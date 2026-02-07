@@ -20,6 +20,11 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
 
+  // Sync internal data state when initialData changes
+  React.useEffect(() => {
+    setData(initialData);
+  }, [initialData]);
+
   // Find ID field for record identification
   const getIdField = React.useCallback(() => {
     return spec.fields.find((f) => f.name === "id" || f.name === "_id")?.name || "id";
@@ -172,7 +177,7 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
           setIsEditModalOpen(false);
           setSelectedRecord(null);
         }}
-        onSubmit={(record) => {
+        onSubmit={(record: Record<string, unknown>) => {
           if (selectedRecord) {
             const id = getRecordId(selectedRecord);
             handleUpdate(id, record);

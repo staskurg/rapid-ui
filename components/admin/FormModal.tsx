@@ -60,7 +60,16 @@ export function FormModal({
           fieldSchema = z.number();
           break;
         case "boolean":
-          fieldSchema = z.boolean();
+          if (field.required) {
+            fieldSchema = z.boolean();
+          } else {
+            // Convert undefined/null to false during validation
+            // This ensures optional boolean fields always have a boolean value
+            fieldSchema = z.preprocess(
+              (val) => (val === undefined || val === null ? false : val),
+              z.boolean()
+            );
+          }
           break;
         case "enum":
           fieldSchema = z.enum(
@@ -71,7 +80,7 @@ export function FormModal({
           fieldSchema = z.string();
       }
 
-      if (!field.required) {
+      if (!field.required && field.type !== "boolean") {
         fieldSchema = fieldSchema.optional();
       }
 
@@ -83,22 +92,41 @@ export function FormModal({
 
   type FormData = z.infer<typeof formSchema>;
 
+  // Set default values for optional boolean fields
+  const getDefaultValues = React.useMemo(() => {
+    const defaults: Record<string, unknown> = {};
+    spec.form.fields.forEach((fieldName) => {
+      const field = spec.fields.find((f) => f.name === fieldName);
+      if (field && field.type === "boolean" && !field.required) {
+        defaults[fieldName] = false;
+      }
+    });
+    return defaults;
+  }, [spec]);
+
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: (initialValues as FormData | undefined) || ({} as FormData),
+    defaultValues: {
+      ...getDefaultValues,
+      ...((initialValues as FormData | undefined) || {}),
+    } as FormData,
   });
 
   React.useEffect(() => {
     if (isOpen) {
       if (initialValues) {
-        form.reset(initialValues);
+        form.reset({
+          ...getDefaultValues,
+          ...initialValues,
+        } as FormData);
       } else {
-        form.reset();
+        form.reset(getDefaultValues as FormData);
       }
     }
-  }, [isOpen, initialValues, form]);
+  }, [isOpen, initialValues, form, getDefaultValues]);
 
   const handleSubmit = (data: FormData) => {
+    // Zod schema already handles boolean defaults, so we can submit directly
     onSubmit(data);
     form.reset();
     onClose();
@@ -176,14 +204,16 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
         />
       );
     case "boolean":
+      // Register the field to ensure it's tracked by react-hook-form
+      form.register(fieldName);
       return (
         <div className="flex items-center space-x-2">
           <Switch
             id={fieldName}
-            checked={typeof value === "boolean" ? value : false}
-            onCheckedChange={(checked) =>
-              form.setValue(fieldName, checked, { shouldValidate: true })
-            }
+            checked={Boolean(value ?? false)}
+            onCheckedChange={(checked) => {
+              form.setValue(fieldName, checked, { shouldValidate: true });
+            }}
           />
           <Label htmlFor={fieldName} className="font-normal">
             {field.label}
