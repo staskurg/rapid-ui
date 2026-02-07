@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI-Native Developer Tool — Schema → Instant Admin UI
+
+An AI-powered developer tool that transforms backend data structures into working internal admin interfaces instantly. Built for backend and full-stack engineers who need usable CRUD UIs without writing frontend code.
+
+## Overview
+
+Paste your backend data → instantly get a usable admin UI.
+
+The tool demonstrates that AI can reason over backend structure and generate a constrained UI specification that renders into a real working interface.
+
+## Features
+
+- **Instant UI Generation**: Paste JSON payload or OpenAPI snippet to generate a complete admin interface
+- **CRUD Operations**: Full create, read, update, delete functionality
+- **Smart Field Detection**: Automatically detects field types and generates appropriate form controls
+- **Filtering & Search**: Built-in filtering capabilities for data tables
+- **Type-Safe**: Built with TypeScript and Zod validation
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **UI**: shadcn/ui + Tailwind CSS
+- **Table**: TanStack Table
+- **Forms**: React Hook Form
+- **Validation**: Zod
+- **AI**: OpenAI SDK
+- **Deployment**: Vercel
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+ 
+- npm or yarn
+- OpenAI API key
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone git@github.com-personal:staskurg/ai-admin-ui.git
+cd ai-admin-ui
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Set up environment variables:
+```bash
+cp .env.example .env.local
+```
+
+4. Add your OpenAI API key to `.env.local`:
+```
+OPENAI_API_KEY=your_api_key_here
+```
+
+### Development
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Build for production:
 
-## Learn More
+```bash
+npm run build
+```
 
-To learn more about Next.js, take a look at the following resources:
+Start the production server:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm start
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Project Structure
 
-## Deploy on Vercel
+```
+ai-admin-ui/
+├── app/                    # Next.js App Router pages
+│   ├── api/               # API routes
+│   └── page.tsx           # Main page
+├── components/
+│   └── admin/             # Admin UI components
+├── lib/
+│   ├── ai/                # AI integration
+│   ├── inference/         # Data inference logic
+│   └── spec/              # UI spec handling
+├── types/                 # TypeScript type definitions
+└── styles/                # Additional styles
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Environment Variables
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- `OPENAI_API_KEY` - Your OpenAI API key (required)
+
+## Deployment
+
+This project is configured for deployment on Vercel:
+
+1. Connect your GitHub repository to Vercel
+2. Add the `OPENAI_API_KEY` environment variable in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+## Documentation
+
+For detailed implementation plans and architecture, see:
+- [Full Blueprint](./.cursor/ai_admin_ui_full_blueprint.md)
+
+## License
+
+Private project - All rights reserved
