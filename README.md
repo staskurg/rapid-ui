@@ -125,9 +125,6 @@ ai-admin-ui/
 │   └── page.tsx           # Main page
 ├── components/
 │   └── admin/             # Admin UI components
-├── docs/                   # Documentation
-│   ├── ARCHITECTURE.md    # System architecture
-│   └── TESTING.md         # Testing strategy
 ├── lib/
 │   ├── ai/                # AI integration
 │   ├── inference/         # Data inference logic
@@ -156,8 +153,7 @@ This project is configured for deployment on Vercel:
 
 ## Documentation
 
-- **[Architecture Overview](./docs/ARCHITECTURE.md)** - System design and component structure
-- **[Testing Strategy](./docs/TESTING.md)** - Testing approach and philosophy
+- **[Architecture Overview](./ARCHITECTURE.md)** - System design and component structure
 - **[Test Examples](./tests/examples/TEST_EXAMPLES.md)** - Example payloads for testing AI generation
 - **[Edge Case Examples](./tests/examples/EDGE_CASE_EXAMPLES.md)** - Edge case scenarios for manual testing
 
