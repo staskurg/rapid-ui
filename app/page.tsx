@@ -2,38 +2,69 @@
 
 import * as React from "react";
 import { AdminRenderer } from "@/components/admin/AdminRenderer";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles, X, FileText, Clipboard } from "lucide-react";
+import { toast } from "sonner";
 import { generateFallbackSpec } from "@/lib/inference/fallback-generator";
 import { parsePayload } from "@/lib/inference/payload-parser";
 import { generateSpec } from "@/lib/inference/spec-generator";
 import type { UISpec } from "@/lib/spec/types";
-import { sampleSpec, sampleData } from "@/lib/spec/sample-spec";
+import { getRandomExample, getRandomPrompt, findExampleByJson } from "@/lib/examples";
 
 export default function Home() {
   const [jsonInput, setJsonInput] = React.useState("");
-  const [intent, setIntent] = React.useState("");
-  const [showIntent, setShowIntent] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [prompt, setPrompt] = React.useState("");
+  const [showPrompt, setShowPrompt] = React.useState(false);
   const [inferredSpec, setInferredSpec] = React.useState<UISpec | null>(null);
   const [parsedData, setParsedData] = React.useState<Record<string, unknown>[] | null>(null);
   const [showPreview, setShowPreview] = React.useState(false);
-  const [useSample, setUseSample] = React.useState(true);
   const [isGenerating, setIsGenerating] = React.useState(false);
+  const [isParsing, setIsParsing] = React.useState(false);
   const [specSource, setSpecSource] = React.useState<"ai" | "fallback" | "deterministic" | null>(null);
 
-  // Use sample data by default
-  const currentSpec = inferredSpec || sampleSpec;
-  const currentData = parsedData || sampleData;
+  const hasGeneratedUI = inferredSpec !== null && parsedData !== null;
+
+  const handlePasteExample = () => {
+    const example = getRandomExample();
+    setJsonInput(example.json);
+    
+    // If prompt section is open, auto-add a random prompt
+    if (showPrompt) {
+      const randomPrompt = getRandomPrompt(example);
+      setPrompt(randomPrompt);
+    }
+  };
+
+  const handlePasteRequirement = () => {
+    if (!jsonInput.trim()) {
+      toast.info("Please enter a JSON payload first");
+      return;
+    }
+    
+    const example = findExampleByJson(jsonInput.trim());
+    if (example) {
+      const randomPrompt = getRandomPrompt(example);
+      setPrompt(randomPrompt);
+    } else {
+      // If no matching example, use a generic prompt
+      const randomExample = getRandomExample();
+      const randomPrompt = getRandomPrompt(randomExample);
+      setPrompt(randomPrompt);
+    }
+  };
 
   const handleParseJSON = () => {
-    setError(null);
+    setIsParsing(true);
     setShowPreview(false);
+    setInferredSpec(null);
+    setParsedData(null);
 
     if (!jsonInput.trim()) {
-      setError("Please enter JSON data");
+      toast.error("Please enter JSON data");
+      setIsParsing(false);
       return;
     }
 
@@ -52,9 +83,13 @@ export default function Home() {
       setInferredSpec(spec);
       setSpecSource("deterministic");
       setShowPreview(true);
-      setUseSample(false);
+      toast.success("UI generated successfully");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Invalid JSON format");
+      const errorMessage = err instanceof Error ? err.message : "Invalid JSON format";
+      toast.error("Invalid JSON format. Please check your input.", {
+        description: errorMessage,
+      });
+      
       // Try fallback generator
       try {
         const fallbackSpec = generateFallbackSpec(jsonInput);
@@ -68,33 +103,39 @@ export default function Home() {
           setParsedData([]);
         }
         setInferredSpec(fallbackSpec);
+        setSpecSource("fallback");
         setShowPreview(true);
-        setUseSample(false);
+        toast.warning("Using fallback parser", {
+          description: "The JSON couldn't be parsed normally, but a fallback spec was created.",
+        });
       } catch (fallbackErr) {
         console.error("Fallback generator also failed:", fallbackErr);
       }
+    } finally {
+      setIsParsing(false);
     }
   };
 
   const handleReset = () => {
     setJsonInput("");
-    setIntent("");
-    setShowIntent(false);
-    setError(null);
+    setPrompt("");
+    setShowPrompt(false);
     setInferredSpec(null);
     setParsedData(null);
     setShowPreview(false);
-    setUseSample(true);
     setSpecSource(null);
+    toast.info("Input cleared");
   };
 
   const handleGenerateWithAI = async () => {
-    setError(null);
+    // Hide spec and UI during generation
     setShowPreview(false);
+    setInferredSpec(null);
+    setParsedData(null);
     setIsGenerating(true);
 
     if (!jsonInput.trim()) {
-      setError("Please enter JSON data");
+      toast.error("Please enter JSON data");
       setIsGenerating(false);
       return;
     }
@@ -104,7 +145,7 @@ export default function Home() {
       const parsed = JSON.parse(jsonInput);
       const dataArray = Array.isArray(parsed) ? parsed : [parsed];
 
-      // Call AI API
+      // Call AI API (no loading toast - we'll show loader in UI)
       const response = await fetch("/api/generate-ui", {
         method: "POST",
         headers: {
@@ -112,12 +153,12 @@ export default function Home() {
         },
         body: JSON.stringify({
           payload: parsed,
-          intent: intent.trim() || undefined,
+          intent: prompt.trim() || undefined,
         }),
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to generate UI spec";
+        let errorMessage = "Failed to generate UI";
         try {
           const errorData = await response.json();
           errorMessage = errorData.error || errorMessage;
@@ -125,6 +166,9 @@ export default function Home() {
           // If response is not JSON, use status text
           errorMessage = `Server error: ${response.status} ${response.statusText}`;
         }
+        toast.error("Failed to generate UI", {
+          description: errorMessage,
+        });
         throw new Error(errorMessage);
       }
 
@@ -136,144 +180,240 @@ export default function Home() {
       setInferredSpec(spec);
       setSpecSource(source);
       setShowPreview(true);
-      setUseSample(false);
+      
+      // Show success toast at the end
+      if (source === "ai") {
+        toast.success("UI generated successfully");
+      } else {
+        toast.warning("Using fallback parser", {
+          description: "Generation failed, but a fallback spec was created.",
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to generate UI spec");
-      console.error("AI generation error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to generate UI";
+      toast.error("Generation failed", {
+        description: errorMessage,
+      });
+      console.error("Generation error:", err);
     } finally {
       setIsGenerating(false);
     }
   };
 
+
+
   return (
-    <div className="container mx-auto py-8 px-4 space-y-6">
-      {/* Header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">AI Admin UI Generator</h1>
-        <p className="text-muted-foreground">
-          Paste your JSON payload to automatically generate a fully functional admin UI
-        </p>
-      </div>
-
-      {/* JSON Input Section */}
-      <div className="space-y-4 rounded-lg border p-6">
-        <div className="space-y-2">
-          <Label htmlFor="json-input">JSON Payload</Label>
-          <Textarea
-            id="json-input"
-            placeholder='Paste your JSON here, e.g.: [{ "name": "John", "age": 30, "active": true }]'
-            value={jsonInput}
-            onChange={(e) => setJsonInput(e.target.value)}
-            className="min-h-[200px] font-mono text-sm"
-            disabled={isGenerating}
-          />
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-        </div>
-
-        {/* Intent Section (Collapsible) */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="intent-input">Intent (Optional)</Label>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowIntent(!showIntent)}
-              type="button"
-            >
-              {showIntent ? "Hide" : "Show"} Intent
-            </Button>
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 max-w-7xl">
+        {/* Hero Section */}
+        <div className="text-center space-y-4 mb-12">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <Sparkles className="h-8 w-8 text-primary" />
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+              AI Admin UI Generator
+            </h1>
           </div>
-          {showIntent && (
-            <Textarea
-              id="intent-input"
-              placeholder='Describe your requirements, e.g.: "Make name field searchable and hide price field from table"'
-              value={intent}
-              onChange={(e) => setIntent(e.target.value)}
-              className="min-h-[80px] text-sm"
-              disabled={isGenerating}
-            />
-          )}
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            Paste backend data → instantly get a usable admin UI
+          </p>
+          <p className="text-sm text-muted-foreground max-w-xl mx-auto">
+            Generate fully functional CRUD interfaces from JSON payloads. Powered by AI. No coding required.
+          </p>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          <Button 
-            onClick={handleParseJSON}
-            disabled={isGenerating}
-          >
-            Parse JSON
-          </Button>
-          <Button 
-            onClick={handleGenerateWithAI}
-            disabled={isGenerating || !jsonInput.trim()}
-            variant="default"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Generating with AI...
-              </>
-            ) : (
-              "Generate with AI"
-            )}
-          </Button>
-          {(showPreview || !useSample) && (
-            <Button variant="outline" onClick={handleReset} disabled={isGenerating}>
-              Reset to Sample
-            </Button>
-          )}
-        </div>
-      </div>
+        {/* Input Section */}
+        <div className="space-y-6 rounded-lg border bg-card p-6 shadow-sm">
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="json-input" className="text-base font-semibold">
+                  JSON Payload
+                </Label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePasteExample}
+                    className="h-8"
+                    type="button"
+                  >
+                    <FileText className="mr-2 h-4 w-4" />
+                    Try Example
+                  </Button>
+                  {jsonInput && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleReset}
+                      className="h-8 w-8 p-0"
+                      type="button"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <Textarea
+                id="json-input"
+                placeholder='Paste your JSON here, e.g.: [{ "name": "John", "age": 30, "active": true }]'
+                value={jsonInput}
+                onChange={(e) => setJsonInput(e.target.value)}
+                className="min-h-[200px] font-mono text-sm"
+                disabled={isGenerating || isParsing}
+              />
+            </div>
 
-      {/* Inferred Spec Preview */}
-      {showPreview && inferredSpec && (
-        <div className="space-y-4 rounded-lg border p-6">
-          <div className="flex items-center justify-between">
-            <div className="space-y-1">
-              <h2 className="text-xl font-semibold">Generated UI Spec</h2>
-              {specSource && (
-                <p className="text-sm text-muted-foreground">
-                  Source:{" "}
-                  <span className="font-medium">
-                    {specSource === "ai"
-                      ? "Generated by AI"
-                      : specSource === "fallback"
-                      ? "Fallback Parser"
-                      : "Deterministic Parser"}
-                  </span>
-                </p>
+            {/* Prompt Section (Collapsible) */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="prompt-input" className="text-base font-semibold">
+                  Prompt (Optional)
+                </Label>
+                <div className="flex gap-2">
+                  {showPrompt && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handlePasteRequirement}
+                      className="h-8"
+                      type="button"
+                    >
+                      <Clipboard className="mr-2 h-4 w-4" />
+                      Try Prompt
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (showPrompt) {
+                        // Clear prompt when hiding
+                        setPrompt("");
+                      }
+                      setShowPrompt(!showPrompt);
+                    }}
+                    type="button"
+                    className="h-8"
+                  >
+                    {showPrompt ? "Hide" : "Show"} Prompt
+                  </Button>
+                </div>
+              </div>
+              {showPrompt && (
+                <Textarea
+                  id="prompt-input"
+                  placeholder='Describe your prompt, e.g.: "Make name field searchable and hide price field from table"'
+                  value={prompt}
+                  onChange={(e) => setPrompt(e.target.value)}
+                  className="min-h-[80px] text-sm"
+                  disabled={isGenerating || isParsing}
+                />
               )}
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowPreview(!showPreview)}
-            >
-              {showPreview ? "Hide" : "Show"} Preview
-            </Button>
           </div>
-          <pre className="overflow-auto rounded-md bg-muted p-4 text-sm">
-            {JSON.stringify(inferredSpec, null, 2)}
-          </pre>
-        </div>
-      )}
 
-      {/* Generated UI */}
-      {currentSpec && (
-        <div className="space-y-4">
-          {!useSample && (
-            <div className="rounded-md bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 p-4">
-              <p className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Generated UI:</strong> The admin interface below was generated from your JSON payload.
-                {specSource === "ai" && " ✨ Generated with AI"}
-                {specSource === "fallback" && " (Using fallback parser)"}
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-3">
+            <Button 
+              onClick={handleParseJSON}
+              disabled={isGenerating || isParsing || !jsonInput.trim()}
+              variant="outline"
+            >
+              {isParsing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                "Parse JSON"
+              )}
+            </Button>
+            <Button 
+              onClick={handleGenerateWithAI}
+              disabled={isGenerating || isParsing || !jsonInput.trim()}
+              variant="default"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Generate with AI
+                </>
+              )}
+            </Button>
+            {hasGeneratedUI && (
+              <Button 
+                variant="ghost" 
+                onClick={handleReset} 
+                disabled={isGenerating || isParsing}
+              >
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Loading State */}
+        {(isGenerating || isParsing) && (
+          <div className="mt-8 flex flex-col items-center justify-center space-y-4 py-12">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-sm text-muted-foreground">
+              {isGenerating ? "Generating UI..." : "Parsing JSON..."}
+            </p>
+          </div>
+        )}
+
+        {/* Inferred Spec Preview */}
+        {!isGenerating && !isParsing && showPreview && inferredSpec && (
+          <div className="mt-6 space-y-4 rounded-lg border bg-card p-6 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-xl font-semibold">UI Spec</h2>
+                {specSource && (
+                  <p className="text-sm text-muted-foreground">
+                    Method:{" "}
+                    <span className="font-medium">
+                      {specSource === "ai"
+                        ? "AI-powered generation"
+                        : specSource === "fallback"
+                        ? "Fallback parser"
+                        : "Deterministic parser"}
+                    </span>
+                  </p>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowPreview(!showPreview)}
+              >
+                {showPreview ? "Hide" : "Show"} Preview
+              </Button>
+            </div>
+            <pre className="overflow-auto rounded-md bg-muted p-4 text-sm max-h-[400px]">
+              {JSON.stringify(inferredSpec, null, 2)}
+            </pre>
+          </div>
+        )}
+
+        {/* Generated UI */}
+        {!isGenerating && !isParsing && inferredSpec && parsedData && (
+          <div className="mt-8 space-y-4">
+            <div className="rounded-lg bg-primary/5 dark:bg-primary/10 border border-primary/20 p-4">
+              <p className="text-sm text-foreground">
+                The admin interface below was created from your JSON payload.
               </p>
             </div>
-          )}
-          <AdminRenderer spec={currentSpec} initialData={currentData} />
-        </div>
-      )}
+            <ErrorBoundary>
+              <AdminRenderer spec={inferredSpec} initialData={parsedData} />
+            </ErrorBoundary>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
