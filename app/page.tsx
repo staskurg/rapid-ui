@@ -86,7 +86,18 @@ export default function Home() {
       toast.success("UI generated successfully");
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Invalid JSON format";
-      toast.error("Invalid JSON format. Please check your input.", {
+      
+      // Provide more specific error messages
+      let userFriendlyMessage = "Invalid JSON format. Please check your input.";
+      if (errorMessage.includes("empty")) {
+        userFriendlyMessage = "The payload is empty. Please provide data with at least one field.";
+      } else if (errorMessage.includes("no valid objects")) {
+        userFriendlyMessage = "The payload contains no valid objects. Please check your data structure.";
+      } else if (errorMessage.includes("no fields")) {
+        userFriendlyMessage = "The payload contains no fields. Please provide an object with at least one property.";
+      }
+      
+      toast.error(userFriendlyMessage, {
         description: errorMessage,
       });
       
@@ -97,7 +108,11 @@ export default function Home() {
         try {
           const parsed = JSON.parse(jsonInput);
           const dataArray = Array.isArray(parsed) ? parsed : [parsed];
-          setParsedData(dataArray as Record<string, unknown>[]);
+          // Filter out invalid entries
+          const validData = dataArray.filter(
+            (item) => item !== null && typeof item === "object" && !Array.isArray(item)
+          );
+          setParsedData(validData.length > 0 ? validData : []);
         } catch {
           // If data parsing fails, use empty array
           setParsedData([]);
@@ -110,6 +125,7 @@ export default function Home() {
         });
       } catch (fallbackErr) {
         console.error("Fallback generator also failed:", fallbackErr);
+        // Don't show another error - we already showed one
       }
     } finally {
       setIsParsing(false);

@@ -15,13 +15,31 @@ export interface ParsedStructure {
 }
 
 /**
+ * Sanitize field name to ensure it's safe for use in forms/tables
+ * Removes or replaces special characters that could cause issues
+ */
+function sanitizeFieldName(name: string): string {
+  // Replace spaces and special characters with underscores
+  // Keep alphanumeric, dots (for nested fields), and underscores
+  return name
+    .replace(/[^a-zA-Z0-9._-]/g, "_")
+    .replace(/_{2,}/g, "_") // Replace multiple underscores with single
+    .replace(/^_+|_+$/g, ""); // Remove leading/trailing underscores
+}
+
+/**
  * Convert camelCase to Title Case
- * e.g., "firstName" -> "First Name", "userName" -> "User Name"
+ * e.g., "firstName" -> "First Name", "userName" -> "User Name", "user.name" -> "User Name"
  */
 function camelCaseToTitleCase(str: string): string {
-  return str
+  // First sanitize the string
+  const sanitized = sanitizeFieldName(str);
+  return sanitized
     .replace(/([A-Z])/g, " $1") // Add space before capital letters
-    .replace(/^./, (char) => char.toUpperCase()) // Capitalize first letter
+    .replace(/[._]/g, " ") // Replace dots and underscores with spaces
+    .split(/\s+/) // Split into words
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()) // Capitalize each word
+    .join(" ") // Join with spaces
     .trim();
 }
 
@@ -95,15 +113,29 @@ export function parsePayload(payload: unknown): ParsedStructure {
   
   if (Array.isArray(payload)) {
     if (payload.length === 0) {
-      throw new Error("Payload array is empty");
+      throw new Error("Payload array is empty. Please provide at least one object in the array.");
+    }
+    // Filter out null/undefined elements and check if we have valid objects
+    const validRecords = payload.filter(
+      (item) => item !== null && item !== undefined && typeof item === "object" && !Array.isArray(item)
+    );
+    if (validRecords.length === 0) {
+      throw new Error("Payload array contains no valid objects. All elements are null, undefined, or invalid.");
     }
     // Use first element structure
-    records = payload as Record<string, unknown>[];
-  } else if (payload !== null && typeof payload === "object") {
+    records = validRecords as Record<string, unknown>[];
+  } else if (payload === null) {
+    throw new Error("Payload cannot be null. Please provide an object or array of objects.");
+  } else if (typeof payload === "object" && !Array.isArray(payload)) {
     // Single object - wrap in array
+    // Check if object is empty
+    if (Object.keys(payload).length === 0) {
+      throw new Error("Payload object is empty. Please provide an object with at least one field.");
+    }
     records = [payload as Record<string, unknown>];
   } else {
-    throw new Error("Payload must be an object or array of objects");
+    const receivedType = payload === null ? "null" : typeof payload;
+    throw new Error("Payload must be an object or array of objects. Received: " + receivedType);
   }
 
   // Flatten nested objects
@@ -115,18 +147,25 @@ export function parsePayload(payload: unknown): ParsedStructure {
     Object.keys(record).forEach((key) => allFieldNames.add(key));
   });
 
+  // Check if we have any fields after flattening
+  if (allFieldNames.size === 0) {
+    throw new Error("Payload contains no fields after parsing (empty object or all null values)");
+  }
+
   // Parse each field
   const fields: ParsedField[] = Array.from(allFieldNames).map((fieldName) => {
+    // Keep original field name for data access (must match JSON keys exactly)
+    // Only sanitize for display in labels
     const allValues = getAllValuesForField(flattenedRecords, fieldName);
     
     // Use first non-null value for type inference
     const sampleValue = allValues.find((v) => v !== null && v !== undefined);
     
     if (sampleValue === undefined) {
-      // Default to string if no values found
+      // Default to string if no values found (all null/undefined)
       return {
-        name: fieldName,
-        label: camelCaseToTitleCase(fieldName),
+        name: fieldName, // Keep original name for data access
+        label: camelCaseToTitleCase(fieldName), // Sanitized label for display
         type: "string",
         required: false,
       };
@@ -138,8 +177,8 @@ export function parsePayload(payload: unknown): ParsedStructure {
     const required = allValues.length === flattenedRecords.length;
 
     const parsedField: ParsedField = {
-      name: fieldName,
-      label: camelCaseToTitleCase(fieldName),
+      name: fieldName, // Keep original name for data access
+      label: camelCaseToTitleCase(fieldName), // Sanitized label for display
       type,
       required,
     };

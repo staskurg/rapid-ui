@@ -112,8 +112,8 @@ describe('Field Inference Logic', () => {
       expect(fieldNames).toContain('user.email');
       
       const userNameField = parsed.fields.find((f) => f.name === 'user.name');
-      // Label generation converts dot notation: "user.name" -> "User.name" (preserves dots)
-      expect(userNameField?.label).toBe('User.name');
+      // Label generation converts dot notation: "user.name" -> "User Name" (dots become spaces)
+      expect(userNameField?.label).toBe('User Name');
     });
 
     it('should handle deeply nested objects', () => {
