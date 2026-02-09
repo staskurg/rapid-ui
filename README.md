@@ -1,6 +1,6 @@
-# AI-Native Developer Tool — Schema → Instant Admin UI
+# RapidUI.dev
 
-An AI-powered developer tool that transforms backend data structures into working internal admin interfaces instantly. Built for backend and full-stack engineers who need usable CRUD UIs without writing frontend code.
+Generate deterministic UIs from backend data. An AI-powered developer tool that transforms backend data structures into working internal admin interfaces instantly. Built for backend and full-stack engineers who need usable CRUD UIs without writing frontend code.
 
 ## Overview
 

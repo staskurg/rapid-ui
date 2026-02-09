@@ -1,10 +1,10 @@
 # Architecture Overview
 
-This document provides a high-level overview of the AI Admin UI Generator architecture, components, and data flow.
+This document provides a high-level overview of the RapidUI.dev architecture, components, and data flow.
 
 ## System Overview
 
-The AI Admin UI Generator is a Next.js application that transforms JSON payloads into working admin interfaces. It uses AI (OpenAI) to generate UI specifications, with deterministic fallbacks for reliability.
+RapidUI.dev is a Next.js application that transforms JSON payloads into working admin interfaces. It uses AI (OpenAI) to generate UI specifications, with deterministic fallbacks for reliability.
 
 ## High-Level Architecture
 

@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Admin UI Generator",
-  description: "Paste backend data → instantly get a usable admin UI. AI-powered tool to generate fully functional CRUD interfaces from JSON payloads.",
+  title: "RapidUI.dev",
+  description: "Generate deterministic UIs from backend data. Paste backend data → instantly get a usable admin UI. Generate fully functional CRUD interfaces from JSON payloads.",
 };
 
 export default function RootLayout({

@@ -226,14 +226,14 @@ export default function Home() {
           <div className="flex items-center justify-center gap-2 mb-4">
             <Sparkles className="h-8 w-8 text-primary" />
             <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
-              AI Admin UI Generator
+              RapidUI.dev
             </h1>
           </div>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Paste backend data → instantly get a usable admin UI
+            Generate deterministic UIs from backend data
           </p>
           <p className="text-sm text-muted-foreground max-w-xl mx-auto">
-            Generate fully functional CRUD interfaces from JSON payloads. Powered by AI. No coding required.
+            Paste backend data → instantly get a usable admin UI. Generate fully functional CRUD interfaces from JSON payloads. No coding required.
           </p>
         </div>
 
