@@ -330,7 +330,7 @@ export default function Home() {
 
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-3">
-            <Button 
+            {/* <Button 
               onClick={handleParseJSON}
               disabled={isGenerating || isParsing || !jsonInput.trim()}
               variant="outline"
@@ -343,7 +343,7 @@ export default function Home() {
               ) : (
                 "Parse JSON"
               )}
-            </Button>
+            </Button> */}
             <Button 
               onClick={handleGenerateWithAI}
               disabled={isGenerating || isParsing || !jsonInput.trim()}
