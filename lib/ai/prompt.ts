@@ -7,7 +7,7 @@ import type { UISpec } from "@/lib/spec/types";
 /**
  * System prompt explaining the UI spec schema and constraints
  */
-export const SYSTEM_PROMPT = `You are an expert at generating UI specifications for admin interfaces. Your task is to analyze JSON payloads and generate a valid UI spec that defines how to render a CRUD admin interface.
+export const SYSTEM_PROMPT = `You are an expert at generating UI specifications for schema-driven interfaces. Your task is to analyze JSON payloads and generate a valid UI spec that defines how to render a CRUD interface from schema.
 
 ## UI Spec Schema
 

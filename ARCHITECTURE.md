@@ -4,7 +4,7 @@ This document provides a high-level overview of the RapidUI.dev architecture, co
 
 ## System Overview
 
-RapidUI.dev is a Next.js application that transforms JSON payloads into working admin interfaces. It uses AI (OpenAI) to generate UI specifications, with deterministic fallbacks for reliability.
+RapidUI.dev is a Next.js application that transforms JSON payloads into schema-driven interfaces. It uses AI (OpenAI) to generate UI specifications, with deterministic fallbacks for reliability.
 
 ## High-Level Architecture
 
@@ -33,7 +33,7 @@ RapidUI.dev is a Next.js application that transforms JSON payloads into working 
 ┌─────────────────────────────────────────────────────────────┐
 │                    Renderer Components                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐    │
-│  │   Admin      │  │   Data       │  │    Form      │    │
+│  │   Schema     │  │   Data       │  │    Form      │    │
 │  │  Renderer    │→ │   Table      │  │    Modal     │    │
 │  └──────────────┘  └──────────────┘  └──────────────┘    │
 │  ┌──────────────┐                                          │
@@ -112,11 +112,11 @@ RapidUI.dev is a Next.js application that transforms JSON payloads into working 
 - API errors → Fallback to deterministic parser
 - Validation failures → Retry with error feedback
 
-### 4. Renderer Components (`components/admin/`)
+### 4. Renderer Components (`components/renderer/`)
 
 **Purpose**: Render UI from UISpec
 
-- **`AdminRenderer.tsx`**: 
+- **`SchemaRenderer.tsx`**: 
   - Main state controller
   - Manages data, filters, modals
   - CRUD handlers (create, update, delete)
@@ -232,8 +232,8 @@ app/
   layout.tsx                  # Root layout
 
 components/
-  admin/
-    AdminRenderer.tsx         # Main state controller
+  renderer/
+    SchemaRenderer.tsx        # Main state controller
     DataTable.tsx             # Table view component
     FormModal.tsx             # Create/edit form
     FiltersPanel.tsx          # Filter controls

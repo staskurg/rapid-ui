@@ -31,7 +31,7 @@ export const FormConfigSchema = z.object({
 });
 
 /**
- * UI Spec schema - the complete specification for generating an admin UI
+ * UI Spec schema - the complete specification for generating a schema-driven UI
  */
 export const UISpecSchema = z
   .object({

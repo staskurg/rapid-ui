@@ -1,19 +1,19 @@
 # RapidUI.dev
 
-Generate deterministic UIs from backend data. An AI-powered developer tool that transforms backend data structures into working internal admin interfaces instantly. Built for backend and full-stack engineers who need usable CRUD UIs without writing frontend code.
+Generate deterministic UIs from backend data. An AI-powered developer tool that transforms backend data structures into schema-driven user interfaces instantly. Built for backend and full-stack engineers who need usable CRUD UIs without writing frontend code.
 
 ## Overview
 
-Paste your backend data → instantly get a usable admin UI.
+Paste your backend data → instantly get a schema-driven UI.
 
-The tool demonstrates that AI can reason over backend structure and generate a constrained UI specification that renders into a real working interface. No frontend coding required—just paste JSON and get a fully functional CRUD admin interface.
+The tool demonstrates that AI can reason over backend structure and generate a constrained UI specification that renders into a real working interface. No frontend coding required—just paste JSON and get a fully functional CRUD interface from your schema.
 
 ## Quick Demo
 
 1. **Paste JSON payload** (or use the "Try Example" button)
 2. **Optionally add a prompt** to customize the UI (e.g., "Hide id field, make name searchable")
 3. **Click "Generate with AI"** or **"Parse JSON"** for deterministic parsing
-4. **Get a working admin UI** with full CRUD operations, filtering, and search
+4. **Get a working UI** with full CRUD operations, filtering, and search
 
 ### Example Payload
 
@@ -36,7 +36,7 @@ The tool demonstrates that AI can reason over backend structure and generate a c
 ]
 ```
 
-**Result**: A fully functional admin interface with:
+**Result**: A fully functional interface with:
 - Data table showing all records
 - Create/Edit/Delete operations
 - Filtering by category, price range, and stock status
@@ -45,7 +45,7 @@ The tool demonstrates that AI can reason over backend structure and generate a c
 
 ## Features
 
-- **Instant UI Generation**: Paste JSON payload or OpenAPI snippet to generate a complete admin interface
+- **Instant UI Generation**: Paste JSON payload or OpenAPI snippet to generate a complete interface
 - **CRUD Operations**: Full create, read, update, delete functionality
 - **Smart Field Detection**: Automatically detects field types and generates appropriate form controls
 - **Filtering & Search**: Built-in filtering capabilities for data tables
@@ -73,8 +73,8 @@ The tool demonstrates that AI can reason over backend structure and generate a c
 
 1. Clone the repository:
 ```bash
-git clone git@github.com-personal:staskurg/ai-admin-ui.git
-cd ai-admin-ui
+git clone git@github.com-personal:staskurg/rapid-ui.git
+cd rapid-ui
 ```
 
 2. Install dependencies:
@@ -119,12 +119,12 @@ npm start
 ## Project Structure
 
 ```
-ai-admin-ui/
+rapid-ui/
 ├── app/                    # Next.js App Router pages
 │   ├── api/               # API routes
 │   └── page.tsx           # Main page
 ├── components/
-│   └── admin/             # Admin UI components
+│   └── renderer/          # Renderer components (schema-driven UI)
 ├── lib/
 │   ├── ai/                # AI integration
 │   ├── inference/         # Data inference logic

@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "RapidUI.dev",
-  description: "Generate deterministic UIs from backend data. Paste backend data → instantly get a usable admin UI. Generate fully functional CRUD interfaces from JSON payloads.",
+  description: "Generate user interfaces directly from backend schemas. Connect or paste JSON → instantly get a schema-driven UI. No frontend coding required.",
 };
 
 export default function RootLayout({

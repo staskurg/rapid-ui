@@ -1,5 +1,5 @@
 /**
- * CrudAdapter interface for API-backed admin UI.
+ * CrudAdapter interface for API-backed schema-driven UI.
  * Supports demo API (full CRUD) and external API (read-only).
  */
 

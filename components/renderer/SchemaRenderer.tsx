@@ -9,13 +9,15 @@ import type { UISpec } from "@/lib/spec/types";
 import type { CrudAdapter } from "@/lib/adapters";
 import { Plus, Loader2 } from "lucide-react";
 
-interface AdminRendererProps {
+interface SchemaRendererProps {
   spec: UISpec;
   initialData?: Record<string, unknown>[];
   adapter?: CrudAdapter;
+  /** When changed, triggers a refetch (e.g. after reset). */
+  refreshTrigger?: number;
 }
 
-export function AdminRenderer({ spec, initialData = [], adapter }: AdminRendererProps) {
+export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger }: SchemaRendererProps) {
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
   const [filters, setFilters] = React.useState<Record<string, unknown>>({});
@@ -75,6 +77,13 @@ export function AdminRenderer({ spec, initialData = [], adapter }: AdminRenderer
       setError(err instanceof Error ? err.message : "Failed to load data");
     }
   }, [adapter]);
+
+  // Refetch when refreshTrigger changes (e.g. after reset)
+  React.useEffect(() => {
+    if (adapter && (refreshTrigger ?? 0) > 0) {
+      refetch();
+    }
+  }, [adapter, refreshTrigger, refetch]);
 
   // Get record ID
   const getRecordId = React.useCallback(

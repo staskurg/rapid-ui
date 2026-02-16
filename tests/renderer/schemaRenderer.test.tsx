@@ -1,11 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { AdminRenderer } from '@/components/admin/AdminRenderer';
+import { SchemaRenderer } from '@/components/renderer/SchemaRenderer';
 import type { UISpec } from '@/lib/spec/types';
 
-// Mock the child components to focus on AdminRenderer state logic
-vi.mock('@/components/admin/DataTable', () => ({
+// Mock the child components to focus on SchemaRenderer state logic
+vi.mock('@/components/renderer/DataTable', () => ({
   DataTable: ({ 
     data, 
     onEdit, 
@@ -46,7 +46,7 @@ vi.mock('@/components/admin/DataTable', () => ({
   ),
 }));
 
-vi.mock('@/components/admin/FormModal', () => ({
+vi.mock('@/components/renderer/FormModal', () => ({
   FormModal: ({ 
     isOpen, 
     onSubmit, 
@@ -81,7 +81,7 @@ vi.mock('@/components/admin/FormModal', () => ({
   },
 }));
 
-vi.mock('@/components/admin/FiltersPanel', () => ({
+vi.mock('@/components/renderer/FiltersPanel', () => ({
   FiltersPanel: ({ 
     onFilterChange 
   }: { 
@@ -97,7 +97,7 @@ vi.mock('@/components/admin/FiltersPanel', () => ({
   ),
 }));
 
-describe('AdminRenderer State Management', () => {
+describe('SchemaRenderer State Management', () => {
   const mockSpec: UISpec = {
     entity: 'User',
     fields: [
@@ -139,7 +139,7 @@ describe('AdminRenderer State Management', () => {
   describe('Create Record', () => {
     it('should add new record to data array', async () => {
       const user = userEvent.setup();
-      const { container } = render(<AdminRenderer spec={mockSpec} initialData={initialData} />);
+      const { container } = render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
 
       // Verify initial count
       const initialRecords = container.querySelectorAll('[data-testid^="record-"]');
@@ -167,7 +167,7 @@ describe('AdminRenderer State Management', () => {
 
     it('should generate ID for new record if not provided', async () => {
       const user = userEvent.setup();
-      render(<AdminRenderer spec={mockSpec} initialData={initialData} />);
+      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
 
       // Open create modal
       const createButton = screen.getByText(/create user/i);
@@ -189,7 +189,7 @@ describe('AdminRenderer State Management', () => {
   describe('Update Record', () => {
     it('should update existing record in data array', async () => {
       const user = userEvent.setup();
-      render(<AdminRenderer spec={mockSpec} initialData={initialData} />);
+      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
 
       // Click edit on first record
       const editButton = screen.getByTestId('edit-0');
@@ -230,7 +230,7 @@ describe('AdminRenderer State Management', () => {
       };
 
       render(
-        <AdminRenderer spec={specWithEmail} initialData={dataWithMoreFields} />
+        <SchemaRenderer spec={specWithEmail} initialData={dataWithMoreFields} />
       );
 
       // Edit record
@@ -258,7 +258,7 @@ describe('AdminRenderer State Management', () => {
   describe('Delete Record', () => {
     it('should remove record from data array', async () => {
       const user = userEvent.setup();
-      const { container } = render(<AdminRenderer spec={mockSpec} initialData={initialData} />);
+      const { container } = render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
 
       // Get initial records
       const initialRecords = container.querySelectorAll('[data-testid^="record-"]');
@@ -286,7 +286,7 @@ describe('AdminRenderer State Management', () => {
   describe('Filter Application', () => {
     it('should filter data based on filter values', async () => {
       const user = userEvent.setup();
-      render(<AdminRenderer spec={mockSpec} initialData={initialData} />);
+      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
 
       // Apply filter
       const filterInput = screen.getByTestId('filter-input');
@@ -303,7 +303,7 @@ describe('AdminRenderer State Management', () => {
   describe('Initial Data Sync', () => {
     it('should sync data when initialData prop changes', async () => {
       const { container, rerender } = render(
-        <AdminRenderer spec={mockSpec} initialData={initialData} />
+        <SchemaRenderer spec={mockSpec} initialData={initialData} />
       );
 
       // Wait for initial render
@@ -318,7 +318,7 @@ describe('AdminRenderer State Management', () => {
         { id: 5, name: 'Eve' },
       ];
 
-      rerender(<AdminRenderer spec={mockSpec} initialData={newData} />);
+      rerender(<SchemaRenderer spec={mockSpec} initialData={newData} />);
 
       // Verify new data appears
       await waitFor(() => {
