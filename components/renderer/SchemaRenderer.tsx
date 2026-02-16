@@ -5,6 +5,15 @@ import { Button } from "@/components/ui/button";
 import { DataTable } from "./DataTable";
 import { FormModal } from "./FormModal";
 import { FiltersPanel } from "./FiltersPanel";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { UISpec } from "@/lib/spec/types";
 import type { CrudAdapter } from "@/lib/adapters";
 import { getCellValue } from "@/lib/utils/getCellValue";
@@ -21,9 +30,13 @@ interface SchemaRendererProps {
 export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger }: SchemaRendererProps) {
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
+  const [editRecord, setEditRecord] = React.useState<Record<string, unknown> | null>(null);
+  const [editLoading, setEditLoading] = React.useState(false);
   const [filters, setFilters] = React.useState<Record<string, unknown>>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [deleteTargetId, setDeleteTargetId] = React.useState<string | number | null>(null);
+  const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [loading, setLoading] = React.useState(!!adapter);
   const [error, setError] = React.useState<string | null>(null);
 
@@ -39,6 +52,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
   React.useEffect(() => {
     if (!adapter) return;
     let cancelled = false;
+    const startTime = Date.now();
     setLoading(true);
     setError(null);
     adapter
@@ -54,7 +68,15 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         }
       })
       .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) {
+          const elapsed = Date.now() - startTime;
+          const minLoading = 500;
+          if (elapsed < minLoading) {
+            setTimeout(() => setLoading(false), minLoading - elapsed);
+          } else {
+            setLoading(false);
+          }
+        }
       });
     return () => {
       cancelled = true;
@@ -159,6 +181,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           await refetch();
         } catch (err) {
           setError(err instanceof Error ? err.message : "Create failed");
+          throw err;
         }
       } else {
         const id = spec.idField ?? "id";
@@ -184,10 +207,12 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         try {
           await adapter.update(id, record);
           setSelectedRecord(null);
+          setEditRecord(null);
           setIsEditModalOpen(false);
           await refetch();
         } catch (err) {
           setError(err instanceof Error ? err.message : "Update failed");
+          throw err;
         }
       } else {
         setData((prev) =>
@@ -197,33 +222,61 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           })
         );
         setSelectedRecord(null);
+        setEditRecord(null);
         setIsEditModalOpen(false);
       }
     },
     [adapter, getRecordId, refetch]
   );
 
-  const handleDelete = React.useCallback(
-    async (id: string | number) => {
-      if (adapter?.remove) {
-        setError(null);
+  const handleDeleteRequest = React.useCallback((id: string | number) => {
+    setDeleteTargetId(id);
+  }, []);
+
+  const handleDeleteConfirm = React.useCallback(async () => {
+    if (deleteTargetId === null) return;
+    const id = deleteTargetId;
+    if (adapter?.remove) {
+      setError(null);
+      setDeleteLoading(true);
+      try {
+        await adapter.remove(id);
+        setDeleteTargetId(null);
+        await refetch();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Delete failed");
+      } finally {
+        setDeleteLoading(false);
+      }
+    } else {
+      setData((prev) => prev.filter((item) => getRecordId(item) !== id));
+      setDeleteTargetId(null);
+    }
+  }, [adapter, deleteTargetId, getRecordId, refetch]);
+
+  const handleEdit = React.useCallback(
+    async (record: Record<string, unknown>) => {
+      setSelectedRecord(record);
+      setIsEditModalOpen(true);
+      if (adapter?.getById) {
+        setEditLoading(true);
+        setEditRecord(null);
         try {
-          await adapter.remove(id);
-          await refetch();
+          const id = getRecordId(record);
+          const fresh = await adapter.getById(id);
+          setEditRecord(fresh);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Delete failed");
+          setError(err instanceof Error ? err.message : "Failed to load record");
+          setEditRecord(record);
+        } finally {
+          setEditLoading(false);
         }
       } else {
-        setData((prev) => prev.filter((item) => getRecordId(item) !== id));
+        setEditRecord(record);
       }
     },
-    [adapter, getRecordId, refetch]
+    [adapter, getRecordId]
   );
-
-  const handleEdit = React.useCallback((record: Record<string, unknown>) => {
-    setSelectedRecord(record);
-    setIsEditModalOpen(true);
-  }, []);
 
   const handleFilterChange = React.useCallback((newFilters: Record<string, unknown>) => {
     setFilters(newFilters);
@@ -269,7 +322,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           data={filteredData}
           spec={spec}
           onEdit={capabilities.update ? handleEdit : undefined}
-          onDelete={capabilities.delete ? handleDelete : undefined}
+          onDelete={capabilities.delete ? handleDeleteRequest : undefined}
         />
       )}
 
@@ -289,16 +342,49 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         onClose={() => {
           setIsEditModalOpen(false);
           setSelectedRecord(null);
+          setEditRecord(null);
         }}
         onSubmit={(record: Record<string, unknown>) => {
-          if (selectedRecord) {
-            const id = getRecordId(selectedRecord);
-            handleUpdate(id, record);
+          const recordForId = editRecord ?? selectedRecord;
+          if (recordForId) {
+            const id = getRecordId(recordForId);
+            return handleUpdate(id, record);
           }
         }}
-        initialValues={selectedRecord || undefined}
+        initialValues={editRecord ?? selectedRecord ?? undefined}
         mode="edit"
+        isLoadingInitialValues={editLoading}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete record</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this record?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={deleteLoading}
+              onClick={() => handleDeleteConfirm()}
+              data-testid="delete-confirm"
+            >
+              {deleteLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

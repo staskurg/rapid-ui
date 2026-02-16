@@ -269,6 +269,10 @@ describe('SchemaRenderer State Management', () => {
       const deleteButton = screen.getByTestId('delete-0');
       await user.click(deleteButton);
 
+      // Confirm delete in dialog
+      const confirmButton = screen.getByTestId('delete-confirm');
+      await user.click(confirmButton);
+
       // Verify record count decreased
       await waitFor(() => {
         const records = container.querySelectorAll('[data-testid^="record-"]');

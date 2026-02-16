@@ -51,6 +51,18 @@ export function createDemoAdapter(
       return Array.isArray(data) ? data : [];
     },
 
+    async getById(id: string | number): Promise<Record<string, unknown>> {
+      const url = buildUrl(`${base}/${encodeURIComponent(String(id))}`, q);
+      const res = await fetch(url);
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("Record not found");
+        }
+        throw new Error(`Failed to fetch record: ${res.status} ${res.statusText}`);
+      }
+      return res.json();
+    },
+
     async create(input: Record<string, unknown>): Promise<Record<string, unknown>> {
       const url = buildUrl(base, q);
       const res = await fetch(url, {

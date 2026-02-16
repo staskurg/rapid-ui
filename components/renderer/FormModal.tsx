@@ -24,14 +24,17 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { UISpec, Field } from "@/lib/spec/types";
+import { Loader2 } from "lucide-react";
 
 interface FormModalProps {
   spec: UISpec;
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: Record<string, unknown>) => void;
+  onSubmit: (data: Record<string, unknown>) => void | Promise<void>;
   initialValues?: Record<string, unknown>;
   mode?: "create" | "edit";
+  /** When true (edit mode), show "Loading record..." instead of form. */
+  isLoadingInitialValues?: boolean;
 }
 
 export function FormModal({
@@ -41,6 +44,7 @@ export function FormModal({
   onSubmit,
   initialValues,
   mode = "create",
+  isLoadingInitialValues = false,
 }: FormModalProps) {
   // Generate Zod schema from spec
   const formSchema = React.useMemo(() => {
@@ -112,6 +116,8 @@ export function FormModal({
     } as FormData,
   });
 
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   React.useEffect(() => {
     if (isOpen) {
       if (initialValues) {
@@ -125,11 +131,15 @@ export function FormModal({
     }
   }, [isOpen, initialValues, form, getDefaultValues]);
 
-  const handleSubmit = (data: FormData) => {
-    // Zod schema already handles boolean defaults, so we can submit directly
-    onSubmit(data);
-    form.reset();
-    onClose();
+  const handleSubmit = async (data: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await onSubmit(data);
+      form.reset();
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -147,6 +157,20 @@ export function FormModal({
         </DialogHeader>
 
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          {isLoadingInitialValues ? (
+            <>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-muted-foreground">Loading record...</span>
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={onClose}>
+                  Cancel
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+          <>
           {spec.form.fields.map((fieldName) => {
             const field = spec.fields.find((f) => f.name === fieldName);
             if (!field) return null;
@@ -168,13 +192,24 @@ export function FormModal({
           })}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">
-              {mode === "create" ? "Create" : "Save Changes"}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {mode === "create" ? "Creating..." : "Saving..."}
+                </>
+              ) : mode === "create" ? (
+                "Create"
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </DialogFooter>
+          </>
+          )}
         </form>
       </DialogContent>
     </Dialog>

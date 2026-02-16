@@ -22,6 +22,9 @@ export interface CrudAdapter {
   /** Fetch list of records for display. Uses session data for demo; API for external. */
   list(): Promise<Record<string, unknown>[]>;
 
+  /** Fetch a single record by ID. Optional; used for edit form to get fresh data. */
+  getById?(id: string | number): Promise<Record<string, unknown>>;
+
   /** Create a record. Only when capabilities.create is true. */
   create?(input: Record<string, unknown>): Promise<Record<string, unknown>>;
 

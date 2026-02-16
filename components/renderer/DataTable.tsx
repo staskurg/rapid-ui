@@ -158,7 +158,7 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
+                No records.
               </TableCell>
             </TableRow>
           )}
