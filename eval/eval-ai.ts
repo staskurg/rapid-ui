@@ -227,7 +227,6 @@ async function evaluateFixture(
 
       runResults.push(runResult);
 
-      // Save failure if validation failed
       if (!validation.isValid) {
         saveFailure(fixtureName, i + 1, rawResponse, validation.errors);
       }

@@ -7,6 +7,7 @@ import { FormModal } from "./FormModal";
 import { FiltersPanel } from "./FiltersPanel";
 import type { UISpec } from "@/lib/spec/types";
 import type { CrudAdapter } from "@/lib/adapters";
+import { getCellValue } from "@/lib/utils/getCellValue";
 import { Plus, Loader2 } from "lucide-react";
 
 interface SchemaRendererProps {
@@ -113,7 +114,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         const field = spec.fields.find((f) => f.name === fieldName);
         if (!field) return true;
 
-        const recordValue = record[fieldName];
+        const recordValue = getCellValue(record, fieldName);
 
         switch (field.type) {
           case "string":

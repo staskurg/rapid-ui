@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { UISpec, Field } from "@/lib/spec/types";
+import { getCellValue } from "@/lib/utils/getCellValue";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface DataTableProps {
@@ -34,24 +35,30 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
 
   // Generate columns from spec
   const columns = React.useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
-    // Create a field map for quick lookup
     const fieldMap = new Map(spec.fields.map((f) => [f.name, f]));
-    
+
     const cols: ColumnDef<Record<string, unknown>>[] = spec.table.columns.map(
       (fieldName) => {
         const field = fieldMap.get(fieldName);
+        const accessor = {
+          id: fieldName,
+          accessorFn: (row: Record<string, unknown>) =>
+            getCellValue(row, fieldName),
+        };
+
         if (!field) {
           return {
-            accessorKey: fieldName,
+            ...accessor,
             header: fieldName,
-            cell: ({ getValue }) => String(getValue() ?? ""),
+            cell: ({ getValue }: { getValue: () => unknown }) =>
+              String(getValue() ?? ""),
           };
         }
 
         return {
-          accessorKey: fieldName,
+          ...accessor,
           header: field.label,
-          cell: ({ getValue }) => {
+          cell: ({ getValue }: { getValue: () => unknown }) => {
             const value = getValue();
             return renderCell(value, field);
           },
@@ -167,6 +174,14 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
 function renderCell(value: unknown, field: Field): React.ReactNode {
   if (value === null || value === undefined) {
     return <span className="text-muted-foreground">—</span>;
+  }
+
+  if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+    const obj = value as Record<string, unknown>;
+    const parts = Object.entries(obj)
+      .filter(([, v]) => v != null && v !== "")
+      .map(([, v]) => String(v));
+    return <span>{parts.join(" · ")}</span>;
   }
 
   switch (field.type) {

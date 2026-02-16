@@ -119,7 +119,7 @@ Output spec:
 - Return ONLY valid JSON matching the UI spec schema.
 - Do not include markdown code blocks or explanations.
 - Ensure all field references are valid.
-- If the payload has nested objects, flatten them (e.g., \`user.name\` instead of nested structure).
+- **Nested objects**: Use dot notation for field names (e.g., \`user.name\`, \`user.email\`, \`order.total\`, \`order.items\`). Never use camelCase like userName—always use the exact nested path.
 - Analyze the payload carefully to determine appropriate field types and whether fields should be enums.`;
 
 /**

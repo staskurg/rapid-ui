@@ -116,6 +116,17 @@ Start the production server:
 npm start
 ```
 
+### Testing
+
+```bash
+npm test              # Run tests once
+npm run test:watch    # Run tests in watch mode
+npm run test:ui       # Open Vitest UI (browser-based test runner)
+npm run eval:ai       # AI evaluation harness (requires OPENAI_API_KEY)
+```
+
+See [eval/README.md](./eval/README.md) for eval options (`--fixture`, `--runs`, etc.).
+
 ## Project Structure
 
 ```

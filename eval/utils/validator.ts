@@ -1,6 +1,6 @@
 /**
  * Validation utilities for AI-generated UISpecs
- * Validates structural validity and logical integrity
+ * Validates structural validity and logical integrity.
  */
 
 import { UISpecSchema, type UISpec } from "@/lib/spec/schema";

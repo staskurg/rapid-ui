@@ -46,13 +46,14 @@ Test payloads are located in `eval/fixtures/`:
 - `enum-heavy.json` - Multiple enum fields
 - `numeric.json` - Numeric-heavy payload
 - `mixed.json` - Complex mixed types
+- `nested.json` - Nested objects (user.name, order.total, etc.) — tests dot notation and camelCase resolution
 - `weird.json` - Edge cases (nulls, empty arrays, etc.)
 
 ## Integration
 
-This harness complements Phase 3.5's fixture-based tests:
-- **Phase 3.5**: Fast, stable fixture-based contract validation (run on every commit)
-- **Phase 4.5**: Comprehensive determinism and stability testing (run on prompt/schema changes)
+This harness complements the fixture-based contract tests:
+- **Contract tests**: Fast, stable validation (run on every commit)
+- **AI eval**: Comprehensive determinism and stability testing (run on prompt/schema changes)
 
 Run evaluation after:
 - Prompt changes (`lib/ai/prompt.ts`)

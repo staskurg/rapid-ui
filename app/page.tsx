@@ -325,6 +325,11 @@ export default function Home() {
     setVersion(v);
   };
 
+  const handleResourceChange = (value: string) => {
+    setResource(value);
+    setVersion(1);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left side panel: Generate UI + UI Spec (20–30%) */}
@@ -358,7 +363,7 @@ export default function Home() {
                 resource={resource}
                 version={version}
                 prompt={connectPrompt}
-                onResourceChange={setResource}
+                onResourceChange={handleResourceChange}
                 onVersionChange={handleConnectVersionChange}
                 onPromptChange={setConnectPrompt}
                 onGenerate={() => handleConnectGenerate()}
