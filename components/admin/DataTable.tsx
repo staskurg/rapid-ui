@@ -25,8 +25,8 @@ import { Pencil, Trash2 } from "lucide-react";
 interface DataTableProps {
   data: Record<string, unknown>[];
   spec: UISpec;
-  onEdit: (record: Record<string, unknown>) => void;
-  onDelete: (id: string | number) => void;
+  onEdit?: (record: Record<string, unknown>) => void;
+  onDelete?: (id: string | number) => void;
 }
 
 export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
@@ -59,42 +59,44 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
       }
     );
 
-    // Add actions column
-    cols.push({
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const record = row.original;
-        // Try to find an ID field (common patterns: id, _id, etc.)
-        const idField = spec.fields.find(
-          (f) => f.name === "id" || f.name === "_id"
-        );
-        const recordId: string | number = idField 
-          ? (record[idField.name] as string | number | undefined) ?? row.index
-          : (record.id as string | number | undefined) ?? row.index;
+    // Add actions column only when onEdit or onDelete is provided
+    if (onEdit !== undefined || onDelete !== undefined) {
+      const idFieldName = spec.idField ?? "id";
+      cols.push({
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => {
+          const record = row.original;
+          const recordId: string | number =
+            (record[idFieldName] as string | number | undefined) ?? row.index;
 
-        return (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onEdit(record)}
-              className="h-8 w-8 p-0"
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onDelete(recordId)}
-              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
-        );
-      },
-    });
+          return (
+            <div className="flex items-center gap-2">
+              {onEdit !== undefined && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onEdit(record)}
+                  className="h-8 w-8 p-0"
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
+              {onDelete !== undefined && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => onDelete(recordId)}
+                  className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+          );
+        },
+      });
+    }
 
     return cols;
   }, [spec, onEdit, onDelete]);

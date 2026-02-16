@@ -6,40 +6,87 @@ import { DataTable } from "./DataTable";
 import { FormModal } from "./FormModal";
 import { FiltersPanel } from "./FiltersPanel";
 import type { UISpec } from "@/lib/spec/types";
-import { Plus } from "lucide-react";
+import type { CrudAdapter } from "@/lib/adapters";
+import { Plus, Loader2 } from "lucide-react";
 
 interface AdminRendererProps {
   spec: UISpec;
   initialData?: Record<string, unknown>[];
+  adapter?: CrudAdapter;
 }
 
-export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
+export function AdminRenderer({ spec, initialData = [], adapter }: AdminRendererProps) {
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
   const [filters, setFilters] = React.useState<Record<string, unknown>>({});
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
+  const [loading, setLoading] = React.useState(!!adapter);
+  const [error, setError] = React.useState<string | null>(null);
 
-  // Sync internal data state when initialData changes
+  const idField = spec.idField ?? "id";
+  const capabilities = adapter?.capabilities ?? {
+    create: true,
+    read: true,
+    update: true,
+    delete: true,
+  };
+
+  // Adapter mode: fetch list on mount and when adapter changes
   React.useEffect(() => {
-    setData(initialData);
-  }, [initialData]);
+    if (!adapter) return;
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    adapter
+      .list()
+      .then((records) => {
+        if (!cancelled) {
+          setData(records);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load data");
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adapter]);
 
-  // Find ID field for record identification
-  const getIdField = React.useCallback(() => {
-    return spec.fields.find((f) => f.name === "id" || f.name === "_id")?.name || "id";
-  }, [spec]);
+  // initialData mode: sync when initialData changes
+  React.useEffect(() => {
+    if (!adapter) {
+      setData(initialData);
+    }
+  }, [adapter, initialData]);
+
+  const refetch = React.useCallback(async () => {
+    if (!adapter) return;
+    setError(null);
+    try {
+      const records = await adapter.list();
+      setData(records);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load data");
+    }
+  }, [adapter]);
 
   // Get record ID
-  const getRecordId = React.useCallback((record: Record<string, unknown>): string | number => {
-    const idField = getIdField();
-    const id = record[idField];
-    if (typeof id === "string" || typeof id === "number") {
-      return id;
-    }
-    // Fallback: use index if no valid ID found
-    return data.indexOf(record);
-  }, [getIdField, data]);
+  const getRecordId = React.useCallback(
+    (record: Record<string, unknown>): string | number => {
+      const id = record[idField];
+      if (typeof id === "string" || typeof id === "number") {
+        return id;
+      }
+      return data.indexOf(record);
+    },
+    [idField, data]
+  );
 
   // Filter data based on current filters
   const filteredData = React.useMemo(() => {
@@ -92,35 +139,76 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
   }, [data, filters, spec]);
 
   // CRUD handlers
-  const handleCreate = React.useCallback((record: Record<string, unknown>) => {
-    const idField = getIdField();
-    // Generate ID if not provided
-    if (!record[idField]) {
-      const maxId = data.reduce((max, r) => {
-        const id = r[idField];
-        if (typeof id === "number" && id > max) return id;
-        return max;
-      }, 0);
-      record[idField] = maxId + 1;
-    }
-    setData((prev) => [...prev, record]);
-    setIsCreateModalOpen(false);
-  }, [data, getIdField]);
+  const handleCreate = React.useCallback(
+    async (record: Record<string, unknown>) => {
+      if (adapter?.create) {
+        setError(null);
+        try {
+          await adapter.create(record);
+          setIsCreateModalOpen(false);
+          await refetch();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Create failed");
+        }
+      } else {
+        const id = spec.idField ?? "id";
+        if (!record[id]) {
+          const maxId = data.reduce((max, r) => {
+            const v = r[id];
+            if (typeof v === "number" && v > max) return v;
+            return max;
+          }, 0);
+          record[id] = maxId + 1;
+        }
+        setData((prev) => [...prev, record]);
+        setIsCreateModalOpen(false);
+      }
+    },
+    [adapter, data, refetch, spec.idField]
+  );
 
-  const handleUpdate = React.useCallback((id: string | number, record: Record<string, unknown>) => {
-    setData((prev) =>
-      prev.map((item) => {
-        const itemId = getRecordId(item);
-        return itemId === id ? { ...item, ...record } : item;
-      })
-    );
-    setSelectedRecord(null);
-    setIsEditModalOpen(false);
-  }, [getRecordId]);
+  const handleUpdate = React.useCallback(
+    async (id: string | number, record: Record<string, unknown>) => {
+      if (adapter?.update) {
+        setError(null);
+        try {
+          await adapter.update(id, record);
+          setSelectedRecord(null);
+          setIsEditModalOpen(false);
+          await refetch();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Update failed");
+        }
+      } else {
+        setData((prev) =>
+          prev.map((item) => {
+            const itemId = getRecordId(item);
+            return itemId === id ? { ...item, ...record } : item;
+          })
+        );
+        setSelectedRecord(null);
+        setIsEditModalOpen(false);
+      }
+    },
+    [adapter, getRecordId, refetch]
+  );
 
-  const handleDelete = React.useCallback((id: string | number) => {
-    setData((prev) => prev.filter((item) => getRecordId(item) !== id));
-  }, [getRecordId]);
+  const handleDelete = React.useCallback(
+    async (id: string | number) => {
+      if (adapter?.remove) {
+        setError(null);
+        try {
+          await adapter.remove(id);
+          await refetch();
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Delete failed");
+        }
+      } else {
+        setData((prev) => prev.filter((item) => getRecordId(item) !== id));
+      }
+    },
+    [adapter, getRecordId, refetch]
+  );
 
   const handleEdit = React.useCallback((record: Record<string, unknown>) => {
     setSelectedRecord(record);
@@ -133,6 +221,13 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
 
   return (
     <div className="space-y-4">
+      {/* Error banner */}
+      {error && (
+        <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {error}
+        </div>
+      )}
+
       {/* Header with Create Button */}
       <div className="flex items-center justify-between">
         <div>
@@ -141,10 +236,12 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
             Manage {spec.entity.toLowerCase()} records with full CRUD operations
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create {spec.entity}
-        </Button>
+        {capabilities.create && (
+          <Button onClick={() => setIsCreateModalOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create {spec.entity}
+          </Button>
+        )}
       </div>
 
       {/* Filters Panel */}
@@ -152,13 +249,19 @@ export function AdminRenderer({ spec, initialData = [] }: AdminRendererProps) {
         <FiltersPanel spec={spec} filters={filters} onFilterChange={handleFilterChange} />
       )}
 
-      {/* Data Table */}
-      <DataTable
-        data={filteredData}
-        spec={spec}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
+      {/* Loading state */}
+      {loading ? (
+        <div className="flex items-center justify-center rounded-md border py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <DataTable
+          data={filteredData}
+          spec={spec}
+          onEdit={capabilities.update ? handleEdit : undefined}
+          onDelete={capabilities.delete ? handleDelete : undefined}
+        />
+      )}
 
       {/* Create Modal */}
       <FormModal

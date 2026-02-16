@@ -40,6 +40,7 @@ export const UISpecSchema = z
     table: TableConfigSchema,
     form: FormConfigSchema,
     filters: z.array(z.string()).default([]),
+    idField: z.string().optional(),
   })
   .refine(
     (data) => {
