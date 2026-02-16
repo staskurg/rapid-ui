@@ -10,6 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader2, Sparkles, X, FileText, Clipboard, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import type { UISpec } from "@/lib/spec/types";
+import { computeSpecDiff } from "@/lib/spec/diff";
+import { formatDiffForDisplay } from "@/lib/spec/diffFormatters";
+import { GenerationSuccessToast } from "@/components/connect/GenerationSuccessToast";
 import { getRandomExample, getRandomPrompt, findExampleByJson } from "@/lib/examples";
 import { createSessionId } from "@/lib/session";
 import { createDemoAdapter } from "@/lib/adapters";
@@ -41,6 +44,13 @@ export default function Home() {
   const [specSource, setSpecSource] = React.useState<"ai" | "fallback" | "deterministic" | null>(null);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
 
+  const lastGeneratedRef = React.useRef<{
+    resource: string | null;
+    dataSource: DataSource;
+    version?: DemoVersion;
+  } | null>(null);
+  const diffToastIdRef = React.useRef<string | number | null>(null);
+
   const hasGeneratedUI = inferredSpec !== null && (parsedData !== null || adapter !== null);
   const isConnectMode = adapter !== null;
 
@@ -67,6 +77,10 @@ export default function Home() {
   };
 
   const handleReset = () => {
+    if (diffToastIdRef.current != null) {
+      toast.dismiss(diffToastIdRef.current);
+      diffToastIdRef.current = null;
+    }
     setInferredSpec(null);
     setParsedData(null);
     setAdapter(null);
@@ -75,11 +89,24 @@ export default function Home() {
     setPastePrompt("");
     setShowPastePrompt(false);
     setConnectPrompt("");
+    lastGeneratedRef.current = null;
     toast.info("Input cleared");
   };
 
   const handleConnectGenerate = async (versionOverride?: DemoVersion) => {
     const v = versionOverride ?? version;
+
+    // Dismiss any visible diff toast before regenerating
+    if (diffToastIdRef.current != null) {
+      toast.dismiss(diffToastIdRef.current);
+      diffToastIdRef.current = null;
+    }
+
+    const prevSpec = inferredSpec;
+    const prevResource = lastGeneratedRef.current?.resource ?? null;
+    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
+    const prevVersion = lastGeneratedRef.current?.version;
+
     setInferredSpec(null);
     setParsedData(null);
     setAdapter(null);
@@ -103,6 +130,7 @@ export default function Home() {
         body: JSON.stringify({
           payload: sample,
           intent: connectPrompt.trim() || undefined,
+          existingSpec: connectPrompt.trim() && prevSpec ? prevSpec : undefined,
         }),
       });
 
@@ -127,8 +155,45 @@ export default function Home() {
       setAdapter(demoAdapter);
       setSpecSource(source);
 
+      lastGeneratedRef.current = { resource, dataSource: "connect", version: v };
+
       if (source === "ai") {
-        toast.success("UI generated successfully");
+        const showDiff =
+          prevSpec &&
+          prevDataSource === "connect" &&
+          prevResource === resource;
+        if (showDiff) {
+          const diff = computeSpecDiff(prevSpec, specWithIdField);
+          const { added, removed } = formatDiffForDisplay(
+            diff,
+            prevSpec,
+            specWithIdField
+          );
+          if (added.length > 0 || removed.length > 0) {
+            const context =
+              prevVersion !== undefined && v !== prevVersion
+                ? `Switched to v${v}`
+                : connectPrompt.trim()
+                  ? "With prompt applied"
+                  : undefined;
+            const toastId = toast.success("UI generated successfully", {
+              description: (
+                <GenerationSuccessToast
+                  added={added}
+                  removed={removed}
+                  context={context}
+                />
+              ),
+              duration: 15000,
+              closeButton: true,
+            });
+            diffToastIdRef.current = toastId;
+          } else {
+            toast.success("UI generated successfully");
+          }
+        } else {
+          toast.success("UI generated successfully");
+        }
       } else {
         toast.warning("Using fallback parser", {
           description: "Generation failed, but a fallback spec was created.",
@@ -158,6 +223,15 @@ export default function Home() {
   };
 
   const handlePasteGenerate = async () => {
+    // Dismiss any visible diff toast before regenerating
+    if (diffToastIdRef.current != null) {
+      toast.dismiss(diffToastIdRef.current);
+      diffToastIdRef.current = null;
+    }
+
+    const prevSpec = inferredSpec;
+    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
+
     setInferredSpec(null);
     setParsedData(null);
     setAdapter(null);
@@ -179,6 +253,7 @@ export default function Home() {
         body: JSON.stringify({
           payload: parsed,
           intent: pastePrompt.trim() || undefined,
+          existingSpec: pastePrompt.trim() && prevSpec ? prevSpec : undefined,
         }),
       });
 
@@ -201,8 +276,37 @@ export default function Home() {
       setInferredSpec(spec);
       setSpecSource(source);
 
+      lastGeneratedRef.current = { resource: null, dataSource: "paste" };
+
       if (source === "ai") {
-        toast.success("UI generated successfully");
+        const showDiff = prevSpec && prevDataSource === "paste";
+        if (showDiff) {
+          const diff = computeSpecDiff(prevSpec, spec);
+          const { added, removed } = formatDiffForDisplay(
+            diff,
+            prevSpec,
+            spec
+          );
+          if (added.length > 0 || removed.length > 0) {
+            const context = pastePrompt.trim() ? "With prompt applied" : undefined;
+            const toastId = toast.success("UI generated successfully", {
+              description: (
+                <GenerationSuccessToast
+                  added={added}
+                  removed={removed}
+                  context={context}
+                />
+              ),
+              duration: 15000,
+              closeButton: true,
+            });
+            diffToastIdRef.current = toastId;
+          } else {
+            toast.success("UI generated successfully");
+          }
+        } else {
+          toast.success("UI generated successfully");
+        }
       } else {
         toast.warning("Using fallback parser", {
           description: "Generation failed, but a fallback spec was created.",
