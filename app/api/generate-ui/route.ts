@@ -5,11 +5,15 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getOpenAIClient } from "@/lib/ai/client";
+import { recordOpenAICall } from "@/lib/ai/metrics";
+import { samplePayloadForAI } from "@/lib/ai/payload-guard";
 import { SYSTEM_PROMPT, buildUserPrompt } from "@/lib/ai/prompt";
 import { UISpecSchema, type UISpec } from "@/lib/spec/schema";
 import { generateFallbackSpec } from "@/lib/inference/fallback-generator";
 
 const MAX_RETRIES = 2;
+/** Retry once for transient API errors (timeout, rate limit, etc.) */
+const MAX_API_RETRIES = 1;
 
 /**
  * Extract JSON from AI response (handles markdown code blocks)
@@ -52,6 +56,14 @@ function validateAISpec(aiResponse: string): UISpec {
 }
 
 /**
+ * Log non-OpenAI timing for debugging (validation, total request).
+ * OpenAI calls use recordOpenAICall() for structured metrics.
+ */
+function logTiming(op: string, ms: number) {
+  console.log(`[generate-ui] ${op}: ${ms.toFixed(0)}ms`);
+}
+
+/**
  * Call OpenAI API to generate UI spec
  */
 async function generateSpecWithAI(
@@ -63,7 +75,7 @@ async function generateSpecWithAI(
 ): Promise<UISpec> {
   const client = getOpenAIClient();
   let userPrompt = buildUserPrompt(payload, intent, existingSpec);
-  
+
   // Enhance prompt on retry with validation error feedback
   if (retryCount > 0 && previousError) {
     userPrompt += `\n\nIMPORTANT: The previous response failed validation (${previousError}). Please ensure:
@@ -72,18 +84,32 @@ async function generateSpecWithAI(
 - The response is valid JSON matching the exact schema
 - No markdown formatting, just pure JSON`;
   }
-  
+
+  const openaiStart = performance.now();
+  const model = "gpt-4o-mini";
   try {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini", // Using gpt-4o-mini for cost efficiency
+      model, // Using gpt-4o-mini for cost efficiency
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
       response_format: { type: "json_object" }, // Request JSON response
       temperature: 0.3, // Lower temperature for more deterministic output
+      max_tokens: 2048, // Room for complex schemas (many fields); 1024 caused truncation on large payloads
     });
-    
+    const openaiMs = performance.now() - openaiStart;
+    const usage = completion.usage;
+    recordOpenAICall({
+      timestamp: new Date().toISOString(),
+      model,
+      duration_ms: Math.round(openaiMs),
+      prompt_tokens: usage?.prompt_tokens ?? 0,
+      completion_tokens: usage?.completion_tokens ?? 0,
+      source: "api",
+      status: "success",
+    });
+
     const content = completion.choices[0]?.message?.content;
     if (!content) {
       throw new Error("Empty response from OpenAI");
@@ -91,7 +117,10 @@ async function generateSpecWithAI(
     
     // Validate the response
     try {
-      return validateAISpec(content);
+      const validateStart = performance.now();
+      const spec = validateAISpec(content);
+      logTiming("validation", performance.now() - validateStart);
+      return spec;
     } catch (validationError) {
       // If validation fails and we have retries left, retry with adjusted prompt
       if (retryCount < MAX_RETRIES) {
@@ -117,11 +146,46 @@ async function generateSpecWithAI(
       throw validationError;
     }
   } catch (error) {
+    // Record API/network failures only. Validation errors are already recorded as success above.
+    const isValidationError =
+      error instanceof Error &&
+      (error.message.includes("Could not extract valid JSON") ||
+        error.message.includes("validation") ||
+        (error as { name?: string }).name === "ZodError");
+    const isRetryableApiError =
+      error instanceof Error &&
+      (error.message.includes("timed out") ||
+        error.message.includes("timeout") ||
+        error.message.includes("rate limit") ||
+        error.message.includes("ECONNRESET"));
+
+    if (!isValidationError) {
+      const openaiMs = performance.now() - openaiStart;
+      recordOpenAICall({
+        timestamp: new Date().toISOString(),
+        model,
+        duration_ms: Math.round(openaiMs),
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        source: "api",
+        status: "error",
+      });
+    }
+
+    // Retry once for transient API errors (timeout, rate limit, etc.)
+    if (isRetryableApiError && retryCount < MAX_API_RETRIES) {
+      console.warn(
+        `OpenAI API error (attempt ${retryCount + 1}/${MAX_API_RETRIES + 1}), retrying:`,
+        error instanceof Error ? error.message : String(error)
+      );
+      return generateSpecWithAI(payload, intent, existingSpec, retryCount + 1);
+    }
+
     // If it's a validation error and we're out of retries, throw it
     if (error instanceof Error && error.message.includes("validation")) {
       throw error;
     }
-    
+
     // For other errors (API errors, network errors, etc.), throw them
     throw error;
   }
@@ -146,7 +210,9 @@ export async function POST(request: NextRequest) {
     }
     
     const { payload, intent, existingSpec } = body;
-    
+
+    const requestStart = performance.now();
+
     // Validate request body
     if (payload === undefined) {
       return NextResponse.json(
@@ -154,19 +220,24 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    
+
+    // Sample large payloads to stay within token limits (avoids truncation + high cost)
+    const sampledPayload = samplePayloadForAI(payload);
+
     let spec: UISpec;
     let source: "ai" | "fallback" = "ai";
     
     try {
       // Try AI generation first
-      spec = await generateSpecWithAI(payload, intent, existingSpec);
+      spec = await generateSpecWithAI(sampledPayload, intent, existingSpec);
+      logTiming("total (request → response)", performance.now() - requestStart);
     } catch (aiError) {
       console.error("AI generation failed, using fallback:", aiError);
       
       // Use fallback generator
+      logTiming("total (AI failed, used fallback)", performance.now() - requestStart);
       try {
-        spec = generateFallbackSpec(payload);
+        spec = generateFallbackSpec(sampledPayload);
         source = "fallback";
       } catch (fallbackError) {
         console.error("Fallback generator also failed:", fallbackError);

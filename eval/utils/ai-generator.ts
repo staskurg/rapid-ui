@@ -4,6 +4,8 @@
  */
 
 import { getOpenAIClient } from "@/lib/ai/client";
+import { recordOpenAICall } from "@/lib/ai/metrics";
+import { samplePayloadForAI } from "@/lib/ai/payload-guard";
 import { SYSTEM_PROMPT, buildUserPrompt } from "@/lib/ai/prompt";
 import { UISpecSchema, type UISpec } from "@/lib/spec/schema";
 import { generateFallbackSpec } from "@/lib/inference/fallback-generator";
@@ -62,7 +64,8 @@ export async function generateSpecWithAI(
   previousError?: string
 ): Promise<{ spec: UISpec; rawResponse: string; source: "ai" | "fallback" }> {
   const client = getOpenAIClient();
-  let userPrompt = buildUserPrompt(payload, intent, existingSpec);
+  const sampledPayload = samplePayloadForAI(payload);
+  let userPrompt = buildUserPrompt(sampledPayload, intent, existingSpec);
 
   // Enhance prompt on retry with validation error feedback
   if (retryCount > 0 && previousError) {
@@ -73,15 +76,29 @@ export async function generateSpecWithAI(
 - No markdown formatting, just pure JSON`;
   }
 
+  const model = "gpt-4o-mini";
+  const openaiStart = performance.now();
   try {
     const completion = await client.chat.completions.create({
-      model: "gpt-4o-mini", // Using gpt-4o-mini for cost efficiency
+      model, // Using gpt-4o-mini for cost efficiency
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         { role: "user", content: userPrompt },
       ],
       response_format: { type: "json_object" }, // Request JSON response
       temperature: 0.3, // Lower temperature for more deterministic output
+      max_tokens: 2048, // Room for complex schemas; 1024 caused truncation on large payloads
+    });
+    const openaiMs = performance.now() - openaiStart;
+    const usage = completion.usage;
+    recordOpenAICall({
+      timestamp: new Date().toISOString(),
+      model,
+      duration_ms: Math.round(openaiMs),
+      prompt_tokens: usage?.prompt_tokens ?? 0,
+      completion_tokens: usage?.completion_tokens ?? 0,
+      source: "eval",
+      status: "success",
     });
 
     const content = completion.choices[0]?.message?.content;
@@ -107,7 +124,7 @@ export async function generateSpecWithAI(
 
         // Retry with enhanced prompt
         return generateSpecWithAI(
-          payload,
+          sampledPayload,
           intent,
           existingSpec,
           retryCount + 1,
@@ -117,7 +134,7 @@ export async function generateSpecWithAI(
 
       // Out of retries, use fallback
       console.warn("AI generation failed after retries, using fallback");
-      const fallbackSpec = generateFallbackSpec(payload);
+      const fallbackSpec = generateFallbackSpec(sampledPayload);
       return {
         spec: fallbackSpec,
         rawResponse: content, // Keep the failed response for analysis
@@ -125,9 +142,20 @@ export async function generateSpecWithAI(
       };
     }
   } catch (error) {
+    // Record API/network failure (validation failures are recorded as success above)
+    const openaiMs = performance.now() - openaiStart;
+    recordOpenAICall({
+      timestamp: new Date().toISOString(),
+      model,
+      duration_ms: Math.round(openaiMs),
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      source: "eval",
+      status: "error",
+    });
     // For API errors, network errors, etc., use fallback
     console.warn("AI generation error, using fallback:", error);
-    const fallbackSpec = generateFallbackSpec(payload);
+    const fallbackSpec = generateFallbackSpec(sampledPayload);
     return {
       spec: fallbackSpec,
       rawResponse: error instanceof Error ? error.message : String(error),

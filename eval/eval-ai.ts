@@ -42,6 +42,7 @@ interface Config {
   failuresDir: string;
   fixtureName?: string; // If specified, only run this fixture
   replayFailures?: boolean; // If true, replay saved failures
+  quick?: boolean; // If true, run 2 runs instead of default (faster iteration)
 }
 
 /**
@@ -55,11 +56,15 @@ function parseArgs(): Config {
     reportsDir: DEFAULT_REPORTS_DIR,
     failuresDir: DEFAULT_FAILURES_DIR,
     replayFailures: false,
+    quick: false,
   };
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === "--runs" && i + 1 < args.length) {
+    if (arg === "--quick" || arg === "-q") {
+      config.quick = true;
+      config.runs = 2;
+    } else if (arg === "--runs" && i + 1 < args.length) {
       config.runs = parseInt(args[i + 1], 10);
       i++;
     } else if (arg === "--fixture" && i + 1 < args.length) {
@@ -78,6 +83,7 @@ Usage: tsx eval/eval-ai.ts [options]
 
 Options:
   --runs N           Number of runs per fixture (default: ${DEFAULT_RUNS})
+  --quick, -q        Quick mode: 2 runs per fixture (faster iteration)
   --fixture NAME     Run specific fixture only
   --output-dir DIR   Custom report output directory (default: eval/reports)
   --replay-failures  Replay saved failures from eval/fixtures/failures/
@@ -199,12 +205,11 @@ async function evaluateFixture(
   console.log(`\nEvaluating fixture: ${fixtureName} (${runs} runs)`);
 
   const payload = loadFixture(fixturePath);
-  const runResults: RunResult[] = [];
 
-  // Run AI generation N times
-  for (let i = 0; i < runs; i++) {
-    process.stdout.write(`  Run ${i + 1}/${runs}... `);
-
+  // Run AI generation N times in parallel (no delay needed)
+  process.stdout.write(`  Running ${runs} runs in parallel... `);
+  const runPromises = Array.from({ length: runs }, async (_, i) => {
+    const runNumber = i + 1;
     try {
       const { spec, rawResponse, source } = await generateSpecWithAI(payload);
       const validation = validateSpec(spec);
@@ -215,7 +220,7 @@ async function evaluateFixture(
       }
 
       const runResult: RunResult = {
-        runNumber: i + 1,
+        runNumber,
         spec: validation.isValid ? spec : null,
         rawResponse,
         source,
@@ -225,24 +230,19 @@ async function evaluateFixture(
         error: validation.errors.length > 0 ? validation.errors.join("; ") : undefined,
       };
 
-      runResults.push(runResult);
-
       if (!validation.isValid) {
-        saveFailure(fixtureName, i + 1, rawResponse, validation.errors);
+        saveFailure(fixtureName, runNumber, rawResponse, validation.errors);
       }
 
-      process.stdout.write(
-        validation.isValid ? "✓\n" : `✗ (${validation.errors[0]})\n`
-      );
+      return runResult;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      process.stdout.write(`✗ (${errorMessage})\n`);
-
-      runResults.push({
-        runNumber: i + 1,
+      saveFailure(fixtureName, runNumber, errorMessage, [errorMessage]);
+      return {
+        runNumber,
         spec: null,
         rawResponse: errorMessage,
-        source: "fallback",
+        source: "fallback" as const,
         validationResult: {
           isValid: false,
           errors: [errorMessage],
@@ -251,16 +251,19 @@ async function evaluateFixture(
         logicalResult: null,
         fingerprint: null,
         error: errorMessage,
-      });
-
-      saveFailure(fixtureName, i + 1, errorMessage, [errorMessage]);
+      };
     }
+  });
 
-    // Small delay between runs to avoid rate limiting
-    if (i < runs - 1) {
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-  }
+  const runResults = (await Promise.all(runPromises)).sort(
+    (a, b) => a.runNumber - b.runNumber
+  );
+
+  // Print per-run results
+  const statuses = runResults.map((r) =>
+    r.validationResult.isValid ? "✓" : `✗ (${r.error ?? r.validationResult.errors[0] ?? "?"})`
+  );
+  console.log(statuses.join(" "));
 
   // Analyze results
   const validRuns = runResults.filter((r) => r.validationResult.isValid).length;
@@ -372,7 +375,7 @@ async function main() {
 
   console.log("AI Evaluation Harness");
   console.log("=".repeat(50));
-  console.log(`Runs per fixture: ${config.runs}`);
+  console.log(`Runs per fixture: ${config.runs}${config.quick ? " (quick mode)" : ""}`);
   console.log(`Fixtures directory: ${config.fixturesDir}`);
   console.log(`Reports directory: ${config.reportsDir}`);
   if (config.replayFailures) {

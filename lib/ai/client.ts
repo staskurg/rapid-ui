@@ -4,6 +4,12 @@
 
 import OpenAI from "openai";
 
+/** Request timeout in ms. 2 min for complex payloads; override via OPENAI_TIMEOUT_MS env. */
+const REQUEST_TIMEOUT_MS =
+  typeof process.env.OPENAI_TIMEOUT_MS === "string"
+    ? parseInt(process.env.OPENAI_TIMEOUT_MS, 10)
+    : 120_000;
+
 /**
  * Get OpenAI API key from environment variables
  */
@@ -31,6 +37,7 @@ export function getOpenAIClient(): OpenAI {
       const apiKey = getApiKey();
       clientInstance = new OpenAI({
         apiKey,
+        timeout: REQUEST_TIMEOUT_MS,
       });
     } catch (error) {
       throw error;

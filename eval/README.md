@@ -8,6 +8,9 @@ Comprehensive evaluation harness for testing AI-generated UI specifications. Mea
 # Run evaluation with default settings (5 runs per fixture)
 npm run eval:ai
 
+# Quick mode: 2 runs per fixture (faster iteration)
+npm run eval:ai -- --quick
+
 # Run with custom number of runs
 npm run eval:ai -- --runs 10
 
