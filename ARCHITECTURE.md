@@ -14,51 +14,70 @@ All flows use AI (OpenAI) to generate UI specifications, with deterministic fall
 
 ## High-Level Architecture
 
+The diagram below shows the **generation workflow** (how a UI spec is produced) and the **runtime flow** (how the rendered UI fetches and mutates data).
+
+### Generation Workflow
+
+User configures a data source, clicks Generate, and the system produces a validated UI spec:
+
+1. **Connect** — User selects tab (Demo / External / Paste) and configures (resource+version, URL, or JSON).
+2. **Sample** — `adapter.getSample()` fetches sample data: Demo API returns seeds; Proxy fetches external URL; Paste uses textarea.
+3. **Spec** — Sample → `generate-ui` API → Zod validation → UISpec.
+4. **Output** — Spec is passed to SchemaRenderer (renders table/form/filters) and Spec Preview (shows JSON).
+
+### Runtime Flow
+
+After generation, the rendered UI fetches and mutates data:
+
+- **Demo**: SchemaRenderer uses `adapter.list()` → Demo API (session store); CRUD → Demo API.
+- **External**: SchemaRenderer uses `adapter.list()` → Proxy → external URL; read-only.
+- **Paste**: No adapter. SchemaRenderer uses `initialData` (parsed JSON); CRUD is local React state.
+
+**Note:** Demo API and Proxy API are mutually exclusive—the active tab determines which path is used. Paste JSON skips the sample fetch and sends the pasted payload directly to `generate-ui`; it also skips the adapter and uses local state for CRUD.
+
 ```mermaid
-flowchart TB
-    subgraph singlePage [Single Page]
-        Tabs["Three Tabs: Demo API, External API, Paste JSON"]
-        Connect[Connect Section]
-        Dashboard[Dashboard Section]
+graph TB
+    subgraph Connect [1. Connect]
+        Tabs[Demo, External, Paste]
+        Config[Resource+Version or URL or JSON]
+        Generate[Generate Button]
     end
 
-    subgraph connectSection [Connect]
-        ResourceSelect[Resource + Version]
-        ExternalURL["External API URL + DataPath"]
-        GenerateBtn[Generate Button]
-    end
-
-    subgraph pipeline [Generation Pipeline]
-        GetSample["adapter.getSample"]
-        GenerateUI["generate-ui API"]
-        Validate[Zod Validation]
-    end
-
-    subgraph dataLayer [Data Layer]
-        DemoAPI[Demo API]
+    subgraph Sample [2. Fetch Sample]
+        GetSample[adapter.getSample]
+        DemoAPI[Demo API sample]
         ProxyAPI[Proxy API]
-        Seeds[(Seeds)]
-        SessionStore[(Session Store)]
     end
 
-    subgraph dashboard [Dashboard]
-        Adapter[CrudAdapter]
+    subgraph Spec [3. Generate Spec]
+        GenerateUI[generate-ui API]
+        Validate[Zod]
+    end
+
+    subgraph Output [4. Output]
         Renderer[SchemaRenderer]
+        SpecPreview[Spec Preview]
     end
 
-    Tabs --> Connect
-    ResourceSelect --> GetSample
-    ExternalURL --> GetSample
+    subgraph Runtime [5. Runtime Data - Demo or External only]
+        Adapter[CrudAdapter]
+        DemoSession[Demo API session]
+        ProxyFetch[Proxy fetch]
+    end
+
+    Tabs --> Config
+    Config --> Generate
+    Generate --> GetSample
     GetSample --> DemoAPI
     GetSample --> ProxyAPI
-    DemoAPI --> Seeds
-    DemoAPI --> SessionStore
-    GetSample --> GenerateUI
+    DemoAPI --> GenerateUI
+    ProxyAPI --> GenerateUI
     GenerateUI --> Validate
     Validate --> Renderer
-    DemoAPI --> Adapter
-    ProxyAPI --> Adapter
-    Adapter --> Renderer
+    Validate --> SpecPreview
+    Renderer --> Adapter
+    Adapter --> DemoSession
+    Adapter --> ProxyFetch
 ```
 
 ## Data Sources
