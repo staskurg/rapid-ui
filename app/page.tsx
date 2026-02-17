@@ -15,21 +15,33 @@ import { formatDiffForDisplay } from "@/lib/spec/diffFormatters";
 import { GenerationSuccessToast } from "@/components/connect/GenerationSuccessToast";
 import { getRandomExample, getRandomPrompt, findExampleByJson } from "@/lib/examples";
 import { createSessionId } from "@/lib/session";
-import { createDemoAdapter } from "@/lib/adapters";
+import { createDemoAdapter, createExternalAdapter } from "@/lib/adapters";
 import { getResourceBySlug } from "@/lib/demoStore/resources";
 import type { DemoVersion } from "@/lib/demoStore/seeds";
 import { ConnectSection } from "@/components/connect/ConnectSection";
+import { ExternalApiSection } from "@/components/connect/ExternalApiSection";
+import {
+  getRandomExternalExample,
+  getRandomExternalPrompt,
+  findExternalExampleByUrl,
+} from "@/lib/externalApiExamples";
 
-type DataSource = "connect" | "paste";
+type DataSource = "demo" | "external" | "paste";
 
 export default function Home() {
-  const [dataSource, setDataSource] = React.useState<DataSource>("connect");
+  const [dataSource, setDataSource] = React.useState<DataSource>("demo");
   const [sessionId] = React.useState(() => createSessionId());
 
-  // Connect state
+  // Demo API state
   const [resource, setResource] = React.useState("users");
   const [version, setVersion] = React.useState<DemoVersion>(1);
   const [connectPrompt, setConnectPrompt] = React.useState("");
+
+  // External API state
+  const [externalUrl, setExternalUrl] = React.useState("");
+  const [externalDataPath, setExternalDataPath] = React.useState("");
+  const [externalPrompt, setExternalPrompt] = React.useState("");
+  const [showExternalPrompt, setShowExternalPrompt] = React.useState(false);
 
   // Paste JSON state
   const [jsonInput, setJsonInput] = React.useState("");
@@ -39,7 +51,7 @@ export default function Home() {
   // Generated UI state
   const [inferredSpec, setInferredSpec] = React.useState<UISpec | null>(null);
   const [parsedData, setParsedData] = React.useState<Record<string, unknown>[] | null>(null);
-  const [adapter, setAdapter] = React.useState<ReturnType<typeof createDemoAdapter> | null>(null);
+  const [adapter, setAdapter] = React.useState<ReturnType<typeof createDemoAdapter> | ReturnType<typeof createExternalAdapter> | null>(null);
   const [isGenerating, setIsGenerating] = React.useState(false);
   const [specSource, setSpecSource] = React.useState<"ai" | "fallback" | "deterministic" | null>(null);
   const [refreshTrigger, setRefreshTrigger] = React.useState(0);
@@ -48,11 +60,14 @@ export default function Home() {
     resource: string | null;
     dataSource: DataSource;
     version?: DemoVersion;
+    externalUrl?: string;
   } | null>(null);
   const diffToastIdRef = React.useRef<string | number | null>(null);
 
   const hasGeneratedUI = inferredSpec !== null && (parsedData !== null || adapter !== null);
-  const isConnectMode = adapter !== null;
+  const isAdapterMode = adapter !== null;
+  const isDemoMode = adapter?.mode === "demo";
+  const isExternalMode = adapter?.mode === "external";
 
   const handlePasteExample = () => {
     const example = getRandomExample();
@@ -89,6 +104,10 @@ export default function Home() {
     setPastePrompt("");
     setShowPastePrompt(false);
     setConnectPrompt("");
+    setExternalUrl("");
+    setExternalDataPath("");
+    setExternalPrompt("");
+    setShowExternalPrompt(false);
     lastGeneratedRef.current = null;
     toast.info("Input cleared");
   };
@@ -155,12 +174,12 @@ export default function Home() {
       setAdapter(demoAdapter);
       setSpecSource(source);
 
-      lastGeneratedRef.current = { resource, dataSource: "connect", version: v };
+      lastGeneratedRef.current = { resource, dataSource: "demo", version: v };
 
       if (source === "ai") {
         const showDiff =
           prevSpec &&
-          prevDataSource === "connect" &&
+          prevDataSource === "demo" &&
           prevResource === resource;
         if (showDiff) {
           const diff = computeSpecDiff(prevSpec, specWithIdField);
@@ -204,6 +223,120 @@ export default function Home() {
         toast.error("Generation failed", { description: err.message });
       }
       console.error("Connect generate error:", err);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleExternalGenerate = async () => {
+    if (diffToastIdRef.current != null) {
+      toast.dismiss(diffToastIdRef.current);
+      diffToastIdRef.current = null;
+    }
+
+    const prevSpec = inferredSpec;
+    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
+    const prevExternalUrl = lastGeneratedRef.current?.externalUrl ?? null;
+
+    setInferredSpec(null);
+    setParsedData(null);
+    setAdapter(null);
+    setIsGenerating(true);
+
+    const url = externalUrl.trim();
+    if (!url) {
+      toast.error("Please enter an API URL");
+      setIsGenerating(false);
+      return;
+    }
+
+    try {
+      const externalAdapter = createExternalAdapter(
+        url,
+        externalDataPath.trim() || undefined
+      );
+      const sample = await externalAdapter.getSample();
+
+      if (!sample || sample.length === 0) {
+        toast.error("API returned no data", {
+          description: "Cannot generate UI from empty sample.",
+        });
+        setIsGenerating(false);
+        return;
+      }
+
+      const response = await fetch("/api/generate-ui", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          payload: sample,
+          intent: externalPrompt.trim() || undefined,
+          existingSpec: externalPrompt.trim() && prevSpec ? prevSpec : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        const msg = (err as { error?: string }).error ?? `Failed: ${response.status}`;
+        toast.error("Failed to generate UI", { description: msg });
+        throw new Error(msg);
+      }
+
+      const result = await response.json();
+      const { spec, source } = result;
+
+      setInferredSpec(spec);
+      setAdapter(externalAdapter);
+      setSpecSource(source);
+
+      lastGeneratedRef.current = {
+        resource: "external",
+        dataSource: "external",
+        externalUrl: url,
+      };
+
+      if (source === "ai") {
+        const showDiff =
+          prevSpec &&
+          prevDataSource === "external" &&
+          prevExternalUrl === url;
+        if (showDiff) {
+          const diff = computeSpecDiff(prevSpec, spec);
+          const { added, removed } = formatDiffForDisplay(
+            diff,
+            prevSpec,
+            spec
+          );
+          if (added.length > 0 || removed.length > 0) {
+            const context = externalPrompt.trim() ? "With prompt applied" : undefined;
+            const toastId = toast.success("UI generated successfully", {
+              description: (
+                <GenerationSuccessToast
+                  added={added}
+                  removed={removed}
+                  context={context}
+                />
+              ),
+              duration: 15000,
+              closeButton: true,
+            });
+            diffToastIdRef.current = toastId;
+          } else {
+            toast.success("UI generated successfully");
+          }
+        } else {
+          toast.success("UI generated successfully");
+        }
+      } else {
+        toast.warning("Using fallback parser", {
+          description: "Generation failed, but a fallback spec was created.",
+        });
+      }
+    } catch (err) {
+      if (err instanceof Error && !err.message.includes("Failed")) {
+        toast.error("Generation failed", { description: err.message });
+      }
+      console.error("External generate error:", err);
     } finally {
       setIsGenerating(false);
     }
@@ -330,6 +463,35 @@ export default function Home() {
     setVersion(1);
   };
 
+  const handleExternalExample = () => {
+    const example = getRandomExternalExample();
+    setExternalUrl(example.url);
+    setExternalDataPath(example.dataPath);
+    if (showExternalPrompt) {
+      setExternalPrompt(getRandomExternalPrompt(example));
+    }
+  };
+
+  const handleExternalTryPrompt = () => {
+    if (!externalUrl.trim()) {
+      toast.info("Please enter an API URL first");
+      return;
+    }
+    const example = findExternalExampleByUrl(externalUrl);
+    if (example) {
+      setExternalPrompt(getRandomExternalPrompt(example));
+    } else {
+      setExternalPrompt(getRandomExternalPrompt(getRandomExternalExample()));
+    }
+  };
+
+  const handleClearExternal = () => {
+    setExternalUrl("");
+    setExternalDataPath("");
+    setExternalPrompt("");
+    setShowExternalPrompt(false);
+  };
+
   return (
     <div className="flex min-h-screen bg-background">
       {/* Left side panel: Generate UI + UI Spec (20–30%) */}
@@ -348,17 +510,18 @@ export default function Home() {
         </header>
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {/* Connect / Paste JSON Toggle */}
+          {/* Demo API | External API | Paste JSON */}
           <Tabs
             value={dataSource}
             onValueChange={(v) => setDataSource(v as DataSource)}
           >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="connect">Connect</TabsTrigger>
-              <TabsTrigger value="paste">Paste JSON</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="demo" className="text-xs">Demo API</TabsTrigger>
+              <TabsTrigger value="external" className="text-xs">External API</TabsTrigger>
+              <TabsTrigger value="paste" className="text-xs">Paste JSON</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="connect" className="mt-4">
+            <TabsContent value="demo" className="mt-4">
               <ConnectSection
                 resource={resource}
                 version={version}
@@ -367,6 +530,24 @@ export default function Home() {
                 onVersionChange={handleConnectVersionChange}
                 onPromptChange={setConnectPrompt}
                 onGenerate={() => handleConnectGenerate()}
+                isGenerating={isGenerating}
+              />
+            </TabsContent>
+
+            <TabsContent value="external" className="mt-4">
+              <ExternalApiSection
+                url={externalUrl}
+                dataPath={externalDataPath}
+                prompt={externalPrompt}
+                showPrompt={showExternalPrompt}
+                onUrlChange={setExternalUrl}
+                onDataPathChange={setExternalDataPath}
+                onPromptChange={setExternalPrompt}
+                onShowPromptChange={setShowExternalPrompt}
+                onTryExample={handleExternalExample}
+                onTryPrompt={handleExternalTryPrompt}
+                onClear={handleClearExternal}
+                onGenerate={handleExternalGenerate}
                 isGenerating={isGenerating}
               />
             </TabsContent>
@@ -475,7 +656,7 @@ export default function Home() {
                       </>
                     )}
                   </Button>
-                  {hasGeneratedUI && !isConnectMode && (
+                  {hasGeneratedUI && !isAdapterMode && (
                     <Button variant="ghost" size="sm" onClick={handleReset} disabled={isGenerating}>
                       Clear
                     </Button>
@@ -516,13 +697,15 @@ export default function Home() {
             <div className="shrink-0 flex items-center justify-between gap-3 mb-4">
               <div className="rounded-md bg-primary/5 dark:bg-primary/10 border border-primary/20 px-3 py-2">
                 <p className="text-xs text-foreground">
-                  {isConnectMode
+                  {isDemoMode
                     ? "API-backed. CRUD persists in your session."
+                    : isExternalMode
+                    ? "Read-only preview"
                     : "Generated from your backend schema."}
                 </p>
               </div>
               <div className="flex gap-2">
-                {isConnectMode && (
+                {isDemoMode && (
                   <Button variant="outline" size="sm" onClick={handleResetData}>
                     <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
                     Reset Data
@@ -569,7 +752,7 @@ export default function Home() {
               ) : (
                 <div className="flex-1 min-h-0">
                   <ErrorBoundary>
-                {isConnectMode && adapter ? (
+                {adapter ? (
                     <SchemaRenderer
                       spec={inferredSpec}
                       adapter={adapter}

@@ -291,6 +291,13 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         </div>
       )}
 
+      {/* Read-only preview banner (external API) */}
+      {adapter?.mode === "external" && (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
+          Read-only preview — external API does not support create, edit, or delete
+        </div>
+      )}
+
       {/* Header with Create Button */}
       <div className="flex items-center justify-between">
         <div>

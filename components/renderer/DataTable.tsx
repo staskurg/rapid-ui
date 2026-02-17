@@ -192,7 +192,7 @@ function renderCell(value: unknown, field: Field): React.ReactNode {
     case "boolean":
       return (
         <Badge variant={value ? "default" : "secondary"}>
-          {value ? "Active" : "Inactive"}
+          {value ? "True" : "False"}
         </Badge>
       );
     case "enum":
