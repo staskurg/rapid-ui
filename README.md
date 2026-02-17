@@ -4,18 +4,43 @@ Generate deterministic UIs from backend data. An AI-powered developer tool that 
 
 ## Overview
 
-Paste your backend data → instantly get a schema-driven UI.
+Connect to an API or paste JSON → instantly get a schema-driven CRUD dashboard.
 
-The tool demonstrates that AI can reason over backend structure and generate a constrained UI specification that renders into a real working interface. No frontend coding required—just paste JSON and get a fully functional CRUD interface from your schema.
+RapidUI offers three ways to get started:
+
+- **Demo API** — One-click dashboard from built-in resources (Users, Products, Tasks, Orders, etc.) with full CRUD
+- **External API** — Connect to any public REST API for read-only preview (e.g. JSONPlaceholder, ReqRes)
+- **Paste JSON** — Paste arbitrary JSON for backward compatibility and ad-hoc use
+
+No frontend coding required—just connect or paste and get a fully functional interface.
 
 ## Quick Demo
 
-1. **Paste JSON payload** (or use the "Try Example" button)
-2. **Optionally add a prompt** to customize the UI (e.g., "Hide id field, make name searchable")
-3. **Click "Generate with AI"** or **"Parse JSON"** for deterministic parsing
-4. **Get a working UI** with full CRUD operations, filtering, and search
+### Option A: Demo API (fastest)
 
-### Example Payload
+1. Open the **Demo API** tab
+2. Select a resource (e.g. **Users**) and version (v1, v2, or v3)
+3. Optionally add a prompt (e.g. "Hide id from table")
+4. Click **Generate**
+5. Get a live CRUD dashboard with Create, Edit, Delete, filters, and search
+
+### Option B: External API
+
+1. Open the **External API** tab
+2. Enter a URL (e.g. `https://jsonplaceholder.typicode.com/users`)
+3. If the response is wrapped (e.g. `{ data: [...] }`), select the data path
+4. Click **Generate**
+5. Get a read-only preview dashboard
+
+### Option C: Paste JSON
+
+1. Open the **Paste JSON** tab
+2. Paste a JSON payload (or use "Try Example")
+3. Optionally add a prompt
+4. Click **Generate with AI** or **Parse JSON**
+5. Get a working UI with full CRUD (local state), filtering, and search
+
+### Example Payload (Paste JSON)
 
 ```json
 [
@@ -45,11 +70,13 @@ The tool demonstrates that AI can reason over backend structure and generate a c
 
 ## Features
 
-- **Instant UI Generation**: Paste JSON payload or OpenAPI snippet to generate a complete interface
-- **CRUD Operations**: Full create, read, update, delete functionality
-- **Smart Field Detection**: Automatically detects field types and generates appropriate form controls
-- **Filtering & Search**: Built-in filtering capabilities for data tables
-- **Type-Safe**: Built with TypeScript and Zod validation
+- **Three data sources**: Demo API (full CRUD), External API (read-only preview), Paste JSON (local state)
+- **One-click generation**: Connect → Generate → Dashboard in seconds
+- **Instant UI generation**: Paste JSON or connect to API to generate a complete interface
+- **CRUD operations**: Full create, read, update, delete (Demo API and Paste JSON)
+- **Smart field detection**: Automatically detects field types and generates appropriate form controls
+- **Filtering & search**: Built-in filtering capabilities for data tables
+- **Type-safe**: Built with TypeScript and Zod validation
 
 ## Tech Stack
 
@@ -131,23 +158,26 @@ See [eval/README.md](./eval/README.md) for eval options (`--fixture`, `--runs`, 
 
 ```
 rapid-ui/
-├── app/                    # Next.js App Router pages
+├── app/
 │   ├── api/               # API routes
-│   └── page.tsx           # Main page
+│   │   ├── demo/          # Demo API (CRUD, sample, reset)
+│   │   ├── generate-ui/   # AI spec generation
+│   │   └── proxy/         # External API proxy (read-only)
+│   └── page.tsx           # Main page (three tabs)
 ├── components/
-│   └── renderer/          # Renderer components (schema-driven UI)
+│   ├── connect/           # Connect section (Demo, External, Paste)
+│   └── renderer/          # Schema-driven UI (table, form, filters)
 ├── lib/
+│   ├── adapters/          # CrudAdapter (demo, external)
 │   ├── ai/                # AI integration
-│   ├── inference/         # Data inference logic
+│   ├── demoStore/        # Demo seeds and session store
+│   ├── inference/        # Data inference logic
 │   └── spec/              # UI spec handling
-├── tests/                  # Tests (automated + manual examples)
-│   ├── examples/          # Manual test examples
-│   ├── ai/                # AI test fixtures
-│   ├── inference/         # Inference tests
-│   ├── renderer/          # Renderer tests
-│   └── spec/              # Schema tests
-├── types/                 # TypeScript type definitions
-└── styles/                # Additional styles
+├── tests/
+│   ├── adapters/         # Adapter tests
+│   ├── examples/         # Manual test examples
+│   └── utils/            # Utility tests
+└── styles/
 ```
 
 ## Environment Variables
@@ -170,15 +200,16 @@ This project is configured for deployment on Vercel:
 
 ## How It Works
 
-1. **Payload Parsing**: JSON payload is parsed to extract structure (field types, nested objects, enums)
-2. **AI Generation** (optional): OpenAI analyzes the payload and generates a UI specification
-3. **Fallback**: If AI fails, deterministic parser creates a valid spec
-4. **Rendering**: UI spec is rendered into React components (table, forms, filters)
-5. **CRUD Operations**: All operations work on client-side state (ready for backend integration)
+1. **Connect or paste**: Choose Demo API, External API, or Paste JSON
+2. **Sample fetch**: Adapter fetches sample data (seeds for demo, proxy for external, or pasted JSON)
+3. **Spec generation**: AI (or deterministic parser) generates a UI specification from the payload
+4. **Validation**: Zod validates the spec
+5. **Rendering**: SchemaRenderer renders table, forms, and filters from the spec
+6. **CRUD**: Demo API and Paste JSON support full CRUD; External API is read-only
 
-## Features
+## Feature Details
 
-- ✅ **Smart Type Detection**: Automatically detects strings, numbers, booleans, and enums
+- ✅ **Smart type detection**: Automatically detects strings, numbers, booleans, and enums
 - ✅ **Nested Object Support**: Flattens nested objects (e.g., `user.name` → "User Name")
 - ✅ **Enum Detection**: Identifies fields with limited distinct values (≤5) as enums
 - ✅ **AI-Powered Customization**: Use natural language prompts to customize the UI

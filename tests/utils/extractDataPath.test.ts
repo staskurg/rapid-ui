@@ -1,5 +1,5 @@
 /**
- * Phase 4: extractArrayFromResponse — data path extraction
+ * extractArrayFromResponse — data path extraction
  */
 
 import { describe, it, expect } from "vitest";

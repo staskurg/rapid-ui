@@ -1,6 +1,8 @@
 # Edge Case Test Examples
 
-Use these examples to test edge case handling in the UI. Copy and paste them into the JSON Payload field and test both "Parse JSON" and "Generate with AI" to verify edge cases are handled correctly.
+Use these examples to test edge case handling in the UI. Copy and paste them into the JSON Payload field (Paste JSON tab) and test both "Parse JSON" and "Generate with AI" to verify edge cases are handled correctly.
+
+> **Note:** These examples also work via the **Demo API** tab or **External API** tab when the data structure matches.
 
 ## 🧪 Edge Case Test Examples
 

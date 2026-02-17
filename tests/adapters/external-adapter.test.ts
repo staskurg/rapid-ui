@@ -1,5 +1,5 @@
 /**
- * Phase 4: External adapter — read-only adapter for external APIs
+ * External adapter — read-only adapter for external APIs
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";

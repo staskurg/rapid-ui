@@ -1,6 +1,8 @@
 # Test Examples for AI Generation
 
-Use these examples to test the AI generation feature. Copy and paste them into the JSON Payload field, optionally add an Intent, and click "Generate with AI".
+Use these examples to test the AI generation feature. Copy and paste them into the JSON Payload field (Paste JSON tab), optionally add an Intent, and click "Generate with AI".
+
+> **Note:** These examples also work via the **Demo API** tab (select a matching resource like Users, Products, or Tasks) or the **External API** tab (if you have a REST endpoint that returns similar data).
 
 ## 🎯 Quick Test Examples
 

@@ -1,6 +1,6 @@
 # Demo API — Manual Testing Guide
 
-Test the Phase 1 demo API endpoints. Ensure the dev server is running:
+Test the demo API endpoints. Ensure the dev server is running:
 
 ```bash
 npm run dev

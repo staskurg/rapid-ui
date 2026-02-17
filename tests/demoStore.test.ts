@@ -1,5 +1,5 @@
 /**
- * Phase 1: Demo store + seeds + session isolation
+ * Demo store + seeds + session isolation
  */
 
 import { describe, it, expect } from "vitest";
