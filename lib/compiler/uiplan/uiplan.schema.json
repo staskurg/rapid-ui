@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rapiduidev/schemas/uiplanir.schema.json",
+  "title": "UiPlanIR",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["resources"],
+  "properties": {
+    "resources": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/ResourcePlan" }
+    }
+  },
+  "$defs": {
+    "ResourcePlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "views"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "views": { "$ref": "#/$defs/ViewsPlan" }
+      }
+    },
+    "ViewsPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "list": { "$ref": "#/$defs/ViewPlan" },
+        "detail": { "$ref": "#/$defs/ViewPlan" },
+        "create": { "$ref": "#/$defs/ViewPlan" },
+        "edit": { "$ref": "#/$defs/ViewPlan" }
+      }
+    },
+    "ViewPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fields"],
+      "properties": {
+        "fields": {
+          "type": "array",
+          "minItems": 0,
+          "items": { "$ref": "#/$defs/FieldPlan" }
+        }
+      }
+    },
+    "FieldPlan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "label": { "type": "string" },
+        "readOnly": { "type": "boolean" },
+        "order": { "type": "number" }
+      }
+    }
+  }
+}
