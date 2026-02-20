@@ -1,0 +1,204 @@
+openapi: 3.1.0
+info:
+  title: RapidUI Golden Spec 2 — Products CRUD (Path Grouping, Prefix Strip)
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+paths:
+  /api/v1/products:
+    get:
+      operationId: listProducts
+      summary: List products
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [draft, active, archived]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductList"
+    post:
+      operationId: createProduct
+      summary: Create product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+  /api/v1/products/{sku}:
+    get:
+      operationId: getProduct
+      summary: Get product by SKU
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    patch:
+      operationId: patchProduct
+      summary: Update product fields
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductPatchInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+    delete:
+      operationId: deleteProduct
+      summary: Delete product
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+components:
+  schemas:
+    ProductList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Product"
+    Product:
+      type: object
+      additionalProperties: false
+      required: [sku, name, status, price, inventory]
+      properties:
+        sku:
+          type: string
+          description: Stock keeping unit
+        name:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, archived]
+        price:
+          $ref: "#/components/schemas/Money"
+        inventory:
+          $ref: "#/components/schemas/Inventory"
+        tags:
+          type: array
+          items:
+            type: string
+        discontinuedAt:
+          type: ["string", "null"]
+          format: date-time
+          description: Nullable timestamp when product was discontinued
+    Money:
+      type: object
+      additionalProperties: false
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [USD, EUR, GBP]
+    Inventory:
+      type: object
+      additionalProperties: false
+      required: [warehouseId, quantity]
+      properties:
+        warehouseId:
+          type: string
+        quantity:
+          type: integer
+          minimum: 0
+        backorderPolicy:
+          type: string
+          enum: [deny, allow]
+    ProductCreateInput:
+      type: object
+      additionalProperties: false
+      required: [sku, name, status, price, inventory]
+      properties:
+        sku:
+          type: string
+        name:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, archived]
+        price:
+          $ref: "#/components/schemas/Money"
+        inventory:
+          $ref: "#/components/schemas/Inventory"
+        tags:
+          type: array
+          items:
+            type: string
+    ProductPatchInput:
+      type: object
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+        status:
+          type: string
+          enum: [draft, active, archived]
+        price:
+          $ref: "#/components/schemas/Money"
+        inventory:
+          $ref: "#/components/schemas/Inventory"
+        tags:
+          type: array
+          items:
+            type: string
+        discontinuedAt:
+          type: ["string", "null"]
+          format: date-time
+    DeleteResult:
+      type: object
+      additionalProperties: false
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean

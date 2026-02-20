@@ -1,774 +1,168 @@
 "use client";
 
 import * as React from "react";
-import { SchemaRenderer } from "@/components/renderer/SchemaRenderer";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Sparkles, X, FileText, Clipboard, RotateCcw } from "lucide-react";
+import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import type { UISpec } from "@/lib/spec/types";
-import { computeSpecDiff } from "@/lib/spec/diff";
-import { formatDiffForDisplay } from "@/lib/spec/diffFormatters";
-import { GenerationSuccessToast } from "@/components/connect/GenerationSuccessToast";
-import { getRandomExample, getRandomPrompt, findExampleByJson } from "@/lib/examples";
-import { createSessionId } from "@/lib/session";
-import { createDemoAdapter, createExternalAdapter } from "@/lib/adapters";
-import { getResourceBySlug } from "@/lib/demoStore/resources";
-import type { DemoVersion } from "@/lib/demoStore/seeds";
-import { ConnectSection } from "@/components/connect/ConnectSection";
-import { ExternalApiSection } from "@/components/connect/ExternalApiSection";
-import {
-  getRandomExternalExample,
-  getRandomExternalPrompt,
-  findExternalExampleByUrl,
-} from "@/lib/externalApiExamples";
+import { OpenApiDropZone } from "@/components/connect/OpenApiDropZone";
+import { ProgressPanel } from "@/components/compiler/ProgressPanel";
+import type { Step } from "@/components/compiler/ProgressPanel";
+import type { CompilerError } from "@/lib/compiler/errors";
+import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
+import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 
-type DataSource = "demo" | "external" | "paste";
+type CompilerState =
+  | { status: "idle" }
+  | { status: "parsing" }
+  | { status: "validating" }
+  | { status: "success"; doc: Record<string, unknown>; version: string }
+  | { status: "error"; errors: CompilerError[] };
 
 export default function Home() {
-  const [dataSource, setDataSource] = React.useState<DataSource>("demo");
-  const [sessionId] = React.useState(() => createSessionId());
+  const [state, setState] = React.useState<CompilerState>({ status: "idle" });
 
-  // Demo API state
-  const [resource, setResource] = React.useState("users");
-  const [version, setVersion] = React.useState<DemoVersion>(1);
-  const [connectPrompt, setConnectPrompt] = React.useState("");
+  const handleFile = React.useCallback((content: string) => {
+    setState({ status: "parsing" });
 
-  // External API state
-  const [externalUrl, setExternalUrl] = React.useState("");
-  const [externalDataPath, setExternalDataPath] = React.useState("");
-  const [externalPrompt, setExternalPrompt] = React.useState("");
-  const [showExternalPrompt, setShowExternalPrompt] = React.useState(false);
-
-  // Paste JSON state
-  const [jsonInput, setJsonInput] = React.useState("");
-  const [pastePrompt, setPastePrompt] = React.useState("");
-  const [showPastePrompt, setShowPastePrompt] = React.useState(false);
-
-  // Generated UI state
-  const [inferredSpec, setInferredSpec] = React.useState<UISpec | null>(null);
-  const [parsedData, setParsedData] = React.useState<Record<string, unknown>[] | null>(null);
-  const [adapter, setAdapter] = React.useState<ReturnType<typeof createDemoAdapter> | ReturnType<typeof createExternalAdapter> | null>(null);
-  const [isGenerating, setIsGenerating] = React.useState(false);
-  const [specSource, setSpecSource] = React.useState<"ai" | "fallback" | "deterministic" | null>(null);
-  const [refreshTrigger, setRefreshTrigger] = React.useState(0);
-
-  const lastGeneratedRef = React.useRef<{
-    resource: string | null;
-    dataSource: DataSource;
-    version?: DemoVersion;
-    externalUrl?: string;
-  } | null>(null);
-  const diffToastIdRef = React.useRef<string | number | null>(null);
-
-  const hasGeneratedUI = inferredSpec !== null && (parsedData !== null || adapter !== null);
-  const isAdapterMode = adapter !== null;
-  const isDemoMode = adapter?.mode === "demo";
-  const isExternalMode = adapter?.mode === "external";
-
-  const handlePasteExample = () => {
-    const example = getRandomExample();
-    setJsonInput(example.json);
-    if (showPastePrompt) {
-      const randomPrompt = getRandomPrompt(example);
-      setPastePrompt(randomPrompt);
-    }
-  };
-
-  const handlePasteRequirement = () => {
-    if (!jsonInput.trim()) {
-      toast.info("Please enter a JSON payload first");
-      return;
-    }
-    const example = findExampleByJson(jsonInput.trim());
-    if (example) {
-      setPastePrompt(getRandomPrompt(example));
-    } else {
-      setPastePrompt(getRandomPrompt(getRandomExample()));
-    }
-  };
-
-  const handleReset = () => {
-    if (diffToastIdRef.current != null) {
-      toast.dismiss(diffToastIdRef.current);
-      diffToastIdRef.current = null;
-    }
-    setInferredSpec(null);
-    setParsedData(null);
-    setAdapter(null);
-    setSpecSource(null);
-    setJsonInput("");
-    setPastePrompt("");
-    setShowPastePrompt(false);
-    setConnectPrompt("");
-    setExternalUrl("");
-    setExternalDataPath("");
-    setExternalPrompt("");
-    setShowExternalPrompt(false);
-    lastGeneratedRef.current = null;
-    toast.info("Input cleared");
-  };
-
-  const handleConnectGenerate = async (versionOverride?: DemoVersion) => {
-    const v = versionOverride ?? version;
-
-    // Dismiss any visible diff toast before regenerating
-    if (diffToastIdRef.current != null) {
-      toast.dismiss(diffToastIdRef.current);
-      diffToastIdRef.current = null;
-    }
-
-    const prevSpec = inferredSpec;
-    const prevResource = lastGeneratedRef.current?.resource ?? null;
-    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
-    const prevVersion = lastGeneratedRef.current?.version;
-
-    setInferredSpec(null);
-    setParsedData(null);
-    setAdapter(null);
-    setIsGenerating(true);
-
-    try {
-      const demoAdapter = createDemoAdapter(resource, sessionId, v);
-      const sample = await demoAdapter.getSample();
-
-      if (!sample || sample.length === 0) {
-        toast.error("API returned no data", {
-          description: "Cannot generate UI from empty sample.",
-        });
-        setIsGenerating(false);
-        return;
-      }
-
-      const response = await fetch("/api/generate-ui", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          payload: sample,
-          intent: connectPrompt.trim() || undefined,
-          existingSpec: connectPrompt.trim() && prevSpec ? prevSpec : undefined,
-        }),
+    const parseResult = parseOpenAPI(content);
+    if (!parseResult.success) {
+      setState({
+        status: "error",
+        errors: [parseResult.error],
       });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const msg = (err as { error?: string }).error ?? `Failed: ${response.status}`;
-        toast.error("Failed to generate UI", { description: msg });
-        throw new Error(msg);
-      }
-
-      const result = await response.json();
-      const { spec, source } = result;
-
-      const resourceDef = getResourceBySlug(resource);
-      const specWithIdField: UISpec = {
-        ...spec,
-        idField: resourceDef?.idField ?? spec.idField ?? "id",
-      };
-
-      setInferredSpec(specWithIdField);
-      setVersion(v);
-      setAdapter(demoAdapter);
-      setSpecSource(source);
-
-      lastGeneratedRef.current = { resource, dataSource: "demo", version: v };
-
-      if (source === "ai") {
-        const showDiff =
-          prevSpec &&
-          prevDataSource === "demo" &&
-          prevResource === resource;
-        if (showDiff) {
-          const diff = computeSpecDiff(prevSpec, specWithIdField);
-          const { added, removed } = formatDiffForDisplay(
-            diff,
-            prevSpec,
-            specWithIdField
-          );
-          if (added.length > 0 || removed.length > 0) {
-            const context =
-              prevVersion !== undefined && v !== prevVersion
-                ? `Switched to v${v}`
-                : connectPrompt.trim()
-                  ? "With prompt applied"
-                  : undefined;
-            const toastId = toast.success("UI generated successfully", {
-              description: (
-                <GenerationSuccessToast
-                  added={added}
-                  removed={removed}
-                  context={context}
-                />
-              ),
-              duration: 15000,
-              closeButton: true,
-            });
-            diffToastIdRef.current = toastId;
-          } else {
-            toast.success("UI generated successfully");
-          }
-        } else {
-          toast.success("UI generated successfully");
-        }
-      } else {
-        toast.warning("Using fallback parser", {
-          description: "Generation failed, but a fallback spec was created.",
-        });
-      }
-    } catch (err) {
-      if (err instanceof Error && !err.message.includes("Failed")) {
-        toast.error("Generation failed", { description: err.message });
-      }
-      console.error("Connect generate error:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleExternalGenerate = async () => {
-    if (diffToastIdRef.current != null) {
-      toast.dismiss(diffToastIdRef.current);
-      diffToastIdRef.current = null;
-    }
-
-    const prevSpec = inferredSpec;
-    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
-    const prevExternalUrl = lastGeneratedRef.current?.externalUrl ?? null;
-
-    setInferredSpec(null);
-    setParsedData(null);
-    setAdapter(null);
-    setIsGenerating(true);
-
-    const url = externalUrl.trim();
-    if (!url) {
-      toast.error("Please enter an API URL");
-      setIsGenerating(false);
+      toast.error("Parse failed", { description: parseResult.error.message });
       return;
     }
 
-    try {
-      const externalAdapter = createExternalAdapter(
-        url,
-        externalDataPath.trim() || undefined
-      );
-      const sample = await externalAdapter.getSample();
-
-      if (!sample || sample.length === 0) {
-        toast.error("API returned no data", {
-          description: "Cannot generate UI from empty sample.",
-        });
-        setIsGenerating(false);
-        return;
-      }
-
-      const response = await fetch("/api/generate-ui", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          payload: sample,
-          intent: externalPrompt.trim() || undefined,
-          existingSpec: externalPrompt.trim() && prevSpec ? prevSpec : undefined,
-        }),
+    setState({ status: "validating" });
+    const validateResult = validateSubset(parseResult.doc);
+    if (!validateResult.success) {
+      setState({
+        status: "error",
+        errors: validateResult.errors,
       });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const msg = (err as { error?: string }).error ?? `Failed: ${response.status}`;
-        toast.error("Failed to generate UI", { description: msg });
-        throw new Error(msg);
-      }
-
-      const result = await response.json();
-      const { spec, source } = result;
-
-      setInferredSpec(spec);
-      setAdapter(externalAdapter);
-      setSpecSource(source);
-
-      lastGeneratedRef.current = {
-        resource: "external",
-        dataSource: "external",
-        externalUrl: url,
-      };
-
-      if (source === "ai") {
-        const showDiff =
-          prevSpec &&
-          prevDataSource === "external" &&
-          prevExternalUrl === url;
-        if (showDiff) {
-          const diff = computeSpecDiff(prevSpec, spec);
-          const { added, removed } = formatDiffForDisplay(
-            diff,
-            prevSpec,
-            spec
-          );
-          if (added.length > 0 || removed.length > 0) {
-            const context = externalPrompt.trim() ? "With prompt applied" : undefined;
-            const toastId = toast.success("UI generated successfully", {
-              description: (
-                <GenerationSuccessToast
-                  added={added}
-                  removed={removed}
-                  context={context}
-                />
-              ),
-              duration: 15000,
-              closeButton: true,
-            });
-            diffToastIdRef.current = toastId;
-          } else {
-            toast.success("UI generated successfully");
-          }
-        } else {
-          toast.success("UI generated successfully");
-        }
-      } else {
-        toast.warning("Using fallback parser", {
-          description: "Generation failed, but a fallback spec was created.",
-        });
-      }
-    } catch (err) {
-      if (err instanceof Error && !err.message.includes("Failed")) {
-        toast.error("Generation failed", { description: err.message });
-      }
-      console.error("External generate error:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleResetData = async () => {
-    if (!adapter || !resource) return;
-    try {
-      const url = `/api/demo/${resource}/reset?session=${sessionId}&v=${version}`;
-      const res = await fetch(url, { method: "POST" });
-      if (!res.ok) throw new Error("Reset failed");
-      setRefreshTrigger((t) => t + 1);
-      toast.success("Data reset to seed state");
-    } catch {
-      toast.error("Failed to reset data");
-    }
-  };
-
-  const handlePasteGenerate = async () => {
-    // Dismiss any visible diff toast before regenerating
-    if (diffToastIdRef.current != null) {
-      toast.dismiss(diffToastIdRef.current);
-      diffToastIdRef.current = null;
-    }
-
-    const prevSpec = inferredSpec;
-    const prevDataSource = lastGeneratedRef.current?.dataSource ?? null;
-
-    setInferredSpec(null);
-    setParsedData(null);
-    setAdapter(null);
-    setIsGenerating(true);
-
-    if (!jsonInput.trim()) {
-      toast.error("Please enter JSON data");
-      setIsGenerating(false);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(jsonInput);
-      const dataArray = Array.isArray(parsed) ? parsed : [parsed];
-
-      const response = await fetch("/api/generate-ui", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          payload: parsed,
-          intent: pastePrompt.trim() || undefined,
-          existingSpec: pastePrompt.trim() && prevSpec ? prevSpec : undefined,
-        }),
+      toast.error("Validation failed", {
+        description: `${validateResult.errors.length} error(s) found`,
       });
-
-      if (!response.ok) {
-        let errorMessage = "Failed to generate UI";
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.error || errorMessage;
-        } catch {
-          errorMessage = `Server error: ${response.status} ${response.statusText}`;
-        }
-        toast.error("Failed to generate UI", { description: errorMessage });
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
-      const { spec, source } = result;
-
-      setParsedData(dataArray as Record<string, unknown>[]);
-      setInferredSpec(spec);
-      setSpecSource(source);
-
-      lastGeneratedRef.current = { resource: null, dataSource: "paste" };
-
-      if (source === "ai") {
-        const showDiff = prevSpec && prevDataSource === "paste";
-        if (showDiff) {
-          const diff = computeSpecDiff(prevSpec, spec);
-          const { added, removed } = formatDiffForDisplay(
-            diff,
-            prevSpec,
-            spec
-          );
-          if (added.length > 0 || removed.length > 0) {
-            const context = pastePrompt.trim() ? "With prompt applied" : undefined;
-            const toastId = toast.success("UI generated successfully", {
-              description: (
-                <GenerationSuccessToast
-                  added={added}
-                  removed={removed}
-                  context={context}
-                />
-              ),
-              duration: 15000,
-              closeButton: true,
-            });
-            diffToastIdRef.current = toastId;
-          } else {
-            toast.success("UI generated successfully");
-          }
-        } else {
-          toast.success("UI generated successfully");
-        }
-      } else {
-        toast.warning("Using fallback parser", {
-          description: "Generation failed, but a fallback spec was created.",
-        });
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to generate UI";
-      toast.error("Generation failed", { description: errorMessage });
-      console.error("Generation error:", err);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleConnectVersionChange = (v: DemoVersion) => {
-    setVersion(v);
-  };
-
-  const handleResourceChange = (value: string) => {
-    setResource(value);
-    setVersion(1);
-  };
-
-  const handleExternalExample = () => {
-    const example = getRandomExternalExample();
-    setExternalUrl(example.url);
-    setExternalDataPath(example.dataPath);
-    if (showExternalPrompt) {
-      setExternalPrompt(getRandomExternalPrompt(example));
-    }
-  };
-
-  const handleExternalTryPrompt = () => {
-    if (!externalUrl.trim()) {
-      toast.info("Please enter an API URL first");
       return;
     }
-    const example = findExternalExampleByUrl(externalUrl);
-    if (example) {
-      setExternalPrompt(getRandomExternalPrompt(example));
-    } else {
-      setExternalPrompt(getRandomExternalPrompt(getRandomExternalExample()));
-    }
-  };
 
-  const handleClearExternal = () => {
-    setExternalUrl("");
-    setExternalDataPath("");
-    setExternalPrompt("");
-    setShowExternalPrompt(false);
-  };
+    setState({
+      status: "success",
+      doc: parseResult.doc,
+      version: parseResult.version,
+    });
+    toast.success("Validation passed", {
+      description: `OpenAPI ${parseResult.version} — ready for compilation`,
+    });
+  }, []);
+
+  const handleDropZoneError = React.useCallback((message: string) => {
+    toast.error("Upload failed", { description: message });
+  }, []);
+
+  const steps: Step[] = React.useMemo(() => {
+    const s: Step[] = [
+      {
+        id: "parse",
+        label: "Parse YAML/JSON",
+        status:
+          state.status === "idle"
+            ? "pending"
+            : state.status === "parsing"
+              ? "running"
+              : state.status === "error" && state.errors[0]?.stage === "Parse"
+                ? "error"
+                : "success",
+      },
+      {
+        id: "validate",
+        label: "Validate subset",
+        status:
+          state.status === "idle" || state.status === "parsing"
+            ? "pending"
+            : state.status === "validating"
+              ? "running"
+              : state.status === "error"
+                ? "error"
+                : "success",
+      },
+    ];
+    return s;
+  }, [state]);
+
+  const errors: CompilerError[] =
+    state.status === "error" ? state.errors : [];
+
+  const endpoints = React.useMemo(() => {
+    if (state.status !== "success") return undefined;
+    const paths = state.doc.paths as Record<string, Record<string, unknown>> | undefined;
+    if (!paths || typeof paths !== "object") return undefined;
+    const methods = ["get", "post", "put", "patch", "delete"];
+    const list: { method: string; path: string; operationId?: string; summary?: string }[] = [];
+    for (const pathKey of Object.keys(paths).sort()) {
+      const pathItem = paths[pathKey];
+      if (!pathItem || typeof pathItem !== "object") continue;
+      for (const method of methods) {
+        const op = pathItem[method] as Record<string, unknown> | undefined;
+        if (!op || typeof op !== "object") continue;
+        list.push({
+          method: method.toUpperCase(),
+          path: pathKey,
+          operationId: typeof op.operationId === "string" ? op.operationId : undefined,
+          summary: typeof op.summary === "string" ? op.summary : undefined,
+        });
+      }
+    }
+    return list;
+  }, [state]);
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Left side panel: Generate UI + UI Spec (20–30%) */}
-      <aside className="w-[28%] min-w-[320px] max-w-[420px] shrink-0 flex flex-col border-r border-border bg-muted/30">
-        {/* Compact header */}
-        <header className="shrink-0 px-4 py-3 border-b border-border">
+      {/* Left panel: drop zone + output spec */}
+      <aside className="flex w-[40%] min-w-[360px] max-w-[520px] shrink-0 flex-col border-r border-border bg-muted/30">
+        <header className="shrink-0 border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-primary shrink-0" />
+            <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold truncate">RapidUI.dev</h1>
-              <p className="text-xs text-muted-foreground truncate">
-                Connect or paste JSON → get a schema-driven UI
+              <h1 className="truncate text-lg font-semibold">RapidUI.dev</h1>
+              <p className="truncate text-xs text-muted-foreground">
+                OpenAPI → deterministic schema-driven UI
               </p>
             </div>
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-          {/* Demo API | External API | Paste JSON */}
-          <Tabs
-            value={dataSource}
-            onValueChange={(v) => setDataSource(v as DataSource)}
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="demo" className="text-xs">Demo API</TabsTrigger>
-              <TabsTrigger value="external" className="text-xs">External API</TabsTrigger>
-              <TabsTrigger value="paste" className="text-xs">Paste JSON</TabsTrigger>
-            </TabsList>
+        <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
+          <OpenApiDropZone
+            onFile={handleFile}
+            onError={handleDropZoneError}
+            disabled={state.status === "parsing" || state.status === "validating"}
+          />
 
-            <TabsContent value="demo" className="mt-4">
-              <ConnectSection
-                resource={resource}
-                version={version}
-                prompt={connectPrompt}
-                onResourceChange={handleResourceChange}
-                onVersionChange={handleConnectVersionChange}
-                onPromptChange={setConnectPrompt}
-                onGenerate={() => handleConnectGenerate()}
-                isGenerating={isGenerating}
-              />
-            </TabsContent>
-
-            <TabsContent value="external" className="mt-4">
-              <ExternalApiSection
-                url={externalUrl}
-                dataPath={externalDataPath}
-                prompt={externalPrompt}
-                showPrompt={showExternalPrompt}
-                onUrlChange={setExternalUrl}
-                onDataPathChange={setExternalDataPath}
-                onPromptChange={setExternalPrompt}
-                onShowPromptChange={setShowExternalPrompt}
-                onTryExample={handleExternalExample}
-                onTryPrompt={handleExternalTryPrompt}
-                onClear={handleClearExternal}
-                onGenerate={handleExternalGenerate}
-                isGenerating={isGenerating}
-              />
-            </TabsContent>
-
-            <TabsContent value="paste" className="mt-4">
-              <div className="space-y-4 rounded-lg border bg-card p-4 shadow-sm">
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="json-input" className="text-sm font-semibold">
-                        JSON Payload
-                      </Label>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handlePasteExample}
-                          className="h-7 text-xs"
-                          type="button"
-                        >
-                          <FileText className="mr-1.5 h-3.5 w-3.5" />
-                          Example
-                        </Button>
-                        {jsonInput && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleReset}
-                            className="h-7 w-7 p-0"
-                            type="button"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                    <Textarea
-                      id="json-input"
-                      placeholder='Paste JSON: [{ "name": "John", "age": 30 }]'
-                      value={jsonInput}
-                      onChange={(e) => setJsonInput(e.target.value)}
-                      className="min-h-[140px] font-mono text-xs"
-                      disabled={isGenerating}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="prompt-input" className="text-sm font-semibold">
-                        Prompt (Optional)
-                      </Label>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (showPastePrompt) setPastePrompt("");
-                          setShowPastePrompt(!showPastePrompt);
-                        }}
-                        type="button"
-                        className="h-7 text-xs"
-                      >
-                        {showPastePrompt ? "Hide" : "Show"}
-                      </Button>
-                    </div>
-                    {showPastePrompt && (
-                      <>
-                        <Textarea
-                          id="prompt-input"
-                          placeholder='e.g. "Make name searchable"'
-                          value={pastePrompt}
-                          onChange={(e) => setPastePrompt(e.target.value)}
-                          className="min-h-[60px] text-xs"
-                          disabled={isGenerating}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handlePasteRequirement}
-                          className="h-7 text-xs"
-                          type="button"
-                        >
-                          <Clipboard className="mr-1.5 h-3.5 w-3.5" />
-                          Try Prompt
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    onClick={handlePasteGenerate}
-                    disabled={isGenerating || !jsonInput.trim()}
-                    variant="default"
-                    size="sm"
-                  >
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        Generating...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="mr-1.5 h-3.5 w-3.5" />
-                        Generate
-                      </>
-                    )}
-                  </Button>
-                  {hasGeneratedUI && !isAdapterMode && (
-                    <Button variant="ghost" size="sm" onClick={handleReset} disabled={isGenerating}>
-                      Clear
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-
-          {/* Inferred Spec Preview — persistent once generated */}
-          {inferredSpec && (
+          {state.status === "success" && (
             <div className="space-y-3 rounded-lg border bg-card p-4 shadow-sm">
               <div className="space-y-0.5">
-                <h2 className="text-sm font-semibold">UI Spec</h2>
-                {specSource && (
-                  <p className="text-xs text-muted-foreground">
-                    {specSource === "ai"
-                      ? "AI-powered"
-                      : specSource === "fallback"
-                      ? "Fallback parser"
-                      : "Deterministic"}
-                  </p>
-                )}
+                <h2 className="text-sm font-semibold">Output Spec</h2>
+                <p className="text-xs text-muted-foreground">
+                  Parsed OpenAPI — full compilation in Phase 2+
+                </p>
               </div>
-              <pre className="overflow-auto rounded-md bg-muted p-3 text-xs max-h-[280px]">
-                {JSON.stringify(inferredSpec, null, 2)}
+              <pre className="max-h-[280px] overflow-auto rounded-md bg-muted p-3 text-xs">
+                {JSON.stringify(state.doc, null, 2)}
               </pre>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Right side: Generated UI (70–80%) — "page within a page" */}
-      <main className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 flex flex-col p-6 min-h-0">
-          {/* Toolbar: actions for the generated UI — only when we have one */}
-          {hasGeneratedUI && (
-            <div className="shrink-0 flex items-center justify-between gap-3 mb-4">
-              <div className="rounded-md bg-primary/5 dark:bg-primary/10 border border-primary/20 px-3 py-2">
-                <p className="text-xs text-foreground">
-                  {isDemoMode
-                    ? "API-backed. CRUD persists in your session."
-                    : isExternalMode
-                    ? "Read-only preview"
-                    : "Generated from your backend schema."}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                {isDemoMode && (
-                  <Button variant="outline" size="sm" onClick={handleResetData}>
-                    <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
-                    Reset Data
-                  </Button>
-                )}
-                <Button variant="ghost" size="sm" onClick={handleReset}>
-                  Clear
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Embedded preview container — always visible */}
-          <div className="flex-1 min-h-0 rounded-xl border-2 border-border bg-card shadow-lg overflow-hidden flex flex-col [box-shadow:0_0_0_1px_hsl(var(--border))]">
-            <div className="shrink-0 px-4 py-2 border-b border-border bg-muted/50 flex items-center gap-2">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
-                <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
-                <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />
-              </div>
-              <span className="text-xs text-muted-foreground font-medium">
-                Generated UI
-              </span>
-            </div>
-            <div className="flex-1 overflow-auto bg-background p-4 md:p-6 min-h-[200px] flex flex-col">
-              {isGenerating ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="flex flex-col items-center gap-3">
-                    <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">Generating</p>
-                  </div>
-                </div>
-              ) : !inferredSpec ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <div className="text-center max-w-sm space-y-3">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted">
-                      <Sparkles className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Connect to the demo API or paste JSON in the panel to generate a UI from your backend schema.
-                    </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 min-h-0">
-                  <ErrorBoundary>
-                {adapter ? (
-                    <SchemaRenderer
-                      spec={inferredSpec}
-                      adapter={adapter}
-                      refreshTrigger={refreshTrigger}
-                    />
-                  ) : (
-                    <SchemaRenderer
-                      spec={inferredSpec}
-                      initialData={parsedData ?? []}
-                    />
-                  )}
-                  </ErrorBoundary>
-                </div>
-              )}
-            </div>
-          </div>
+      {/* Right panel: progress */}
+      <main className="flex flex-1 flex-col overflow-y-auto p-6">
+        <div className="mx-auto w-full max-w-lg">
+          <ProgressPanel
+            steps={steps}
+            errors={errors}
+            endpoints={endpoints}
+          />
         </div>
       </main>
     </div>
