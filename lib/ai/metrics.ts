@@ -115,6 +115,50 @@ function consoleSink(event: OpenAICallEvent): void {
 sinks.push(consoleSink);
 
 /**
+ * Log a generated UI page load event. Uses same console format as OpenAI metrics.
+ * In dev: pretty-printed with color. Helps verify compilation data on page load.
+ */
+export function logCompilationPageLoad(event: {
+  id: string;
+  resource: string;
+  displayName: string;
+  resourceNames: string[];
+  resourceSlugs: string[];
+  currentSpec: unknown;
+  apiIrSummary?: { title: string; version: string; resourceCount: number };
+}): void {
+  if (process.env.OPENAI_METRICS_DISABLED === "true") {
+    return;
+  }
+
+  const logEvent = {
+    event: "compilation_page_load",
+    timestamp: new Date().toISOString(),
+    "rapidui.compilation.id": event.id,
+    "rapidui.compilation.resource": event.resource,
+    "rapidui.compilation.display_name": event.displayName,
+    "rapidui.compilation.resource_names": event.resourceNames,
+    "rapidui.compilation.resource_slugs": event.resourceSlugs,
+    "rapidui.compilation.current_spec": event.currentSpec,
+    ...(event.apiIrSummary && {
+      "rapidui.apiir.title": event.apiIrSummary.title,
+      "rapidui.apiir.version": event.apiIrSummary.version,
+      "rapidui.apiir.resource_count": event.apiIrSummary.resourceCount,
+    }),
+  };
+
+  const isDev = process.env.NODE_ENV !== "production";
+  if (isDev) {
+    const json = JSON.stringify(logEvent, null, 2);
+    console.log(
+      `${C.cyan}[GeneratedUI]${C.reset} ${C.green}loaded${C.reset}\n${C.dim}${json}${C.reset}`
+    );
+  } else {
+    console.log(JSON.stringify(logEvent));
+  }
+}
+
+/**
  * Record an OpenAI API call. Passes the event to all registered sinks.
  * Fire-and-forget: does not await async sinks to avoid blocking callers.
  *

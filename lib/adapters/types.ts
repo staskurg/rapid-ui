@@ -3,7 +3,7 @@
  * Supports demo API (full CRUD) and external API (read-only).
  */
 
-export type AdapterMode = "demo" | "external";
+export type AdapterMode = "demo" | "external" | "mock";
 
 export interface AdapterCapabilities {
   create: boolean;

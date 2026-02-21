@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { OpenApiDropZone } from "@/components/connect/OpenApiDropZone";
@@ -9,16 +10,22 @@ import type { Step } from "@/components/compiler/ProgressPanel";
 import type { CompilerError } from "@/lib/compiler/errors";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
+import { slugify } from "@/lib/utils/slugify";
 
 type CompilerState =
   | { status: "idle" }
   | { status: "parsing" }
   | { status: "validating" }
-  | { status: "success"; doc: Record<string, unknown>; version: string }
+  | { status: "compiling" }
+  | { status: "success"; id: string; url: string; resourceNames: string[]; specs: Record<string, unknown> }
   | { status: "error"; errors: CompilerError[] };
 
 export default function Home() {
   const [state, setState] = React.useState<CompilerState>({ status: "idle" });
+  const [origin, setOrigin] = React.useState("");
+  React.useEffect(() => {
+    setOrigin(typeof window !== "undefined" ? window.location.origin : "");
+  }, []);
 
   const handleFile = React.useCallback((content: string) => {
     setState({ status: "parsing" });
@@ -46,14 +53,44 @@ export default function Home() {
       return;
     }
 
-    setState({
-      status: "success",
-      doc: parseResult.doc,
-      version: parseResult.version,
-    });
-    toast.success("Validation passed", {
-      description: `OpenAPI ${parseResult.version} — ready for compilation`,
-    });
+    setState({ status: "compiling" });
+    fetch("/api/compile-openapi", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ openapi: content }),
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          const errors = data.errors ?? [{ code: "UISPEC_INVALID", stage: "Lowering" as const, message: "Compilation failed" }];
+          setState({ status: "error", errors });
+          toast.error("Compilation failed", {
+            description: errors[0]?.message ?? "Unknown error",
+          });
+          return;
+        }
+        setState({
+          status: "success",
+          id: data.id,
+          url: data.url ?? `/u/${data.id}/${slugify(data.resourceNames?.[0] ?? "resource")}`,
+          resourceNames: data.resourceNames ?? [],
+          specs: data.specs ?? {},
+        });
+        toast.success("Compilation complete", {
+          description: `View UI for ${data.resourceNames?.length ?? 0} resource(s)`,
+        });
+      })
+      .catch((err) => {
+        setState({
+          status: "error",
+          errors: [{
+            code: "UISPEC_INVALID",
+            stage: "Lowering",
+            message: err instanceof Error ? err.message : "Compilation failed",
+          }],
+        });
+        toast.error("Compilation failed", { description: "Network or server error" });
+      });
   }, []);
 
   const handleDropZoneError = React.useCallback((message: string) => {
@@ -61,7 +98,13 @@ export default function Home() {
   }, []);
 
   const steps: Step[] = React.useMemo(() => {
-    const s: Step[] = [
+    const isError = state.status === "error";
+    const err = isError ? state.errors[0] : null;
+    const parseErr = err?.stage === "Parse";
+    const validateErr = err?.stage === "Subset";
+    const compileErr = isError && !parseErr && !validateErr;
+
+    return [
       {
         id: "parse",
         label: "Parse YAML/JSON",
@@ -70,9 +113,7 @@ export default function Home() {
             ? "pending"
             : state.status === "parsing"
               ? "running"
-              : state.status === "error" && state.errors[0]?.stage === "Parse"
-                ? "error"
-                : "success",
+              : parseErr ? "error" : "success",
       },
       {
         id: "validate",
@@ -82,43 +123,38 @@ export default function Home() {
             ? "pending"
             : state.status === "validating"
               ? "running"
-              : state.status === "error"
-                ? "error"
-                : "success",
+              : validateErr ? "error" : "success",
+      },
+      {
+        id: "compile",
+        label: "Compile pipeline",
+        status:
+          state.status === "idle" || state.status === "parsing" || state.status === "validating"
+            ? "pending"
+            : state.status === "compiling"
+              ? "running"
+              : state.status === "success"
+                ? "success"
+                : compileErr ? "error" : "pending",
       },
     ];
-    return s;
   }, [state]);
 
   const errors: CompilerError[] =
     state.status === "error" ? state.errors : [];
 
-  const endpoints = React.useMemo(() => {
-    if (state.status !== "success") return undefined;
-    const paths = state.doc.paths as Record<string, Record<string, unknown>> | undefined;
-    if (!paths || typeof paths !== "object") return undefined;
-    const methods = ["get", "post", "put", "patch", "delete"];
-    const list: { method: string; path: string; operationId?: string; summary?: string }[] = [];
-    for (const pathKey of Object.keys(paths).sort()) {
-      const pathItem = paths[pathKey];
-      if (!pathItem || typeof pathItem !== "object") continue;
-      for (const method of methods) {
-        const op = pathItem[method] as Record<string, unknown> | undefined;
-        if (!op || typeof op !== "object") continue;
-        list.push({
-          method: method.toUpperCase(),
-          path: pathKey,
-          operationId: typeof op.operationId === "string" ? op.operationId : undefined,
-          summary: typeof op.summary === "string" ? op.summary : undefined,
-        });
-      }
-    }
-    return list;
-  }, [state]);
+  const viewUrl = state.status === "success" ? state.url : null;
+  const resourceLinks =
+    state.status === "success"
+      ? state.resourceNames.map((name) => ({
+          name,
+          href: `/u/${state.id}/${slugify(name)}`,
+        }))
+      : [];
 
   return (
     <div className="flex min-h-screen bg-background">
-      {/* Left panel: drop zone + output spec */}
+      {/* Left panel: drop zone + UISpec JSON output */}
       <aside className="flex w-[40%] min-w-[360px] max-w-[520px] shrink-0 flex-col border-r border-border bg-muted/30">
         <header className="shrink-0 border-b border-border px-4 py-3">
           <div className="flex items-center gap-2">
@@ -136,7 +172,7 @@ export default function Home() {
           <OpenApiDropZone
             onFile={handleFile}
             onError={handleDropZoneError}
-            disabled={state.status === "parsing" || state.status === "validating"}
+            disabled={state.status === "parsing" || state.status === "validating" || state.status === "compiling"}
           />
 
           {state.status === "success" && (
@@ -144,25 +180,48 @@ export default function Home() {
               <div className="space-y-0.5">
                 <h2 className="text-sm font-semibold">Output Spec</h2>
                 <p className="text-xs text-muted-foreground">
-                  Parsed OpenAPI — full compilation in Phase 2+
+                  UISpec from compiler pipeline
                 </p>
               </div>
-              <pre className="max-h-[280px] overflow-auto rounded-md bg-muted p-3 text-xs">
-                {JSON.stringify(state.doc, null, 2)}
+              <pre className="max-h-[400px] overflow-auto rounded-md bg-muted p-3 text-xs">
+                {JSON.stringify(state.specs, null, 2)}
               </pre>
             </div>
           )}
         </div>
       </aside>
 
-      {/* Right panel: progress */}
+      {/* Right panel: progress + result link */}
       <main className="flex flex-1 flex-col overflow-y-auto p-6">
-        <div className="mx-auto w-full max-w-lg">
-          <ProgressPanel
-            steps={steps}
-            errors={errors}
-            endpoints={endpoints}
-          />
+        <div className="mx-auto flex w-full max-w-lg flex-col gap-6">
+          <ProgressPanel steps={steps} errors={errors} />
+
+          {viewUrl && (
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-green-700 dark:text-green-500">
+                Success!
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                Generated UI endpoint. Open in a new tab to view.
+              </p>
+              <div className="space-y-1">
+                {resourceLinks.map(({ href }) => {
+                  const fullUrl = origin ? `${origin}${href}` : href;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block break-all text-sm text-green-700 dark:text-green-500 underline-offset-4 hover:underline"
+                    >
+                      {fullUrl}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
