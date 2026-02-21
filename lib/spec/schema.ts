@@ -14,6 +14,7 @@ export const FieldSchema = z.object({
   type: FieldTypeSchema,
   required: z.boolean().default(false),
   options: z.array(z.string()).optional(), // Required for enum type
+  readOnly: z.boolean().optional(),
 });
 
 /**

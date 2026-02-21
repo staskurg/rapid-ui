@@ -219,6 +219,7 @@ export function FormModal({
 function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>) {
   const fieldName = field.name;
   const value = form.watch(fieldName) as unknown;
+  const disabled = field.readOnly === true;
 
   switch (field.type) {
     case "string":
@@ -227,6 +228,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           id={fieldName}
           {...form.register(fieldName)}
           placeholder={`Enter ${field.label.toLowerCase()}`}
+          disabled={disabled}
         />
       );
     case "number":
@@ -236,6 +238,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           type="number"
           {...form.register(fieldName, { valueAsNumber: true })}
           placeholder={`Enter ${field.label.toLowerCase()}`}
+          disabled={disabled}
         />
       );
     case "boolean":
@@ -249,6 +252,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
             onCheckedChange={(checked) => {
               form.setValue(fieldName, checked, { shouldValidate: true });
             }}
+            disabled={disabled}
           />
           <Label htmlFor={fieldName} className="font-normal">
             {field.label}
@@ -262,6 +266,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           onValueChange={(val) =>
             form.setValue(fieldName, val, { shouldValidate: true })
           }
+          disabled={disabled}
         >
           <SelectTrigger id={fieldName}>
             <SelectValue placeholder={`Select ${field.label.toLowerCase()}`} />
@@ -281,6 +286,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           id={fieldName}
           {...form.register(fieldName)}
           placeholder={`Enter ${field.label.toLowerCase()}`}
+          disabled={disabled}
         />
       );
   }
