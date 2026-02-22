@@ -1,0 +1,569 @@
+{
+  "api": {
+    "title": "RapidUI Golden Spec 2 — Products CRUD (Path Grouping, Prefix Strip)",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "listProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "sku",
+                "name",
+                "status",
+                "price",
+                "inventory"
+              ],
+              "properties": {
+                "sku": {
+                  "type": "string",
+                  "description": "Stock keeping unit"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "draft",
+                    "active",
+                    "archived"
+                  ]
+                },
+                "price": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "amount",
+                    "currency"
+                  ],
+                  "properties": {
+                    "amount": {
+                      "type": "number",
+                      "minimum": 0
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD",
+                        "EUR",
+                        "GBP"
+                      ]
+                    }
+                  }
+                },
+                "inventory": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "warehouseId",
+                    "quantity"
+                  ],
+                  "properties": {
+                    "warehouseId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "backorderPolicy": {
+                      "type": "string",
+                      "enum": [
+                        "deny",
+                        "allow"
+                      ]
+                    }
+                  }
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "discontinuedAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time",
+                  "description": "Nullable timestamp when product was discontinued"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getProduct",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/products/{sku}",
+          "identifierParam": "sku",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sku",
+              "name",
+              "status",
+              "price",
+              "inventory"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string",
+                "description": "Stock keeping unit"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP"
+                    ]
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "warehouseId",
+                  "quantity"
+                ],
+                "properties": {
+                  "warehouseId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "backorderPolicy": {
+                    "type": "string",
+                    "enum": [
+                      "deny",
+                      "allow"
+                    ]
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "discontinuedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Nullable timestamp when product was discontinued"
+              }
+            }
+          }
+        },
+        {
+          "id": "createProduct",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/products",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sku",
+              "name",
+              "status",
+              "price",
+              "inventory"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP"
+                    ]
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "warehouseId",
+                  "quantity"
+                ],
+                "properties": {
+                  "warehouseId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "backorderPolicy": {
+                    "type": "string",
+                    "enum": [
+                      "deny",
+                      "allow"
+                    ]
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sku",
+              "name",
+              "status",
+              "price",
+              "inventory"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string",
+                "description": "Stock keeping unit"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP"
+                    ]
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "warehouseId",
+                  "quantity"
+                ],
+                "properties": {
+                  "warehouseId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "backorderPolicy": {
+                    "type": "string",
+                    "enum": [
+                      "deny",
+                      "allow"
+                    ]
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "discontinuedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Nullable timestamp when product was discontinued"
+              }
+            }
+          }
+        },
+        {
+          "id": "patchProduct",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/v1/products/{sku}",
+          "identifierParam": "sku",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP"
+                    ]
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "warehouseId",
+                  "quantity"
+                ],
+                "properties": {
+                  "warehouseId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "backorderPolicy": {
+                    "type": "string",
+                    "enum": [
+                      "deny",
+                      "allow"
+                    ]
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "discontinuedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "sku",
+              "name",
+              "status",
+              "price",
+              "inventory"
+            ],
+            "properties": {
+              "sku": {
+                "type": "string",
+                "description": "Stock keeping unit"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active",
+                  "archived"
+                ]
+              },
+              "price": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "currency": {
+                    "type": "string",
+                    "enum": [
+                      "USD",
+                      "EUR",
+                      "GBP"
+                    ]
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "warehouseId",
+                  "quantity"
+                ],
+                "properties": {
+                  "warehouseId": {
+                    "type": "string"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "backorderPolicy": {
+                    "type": "string",
+                    "enum": [
+                      "deny",
+                      "allow"
+                    ]
+                  }
+                }
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "discontinuedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time",
+                "description": "Nullable timestamp when product was discontinued"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteProduct",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/v1/products/{sku}",
+          "identifierParam": "sku",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deleted"
+            ],
+            "properties": {
+              "deleted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

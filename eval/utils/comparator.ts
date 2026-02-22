@@ -2,7 +2,9 @@
  * Structural comparison utilities for detecting drift across AI runs
  */
 
+import stringify from "fast-json-stable-stringify";
 import type { UISpec } from "@/lib/spec/types";
+import type { UiPlanIR } from "@/lib/compiler/uiplan/uiplan.schema";
 
 export interface StructuralFingerprint {
   fieldNames: Set<string>;
@@ -23,13 +25,13 @@ export interface ComparisonResult {
  * Extract structural fingerprint from a UISpec
  */
 export function extractFingerprint(spec: UISpec): StructuralFingerprint {
-  const fieldNames = new Set(spec.fields.map((f) => f.name));
-  const fieldTypes = new Map(
+  const fieldNames = new Set<string>(spec.fields.map((f) => f.name));
+  const fieldTypes = new Map<string, string>(
     spec.fields.map((f) => [f.name, f.type])
   );
-  const tableColumns = new Set(spec.table.columns);
-  const formFields = new Set(spec.form.fields);
-  const filterFields = new Set(spec.filters);
+  const tableColumns = new Set<string>(spec.table.columns);
+  const formFields = new Set<string>(spec.form.fields);
+  const filterFields = new Set<string>(spec.filters);
   const enumFields = new Map<string, string[]>();
 
   spec.fields.forEach((field) => {
@@ -236,4 +238,191 @@ export function compareMultipleFingerprints(
     allDifferences: [...allDifferences],
     consistent: allDifferences.size === 0,
   };
+}
+
+// --- Multi-spec (Record<slug, UISpec>) comparison ---
+
+/**
+ * Produce stable canonical string for Record<slug, UISpec>.
+ * Used for byte-identical comparison.
+ */
+export function canonicalString(specs: Record<string, UISpec>): string {
+  const sorted: Record<string, UISpec> = {};
+  for (const k of Object.keys(specs).sort()) {
+    sorted[k] = specs[k];
+  }
+  return stringify(sorted);
+}
+
+/**
+ * Compare two multi-spec runs.
+ * Asserts same slugs; per-resource fingerprint comparison.
+ * Overall similarity = min of per-resource similarities (each resource must ≥ threshold).
+ */
+export function compareSpecsMulti(
+  run1: Record<string, UISpec>,
+  run2: Record<string, UISpec>
+): {
+  sameSlugs: boolean;
+  slugMismatch?: string;
+  perResource: Record<string, { similarity: number; differences: string[] }>;
+  minSimilarity: number;
+  differences: string[];
+} {
+  const slugs1 = new Set(Object.keys(run1));
+  const slugs2 = new Set(Object.keys(run2));
+
+  if (slugs1.size !== slugs2.size) {
+    return {
+      sameSlugs: false,
+      slugMismatch: `Different resource counts: ${slugs1.size} vs ${slugs2.size}`,
+      perResource: {},
+      minSimilarity: 0,
+      differences: [
+        `Slugs differ: [${[...slugs1].sort().join(", ")}] vs [${[...slugs2].sort().join(", ")}]`,
+      ],
+    };
+  }
+
+  const only1 = [...slugs1].filter((s) => !slugs2.has(s));
+  const only2 = [...slugs2].filter((s) => !slugs1.has(s));
+  if (only1.length > 0 || only2.length > 0) {
+    return {
+      sameSlugs: false,
+      slugMismatch: `Different slugs: only in run1: ${only1.join(", ")}; only in run2: ${only2.join(", ")}`,
+      perResource: {},
+      minSimilarity: 0,
+      differences: [
+        `Slugs differ: [${[...slugs1].sort().join(", ")}] vs [${[...slugs2].sort().join(", ")}]`,
+      ],
+    };
+  }
+
+  const perResource: Record<string, { similarity: number; differences: string[] }> = {};
+  let minSim = 1;
+  const allDiffs: string[] = [];
+
+  for (const slug of slugs1) {
+    const fp1 = extractFingerprint(run1[slug]);
+    const fp2 = extractFingerprint(run2[slug]);
+    const result = compareFingerprints(fp1, fp2);
+    perResource[slug] = {
+      similarity: result.similarity,
+      differences: result.differences,
+    };
+    minSim = Math.min(minSim, result.similarity);
+    result.differences.forEach((d) => allDiffs.push(`[${slug}] ${d}`));
+  }
+
+  return {
+    sameSlugs: true,
+    perResource,
+    minSimilarity: minSim,
+    differences: allDiffs,
+  };
+}
+
+/**
+ * Human-readable diff between two canonical strings.
+ */
+export function diffCanonical(a: string, b: string): string {
+  const linesA = a.split("\n");
+  const linesB = b.split("\n");
+  const maxLen = Math.max(linesA.length, linesB.length);
+  const out: string[] = [];
+
+  for (let i = 0; i < maxLen; i++) {
+    const la = linesA[i] ?? "";
+    const lb = linesB[i] ?? "";
+    const prefix = la === lb ? "  " : la === "" ? "+ " : lb === "" ? "- " : "! ";
+    const content = la === lb ? la : `run1: ${la} | run2: ${lb}`;
+    if (la !== lb) {
+      out.push(`${prefix}${content}`);
+    }
+  }
+  return out.length > 0 ? out.join("\n") : "(identical)";
+}
+
+// --- UiPlanIR fingerprint (for LLM-only evals) ---
+
+export interface UiPlanIRFingerprint {
+  resourceNames: Set<string>;
+  perResource: Record<
+    string,
+    { listPaths: string[]; detailPaths: string[]; createPaths: string[]; editPaths: string[] }
+  >;
+}
+
+/**
+ * Extract structural fingerprint from normalized UiPlanIR.
+ */
+export function extractUiPlanIRFingerprint(uiPlan: UiPlanIR): UiPlanIRFingerprint {
+  const resourceNames = new Set(uiPlan.resources.map((r) => r.name));
+  const perResource: UiPlanIRFingerprint["perResource"] = {};
+
+  for (const res of uiPlan.resources) {
+    const listPaths = (res.views.list?.fields ?? []).map((f) => f.path).sort();
+    const detailPaths = (res.views.detail?.fields ?? []).map((f) => f.path).sort();
+    const createPaths = (res.views.create?.fields ?? []).map((f) => f.path).sort();
+    const editPaths = (res.views.edit?.fields ?? []).map((f) => f.path).sort();
+    perResource[res.name] = {
+      listPaths,
+      detailPaths,
+      createPaths,
+      editPaths,
+    };
+  }
+
+  return { resourceNames, perResource };
+}
+
+/**
+ * Compare two UiPlanIR fingerprints; returns similarity 0-1.
+ */
+export function compareUiPlanIRFingerprints(
+  fp1: UiPlanIRFingerprint,
+  fp2: UiPlanIRFingerprint
+): { similarity: number; differences: string[] } {
+  const differences: string[] = [];
+
+  const allRes = new Set<string>([...fp1.resourceNames, ...fp2.resourceNames]);
+  const only1 = [...fp1.resourceNames].filter((r) => !fp2.resourceNames.has(r));
+  const only2 = [...fp2.resourceNames].filter((r) => !fp1.resourceNames.has(r));
+  if (only1.length > 0) differences.push(`Resources only in run1: ${only1.join(", ")}`);
+  if (only2.length > 0) differences.push(`Resources only in run2: ${only2.join(", ")}`);
+
+  let totalScore = 0;
+  let totalWeight = 0;
+
+  for (const res of allRes) {
+    const r1 = fp1.perResource[res];
+    const r2 = fp2.perResource[res];
+    if (!r1 || !r2) {
+      totalWeight += 1;
+      continue;
+    }
+
+    const viewKeys = ["listPaths", "detailPaths", "createPaths", "editPaths"] as const;
+    for (const key of viewKeys) {
+      const s1 = new Set(r1[key]);
+      const s2 = new Set(r2[key]);
+      const union = new Set([...s1, ...s2]);
+      const intersection = [...s1].filter((p) => s2.has(p));
+      const sim = union.size > 0 ? intersection.length / union.size : 1;
+      totalScore += sim;
+      totalWeight += 1;
+      if (sim < 1) {
+        const onlyIn1 = [...s1].filter((p) => !s2.has(p));
+        const onlyIn2 = [...s2].filter((p) => !s1.has(p));
+        if (onlyIn1.length > 0 || onlyIn2.length > 0) {
+          differences.push(
+            `[${res}] ${key}: only run1: [${onlyIn1.join(", ")}]; only run2: [${onlyIn2.join(", ")}]`
+          );
+        }
+      }
+    }
+  }
+
+  const similarity = totalWeight > 0 ? totalScore / totalWeight : 1;
+  return { similarity, differences };
 }

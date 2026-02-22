@@ -3,7 +3,8 @@
  * Validates structural validity and logical integrity.
  */
 
-import { UISpecSchema, type UISpec } from "@/lib/spec/schema";
+import { UISpecSchema } from "@/lib/spec/schema";
+import type { UISpec } from "@/lib/spec/types";
 
 export interface ValidationResult {
   isValid: boolean;
@@ -106,5 +107,46 @@ export function validateSpec(spec: unknown): {
     schemaResult,
     logicalResult,
     errors: allErrors,
+  };
+}
+
+export interface PerSpecValidationResult {
+  isValid: boolean;
+  schemaResult: ValidationResult;
+  logicalResult: LogicalIntegrityResult | null;
+  errors: string[];
+}
+
+/**
+ * Validate multiple UISpecs (Record<slug, UISpec>).
+ * All specs must pass for overall validity.
+ */
+export function validateSpecs(
+  specs: Record<string, UISpec>
+): {
+  isValid: boolean;
+  errors: string[];
+  perSpec: Record<string, PerSpecValidationResult>;
+} {
+  const perSpec: Record<string, PerSpecValidationResult> = {};
+  const errors: string[] = [];
+
+  for (const [slug, spec] of Object.entries(specs)) {
+    const result = validateSpec(spec);
+    perSpec[slug] = {
+      isValid: result.isValid,
+      schemaResult: result.schemaResult,
+      logicalResult: result.logicalResult,
+      errors: result.errors,
+    };
+    if (!result.isValid) {
+      errors.push(`[${slug}]: ${result.errors.join("; ")}`);
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    perSpec,
   };
 }

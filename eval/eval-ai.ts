@@ -1,62 +1,63 @@
 #!/usr/bin/env tsx
 /**
- * AI Evaluation Harness
- * 
- * Runs AI generation multiple times per fixture to measure:
- * - Structural validity (schema compliance)
- * - Logical integrity (field references, enum options)
- * - Stability/determinism (structural consistency across runs)
- * - Edge tolerance (handling weird/incomplete payloads)
+ * Full pipeline evaluation: OpenAPI → UISpec determinism.
+ * Loads OpenAPI from tests/compiler/fixtures/*.yaml (excludes invalid).
+ * Runs compileOpenAPI N times sequentially per fixture.
+ * Compares via UISpec fingerprint; overall = min per-resource similarity.
+ * Requires OPENAI_API_KEY.
  */
 
-import { readFileSync, writeFileSync, mkdirSync, existsSync, readdirSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { generateSpecWithAI } from "./utils/ai-generator.js";
-import { validateSpec } from "./utils/validator.js";
 import {
-  extractFingerprint,
-  compareMultipleFingerprints,
-} from "./utils/comparator.js";
+  readFileSync,
+  writeFileSync,
+  mkdirSync,
+  readdirSync,
+  existsSync,
+} from "fs";
+import { join } from "path";
+import { compileOpenAPIForEval } from "./utils/compile-openapi";
+import { validateSpecs } from "./utils/validator";
 import {
-  generateMarkdownReport,
-  generateTextReport,
-  type RunResult,
-  type FixtureResult,
-  type EvaluationReport,
-} from "./utils/reporter.js";
+  compareSpecsMulti,
+  diffCanonical,
+  canonicalString,
+} from "./utils/comparator";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Default configuration
 const DEFAULT_RUNS = 5;
-const DEFAULT_FIXTURES_DIR = join(__dirname, "fixtures"); // Use eval/fixtures for payloads
-const DEFAULT_REPORTS_DIR = join(__dirname, "reports");
-const DEFAULT_FAILURES_DIR = join(__dirname, "fixtures/failures");
+const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
+const REPORTS_DIR = join(process.cwd(), "eval/reports");
+const FAILURES_DIR = join(process.cwd(), "eval/fixtures/failures");
+const INVALID_FIXTURE = "golden_openapi_invalid_expected_failure";
+const SIMILARITY_THRESHOLD = 0.9;
+const VALIDITY_THRESHOLD = 0.9;
+
+function requireOpenAIKey(): void {
+  if (!process.env.OPENAI_API_KEY?.trim()) {
+    throw new Error(
+      "OPENAI_API_KEY is required for evals. Add it to .env.local to run LLM determinism evaluation."
+    );
+  }
+}
 
 interface Config {
   runs: number;
-  fixturesDir: string;
-  reportsDir: string;
-  failuresDir: string;
-  fixtureName?: string; // If specified, only run this fixture
-  replayFailures?: boolean; // If true, replay saved failures
-  quick?: boolean; // If true, run 2 runs instead of default (faster iteration)
+  fixtureName?: string;
+  quick?: boolean;
+  json?: boolean;
+  outputDir?: string;
+  replayFailures?: boolean;
+  parallel?: boolean;
 }
 
-/**
- * Parse command-line arguments
- */
 function parseArgs(): Config {
   const args = process.argv.slice(2);
   const config: Config = {
     runs: DEFAULT_RUNS,
-    fixturesDir: DEFAULT_FIXTURES_DIR,
-    reportsDir: DEFAULT_REPORTS_DIR,
-    failuresDir: DEFAULT_FAILURES_DIR,
-    replayFailures: false,
     quick: false,
+    json: false,
+    outputDir: REPORTS_DIR,
+    replayFailures: false,
+    parallel: false,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -64,30 +65,36 @@ function parseArgs(): Config {
     if (arg === "--quick" || arg === "-q") {
       config.quick = true;
       config.runs = 2;
-    } else if (arg === "--runs" && i + 1 < args.length) {
+    } else if (arg === "--runs" && args[i + 1]) {
       config.runs = parseInt(args[i + 1], 10);
       i++;
-    } else if (arg === "--fixture" && i + 1 < args.length) {
+    } else if (arg === "--fixture" && args[i + 1]) {
       config.fixtureName = args[i + 1];
       i++;
-    } else if (arg === "--output-dir" && i + 1 < args.length) {
-      config.reportsDir = args[i + 1];
+    } else if (arg === "--output-dir" && args[i + 1]) {
+      config.outputDir = args[i + 1];
       i++;
     } else if (arg === "--replay-failures") {
       config.replayFailures = true;
+    } else if (arg === "--json") {
+      config.json = true;
+    } else if (arg === "--parallel" || arg === "-p") {
+      config.parallel = true;
     } else if (arg === "--help" || arg === "-h") {
       console.log(`
-AI Evaluation Harness
+Full pipeline evaluation (OpenAPI → UISpec determinism)
 
 Usage: tsx eval/eval-ai.ts [options]
 
 Options:
   --runs N           Number of runs per fixture (default: ${DEFAULT_RUNS})
-  --quick, -q        Quick mode: 2 runs per fixture (faster iteration)
+  --quick, -q        Quick mode: 2 runs
   --fixture NAME     Run specific fixture only
-  --output-dir DIR   Custom report output directory (default: eval/reports)
+  --output-dir DIR   Report output directory
   --replay-failures  Replay saved failures from eval/fixtures/failures/
-  --help, -h         Show this help message
+  --parallel, -p     Run all runs in parallel (faster; may hit rate limits)
+  --json             Output JSON for CI
+  --help, -h         Show this help
       `);
       process.exit(0);
     }
@@ -96,368 +103,337 @@ Options:
   return config;
 }
 
-/**
- * Load fixture payload
- */
-function loadFixture(fixturePath: string): unknown {
-  try {
-    const content = readFileSync(fixturePath, "utf-8");
-    return JSON.parse(content);
-  } catch (error) {
-    throw new Error(`Failed to load fixture ${fixturePath}: ${error}`);
-  }
-}
-
-/**
- * Load failure data from saved failures
- */
 interface FailureData {
   fixtureName: string;
   runNumber: number;
+  openapiPath: string;
   timestamp: string;
   errors: string[];
-  rawResponse: string;
+  rawResponse?: string;
 }
 
-function loadFailures(failuresDir: string): FailureData[] {
-  if (!existsSync(failuresDir)) {
-    return [];
-  }
-
-  const files = readdirSync(failuresDir);
-  const failures: FailureData[] = [];
-
-  files
-    .filter((f) => f.endsWith(".json"))
-    .forEach((f) => {
-      try {
-        const failurePath = join(failuresDir, f);
-        const content = readFileSync(failurePath, "utf-8");
-        const failureData = JSON.parse(content) as FailureData;
-        failures.push(failureData);
-      } catch (error) {
-        console.warn(`Failed to load failure file ${f}: ${error}`);
-      }
-    });
-
-  return failures;
-}
-
-/**
- * Get list of fixture files
- */
 function getFixtures(config: Config): string[] {
-  const fixtures: string[] = [];
-
-  if (config.replayFailures) {
-    // Load failures and extract original fixture names
-    const failures = loadFailures(config.failuresDir);
-    const fixtureNames = new Set(failures.map((f) => f.fixtureName));
-    
-    if (fixtureNames.size === 0) {
-      console.warn("No failures found to replay. Running normal evaluation instead.");
-      return getFixtures({ ...config, replayFailures: false });
-    }
-
-    // Load fixtures that had failures
-    fixtureNames.forEach((name) => {
-      const fixturePath = join(config.fixturesDir, `${name}.json`);
-      if (existsSync(fixturePath)) {
-        fixtures.push(fixturePath);
-      } else {
-        console.warn(`Fixture ${name} not found, skipping failure replay for it`);
+  if (config.replayFailures && existsSync(FAILURES_DIR)) {
+    const files = readdirSync(FAILURES_DIR).filter((f) => f.endsWith(".json"));
+    const fixturePaths = new Set<string>();
+    for (const f of files) {
+      try {
+        const data = JSON.parse(
+          readFileSync(join(FAILURES_DIR, f), "utf-8")
+        ) as FailureData;
+        if (data.openapiPath && existsSync(data.openapiPath)) {
+          fixturePaths.add(data.openapiPath);
+        } else if (data.fixtureName) {
+          const yaml = join(FIXTURES_DIR, `${data.fixtureName}.yaml`);
+          const yml = join(FIXTURES_DIR, `${data.fixtureName}.yml`);
+          if (existsSync(yaml)) fixturePaths.add(yaml);
+          else if (existsSync(yml)) fixturePaths.add(yml);
+        }
+      } catch {
+        // skip
       }
-    });
-
-    console.log(`\nReplaying failures for ${fixtures.length} fixture(s)`);
-    return fixtures;
+    }
+    return [...fixturePaths];
   }
 
   if (config.fixtureName) {
-    // Single fixture specified
-    const fixturePath = join(config.fixturesDir, `${config.fixtureName}.json`);
-    if (existsSync(fixturePath)) {
-      fixtures.push(fixturePath);
-    } else {
-      throw new Error(`Fixture not found: ${config.fixtureName}`);
-    }
-  } else {
-    // Load all fixtures from directory
-    const files = readdirSync(config.fixturesDir);
-    files
-      .filter((f) => f.endsWith(".json"))
-      .forEach((f) => {
-        fixtures.push(join(config.fixturesDir, f));
-      });
+    const yaml = join(FIXTURES_DIR, `${config.fixtureName}.yaml`);
+    const yml = join(FIXTURES_DIR, `${config.fixtureName}.yml`);
+    if (existsSync(yaml)) return [yaml];
+    if (existsSync(yml)) return [yml];
+    throw new Error(`Fixture not found: ${config.fixtureName}`);
   }
 
-  return fixtures;
+  return readdirSync(FIXTURES_DIR)
+    .filter(
+      (f) =>
+        (f.endsWith(".yaml") || f.endsWith(".yml")) &&
+        !f.startsWith(INVALID_FIXTURE)
+    )
+    .map((f) => join(FIXTURES_DIR, f));
 }
 
-/**
- * Evaluate a single fixture
- */
-async function evaluateFixture(
+interface RunResult {
+  runNumber: number;
+  specs: Record<string, import("@/lib/spec/types").UISpec> | null;
+  valid: boolean;
+  errors: string[];
+}
+
+interface FixtureResult {
+  fixtureName: string;
+  fixturePath: string;
+  runs: RunResult[];
+  validRuns: number;
+  invalidRuns: number;
+  minSimilarity: number;
+  passed: boolean;
+  errors: string[];
+}
+
+async function runSingleEval(
+  fixtureName: string,
   fixturePath: string,
-  runs: number
-): Promise<FixtureResult> {
-  const fixtureName = fixturePath.split("/").pop()?.replace(".json", "") || "unknown";
-  console.log(`\nEvaluating fixture: ${fixtureName} (${runs} runs)`);
+  openapiString: string,
+  runNumber: number
+): Promise<RunResult> {
+  try {
+    const result = await compileOpenAPIForEval(openapiString);
 
-  const payload = loadFixture(fixturePath);
-
-  // Run AI generation N times in parallel (no delay needed)
-  process.stdout.write(`  Running ${runs} runs in parallel... `);
-  const runPromises = Array.from({ length: runs }, async (_, i) => {
-    const runNumber = i + 1;
-    try {
-      const { spec, rawResponse, source } = await generateSpecWithAI(payload);
-      const validation = validateSpec(spec);
-
-      let fingerprint = null;
+    if (result.success) {
+      const validation = validateSpecs(result.specs);
       if (validation.isValid) {
-        fingerprint = extractFingerprint(spec);
+        return {
+          runNumber,
+          specs: result.specs,
+          valid: true,
+          errors: [],
+        };
       }
-
-      const runResult: RunResult = {
-        runNumber,
-        spec: validation.isValid ? spec : null,
-        rawResponse,
-        source,
-        validationResult: validation.schemaResult,
-        logicalResult: validation.logicalResult,
-        fingerprint,
-        error: validation.errors.length > 0 ? validation.errors.join("; ") : undefined,
-      };
-
-      if (!validation.isValid) {
-        saveFailure(fixtureName, runNumber, rawResponse, validation.errors);
-      }
-
-      return runResult;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      saveFailure(fixtureName, runNumber, errorMessage, [errorMessage]);
+      saveFailure(fixtureName, fixturePath, runNumber, validation.errors);
       return {
         runNumber,
-        spec: null,
-        rawResponse: errorMessage,
-        source: "fallback" as const,
-        validationResult: {
-          isValid: false,
-          errors: [errorMessage],
-          warnings: [],
-        },
-        logicalResult: null,
-        fingerprint: null,
-        error: errorMessage,
+        specs: null,
+        valid: false,
+        errors: validation.errors,
       };
     }
-  });
-
-  const runResults = (await Promise.all(runPromises)).sort(
-    (a, b) => a.runNumber - b.runNumber
-  );
-
-  // Print per-run results
-  const statuses = runResults.map((r) =>
-    r.validationResult.isValid ? "✓" : `✗ (${r.error ?? r.validationResult.errors[0] ?? "?"})`
-  );
-  console.log(statuses.join(" "));
-
-  // Analyze results
-  const validRuns = runResults.filter((r) => r.validationResult.isValid).length;
-  const invalidRuns = runs - validRuns;
-  const fallbackRuns = runResults.filter((r) => r.source === "fallback").length;
-
-  // Collect all errors and warnings
-  const errors = new Set<string>();
-  const warnings = new Set<string>();
-  runResults.forEach((r) => {
-    r.validationResult.errors.forEach((e) => errors.add(e));
-    r.validationResult.warnings.forEach((w) => warnings.add(w));
-    if (r.error) {
-      errors.add(r.error);
-    }
-  });
-
-  // Calculate stability metrics
-  const validFingerprints = runResults
-    .filter((r) => r.fingerprint !== null)
-    .map((r) => r.fingerprint!);
-
-  let averageSimilarity = 1.0;
-  let minSimilarity = 1.0;
-  let maxSimilarity = 1.0;
-  let consistent = true;
-
-  if (validFingerprints.length > 1) {
-    const comparison = compareMultipleFingerprints(validFingerprints);
-    averageSimilarity = comparison.averageSimilarity;
-    minSimilarity = comparison.minSimilarity;
-    maxSimilarity = comparison.maxSimilarity;
-    consistent = comparison.consistent;
+    const errMsgs = result.errors.map((e) => e.message);
+    saveFailure(fixtureName, fixturePath, runNumber, errMsgs);
+    return {
+      runNumber,
+      specs: null,
+      valid: false,
+      errors: errMsgs,
+    };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    saveFailure(fixtureName, fixturePath, runNumber, [msg]);
+    return {
+      runNumber,
+      specs: null,
+      valid: false,
+      errors: [msg],
+    };
   }
+}
+
+async function evaluateFixture(
+  fixturePath: string,
+  runs: number,
+  parallel: boolean
+): Promise<FixtureResult> {
+  const fixtureName = fixturePath.split("/").pop()?.replace(/\.(yaml|yml)$/, "") ?? "unknown";
+  const openapiString = readFileSync(fixturePath, "utf-8");
+
+  let runResults: RunResult[];
+
+  if (parallel) {
+    process.stdout.write(`  Running ${runs} runs in parallel... `);
+    runResults = await Promise.all(
+      Array.from({ length: runs }, (_, i) =>
+        runSingleEval(fixtureName, fixturePath, openapiString, i + 1)
+      )
+    );
+    runResults.sort((a, b) => a.runNumber - b.runNumber);
+    const statuses = runResults.map((r) => (r.valid ? "✓" : `✗`));
+    console.log(statuses.join(" "));
+  } else {
+    runResults = [];
+    for (let i = 0; i < runs; i++) {
+      const runNumber = i + 1;
+      process.stdout.write(`  Run ${runNumber}/${runs}... `);
+      const r = await runSingleEval(
+        fixtureName,
+        fixturePath,
+        openapiString,
+        runNumber
+      );
+      runResults.push(r);
+      console.log(r.valid ? "✓" : `✗ ${r.errors[0] ?? "?"}`);
+    }
+  }
+
+  const validRuns = runResults.filter((r) => r.valid);
+  const invalidRuns = runs - validRuns.length;
+
+  let minSimilarity = 1;
+  const errors = [...new Set(runResults.flatMap((r) => r.errors))];
+
+  if (validRuns.length >= 2) {
+    let minAcrossPairs = 1;
+    let worstPair: { i: number; j: number; comp: ReturnType<typeof compareSpecsMulti> } | null = null;
+    for (let i = 0; i < validRuns.length; i++) {
+      for (let j = i + 1; j < validRuns.length; j++) {
+        const comp = compareSpecsMulti(validRuns[i].specs!, validRuns[j].specs!);
+        if (!comp.sameSlugs) {
+          errors.push(comp.slugMismatch ?? "Slug mismatch");
+          minAcrossPairs = 0;
+        } else {
+          if (comp.minSimilarity < minAcrossPairs) {
+            minAcrossPairs = comp.minSimilarity;
+            worstPair = { i, j, comp };
+          }
+        }
+      }
+    }
+    minSimilarity = minAcrossPairs;
+    // Diff on failure for prompt debugging
+    if (minAcrossPairs < SIMILARITY_THRESHOLD && worstPair) {
+      const { i, j, comp } = worstPair;
+      const a = canonicalString(validRuns[i].specs!);
+      const b = canonicalString(validRuns[j].specs!);
+      console.log(`\n  Diff (runs ${i + 1} vs ${j + 1}, similarity ${(comp.minSimilarity * 100).toFixed(1)}%):`);
+      console.log(diffCanonical(a, b).split("\n").slice(0, 20).join("\n"));
+    }
+  }
+
+  const validityRate = validRuns.length / runs;
+  const passed =
+    validityRate >= VALIDITY_THRESHOLD &&
+    minSimilarity >= SIMILARITY_THRESHOLD;
 
   return {
     fixtureName,
+    fixturePath,
     runs: runResults,
-    totalRuns: runs,
-    validRuns,
+    validRuns: validRuns.length,
     invalidRuns,
-    fallbackRuns,
-    averageSimilarity,
     minSimilarity,
-    maxSimilarity,
-    consistent,
-    errors: [...errors],
-    warnings: [...warnings],
+    passed,
+    errors,
   };
 }
 
-/**
- * Save failure response for replay
- */
 function saveFailure(
   fixtureName: string,
+  openapiPath: string,
   runNumber: number,
-  rawResponse: string,
   errors: string[]
 ): void {
-  const failuresDir = DEFAULT_FAILURES_DIR;
-  if (!existsSync(failuresDir)) {
-    mkdirSync(failuresDir, { recursive: true });
+  if (!existsSync(FAILURES_DIR)) {
+    mkdirSync(FAILURES_DIR, { recursive: true });
   }
-
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const failureFile = join(
-    failuresDir,
-    `${fixtureName}-run${runNumber}-${timestamp}.json`
-  );
-
-  const failureData = {
+  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  const file = join(FAILURES_DIR, `${fixtureName}-run${runNumber}-${ts}.json`);
+  const data: FailureData = {
     fixtureName,
     runNumber,
+    openapiPath,
     timestamp: new Date().toISOString(),
     errors,
-    rawResponse,
   };
-
-  writeFileSync(failureFile, JSON.stringify(failureData, null, 2));
-  console.log(`    Saved failure to: ${failureFile}`);
+  writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-/**
- * Generate and save report
- */
-function saveReport(report: EvaluationReport, config: Config): void {
-  if (!existsSync(config.reportsDir)) {
-    mkdirSync(config.reportsDir, { recursive: true });
-  }
-
-  const timestamp = report.timestamp.replace(/[:.]/g, "-");
-  const markdownPath = join(config.reportsDir, `report-${timestamp}.md`);
-  const textPath = join(config.reportsDir, `report-${timestamp}.txt`);
-
-  writeFileSync(markdownPath, generateMarkdownReport(report));
-  writeFileSync(textPath, generateTextReport(report));
-
-  console.log(`\nReports saved:`);
-  console.log(`  Markdown: ${markdownPath}`);
-  console.log(`  Text: ${textPath}`);
-}
-
-/**
- * Main evaluation function
- */
 async function main() {
+  requireOpenAIKey();
   const config = parseArgs();
 
-  console.log("AI Evaluation Harness");
-  console.log("=".repeat(50));
-  console.log(`Runs per fixture: ${config.runs}${config.quick ? " (quick mode)" : ""}`);
-  console.log(`Fixtures directory: ${config.fixturesDir}`);
-  console.log(`Reports directory: ${config.reportsDir}`);
-  if (config.replayFailures) {
-    console.log(`Mode: Replaying failures from ${config.failuresDir}`);
-  }
-
-  // Get fixtures
   const fixtures = getFixtures(config);
   if (fixtures.length === 0) {
-    console.error("No fixtures found!");
+    console.error("No fixtures found.");
     process.exit(1);
   }
 
-  console.log(`\nFound ${fixtures.length} fixture(s)`);
-
-  // Evaluate each fixture
-  const fixtureResults: FixtureResult[] = [];
-  let totalRuns = 0;
-  let totalValidRuns = 0;
-
-  for (const fixturePath of fixtures) {
-    const result = await evaluateFixture(fixturePath, config.runs);
-    fixtureResults.push(result);
-    totalRuns += result.totalRuns;
-    totalValidRuns += result.validRuns;
-  }
-
-  // Calculate overall metrics
-  const overallValidRate = totalRuns > 0 ? totalValidRuns / totalRuns : 0;
-  
-  // Calculate overall stability as average of per-fixture stability scores
-  // (not by comparing across fixtures, which would be meaningless)
-  const fixtureStabilities = fixtureResults
-    .filter((fr) => fr.validRuns > 0) // Only include fixtures with valid runs
-    .map((fr) => fr.averageSimilarity);
-  
-  const overallStability =
-    fixtureStabilities.length > 0
-      ? fixtureStabilities.reduce((a, b) => a + b, 0) / fixtureStabilities.length
-      : 1.0;
-
-  // Generate report
-  const report: EvaluationReport = {
-    timestamp: new Date().toISOString(),
-    totalFixtures: fixtureResults.length,
-    totalRuns,
-    overallValidRate,
-    overallStability,
-    fixtureResults,
-  };
-
-  // Save reports
-  saveReport(report, config);
-
-  // Print summary
-  console.log("\n" + "=".repeat(50));
-  console.log("Evaluation Summary");
+  console.log("Full Pipeline Evaluation (OpenAPI → UISpec)");
   console.log("=".repeat(50));
-  console.log(`Total Fixtures: ${report.totalFixtures}`);
-  console.log(`Total Runs: ${report.totalRuns}`);
-  console.log(
-    `Overall Valid Rate: ${(report.overallValidRate * 100).toFixed(1)}%`
-  );
-  console.log(
-    `Overall Stability: ${(report.overallStability * 100).toFixed(1)}%`
-  );
+  console.log(`Runs per fixture: ${config.runs}${config.quick ? " (quick)" : ""}${config.parallel ? " (parallel)" : ""}`);
+  console.log(`Fixtures: ${fixtures.length}`);
+  console.log("");
 
-  if (report.overallValidRate >= 0.9) {
-    console.log("\n✅ Valid rate meets target (≥90%)");
+  const results: FixtureResult[] = [];
+
+  if (config.parallel) {
+    const fixtureResults = await Promise.all(
+      fixtures.map(async (path) => {
+        const name = path.split("/").pop() ?? "?";
+        console.log(`\nFixture: ${name}`);
+        const result = await evaluateFixture(path, config.runs, true);
+        console.log(
+          `  Valid: ${result.validRuns}/${config.runs}, Min similarity: ${(result.minSimilarity * 100).toFixed(1)}%`
+        );
+        return result;
+      })
+    );
+    results.push(...fixtureResults);
   } else {
-    console.log("\n⚠️  Valid rate below target (<90%)");
+    for (const path of fixtures) {
+      const name = path.split("/").pop() ?? "?";
+      console.log(`\nFixture: ${name}`);
+      const result = await evaluateFixture(path, config.runs, false);
+      results.push(result);
+      console.log(
+        `  Valid: ${result.validRuns}/${config.runs}, Min similarity: ${(result.minSimilarity * 100).toFixed(1)}%`
+      );
+    }
   }
 
-  if (report.overallStability >= 0.9) {
-    console.log("✅ Stability is high");
-  } else {
-    console.log("⚠️  Stability is low");
+  const totalRuns = results.reduce((s, r) => s + r.runs.length, 0);
+  const totalValid = results.reduce((s, r) => s + r.validRuns, 0);
+  const validityRate = totalRuns > 0 ? totalValid / totalRuns : 0;
+  const minSimAcross =
+    results.filter((r) => r.validRuns > 0).length > 0
+      ? Math.min(...results.filter((r) => r.validRuns > 0).map((r) => r.minSimilarity))
+      : 1;
+  const allPassed = results.every((r) => r.passed);
+  const noValidRuns = totalValid === 0;
+
+  if (noValidRuns) {
+    console.error("\nNo valid runs. Eval failed.");
+    if (config.json) {
+      console.log(
+        JSON.stringify({
+          passed: false,
+          validity: 0,
+          similarity: 0,
+          errors: results.flatMap((r) => r.errors),
+        })
+      );
+    }
+    process.exit(1);
   }
+
+  console.log("\n" + "=".repeat(50));
+  console.log("Summary");
+  console.log("=".repeat(50));
+  console.log(`Validity: ${(validityRate * 100).toFixed(1)}%`);
+  console.log(`Min similarity: ${(minSimAcross * 100).toFixed(1)}%`);
+  console.log(allPassed ? "\n✅ Passed" : "\n⚠️ Failed");
+
+  if (config.outputDir) {
+    mkdirSync(config.outputDir, { recursive: true });
+    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const reportPath = join(config.outputDir, `report-full-${ts}.txt`);
+    const lines = [
+      `Full Pipeline Eval Report - ${new Date().toISOString()}`,
+      `Validity: ${(validityRate * 100).toFixed(1)}%`,
+      `Min similarity: ${(minSimAcross * 100).toFixed(1)}%`,
+      "",
+      ...results.map(
+        (r) =>
+          `${r.fixtureName}: valid ${r.validRuns}/${r.runs.length}, sim ${(r.minSimilarity * 100).toFixed(1)}%`
+      ),
+    ];
+    writeFileSync(reportPath, lines.join("\n"));
+    console.log(`\nReport: ${reportPath}`);
+  }
+
+  if (config.json) {
+    console.log(
+      JSON.stringify({
+        passed: allPassed,
+        validity: validityRate,
+        similarity: minSimAcross,
+        errors: results.flatMap((r) => r.errors),
+      })
+    );
+  }
+
+  process.exit(allPassed ? 0 : 1);
 }
 
-// Run main function
-main().catch((error) => {
-  console.error("Evaluation failed:", error);
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

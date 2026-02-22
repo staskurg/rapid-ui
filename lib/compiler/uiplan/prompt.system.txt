@@ -13,10 +13,16 @@ HARD RULES (non-negotiable):
 6) You MUST NOT infer relationships or navigation between resources.
 7) Determinism: given the same ApiIR, you must produce the same UiPlanIR every time.
 
+FIELD PLAN OUTPUT FORMAT (include all applicable keys for every field):
+- path: REQUIRED. Always include.
+- label: REQUIRED. Always include. Derive from path using LABEL RULES below.
+- readOnly: Include ONLY when true. Omit when false.
+- order: REQUIRED. Always include. Assign deterministic order per ORDERING RULES below.
+
 ALLOWED DECISIONS:
-A) Labels: you may produce human-friendly labels from field names (stable transformation).
-B) Field ordering: you may assign an order that is stable and explainable.
-C) readOnly: you may mark fields as readOnly using deterministic rules.
+A) Labels: produce human-friendly labels from field names (stable transformation).
+B) Field ordering: assign order numbers deterministically.
+C) readOnly: mark fields as readOnly using deterministic rules.
 
 READONLY RULES (deterministic):
 - Mark readOnly=true if any of the following is true:
@@ -24,7 +30,7 @@ READONLY RULES (deterministic):
   - field name ends with "Id" (case-insensitive) AND the field is required in responseSchema but not present in create/update requestSchema
   - field path is exactly "createdAt" or "updatedAt" or ends with ".createdAt" / ".updatedAt"
   - field path contains "createdAt" or "updatedAt" as a terminal segment
-Otherwise readOnly is omitted.
+Otherwise omit readOnly (do not include readOnly: false).
 
 FIELD INCLUSION RULES:
 - For list view: include all primitive fields from responseSchema at the top level plus top-level enums; do NOT include nested objects or arrays unless they are arrays of primitives (then include).
@@ -36,20 +42,49 @@ NESTING / FIELD PATHS:
 - Represent nested fields using dot paths (e.g., "profile.firstName").
 - For arrays of primitives, use the array property path (e.g., "tags").
 
-ORDERING RULES (stable):
-- If you assign explicit order numbers, they must be deterministic:
-  1) required fields first
-  2) then non-required
-  3) within each group, sort lexicographically by field path
-- If you do not assign order numbers, the consumer will sort lexicographically, so prefer assigning order numbers only if needed.
+ORDERING RULES (stable, always assign order):
+1) required fields first (order 1, 2, 3...)
+2) then non-required fields
+3) within each group, sort lexicographically by field path
+4) Use consecutive integers starting from 1.
 
-LABEL RULES (stable):
+LABEL RULES (stable, apply exactly):
 - Convert camelCase / snake_case / kebab-case to Title Case.
 - Keep acronyms as uppercase when obvious (e.g., "SKU" for "sku").
 - Do not add punctuation.
+- Common patterns (use these exactly):
+  | path           | label        |
+  | id             | Id           |
+  | createdAt      | Created At   |
+  | updatedAt     | Updated At   |
+  | firstName      | First Name   |
+  | lastName       | Last Name    |
+  | profile.firstName | First Name |
+  | profile.lastName  | Last Name  |
+  | warehouseId    | Warehouse Id |
 
 ERROR HANDLING:
 - If ApiIR is missing required data for a view (e.g., no create operation for a resource), omit that view.
 - Never output nulls. Omit absent views and optional properties.
+
+EXAMPLE (minimal ApiIR → UiPlanIR):
+
+Input ApiIR (abbreviated):
+{"resources":[{"name":"Users","operations":[{"kind":"list","responseSchema":{"type":"array","items":{"properties":{"id":{"type":"string"},"email":{"type":"string"},"status":{"type":"string","enum":["active","suspended"]}}}}},{"kind":"detail","responseSchema":{"properties":{"id":{},"email":{},"status":{}}}},{"kind":"create","requestSchema":{"properties":{"email":{},"status":{}}}},{"kind":"update","requestSchema":{"properties":{"email":{},"status":{}}}}]}]}
+
+Expected UiPlanIR output:
+{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"status","label":"Status","order":3}]},"detail":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"status","label":"Status","order":3}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]}}}]}
+
+Note: id is readOnly (system field), so omitted from create/edit. Each field has path, label, order; readOnly only when true.
+
+EXAMPLE 2 (nested fields, profile.firstName / profile.lastName):
+
+Input ApiIR (abbreviated):
+{"resources":[{"name":"Users","operations":[{"kind":"list","responseSchema":{"items":{"properties":{"id":{},"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}}},{"kind":"detail","responseSchema":{"properties":{"id":{},"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}},{"kind":"create","requestSchema":{"properties":{"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}},{"kind":"update","requestSchema":{"properties":{"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}}]}]}
+
+Expected UiPlanIR output (nested paths):
+{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"detail":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]}}}]}
+
+Note: Nested object properties use dot paths. Labels for nested segments use the property name only (e.g., "profile.firstName" → "First Name", not "Profile First Name").
 
 Remember: You are producing a plan for a deterministic renderer. Boring is correct.

@@ -22,6 +22,8 @@ import { ZodError } from "zod";
 
 const MODEL = "gpt-4o-mini";
 const MAX_RETRIES = 2;
+/** Fixed seed for reproducible outputs when supported by the model. */
+const SEED = 42;
 
 export interface LlmPlanResult {
   success: true;
@@ -101,6 +103,7 @@ export async function llmPlan(
           { role: "user", content: userPrompt },
         ],
         temperature: 0,
+        seed: SEED,
         response_format: { type: "json_object" },
         max_tokens: 4096,
       });
