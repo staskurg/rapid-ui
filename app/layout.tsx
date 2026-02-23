@@ -26,11 +26,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      {/* suppressHydrationWarning is needed because next-themes modifies the <html> class
-          attribute (adds/removes 'dark') after hydration, causing an expected mismatch
-          between server-rendered HTML and client-rendered HTML */}
+      {/* suppressHydrationWarning on html: next-themes modifies class (dark mode) after hydration */}
+      {/* suppressHydrationWarning on body: browser extensions (e.g. Grammarly) inject data-* attrs */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning
       >
         <ThemeProvider
           attribute="class"
