@@ -25,10 +25,10 @@ todos:
     status: completed
   - id: phase6-5-ui
     content: "Phase 6.5: Full generated UI page. CHECKPOINT: CRUD from UI, sidebar nav."
-    status: pending
+    status: completed
   - id: phase7-harness
     content: "Phase 7: Determinism harness & golden specs. CHECKPOINT: Snapshot tests pass, invalid spec fails."
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -351,22 +351,22 @@ Same UiPlanIR → byte-identical UISpec map. Each UISpec passes existing validat
 ### File Summary
 
 
-| File                                              | Action                                     |
-| ------------------------------------------------- | ------------------------------------------ |
-| `lib/compiler/pipeline.ts`                        | Create — orchestrate full compile pipeline |
-| `lib/compiler/store.ts`                           | Create — compilation store (specs + apiIr) |
-| `lib/compiler/mock/fixtures.ts`                   | Create — getPredefinedData, isGoldenSpec   |
-| `lib/compiler/mock/fixtures/*.json`               | Create — predefined users, products data   |
-| `lib/compiler/mock/store.ts`                      | Create — per-session mock data             |
-| `app/api/compile-openapi/route.ts`                | Create — full pipeline, persist            |
-| `app/api/compilations/[id]/route.ts`              | Create — GET specs by id                   |
-| `app/api/mock/[id]/[resource]/route.ts`           | Create — GET list, POST create             |
-| `app/api/mock/[id]/[resource]/[paramId]/route.ts` | Create — GET, PUT/PATCH, DELETE            |
-| `app/api/mock/[id]/[resource]/reset/route.ts`     | Create — POST reset                        |
-| `lib/adapters/mock-adapter.ts`                    | Create — CRUD adapter for mock API         |
-| `app/page.tsx`                                    | Update — wire compile API, "View UI" link  |
-| `app/u/[id]/page.tsx`                             | Create — redirect to first resource        |
-| `app/u/[id]/[resource]/page.tsx`                  | Create — minimal placeholder page          |
+| File                                              | Action                                      |
+| ------------------------------------------------- | ------------------------------------------- |
+| `lib/compiler/pipeline.ts`                        | Create — orchestrate full compile pipeline  |
+| `lib/compiler/store.ts`                           | Create — compilation store (specs + apiIr)  |
+| `lib/compiler/mock/fixtures.ts`                   | Create — getPredefinedData, isGoldenSpec    |
+| `lib/compiler/mock/fixtures/*.json`               | Create — predefined users, products data    |
+| `lib/compiler/mock/store.ts`                      | Create — per-session mock data              |
+| `app/api/compile-openapi/route.ts`                | Create — full pipeline, persist             |
+| `app/api/compilations/[id]/route.ts`              | Create — GET specs by id                    |
+| `app/api/mock/[id]/[resource]/route.ts`           | Create — GET list, POST create              |
+| `app/api/mock/[id]/[resource]/[paramId]/route.ts` | Create — GET, PUT/PATCH, DELETE             |
+| ~~`app/api/mock/[id]/[resource]/reset/route.ts`~~ | Removed (6.25a — mock clears on re-compile) |
+| `lib/adapters/mock-adapter.ts`                    | Create — CRUD adapter for mock API          |
+| `app/page.tsx`                                    | Update — wire compile API, "View UI" link   |
+| `app/u/[id]/page.tsx`                             | Create — redirect to first resource         |
+| `app/u/[id]/[resource]/page.tsx`                  | Create — minimal placeholder page           |
 
 
 ### CHECKPOINT 6
@@ -502,57 +502,51 @@ Compare: same slugs? per-resource fingerprint ≥90%? diff on failure
 | `app/u/[id]/[resource]/page.tsx`            | Replace — full sidebar + SchemaRenderer |
 
 
-### CHECKPOINT 6.5
+### CHECKPOINT 6.5 ✓
 
-"View UI" link works. Generated UI shows seeded data from OpenAPI schemas. Full CRUD (list, create, edit, delete) from UI. Reset restores seeds. Shared data — URLs are shareable; anyone with the link sees the same data.
+"View UI" link works. Generated UI shows predefined data. Full CRUD (list, create, edit, delete) from UI. Mock clears on re-compile (no Reset button per 6.25a). Shared data — URLs are shareable.
 
 ---
 
 ## Phase 7: Determinism Harness, Golden Specs & Eval Update
 
-**Goal:** Prove compiler correctness. Update eval harness for OpenAPI pipeline.
+**Goal:** Prove compiler correctness. Snapshot tests + full pipeline E2E. Eval harness already updated in Phase 6.25.
 
-### Tasks
+### Current State (as of Phase 6.5 complete)
 
-1. **Snapshot tests** (`tests/compiler/`):
-  - `canonical.test.ts`: Golden specs → canonical JSON snapshot
-  - `apiir.test.ts`: Golden specs → ApiIR snapshot
-  - `uiplan.test.ts`: ApiIR → UiPlanIR (mock LLM or fixture) → normalized snapshot
-  - `lowering.test.ts`: UiPlanIR fixture → UISpec snapshot
-  - `invalid.test.ts`: `golden_openapi_invalid_expected_failure.yaml` → assert fails with expected error codes + order
-2. **Full pipeline test:** Golden Users spec → full compile → UISpec snapshot. Golden Products spec → same. Use `llmPlanFn` fixture to avoid real LLM in CI; optional real-LLM run when `OPENAI_API_KEY` set.
-3. **Golden spec location:** Copy or symlink `.cursor/mvp_v3/specs/*.yaml` to `tests/compiler/fixtures/` for test access.
-4. **Eval harness update** (`eval/`): Replace payload-based eval with OpenAPI-based eval.
-  - **Fixtures:** Use OpenAPI specs (golden_users.yaml, golden_products.yaml) instead of JSON payloads.
-  - **Entry point:** Call `compileOpenAPI(openapiString)` from pipeline (export testable function).
-  - **Metrics:** `llm-plan.ts` accepts optional `source` param; pass `"eval"` for eval runs so `recordOpenAICall` uses `source: "eval"`.
-  - **Tests:** Structural validity (UISpec passes schema), determinism (same OpenAPI → same UISpec across N runs), stability metrics.
-  - **Remove:** Old `eval/utils/ai-generator.ts` (payload → UISpec). Create `eval/utils/compile-openapi.ts` that calls pipeline.
-  - **Keep:** `eval/utils/validator.ts`, `comparator.ts`, `reporter.ts`; adapt for `Record<slug, UISpec>` (validate each spec, fingerprint multi-spec output).
-5. **Eval legacy removal:** Delete `eval/fixtures/*.json` (payload fixtures). Replace with OpenAPI fixtures or symlink to `tests/compiler/fixtures/`. Update `eval/README.md`.
-6. **CI:** Snapshot tests and eval must pass. Any change to spec or compiler invalidates snapshots.
+
+| Item                                           | Status              | Notes                                                                   |
+| ---------------------------------------------- | ------------------- | ----------------------------------------------------------------------- |
+| `tests/compiler/canonical.test.ts`             | ✓ Done              | Golden specs → canonical JSON snapshot                                  |
+| `tests/compiler/apiir.test.ts`                 | ✓ Done              | Golden specs → ApiIR snapshot                                           |
+| `tests/compiler/uiplan.test.ts`                | ✓ Done              | ApiIR → UiPlanIR via mock LLM, normalized snapshot                      |
+| `tests/compiler/lowering.test.ts`              | ✓ Done              | UiPlanIR fixture → UISpec snapshot                                      |
+| `tests/compiler/invalid.test.ts`               | ✓ Done              | Invalid spec → expected error codes + order                             |
+| `tests/compiler/pipeline.test.ts`              | ✓ Done              | Full E2E: compileOpenAPI with llmPlanFn → UISpec snapshot               |
+| `tests/compiler/fixtures/`                     | ✓ Done              | Golden YAMLs + apiir/*.json (single source of truth)                    |
+| Eval harness                                   | ✓ Done (Phase 6.25) | compile-openapi.ts, eval-ai.ts, eval-llm-only.ts, validator, comparator |
+| `lib/compiler/uiplan/llm-plan.ts` source param | ✓ Done              | Optional `source` for metrics                                           |
+| `eval/utils/ai-generator.ts`                   | ✓ Removed           | Replaced by compile-openapi.ts                                          |
+
+
+### Remaining Tasks
+
+1. **Golden spec sync:** When `tests/compiler/fixtures/*.yaml` changes, run `npm run fixtures:generate-apiir` to refresh ApiIR fixtures.
 
 ### File Summary
 
 
-| File                               | Action                                          |
-| ---------------------------------- | ----------------------------------------------- |
-| `tests/compiler/fixtures/`         | Create — golden specs                           |
-| `tests/compiler/canonical.test.ts` | Create                                          |
-| `tests/compiler/apiir.test.ts`     | Create                                          |
-| `tests/compiler/uiplan.test.ts`    | Create — fixture-based, no LLM                  |
-| `tests/compiler/lowering.test.ts`  | Create — fixture → UISpec                       |
-| `tests/compiler/invalid.test.ts`   | Create                                          |
-| `tests/compiler/pipeline.test.ts`  | Create — full E2E, mock LLM                     |
-| `eval/utils/compile-openapi.ts`    | Create — calls pipeline, source: "eval"         |
-| `eval/eval-ai.ts`                  | Update — use OpenAPI fixtures, compile pipeline |
-| `eval/README.md`                   | Update — OpenAPI flow, new fixtures             |
-| `lib/compiler/uiplan/llm-plan.ts`  | Update — optional source param for metrics      |
+| File                              | Action                                        |
+| --------------------------------- | --------------------------------------------- |
+| `tests/compiler/pipeline.test.ts` | ✓ Done — full E2E, llmPlanFn, UISpec snapshot |
 
 
-### CHECKPOINT 7
+### CHECKPOINT 7 ✓
 
-Same input compiled twice → byte-identical outputs. Invalid spec fails with expected errors. Eval runs with OpenAPI fixtures; determinism and validity metrics reported.
+- [x] Same input compiled twice → byte-identical outputs (canonical, apiir, uiplan, lowering tests)
+- [x] Invalid spec fails with expected errors (invalid.test.ts)
+- [x] Eval runs with OpenAPI fixtures; determinism and validity metrics (Phase 6.25)
+- [x] Full pipeline E2E test with llmPlanFn passes (no API key required)
 
 ---
 
@@ -571,8 +565,8 @@ Same input compiled twice → byte-identical outputs. Invalid spec fails with ex
 **Phase 6.5:** Full UI.
 
 1. **Layout:** Sidebar (nav menu: Users, Products, etc.) + main content (SchemaRenderer).
-2. **Data:** Fetch specs from `GET /api/compilations/[id]`. Use `MockAdapter` for CRUD. Seed data generated from OpenAPI schemas. Shared per compilation; Reset Data restores seeds for all viewers.
-3. **Navigation:** Sidebar links to `/u/[id]/users`, `/u/[id]/products`. Reset Data button.
+2. **Data:** Fetch specs from store (server) or `GET /api/compilations/[id]`. Use `MockAdapter` for CRUD. Predefined fixtures for golden specs. Shared per compilation; mock clears on re-compile (no Reset Data button per 6.25a).
+3. **Navigation:** Sidebar links to `/u/[id]/users`, `/u/[id]/products`.
 
 ---
 
@@ -586,8 +580,8 @@ lib/
     pipeline.ts
     store.ts              # In-memory compilation store (specs + apiIr)
     mock/
-      seed-generator.ts   # Schema-based sample data
-      store.ts            # Per-session mock data
+      fixtures.ts         # getPredefinedData, isGoldenSpec (6.25a)
+      store.ts            # Per-compilation mock data (predefined fixtures)
     openapi/
       parser.ts
       subset-validator.ts
@@ -721,14 +715,14 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
 
 ## Implementation Todo List
 
-- **Phase 1 — OpenAPI Ingestion & Subset Validator**
-  - lib/compiler/errors.ts — error taxonomy (incl. UIPLAN_LLM_UNAVAILABLE)
-  - lib/compiler/openapi/parser.ts — parse YAML/JSON
-  - lib/compiler/openapi/subset-validator.ts — validate subset
-  - components/connect/OpenApiDropZone.tsx — drag-and-drop upload
-  - components/compiler/ProgressPanel.tsx — right panel
-  - app/page.tsx — two-panel compiler layout
-  - Legacy removal — delete demo/external/paste, adapters, inference, etc.
+- **Phase 1 — OpenAPI Ingestion & Subset Validator** ✓
+  - ✓ lib/compiler/errors.ts — error taxonomy (incl. UIPLAN_LLM_UNAVAILABLE)
+  - ✓ lib/compiler/openapi/parser.ts — parse YAML/JSON
+  - ✓ lib/compiler/openapi/subset-validator.ts — validate subset
+  - ✓ components/connect/OpenApiDropZone.tsx — drag-and-drop upload
+  - ✓ components/compiler/ProgressPanel.tsx — right panel
+  - ✓ app/page.tsx — two-panel compiler layout
+  - ✓ Legacy removal — demo/external/paste, adapters, inference removed
 - **Phase 2 — Canonicalization & Hashing** ✓
   - ✓ npm install fast-json-stable-stringify (explicit dep)
   - ✓ lib/compiler/openapi/ref-resolver.ts
@@ -757,11 +751,10 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
 - **Phase 6 — Pipeline, Persistence & Mock Backend** ✓
   - ✓ lib/compiler/pipeline.ts — compileOpenAPI with optional llmPlanFn
   - ✓ lib/compiler/store.ts — globalThis for dev hot-reload persistence
-  - ✓ lib/compiler/mock/seed-generator.ts
-  - ✓ lib/compiler/mock/store.ts
+  - ✓ lib/compiler/mock/store.ts (predefined fixtures per 6.25a; seed-generator removed)
   - ✓ app/api/mock/[id]/[resource]/route.ts
   - ✓ app/api/mock/[id]/[resource]/[paramId]/route.ts
-  - ✓ app/api/mock/[id]/[resource]/reset/route.ts
+  - ✓ reset route removed (6.25a — mock clears on re-compile)
   - ✓ lib/adapters/mock-adapter.ts
   - ✓ app/api/compile-openapi/route.ts
   - ✓ app/api/compilations/[id]/route.ts
@@ -779,20 +772,20 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
   - ✓ eval/utils/ai-generator.ts — delete
   - ✓ eval/README.md — update
   - ✓ package.json — add eval:llm script
-- **Phase 6.5 — Full Generated UI Page**
-  - components/compiler/CompiledUISidebar.tsx — sidebar nav + Reset Data
-  - app/u/[id]/[resource]/page.tsx — replace with full SchemaRenderer + adapter
-- **Phase 7 — Determinism Harness, Golden Specs & Eval**
-  - tests/compiler/fixtures/ — golden specs
-  - tests/compiler/canonical.test.ts
-  - tests/compiler/apiir.test.ts
-  - tests/compiler/uiplan.test.ts
-  - tests/compiler/lowering.test.ts
-  - tests/compiler/invalid.test.ts
-  - tests/compiler/pipeline.test.ts — use llmPlanFn fixture for CI
-  - eval/utils/compile-openapi.ts — pipeline caller, source: "eval"
-  - eval/eval-ai.ts — update for OpenAPI fixtures
-  - eval/README.md — update docs
-  - lib/compiler/uiplan/llm-plan.ts — optional source param
-  - Legacy: delete eval/utils/ai-generator.ts, eval/fixtures/*.json
+- **Phase 6.5 — Full Generated UI Page** ✓
+  - ✓ components/compiler/CompiledUISidebar.tsx — sidebar nav
+  - ✓ app/u/[id]/[resource]/page.tsx — full SchemaRenderer + adapter
+- **Phase 7 — Determinism Harness, Golden Specs & Eval** ✓
+  - ✓ tests/compiler/fixtures/ — golden specs
+  - ✓ tests/compiler/canonical.test.ts
+  - ✓ tests/compiler/apiir.test.ts
+  - ✓ tests/compiler/uiplan.test.ts
+  - ✓ tests/compiler/lowering.test.ts
+  - ✓ tests/compiler/invalid.test.ts
+  - ✓ tests/compiler/pipeline.test.ts — full E2E with llmPlanFn
+  - ✓ eval/utils/compile-openapi.ts (Phase 6.25)
+  - ✓ eval/eval-ai.ts (Phase 6.25)
+  - ✓ eval/README.md (Phase 6.25)
+  - ✓ lib/compiler/uiplan/llm-plan.ts source param
+  - ✓ eval/utils/ai-generator.ts deleted (Phase 6.25)
 

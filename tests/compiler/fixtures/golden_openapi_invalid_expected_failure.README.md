@@ -11,7 +11,7 @@ You should snapshot:
 * error ordering
 * error stages
 
-If this spec ever *partially* compiles, that’s a **regression**.
+If this spec ever *partially* compiles, that's a **regression**.
 
 ---
 
@@ -113,7 +113,7 @@ I strongly recommend:
 
 3. **Regression guard**:
 
-   * If future work ever “fixes” this spec automatically → fail CI
+   * If future work ever "fixes" this spec automatically → fail CI
 
 ---
 
@@ -128,4 +128,3 @@ You now have the complete, intentional trio:
 | **Spec C** | Deterministic failure surface                       |
 
 This is exactly what a compiler-backed product should ship with.
-
