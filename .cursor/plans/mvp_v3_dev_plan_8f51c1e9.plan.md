@@ -502,9 +502,9 @@ Compare: same slugs? per-resource fingerprint ≥90%? diff on failure
 | `app/u/[id]/[resource]/page.tsx`            | Replace — full sidebar + SchemaRenderer |
 
 
-### CHECKPOINT 6.5 ✓
+### CHECKPOINT 6.5
 
-"View UI" link works. Generated UI shows predefined data. Full CRUD (list, create, edit, delete) from UI. Mock clears on re-compile (no Reset button per 6.25a). Shared data — URLs are shareable.
+"View UI" link works. Generated UI shows seeded data from OpenAPI schemas. Full CRUD (list, create, edit, delete) from UI. Reset restores seeds. Shared data — URLs are shareable; anyone with the link sees the same data.
 
 ---
 
@@ -543,10 +543,10 @@ Compare: same slugs? per-resource fingerprint ≥90%? diff on failure
 
 ### CHECKPOINT 7 ✓
 
-- [x] Same input compiled twice → byte-identical outputs (canonical, apiir, uiplan, lowering tests)
-- [x] Invalid spec fails with expected errors (invalid.test.ts)
-- [x] Eval runs with OpenAPI fixtures; determinism and validity metrics (Phase 6.25)
-- [x] Full pipeline E2E test with llmPlanFn passes (no API key required)
+- Same input compiled twice → byte-identical outputs (canonical, apiir, uiplan, lowering tests)
+- Invalid spec fails with expected errors (invalid.test.ts)
+- Eval runs with OpenAPI fixtures; determinism and validity metrics (Phase 6.25)
+- Full pipeline E2E test with llmPlanFn passes (no API key required)
 
 ---
 
@@ -580,8 +580,8 @@ lib/
     pipeline.ts
     store.ts              # In-memory compilation store (specs + apiIr)
     mock/
-      fixtures.ts         # getPredefinedData, isGoldenSpec (6.25a)
-      store.ts            # Per-compilation mock data (predefined fixtures)
+      seed-generator.ts   # Schema-based sample data
+      store.ts            # Per-session mock data
     openapi/
       parser.ts
       subset-validator.ts
@@ -715,14 +715,14 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
 
 ## Implementation Todo List
 
-- **Phase 1 — OpenAPI Ingestion & Subset Validator** ✓
-  - ✓ lib/compiler/errors.ts — error taxonomy (incl. UIPLAN_LLM_UNAVAILABLE)
-  - ✓ lib/compiler/openapi/parser.ts — parse YAML/JSON
-  - ✓ lib/compiler/openapi/subset-validator.ts — validate subset
-  - ✓ components/connect/OpenApiDropZone.tsx — drag-and-drop upload
-  - ✓ components/compiler/ProgressPanel.tsx — right panel
-  - ✓ app/page.tsx — two-panel compiler layout
-  - ✓ Legacy removal — demo/external/paste, adapters, inference removed
+- **Phase 1 — OpenAPI Ingestion & Subset Validator**
+  - lib/compiler/errors.ts — error taxonomy (incl. UIPLAN_LLM_UNAVAILABLE)
+  - lib/compiler/openapi/parser.ts — parse YAML/JSON
+  - lib/compiler/openapi/subset-validator.ts — validate subset
+  - components/connect/OpenApiDropZone.tsx — drag-and-drop upload
+  - components/compiler/ProgressPanel.tsx — right panel
+  - app/page.tsx — two-panel compiler layout
+  - Legacy removal — delete demo/external/paste, adapters, inference, etc.
 - **Phase 2 — Canonicalization & Hashing** ✓
   - ✓ npm install fast-json-stable-stringify (explicit dep)
   - ✓ lib/compiler/openapi/ref-resolver.ts
@@ -775,7 +775,7 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
 - **Phase 6.5 — Full Generated UI Page** ✓
   - ✓ components/compiler/CompiledUISidebar.tsx — sidebar nav
   - ✓ app/u/[id]/[resource]/page.tsx — full SchemaRenderer + adapter
-- **Phase 7 — Determinism Harness, Golden Specs & Eval** ✓
+- **Phase 7 — Determinism Harness, Golden Specs & Eval**
   - ✓ tests/compiler/fixtures/ — golden specs
   - ✓ tests/compiler/canonical.test.ts
   - ✓ tests/compiler/apiir.test.ts
