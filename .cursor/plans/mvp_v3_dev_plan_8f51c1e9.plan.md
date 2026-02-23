@@ -339,10 +339,10 @@ Same UiPlanIR → byte-identical UISpec map. Each UISpec passes existing validat
 2. **In-memory compilation store** (`lib/compiler/store.ts`): `Map<id, { specs, resourceNames, resourceSlugs, apiIr, openapiCanonicalHash }>`. `resourceSlugs = resourceNames.map(slugify)`. Specs keyed by slug. Store `apiIr` for seed generation.
 3. **Compile API** (`app/api/compile-openapi/route.ts`): POST `{ openapi: string, sessionId?: string }`. Call `compileOpenAPI(openapi, { source: "api", sessionId })`. On success: persist (specs + apiIr), return `{ id, url, resourceNames }`. On failure: return `{ errors }`, no persist.
 4. **Fetch API** (`app/api/compilations/[id]/route.ts`): GET returns `{ specs, resourceNames }` for id. 404 if not found.
-5. **Predefined fixtures** (6.25a): Golden specs only. `lib/compiler/mock/fixtures.ts` + `fixtures/users.json`, `fixtures/products.json`. Hash lookup: `getPredefinedData(hash, resourceSlug)`, `isGoldenSpec(hash)`. No seed generator.
-6. **Mock data store** (`lib/compiler/mock/store.ts`): Per `(id, resource)`: mutable records (shared, no session). Initialized from predefined fixtures on first access. `getRecords`, `createRecord`, `updateRecord`, `deleteRecord`, `getById`. `clearForCompilation(id)` on re-compile.
+5. **Schema-based seed generator** (`lib/compiler/mock/seed-generator.ts`): Generate sample records from JSON Schema (from ApiIR `responseSchema` for list). Use `type`, `enum`, `properties`, `required`. Deterministic: same schema → same seeds. Produce 3–5 sample records per resource.
+6. **Mock data store** (`lib/compiler/mock/store.ts`): Per `(id, resource)`: mutable records (shared, no session). Seeds initialized from seed-generator on first access. `getRecords`, `createRecord`, `updateRecord`, `deleteRecord`, `getById`, `reset`.
 7. **Mock API routes** (`app/api/mock/[id]/[resource]/route.ts`, ...): `[resource]` = slug (e.g. `users`). GET list, POST create, GET by id, PUT/PATCH update, DELETE. Use `specs[resource].idField` for ID generation and lookups. No session param — shared data.
-8. **Reset on compile:** `clearForCompilation(id)` before `putCompilation`. No reset endpoint (removed in 6.25a).
+8. **Reset endpoint** (`app/api/mock/[id]/[resource]/reset/route.ts`): POST reset restores seeds for that compilation+resource.
 9. **MockAdapter** (`lib/adapters/mock-adapter.ts`): Calls `/api/mock/[id]/[resource]`. `createMockAdapter(compilationId, resource)`. No session — shareable URLs.
 10. **Compiler page wiring** (`app/page.tsx`): Create session on mount (`createSessionId()`). On parse+validate success → call compile API with `{ openapi, sessionId }`. Add compile steps to progress. On success: show "View UI" link to `/u/{id}/{firstResource}`.
 11. **Root redirect** (`app/u/[id]/page.tsx`): Redirect to `/u/[id]/[firstResource]`.
@@ -355,13 +355,14 @@ Same UiPlanIR → byte-identical UISpec map. Each UISpec passes existing validat
 | ------------------------------------------------- | ------------------------------------------ |
 | `lib/compiler/pipeline.ts`                        | Create — orchestrate full compile pipeline |
 | `lib/compiler/store.ts`                           | Create — compilation store (specs + apiIr) |
-| `lib/compiler/mock/fixtures.ts`                   | Create — getPredefinedData, isGoldenSpec    |
-| `lib/compiler/mock/fixtures/*.json`               | Create — predefined users, products data    |
+| `lib/compiler/mock/fixtures.ts`                   | Create — getPredefinedData, isGoldenSpec   |
+| `lib/compiler/mock/fixtures/*.json`               | Create — predefined users, products data   |
 | `lib/compiler/mock/store.ts`                      | Create — per-session mock data             |
 | `app/api/compile-openapi/route.ts`                | Create — full pipeline, persist            |
 | `app/api/compilations/[id]/route.ts`              | Create — GET specs by id                   |
 | `app/api/mock/[id]/[resource]/route.ts`           | Create — GET list, POST create             |
 | `app/api/mock/[id]/[resource]/[paramId]/route.ts` | Create — GET, PUT/PATCH, DELETE            |
+| `app/api/mock/[id]/[resource]/reset/route.ts`     | Create — POST reset                        |
 | `lib/adapters/mock-adapter.ts`                    | Create — CRUD adapter for mock API         |
 | `app/page.tsx`                                    | Update — wire compile API, "View UI" link  |
 | `app/u/[id]/page.tsx`                             | Create — redirect to first resource        |
@@ -370,7 +371,7 @@ Same UiPlanIR → byte-identical UISpec map. Each UISpec passes existing validat
 
 ### CHECKPOINT 6
 
-Compile succeeds → persist → Fetch API returns specs. Mock API works (list, create, get, update, delete) via direct API calls. Compiler page shows "View UI" link. Link works: redirect → minimal page shows "Specs loaded" for resource. Same spec re-uploaded → same id. Re-compile clears mock; next request loads fresh predefined data.
+Compile succeeds → persist → Fetch API returns specs. Mock API works (list, create, get, update, delete, reset) via direct API calls. Compiler page shows "View UI" link. Link works: redirect → minimal page shows "Specs loaded" for resource. Same spec re-uploaded → same id.
 
 ---
 
@@ -570,8 +571,8 @@ Same input compiled twice → byte-identical outputs. Invalid spec fails with ex
 **Phase 6.5:** Full UI.
 
 1. **Layout:** Sidebar (nav menu: Users, Products, etc.) + main content (SchemaRenderer).
-2. **Data:** Fetch specs from `GET /api/compilations/[id]`. Use `MockAdapter` for CRUD. Predefined data from golden spec fixtures. Shared per compilation. Re-compile clears mock; next request loads fresh predefined data.
-3. **Navigation:** Sidebar links to `/u/[id]/users`, `/u/[id]/products`.
+2. **Data:** Fetch specs from `GET /api/compilations/[id]`. Use `MockAdapter` for CRUD. Seed data generated from OpenAPI schemas. Shared per compilation; Reset Data restores seeds for all viewers.
+3. **Navigation:** Sidebar links to `/u/[id]/users`, `/u/[id]/products`. Reset Data button.
 
 ---
 
@@ -585,9 +586,8 @@ lib/
     pipeline.ts
     store.ts              # In-memory compilation store (specs + apiIr)
     mock/
-      fixtures.ts         # getPredefinedData, isGoldenSpec (hash lookup)
-      fixtures/           # users.json, products.json
-      store.ts            # Per-compilation mock data (predefined only)
+      seed-generator.ts   # Schema-based sample data
+      store.ts            # Per-session mock data
     openapi/
       parser.ts
       subset-validator.ts
@@ -614,7 +614,6 @@ lib/
     mock-adapter.ts       # CRUD adapter for mock API
   utils/
     slugify.ts            # Resource name → URL slug
-    formatDate.ts         # formatDateForDisplay (date-fns, ISO + Unix)
     flattenRecord.ts      # Nested → flat for form
     unflattenRecord.ts    # Flat → nested for API
 
@@ -758,10 +757,11 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
 - **Phase 6 — Pipeline, Persistence & Mock Backend** ✓
   - ✓ lib/compiler/pipeline.ts — compileOpenAPI with optional llmPlanFn
   - ✓ lib/compiler/store.ts — globalThis for dev hot-reload persistence
-  - ✓ lib/compiler/mock/fixtures.ts + fixtures/*.json (predefined data)
+  - ✓ lib/compiler/mock/seed-generator.ts
   - ✓ lib/compiler/mock/store.ts
   - ✓ app/api/mock/[id]/[resource]/route.ts
   - ✓ app/api/mock/[id]/[resource]/[paramId]/route.ts
+  - ✓ app/api/mock/[id]/[resource]/reset/route.ts
   - ✓ lib/adapters/mock-adapter.ts
   - ✓ app/api/compile-openapi/route.ts
   - ✓ app/api/compilations/[id]/route.ts
@@ -779,9 +779,8 @@ See [.cursor/plans/mvp_v3_stress_test_analysis.md](.cursor/plans/mvp_v3_stress_t
   - ✓ eval/utils/ai-generator.ts — delete
   - ✓ eval/README.md — update
   - ✓ package.json — add eval:llm script
-  - ✓ 6.25a: lib/utils/formatDate.ts, golden specs only, predefined fixtures, no Reset button, clearForCompilation on compile
 - **Phase 6.5 — Full Generated UI Page**
-  - components/compiler/CompiledUISidebar.tsx — sidebar nav
+  - components/compiler/CompiledUISidebar.tsx — sidebar nav + Reset Data
   - app/u/[id]/[resource]/page.tsx — replace with full SchemaRenderer + adapter
 - **Phase 7 — Determinism Harness, Golden Specs & Eval**
   - tests/compiler/fixtures/ — golden specs
