@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { slugify } from "@/lib/utils/slugify";
 import { getCompilation } from "@/lib/compiler/store";
 import { logCompilationPageLoad } from "@/lib/ai/metrics";
+import { CompiledUIContent } from "@/components/compiler/CompiledUIContent";
 
 export default async function GeneratedUIPage({
   params,
@@ -36,17 +37,38 @@ export default async function GeneratedUIPage({
     );
   }
 
+  const currentSpec = entry.specs[resource];
   const displayName =
     entry.resourceNames.find((n) => slugify(n) === resource) ?? resource;
 
-  const currentSpec = entry.specs[resource];
+  if (!currentSpec) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="max-w-md rounded-lg border bg-card p-6 text-center shadow-sm">
+          <h1 className="text-lg font-semibold text-destructive">
+            Resource not found
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            The resource &quot;{resource}&quot; does not exist in this compilation.
+          </p>
+          <Link
+            href={`/u/${id}`}
+            className="mt-4 inline-block text-sm font-medium text-primary underline-offset-4 hover:underline"
+          >
+            Go to first resource
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
   logCompilationPageLoad({
     id,
     resource,
     displayName,
     resourceNames: entry.resourceNames,
     resourceSlugs: entry.resourceSlugs,
-    currentSpec: currentSpec ?? null,
+    currentSpec,
     apiIrSummary: {
       title: entry.apiIr.api.title,
       version: entry.apiIr.api.version,
@@ -55,37 +77,12 @@ export default async function GeneratedUIPage({
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background p-6">
-      <div className="mx-auto w-full max-w-2xl space-y-6">
-        <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <h1 className="text-lg font-semibold">{displayName}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Specs loaded for resource: {resource}
-          </p>
-          {entry.resourceNames.length > 1 && (
-            <div className="mt-4">
-              <p className="text-xs font-medium text-muted-foreground">
-                Resources
-              </p>
-              <ul className="mt-2 space-y-1">
-                {entry.resourceNames.map((name) => {
-                  const slug = slugify(name);
-                  return (
-                    <li key={slug}>
-                      <Link
-                        href={`/u/${id}/${slug}`}
-                        className="text-sm text-primary hover:underline"
-                      >
-                        {name}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    <CompiledUIContent
+      id={id}
+      resource={resource}
+      spec={currentSpec}
+      resourceNames={entry.resourceNames}
+      resourceSlugs={entry.resourceSlugs}
+    />
   );
 }

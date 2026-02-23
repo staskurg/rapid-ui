@@ -3,11 +3,10 @@ import { getCompilation } from "@/lib/compiler/store";
 import * as mockStore from "@/lib/compiler/mock/store";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string; resource: string }> }
 ) {
   const { id, resource } = await params;
-  const sessionId = request.nextUrl.searchParams.get("session") ?? "default";
 
   const entry = getCompilation(id);
   if (!entry) {
@@ -27,7 +26,13 @@ export async function GET(
   const listOp = resourceIr.operations.find((o) => o.kind === "list");
   const listSchema = listOp?.responseSchema ?? { type: "array", items: { type: "object" } };
 
-  const records = mockStore.getRecords(id, sessionId, resource, listSchema, spec);
+  const records = mockStore.getRecords(
+    id,
+    resource,
+    listSchema,
+    spec,
+    entry.openapiCanonicalHash
+  );
   return NextResponse.json(records);
 }
 
@@ -36,7 +41,6 @@ export async function POST(
   { params }: { params: Promise<{ id: string; resource: string }> }
 ) {
   const { id, resource } = await params;
-  const sessionId = request.nextUrl.searchParams.get("session") ?? "default";
 
   const entry = getCompilation(id);
   if (!entry) {
@@ -63,6 +67,13 @@ export async function POST(
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const record = mockStore.createRecord(id, sessionId, resource, listSchema, spec, input);
+  const record = mockStore.createRecord(
+    id,
+    resource,
+    listSchema,
+    spec,
+    entry.openapiCanonicalHash,
+    input
+  );
   return NextResponse.json(record);
 }

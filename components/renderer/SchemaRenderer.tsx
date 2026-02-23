@@ -173,10 +173,11 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
   // CRUD handlers
   const handleCreate = React.useCallback(
     async (record: Record<string, unknown>) => {
+      const payload = record;
       if (adapter?.create) {
         setError(null);
         try {
-          await adapter.create(record);
+          await adapter.create(payload);
           setIsCreateModalOpen(false);
           await refetch();
         } catch (err) {
@@ -185,15 +186,15 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         }
       } else {
         const id = spec.idField ?? "id";
-        if (!record[id]) {
+        if (!payload[id]) {
           const maxId = data.reduce((max, r) => {
             const v = r[id];
             if (typeof v === "number" && v > max) return v;
             return max;
           }, 0);
-          record[id] = maxId + 1;
+          payload[id] = maxId + 1;
         }
-        setData((prev) => [...prev, record]);
+        setData((prev) => [...prev, payload]);
         setIsCreateModalOpen(false);
       }
     },
@@ -202,10 +203,11 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
 
   const handleUpdate = React.useCallback(
     async (id: string | number, record: Record<string, unknown>) => {
+      const payload = record;
       if (adapter?.update) {
         setError(null);
         try {
-          await adapter.update(id, record);
+          await adapter.update(id, payload);
           setSelectedRecord(null);
           setEditRecord(null);
           setIsEditModalOpen(false);
@@ -218,7 +220,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         setData((prev) =>
           prev.map((item) => {
             const itemId = getRecordId(item);
-            return itemId === id ? { ...item, ...record } : item;
+            return itemId === id ? { ...item, ...payload } : item;
           })
         );
         setSelectedRecord(null);
@@ -358,7 +360,11 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
             return handleUpdate(id, record);
           }
         }}
-        initialValues={editRecord ?? selectedRecord ?? undefined}
+        initialValues={
+          editRecord ?? selectedRecord
+            ? (editRecord ?? selectedRecord) as Record<string, unknown>
+            : undefined
+        }
         mode="edit"
         isLoadingInitialValues={editLoading}
       />

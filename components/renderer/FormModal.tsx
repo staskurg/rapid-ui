@@ -24,6 +24,12 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import type { UISpec, Field } from "@/lib/spec/types";
+import {
+  buildNestedSchema,
+  buildNestedDefaults,
+  getErrorByPath,
+  mergeNested,
+} from "@/lib/utils/formSchema";
 import { Loader2 } from "lucide-react";
 
 interface FormModalProps {
@@ -46,67 +52,16 @@ export function FormModal({
   mode = "create",
   isLoadingInitialValues = false,
 }: FormModalProps) {
-  // Generate Zod schema from spec
-  const formSchema = React.useMemo(() => {
-    const schemaObject: Record<string, z.ZodTypeAny> = {};
-
-    spec.form.fields.forEach((fieldName) => {
-      const field = spec.fields.find((f) => f.name === fieldName);
-      if (!field) return;
-
-      let fieldSchema: z.ZodTypeAny;
-
-      switch (field.type) {
-        case "string":
-          fieldSchema = z.string();
-          break;
-        case "number":
-          fieldSchema = z.number();
-          break;
-        case "boolean":
-          if (field.required) {
-            fieldSchema = z.boolean();
-          } else {
-            // Convert undefined/null to false during validation
-            // This ensures optional boolean fields always have a boolean value
-            fieldSchema = z.preprocess(
-              (val) => (val === undefined || val === null ? false : val),
-              z.boolean()
-            );
-          }
-          break;
-        case "enum":
-          fieldSchema = z.enum(
-            (field.options || []) as [string, ...string[]]
-          );
-          break;
-        default:
-          fieldSchema = z.string();
-      }
-
-      if (!field.required && field.type !== "boolean") {
-        fieldSchema = fieldSchema.optional();
-      }
-
-      schemaObject[fieldName] = fieldSchema;
-    });
-
-    return z.object(schemaObject);
-  }, [spec]);
+  // Nested Zod schema matching RHF's structure (register("profile.firstName") -> nested)
+  const formSchema = React.useMemo(() => buildNestedSchema(spec), [spec]);
 
   type FormData = z.infer<typeof formSchema>;
 
-  // Set default values for optional boolean fields
-  const getDefaultValues = React.useMemo(() => {
-    const defaults: Record<string, unknown> = {};
-    spec.form.fields.forEach((fieldName) => {
-      const field = spec.fields.find((f) => f.name === fieldName);
-      if (field && field.type === "boolean" && !field.required) {
-        defaults[fieldName] = false;
-      }
-    });
-    return defaults;
-  }, [spec]);
+  // Nested defaults for optional boolean fields (profile.newsletter -> { profile: { newsletter: false } })
+  const getDefaultValues = React.useMemo(
+    () => buildNestedDefaults(spec),
+    [spec]
+  );
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -121,10 +76,12 @@ export function FormModal({
   React.useEffect(() => {
     if (isOpen) {
       if (initialValues) {
-        form.reset({
-          ...getDefaultValues,
-          ...initialValues,
-        } as FormData);
+        form.reset(
+          mergeNested(
+            getDefaultValues as Record<string, unknown>,
+            initialValues as Record<string, unknown>
+          ) as FormData
+        );
       } else {
         form.reset(getDefaultValues as FormData);
       }
@@ -182,9 +139,11 @@ export function FormModal({
                   {field.required && <span className="text-destructive ml-1">*</span>}
                 </Label>
                 {renderField(field, form)}
-                {form.formState.errors[fieldName] && (
+                {getErrorByPath(form.formState.errors, fieldName) && (
                   <p className="text-sm text-destructive">
-                    {String(form.formState.errors[fieldName]?.message)}
+                    {String(
+                      getErrorByPath(form.formState.errors, fieldName)?.message
+                    )}
                   </p>
                 )}
               </div>

@@ -3,4 +3,4 @@
  */
 
 export type { CrudAdapter, AdapterMode, AdapterCapabilities } from "./types";
-export { createMockAdapter, resetMockData } from "./mock-adapter";
+export { createMockAdapter } from "./mock-adapter";

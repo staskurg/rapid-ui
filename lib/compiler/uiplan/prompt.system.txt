@@ -32,11 +32,11 @@ READONLY RULES (deterministic):
   - field path contains "createdAt" or "updatedAt" as a terminal segment
 Otherwise omit readOnly (do not include readOnly: false).
 
-FIELD INCLUSION RULES:
-- For list view: include all primitive fields from responseSchema at the top level plus top-level enums; do NOT include nested objects or arrays unless they are arrays of primitives (then include).
-- For detail view: include all primitive fields from responseSchema, including nested primitives up to depth 2 (object -> primitive). Do NOT include arrays of objects.
-- For create view: include fields from requestSchema (create operation). Include nested primitives up to depth 2. Exclude any readOnly fields.
-- For edit view: include fields from requestSchema (update operation). Include nested primitives up to depth 2. Exclude any readOnly fields.
+FIELD INCLUSION RULES (include ALL applicable fields; do not omit optional ones):
+- For list view: include all primitive and enum fields from responseSchema at top level; for nested objects, include their primitive/enum children as dot paths (e.g., inventory.quantity, inventory.backorderPolicy). Do NOT include arrays of objects. Arrays of primitives: include the array path.
+- For detail view: include ALL primitive and enum fields from responseSchema, including nested at depth 2 (object -> primitive/enum). Include optional nested fields. Do NOT include arrays of objects.
+- For create view: include ALL fields from requestSchema (create operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields.
+- For edit view: include ALL fields from requestSchema (update operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields. Path params (e.g., identifierParam) are NOT in requestSchema — do not add them.
 
 NESTING / FIELD PATHS:
 - Represent nested fields using dot paths (e.g., "profile.firstName").
@@ -61,6 +61,7 @@ LABEL RULES (stable, apply exactly):
   | lastName       | Last Name    |
   | profile.firstName | First Name |
   | profile.lastName  | Last Name  |
+  | profile.phone     | Phone      |
   | warehouseId    | Warehouse Id |
 
 ERROR HANDLING:
@@ -86,5 +87,10 @@ Expected UiPlanIR output (nested paths):
 {"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"detail":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]}}}]}
 
 Note: Nested object properties use dot paths. Labels for nested segments use the property name only (e.g., "profile.firstName" → "First Name", not "Profile First Name").
+
+EXAMPLE 3 (optional nested field — MUST include):
+- If profile has required: [firstName, lastName] and optional phone, you MUST include profile.phone in all views.
+- Optional fields are NOT optional to omit. Include every property that exists in the schema.
+- Example: profile { firstName, lastName, phone? } → list/detail/create/edit must all include profile.firstName, profile.lastName, AND profile.phone.
 
 Remember: You are producing a plan for a deterministic renderer. Boring is correct.

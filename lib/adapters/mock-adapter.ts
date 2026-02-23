@@ -1,6 +1,6 @@
 /**
  * Mock CRUD adapter for compiled UI.
- * Calls /api/mock/[id]/[resource]?session=...
+ * Calls /api/mock/[id]/[resource]. No session — URLs are shareable.
  */
 
 import type { CrudAdapter } from "./types";
@@ -12,14 +12,12 @@ function getBaseUrl(): string {
 
 export function createMockAdapter(
   compilationId: string,
-  resource: string,
-  sessionId: string
+  resource: string
 ): CrudAdapter {
   const base = getBaseUrl();
-  const sessionParam = `session=${encodeURIComponent(sessionId)}`;
-  const listUrl = `${base}/api/mock/${compilationId}/${resource}?${sessionParam}`;
+  const listUrl = `${base}/api/mock/${compilationId}/${resource}`;
   const itemUrl = (id: string | number) =>
-    `${base}/api/mock/${compilationId}/${resource}/${encodeURIComponent(String(id))}?${sessionParam}`;
+    `${base}/api/mock/${compilationId}/${resource}/${encodeURIComponent(String(id))}`;
 
   return {
     mode: "mock",
@@ -72,15 +70,4 @@ export function createMockAdapter(
       if (!res.ok) throw new Error(`Failed to delete: ${res.statusText}`);
     },
   };
-}
-
-export async function resetMockData(
-  compilationId: string,
-  resource: string,
-  sessionId: string
-): Promise<void> {
-  const base = getBaseUrl();
-  const url = `${base}/api/mock/${compilationId}/${resource}/reset?session=${encodeURIComponent(sessionId)}`;
-  const res = await fetch(url, { method: "POST" });
-  if (!res.ok) throw new Error(`Failed to reset: ${res.statusText}`);
 }

@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { UISpec, Field } from "@/lib/spec/types";
 import { getCellValue } from "@/lib/utils/getCellValue";
+import { formatDateForDisplay } from "@/lib/utils/formatDate";
 import { Pencil, Trash2 } from "lucide-react";
 
 interface DataTableProps {
@@ -168,6 +169,7 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
   );
 }
 
+
 /**
  * Render a cell value based on field type
  */
@@ -180,13 +182,18 @@ function renderCell(value: unknown, field: Field): React.ReactNode {
     const obj = value as Record<string, unknown>;
     const parts = Object.entries(obj)
       .filter(([, v]) => v != null && v !== "")
-      .map(([, v]) => String(v));
+      .map(([, v]) => {
+        const formatted = formatDateForDisplay(v);
+        return formatted ?? String(v);
+      });
     return <span>{parts.join(" · ")}</span>;
   }
 
   switch (field.type) {
-    case "string":
-      return <span>{String(value)}</span>;
+    case "string": {
+      const formatted = formatDateForDisplay(value);
+      return <span>{formatted ?? String(value)}</span>;
+    }
     case "number":
       return <span>{Number(value).toLocaleString()}</span>;
     case "boolean":
