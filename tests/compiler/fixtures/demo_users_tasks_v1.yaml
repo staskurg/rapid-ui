@@ -1,0 +1,225 @@
+# Demo v1: Users only. id, email, profile.firstName, profile.lastName, status, role. Full CRUD.
+openapi: 3.0.3
+info:
+  title: Demo Users v1
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Users
+    description: User management
+paths:
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserList"
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get user by id
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Replace user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      tags: [Users]
+      operationId: patchUser
+      summary: Update user fields
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPatchInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      summary: Delete user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+components:
+  schemas:
+    UserList:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, email, status, profile]
+      properties:
+        id:
+          type: string
+          description: Stable identifier
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        role:
+          type: string
+          enum: [admin, member, viewer]
+          description: Optional; defaults server-side
+        createdAt:
+          type: string
+          format: date-time
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserProfile:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+          description: Optional
+    UserCreateInput:
+      type: object
+      additionalProperties: false
+      required: [email, status, profile]
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        role:
+          type: string
+          enum: [admin, member, viewer]
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserUpdateInput:
+      type: object
+      additionalProperties: false
+      required: [email, status, profile]
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        role:
+          type: string
+          enum: [admin, member, viewer]
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserPatchInput:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        role:
+          type: string
+          enum: [admin, member, viewer]
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    DeleteResult:
+      type: object
+      additionalProperties: false
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean

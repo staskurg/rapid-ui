@@ -3,10 +3,14 @@ import { getCompilation } from "@/lib/compiler/store";
 
 export default async function CompilationRootPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ resource?: string }>;
 }) {
   const { id } = await params;
+  const { resource: resourceParam } = await searchParams;
+
   if (!id?.trim()) {
     redirect("/");
   }
@@ -21,5 +25,11 @@ export default async function CompilationRootPage({
     redirect("/");
   }
 
-  redirect(`/u/${id}/${firstResource}`);
+  // If ?resource=slug is present and valid, use it; else use first resource
+  const targetResource =
+    resourceParam && entry.resourceSlugs.includes(resourceParam)
+      ? resourceParam
+      : firstResource;
+
+  redirect(`/u/${id}/${targetResource}`);
 }

@@ -1,0 +1,522 @@
+{
+  "api": {
+    "title": "Demo Users v1",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "listUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "email",
+                "status",
+                "profile"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Stable identifier"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "invited",
+                    "suspended"
+                  ]
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "admin",
+                    "member",
+                    "viewer"
+                  ],
+                  "description": "Optional; defaults server-side"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "profile": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "firstName",
+                    "lastName"
+                  ],
+                  "properties": {
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Optional"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getUser",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ],
+                "description": "Optional; defaults server-side"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ]
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ],
+                "description": "Optional; defaults server-side"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "patchUser",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ]
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ],
+                "description": "Optional; defaults server-side"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateUser",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ]
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "member",
+                  "viewer"
+                ],
+                "description": "Optional; defaults server-side"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteUser",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deleted"
+            ],
+            "properties": {
+              "deleted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

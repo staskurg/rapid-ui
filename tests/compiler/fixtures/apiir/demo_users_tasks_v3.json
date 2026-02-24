@@ -1,0 +1,915 @@
+{
+  "api": {
+    "title": "Demo Users + Tasks v3",
+    "version": "3.0.0"
+  },
+  "resources": [
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "listTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "title",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Stable identifier"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "todo",
+                    "in_progress",
+                    "done"
+                  ]
+                },
+                "dueAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Due date and time"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ]
+                },
+                "tags": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Task tags"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getTask",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Due date and time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task tags"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTask",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "status"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Due date and time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task tags"
+              }
+            }
+          }
+        },
+        {
+          "id": "patchTask",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Due date and time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task tags"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateTask",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "status"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "title": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "todo",
+                  "in_progress",
+                  "done"
+                ]
+              },
+              "dueAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Due date and time"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Task tags"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteTask",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deleted"
+            ],
+            "properties": {
+              "deleted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "listUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "id",
+                "email",
+                "status",
+                "profile"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Stable identifier"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "invited",
+                    "suspended"
+                  ]
+                },
+                "department": {
+                  "type": "string",
+                  "description": "User department"
+                },
+                "notes": {
+                  "type": "string",
+                  "description": "User notes"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "profile": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "firstName",
+                    "lastName"
+                  ],
+                  "properties": {
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Optional"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getUser",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string",
+                "description": "User department"
+              },
+              "notes": {
+                "type": "string",
+                "description": "User notes"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string",
+                "description": "User department"
+              },
+              "notes": {
+                "type": "string",
+                "description": "User notes"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "patchUser",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string",
+                "description": "User department"
+              },
+              "notes": {
+                "type": "string",
+                "description": "User notes"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateUser",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string"
+              },
+              "notes": {
+                "type": "string"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "email",
+              "status",
+              "profile"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "invited",
+                  "suspended"
+                ]
+              },
+              "department": {
+                "type": "string",
+                "description": "User department"
+              },
+              "notes": {
+                "type": "string",
+                "description": "User notes"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "profile": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "firstName",
+                  "lastName"
+                ],
+                "properties": {
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Optional"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteUser",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "deleted"
+            ],
+            "properties": {
+              "deleted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

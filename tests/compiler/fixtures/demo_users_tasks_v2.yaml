@@ -1,0 +1,425 @@
+# Demo v2: Users (+department, +lastLoginAt, -role) + Tasks (id, title, status, assigneeId, dueDate, priority)
+openapi: 3.0.3
+info:
+  title: Demo Users + Tasks v2
+  version: 2.0.0
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Users
+    description: User management
+  - name: Tasks
+    description: Task management
+paths:
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      summary: List users
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserList"
+    post:
+      tags: [Users]
+      operationId: createUser
+      summary: Create user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+  /users/{userId}:
+    get:
+      tags: [Users]
+      operationId: getUser
+      summary: Get user by id
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    put:
+      tags: [Users]
+      operationId: updateUser
+      summary: Replace user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    patch:
+      tags: [Users]
+      operationId: patchUser
+      summary: Update user fields
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserPatchInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      tags: [Users]
+      operationId: deleteUser
+      summary: Delete user
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+  /tasks:
+    get:
+      tags: [Tasks]
+      operationId: listTasks
+      summary: List tasks
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskList"
+    post:
+      tags: [Tasks]
+      operationId: createTask
+      summary: Create task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+  /tasks/{taskId}:
+    get:
+      tags: [Tasks]
+      operationId: getTask
+      summary: Get task by id
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    put:
+      tags: [Tasks]
+      operationId: updateTask
+      summary: Replace task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdateInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    patch:
+      tags: [Tasks]
+      operationId: patchTask
+      summary: Update task fields
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskPatchInput"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+    delete:
+      tags: [Tasks]
+      operationId: deleteTask
+      summary: Delete task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResult"
+
+components:
+  schemas:
+    UserList:
+      type: array
+      items:
+        $ref: "#/components/schemas/User"
+    User:
+      type: object
+      additionalProperties: false
+      required: [id, email, status, profile]
+      properties:
+        id:
+          type: string
+          description: Stable identifier
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        department:
+          type: string
+          description: User department
+        lastLoginAt:
+          type: string
+          format: date-time
+          description: Last login timestamp
+        createdAt:
+          type: string
+          format: date-time
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserProfile:
+      type: object
+      additionalProperties: false
+      required: [firstName, lastName]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        phone:
+          type: string
+          description: Optional
+    UserCreateInput:
+      type: object
+      additionalProperties: false
+      required: [email, status, profile]
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        department:
+          type: string
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserUpdateInput:
+      type: object
+      additionalProperties: false
+      required: [email, status, profile]
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        department:
+          type: string
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    UserPatchInput:
+      type: object
+      additionalProperties: false
+      properties:
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+          enum: [active, invited, suspended]
+        department:
+          type: string
+        profile:
+          $ref: "#/components/schemas/UserProfile"
+    TaskList:
+      type: array
+      items:
+        $ref: "#/components/schemas/Task"
+    Task:
+      type: object
+      additionalProperties: false
+      required: [id, title, status]
+      properties:
+        id:
+          type: string
+          description: Stable identifier
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        assigneeId:
+          type: string
+          description: User id of assignee
+        dueDate:
+          type: string
+          format: date
+          description: Due date
+        priority:
+          type: string
+          enum: [low, medium, high]
+    TaskCreateInput:
+      type: object
+      additionalProperties: false
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        assigneeId:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [low, medium, high]
+    TaskUpdateInput:
+      type: object
+      additionalProperties: false
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        assigneeId:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [low, medium, high]
+    TaskPatchInput:
+      type: object
+      additionalProperties: false
+      properties:
+        title:
+          type: string
+        status:
+          type: string
+          enum: [todo, in_progress, done]
+        assigneeId:
+          type: string
+        dueDate:
+          type: string
+          format: date
+        priority:
+          type: string
+          enum: [low, medium, high]
+    DeleteResult:
+      type: object
+      additionalProperties: false
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean

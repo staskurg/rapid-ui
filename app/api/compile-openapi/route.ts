@@ -51,9 +51,8 @@ export async function POST(request: Request) {
     status: "success",
   });
 
-  const firstResource = result.resourceSlugs[0] ?? "resource";
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "";
-  const url = base ? `${base}/u/${result.id}/${firstResource}` : `/u/${result.id}/${firstResource}`;
+  const url = base ? `${base}/u/${result.id}` : `/u/${result.id}`;
 
   return NextResponse.json({
     id: result.id,

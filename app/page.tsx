@@ -10,7 +10,6 @@ import type { Step } from "@/components/compiler/ProgressPanel";
 import type { CompilerError } from "@/lib/compiler/errors";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { slugify } from "@/lib/utils/slugify";
 import { getOrCreateAccountId } from "@/lib/session";
 
 type CompilerState =
@@ -76,7 +75,7 @@ export default function Home() {
         setState({
           status: "success",
           id: data.id,
-          url: data.url ?? `/u/${data.id}/${slugify(data.resourceNames?.[0] ?? "resource")}`,
+          url: data.url ?? `/u/${data.id}`,
           resourceNames: data.resourceNames ?? [],
           specs: data.specs ?? {},
         });
@@ -148,13 +147,6 @@ export default function Home() {
     state.status === "error" ? state.errors : [];
 
   const viewUrl = state.status === "success" ? state.url : null;
-  const resourceLinks =
-    state.status === "success"
-      ? state.resourceNames.map((name) => ({
-          name,
-          href: `/u/${state.id}/${slugify(name)}`,
-        }))
-      : [];
 
   return (
     <div className="flex min-h-screen bg-background">
@@ -208,22 +200,14 @@ export default function Home() {
               <p className="text-sm text-muted-foreground">
                 Generated UI endpoint. Open in a new tab to view.
               </p>
-              <div className="space-y-1">
-                {resourceLinks.map(({ href }) => {
-                  const fullUrl = origin ? `${origin}${href}` : href;
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block break-all text-sm text-green-700 dark:text-green-500 underline-offset-4 hover:underline"
-                    >
-                      {fullUrl}
-                    </Link>
-                  );
-                })}
-              </div>
+              <Link
+                href={viewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block break-all text-sm text-green-700 dark:text-green-500 underline-offset-4 hover:underline"
+              >
+                {origin ? `${origin}${viewUrl}` : viewUrl}
+              </Link>
             </div>
           )}
         </div>

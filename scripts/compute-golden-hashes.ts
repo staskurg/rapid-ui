@@ -20,6 +20,9 @@ import { sha256Hash } from "../lib/compiler/hash";
 const FIXTURES = [
   "tests/compiler/fixtures/golden_openapi_users_tagged_3_0.yaml",
   "tests/compiler/fixtures/golden_openapi_products_path_3_1.yaml",
+  "tests/compiler/fixtures/demo_users_tasks_v1.yaml",
+  "tests/compiler/fixtures/demo_users_tasks_v2.yaml",
+  "tests/compiler/fixtures/demo_users_tasks_v3.yaml",
 ];
 
 for (const p of FIXTURES) {
