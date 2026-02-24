@@ -7,7 +7,7 @@ todos:
     status: completed
   - id: phase2-diff
     content: "Phase 2: Multi-resource diff utilities. CHECKPOINT: computeMultiSpecDiff + formatMultiSpecDiffForDisplay work."
-    status: pending
+    status: completed
   - id: phase3-demo-specs
     content: "Phase 3: Demo specs and fixtures. CHECKPOINT: v1/v2/v3 compile, mock data works."
     status: pending
@@ -80,7 +80,7 @@ isProject: false
 
 ---
 
-## Phase 2: Multi-Resource Diff Utilities
+## Phase 2: Multi-Resource Diff Utilities ✅
 
 **Goal:** Compute and format diffs between multi-resource UISpec maps for update flow and generated UI display.
 

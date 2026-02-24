@@ -1,6 +1,13 @@
 import { describe, it, expect } from "vitest";
-import { computeSpecDiff } from "@/lib/spec/diff";
-import { formatDiffForDisplay } from "@/lib/spec/diffFormatters";
+import {
+  computeMultiSpecDiff,
+  computeSpecDiff,
+  type UISpecMap,
+} from "@/lib/spec/diff";
+import {
+  formatDiffForDisplay,
+  formatMultiSpecDiffForDisplay,
+} from "@/lib/spec/diffFormatters";
 import type { UISpec } from "@/lib/spec/schema";
 
 const baseSpec: UISpec = {
@@ -133,5 +140,134 @@ describe("formatDiffForDisplay", () => {
     const result = formatDiffForDisplay(diff, baseSpec, next);
     const total = result.added.length + result.removed.length;
     expect(total).toBeLessThanOrEqual(8); // 7 + possible "X more…"
+  });
+});
+
+const taskSpec: UISpec = {
+  entity: "Task",
+  fields: [
+    { name: "id", label: "ID", type: "string", required: true },
+    { name: "title", label: "Title", type: "string", required: true },
+    { name: "status", label: "Status", type: "string", required: false },
+  ],
+  table: { columns: ["id", "title", "status"] },
+  form: { fields: ["title", "status"] },
+  filters: ["status"],
+  idField: "id",
+};
+
+describe("computeMultiSpecDiff", () => {
+  it("returns empty diff for identical multi-specs", () => {
+    const specs = { users: baseSpec, tasks: taskSpec };
+    const diff = computeMultiSpecDiff(specs, specs);
+    expect(diff.resourcesAdded).toEqual([]);
+    expect(diff.resourcesRemoved).toEqual([]);
+    expect(Object.keys(diff.resourceDiffs)).toEqual(["users", "tasks"]);
+    expect(diff.resourceDiffs.users.fieldsAdded).toEqual([]);
+    expect(diff.resourceDiffs.tasks.fieldsAdded).toEqual([]);
+  });
+
+  it("detects resource added", () => {
+    const prev = { users: baseSpec };
+    const next = { users: baseSpec, tasks: taskSpec };
+    const diff = computeMultiSpecDiff(prev, next);
+    expect(diff.resourcesAdded).toEqual(["tasks"]);
+    expect(diff.resourcesRemoved).toEqual([]);
+    expect(Object.keys(diff.resourceDiffs)).toEqual(["users"]);
+  });
+
+  it("detects resource removed", () => {
+    const prev = { users: baseSpec, tasks: taskSpec };
+    const next = { users: baseSpec };
+    const diff = computeMultiSpecDiff(prev, next);
+    expect(diff.resourcesAdded).toEqual([]);
+    expect(diff.resourcesRemoved).toEqual(["tasks"]);
+    expect(Object.keys(diff.resourceDiffs)).toEqual(["users"]);
+  });
+
+  it("detects field changes within resource", () => {
+    const prev = { users: baseSpec };
+    const next: UISpecMap = {
+      users: {
+        ...baseSpec,
+        fields: [
+          ...baseSpec.fields,
+          { name: "department", label: "Department", type: "string", required: false },
+        ],
+        table: { columns: ["id", "name", "email", "department"] },
+        form: { fields: ["name", "email", "department"] },
+      },
+    };
+    const diff = computeMultiSpecDiff(prev, next);
+    expect(diff.resourcesAdded).toEqual([]);
+    expect(diff.resourcesRemoved).toEqual([]);
+    expect(diff.resourceDiffs.users.fieldsAdded).toEqual(["department"]);
+    expect(diff.resourceDiffs.users.fieldsRemoved).toEqual([]);
+  });
+});
+
+describe("formatMultiSpecDiffForDisplay", () => {
+  it("returns empty arrays for empty multi-diff", () => {
+    const specs = { users: baseSpec, tasks: taskSpec };
+    const multiDiff = computeMultiSpecDiff(specs, specs);
+    const result = formatMultiSpecDiffForDisplay(multiDiff, specs, specs);
+    expect(result.added).toEqual([]);
+    expect(result.removed).toEqual([]);
+  });
+
+  it("formats resource added with entity name", () => {
+    const prev = { users: baseSpec };
+    const next = { users: baseSpec, tasks: taskSpec };
+    const multiDiff = computeMultiSpecDiff(prev, next);
+    const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
+    expect(result.added).toContain("Task");
+    expect(result.removed).toEqual([]);
+  });
+
+  it("formats resource removed with entity name", () => {
+    const prev = { users: baseSpec, tasks: taskSpec };
+    const next = { users: baseSpec };
+    const multiDiff = computeMultiSpecDiff(prev, next);
+    const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
+    expect(result.added).toEqual([]);
+    expect(result.removed).toContain("Task");
+  });
+
+  it("formats field changes with humanized names", () => {
+    const prev: UISpecMap = { users: baseSpec };
+    const next: UISpecMap = {
+      users: {
+        ...baseSpec,
+        fields: [
+          ...baseSpec.fields,
+          { name: "department", label: "Department", type: "string", required: false },
+        ],
+        table: { columns: ["id", "name", "email", "department"] },
+        form: { fields: ["name", "email", "department"] },
+      },
+    };
+    const multiDiff = computeMultiSpecDiff(prev, next);
+    const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
+    expect(result.added).toContain("Department");
+    expect(result.removed).toEqual([]);
+  });
+
+  it("formats field removed", () => {
+    const prev: UISpecMap = {
+      users: {
+        ...baseSpec,
+        fields: [
+          ...baseSpec.fields,
+          { name: "role", label: "Role", type: "string", required: false },
+        ],
+        table: { columns: ["id", "name", "email", "role"] },
+        form: { fields: ["name", "email", "role"] },
+      },
+    };
+    const next: UISpecMap = { users: baseSpec };
+    const multiDiff = computeMultiSpecDiff(prev, next);
+    const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
+    expect(result.added).toEqual([]);
+    expect(result.removed).toContain("Role");
   });
 });

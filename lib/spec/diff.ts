@@ -2,7 +2,9 @@
  * Spec diff utility — computes structured diff between two UISpecs.
  */
 
-import type { UISpec, Field } from "./schema";
+import type { Field, UISpec } from "./schema";
+
+export type UISpecMap = Record<string, UISpec>;
 
 export interface SpecDiff {
   entityChanged: boolean;
@@ -91,5 +93,39 @@ export function computeSpecDiff(prev: UISpec, next: UISpec): SpecDiff {
     filtersAdded,
     filtersRemoved,
     idFieldChanged,
+  };
+}
+
+export interface MultiSpecDiff {
+  resourcesAdded: string[];
+  resourcesRemoved: string[];
+  resourceDiffs: Record<string, SpecDiff>;
+}
+
+/**
+ * Compute diff between two multi-resource UISpec maps.
+ * Keys are resource slugs (e.g. "users", "tasks").
+ */
+export function computeMultiSpecDiff(
+  prevSpecs: UISpecMap,
+  nextSpecs: UISpecMap
+): MultiSpecDiff {
+  const prevKeys = new Set(Object.keys(prevSpecs));
+  const nextKeys = new Set(Object.keys(nextSpecs));
+
+  const resourcesAdded = [...nextKeys].filter((k) => !prevKeys.has(k));
+  const resourcesRemoved = [...prevKeys].filter((k) => !nextKeys.has(k));
+
+  const resourceDiffs: Record<string, SpecDiff> = {};
+  for (const key of prevKeys) {
+    if (nextKeys.has(key)) {
+      resourceDiffs[key] = computeSpecDiff(prevSpecs[key], nextSpecs[key]);
+    }
+  }
+
+  return {
+    resourcesAdded,
+    resourcesRemoved,
+    resourceDiffs,
   };
 }

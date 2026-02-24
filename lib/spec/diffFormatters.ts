@@ -3,7 +3,7 @@
  * Consolidated format "Field Label (Table, Form, Filters)" — one line per field.
  */
 
-import type { SpecDiff } from "./diff";
+import type { MultiSpecDiff, SpecDiff, UISpecMap } from "./diff";
 import type { UISpec } from "./schema";
 
 const MAX_ITEMS = 7;
@@ -174,5 +174,66 @@ export function formatDiffForDisplay(
   return {
     added: cappedAdded,
     removed: cappedRemoved,
+  };
+}
+
+/**
+ * Format multi-resource diff for display.
+ * Returns raw semantic strings: page-level = entity name, field-level = field names.
+ * UI adds ++/-- when rendering.
+ */
+export function formatMultiSpecDiffForDisplay(
+  multiDiff: MultiSpecDiff,
+  prevSpecs: UISpecMap,
+  nextSpecs: UISpecMap
+): FormatDiffResult {
+  const added: string[] = [];
+  const removed: string[] = [];
+
+  // Page-level: resource entity names
+  for (const slug of multiDiff.resourcesAdded) {
+    const spec = nextSpecs[slug];
+    added.push(spec?.entity ?? humanize(slug));
+  }
+  for (const slug of multiDiff.resourcesRemoved) {
+    const spec = prevSpecs[slug];
+    removed.push(spec?.entity ?? humanize(slug));
+  }
+
+  // Field-level: field names (humanized) from per-resource diffs
+  for (const diff of Object.values(multiDiff.resourceDiffs)) {
+    for (const name of diff.fieldsAdded) {
+      added.push(humanize(name));
+    }
+    for (const name of diff.fieldsRemoved) {
+      removed.push(humanize(name));
+    }
+    for (const { name } of diff.fieldsChanged) {
+      added.push(humanize(name));
+      removed.push(humanize(name));
+    }
+    for (const name of diff.tableColumnsAdded) {
+      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
+    }
+    for (const name of diff.tableColumnsRemoved) {
+      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
+    }
+    for (const name of diff.formFieldsAdded) {
+      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
+    }
+    for (const name of diff.formFieldsRemoved) {
+      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
+    }
+    for (const name of diff.filtersAdded) {
+      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
+    }
+    for (const name of diff.filtersRemoved) {
+      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
+    }
+  }
+
+  return {
+    added: [...new Set(added)],
+    removed: [...new Set(removed)],
   };
 }
