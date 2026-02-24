@@ -172,6 +172,6 @@ describe("compileOpenAPI full pipeline", () => {
     expect(r1.success && r2.success).toBe(true);
     if (!r1.success || !r2.success) return;
     expect(stringify(r1.specs)).toBe(stringify(r2.specs));
-    expect(r1.id).toBe(r2.id);
+    // ids differ (UUID-based); specs comparison is the determinism check
   });
 });

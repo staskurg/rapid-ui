@@ -16,7 +16,7 @@ This document stress-tests the implementation plan: gaps, edge cases, inconsiste
 | **Failed compilations** | Low | Plan extends entry with `status: "success" \| "failed"` but compile API only saves on success. Failed compilations are never persisted. **Recommendation:** Either (a) don't persist failures (keep current behavior, status only for future use), or (b) add failed-entry persistence for "compilation history" — plan doesn't require it, so (a) is fine. |
 | **Existing store entries** | Medium | Current `CompilationEntry` has no `accountId`. After Phase 1, `listCompilationsByAccount` filters by `entry.accountId`. Old entries (from before deploy) will have `accountId === undefined` and won't appear in any list. **Recommendation:** Document that server restart clears store (in-memory). No migration needed. If store is ever persisted, add migration. |
 | **deleteCompilation idempotency** | Low | Plan doesn't say: does `deleteCompilation(id)` fail if id doesn't exist? **Recommendation:** Make idempotent (no-op if missing). Simpler. |
-| **Pipeline test** | Done | Plan says remove `expect(r1.id).toBe(r2.id)` — but with UUID ids, same OpenAPI will now produce *different* ids each run (no sessionId). **Verify:** Pipeline uses `accountId` now; id = `crypto.randomUUID().slice(0,12)` when no idOverride. So r1.id !== r2.id always. Test should only assert `stringify(r1.specs) === stringify(r2.specs)`. |
+| **Pipeline test** | Done | Plan says remove `expect(r1.id).toBe(r2.id)` — but with UUID ids, same OpenAPI will now produce *different* ids each run (no sessionId). **Verify:** Pipeline uses `accountId` now; id = `crypto.randomUUID().slice(0,12)` when no `id` option. So r1.id !== r2.id always. Test should only assert `stringify(r1.specs) === stringify(r2.specs)`. |
 
 ### Cross-Cutting: accountId vs sessionId
 
@@ -156,7 +156,7 @@ None of these currently need accountId except the new compilations API. Ensure b
 
 ### 2. Pipeline Options Change
 
-Phase 1: `sessionId` → `accountId`, add `idOverride`. Pipeline `compileOpenAPI` signature changes. Callers:
+Phase 1: `sessionId` → `accountId`, add `id`. Pipeline `compileOpenAPI` signature changes. Callers:
 
 - `app/api/compile-openapi/route.ts`
 - `app/api/compilations/[id]/update/route.ts` (new)

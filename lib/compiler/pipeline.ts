@@ -7,7 +7,7 @@ import { parseOpenAPI } from "./openapi/parser";
 import { validateSubset } from "./openapi/subset-validator";
 import { resolveRefs } from "./openapi/ref-resolver";
 import { canonicalize, canonicalStringify } from "./openapi/canonicalize";
-import { sha256Hash, sha256HashString } from "./hash";
+import { sha256Hash } from "./hash";
 import { buildApiIR } from "./apiir";
 import type { ApiIR } from "./apiir";
 import { llmPlan } from "./uiplan/llm-plan";
@@ -23,8 +23,11 @@ export interface CompileOptions {
   source?: CompileSource;
   /** Inject mock for tests (CI without API key). */
   llmPlanFn?: (apiIr: ApiIR) => UiPlanIR;
-  /** Session ID from compiler page. When provided, id = hash(openapiHash + sessionId) for unique shareable URLs. */
-  sessionId?: string;
+  /**
+   * Id of the compilation to update (CRUD: update by id). When provided,
+   * use this id instead of generating one — preserves URL on update-in-place.
+   */
+  id?: string;
 }
 
 export interface CompileSuccess {
@@ -46,7 +49,7 @@ export type CompileOutput = CompileSuccess | CompileFailure;
 
 /**
  * Compile OpenAPI string to UISpec map.
- * id = first 12 chars of openapiCanonicalHash.
+ * id = options.id if provided, else 12-char UUID.
  * On failure, returns errors; no persist.
  */
 export async function compileOpenAPI(
@@ -94,9 +97,7 @@ export async function compileOpenAPI(
   const resourceNames = buildResult.apiIr.resources.map((r) => r.name);
   const resourceSlugs = resourceNames.map(slugify);
 
-  const id = options?.sessionId
-    ? sha256HashString(openapiCanonicalHash + options.sessionId).slice(0, 12)
-    : openapiCanonicalHash.slice(0, 12);
+  const id = options?.id ?? crypto.randomUUID().slice(0, 12);
 
   return {
     success: true,

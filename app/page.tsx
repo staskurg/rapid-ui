@@ -11,7 +11,7 @@ import type { CompilerError } from "@/lib/compiler/errors";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { slugify } from "@/lib/utils/slugify";
-import { createSessionId } from "@/lib/session";
+import { getOrCreateAccountId } from "@/lib/session";
 
 type CompilerState =
   | { status: "idle" }
@@ -24,9 +24,11 @@ type CompilerState =
 export default function Home() {
   const [state, setState] = React.useState<CompilerState>({ status: "idle" });
   const [origin, setOrigin] = React.useState("");
-  const [sessionId] = React.useState(() => createSessionId());
   React.useEffect(() => {
-    setOrigin(typeof window !== "undefined" ? window.location.origin : "");
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+      getOrCreateAccountId(); // ensure accountId exists in localStorage on load
+    }
   }, []);
 
   const handleFile = React.useCallback((content: string) => {
@@ -59,7 +61,7 @@ export default function Home() {
     fetch("/api/compile-openapi", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ openapi: content, sessionId }),
+      body: JSON.stringify({ openapi: content, accountId: getOrCreateAccountId() }),
     })
       .then(async (res) => {
         const data = await res.json();
@@ -93,7 +95,7 @@ export default function Home() {
         });
         toast.error("Compilation failed", { description: "Network or server error" });
       });
-  }, [sessionId]);
+  }, []);
 
   const handleDropZoneError = React.useCallback((message: string) => {
     toast.error("Upload failed", { description: message });

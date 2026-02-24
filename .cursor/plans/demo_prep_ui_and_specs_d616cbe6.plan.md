@@ -4,7 +4,7 @@ overview: "Implement demo-ready changes: new user+task demo specs (v1/v2/v3) wit
 todos:
   - id: phase1-foundation
     content: "Phase 1: Foundation (accountId, store, pipeline). CHECKPOINT: accountId in localStorage, UUID ids, list/delete work."
-    status: pending
+    status: completed
   - id: phase2-diff
     content: "Phase 2: Multi-resource diff utilities. CHECKPOINT: computeMultiSpecDiff + formatMultiSpecDiffForDisplay work."
     status: pending
@@ -42,8 +42,8 @@ isProject: false
 1. **getOrCreateAccountId** (`lib/session.ts`): Add `getOrCreateAccountId()` — read from `localStorage` key `rapidui_account_id`; if missing, generate UUID and persist. Keep `createSessionId` for backward compat if needed.
 2. **CompilationEntry** (`lib/compiler/store.ts`): Extend with `accountId`, `name` (apiIr.api.title or first resource), `status: "success" | "failed"`, `errors?`, `diffFromPrevious?`.
 3. **Store functions** (`lib/compiler/store.ts`): Add `listCompilationsByAccount(accountId)` — iterate `getStore().values()`, filter by `entry.accountId`, return `{ id, name, status }[]`. Add `deleteCompilation(id)` (idempotent: no-op if id missing).
-4. **Pipeline** (`lib/compiler/pipeline.ts`): Replace `sessionId` with `accountId` in options. Add `idOverride?: string`. When `idOverride` provided, use it; else `id = crypto.randomUUID().slice(0, 12)`. Remove hash-based id logic.
-5. **Compile API** (`app/api/compile-openapi/route.ts`): Accept `accountId` in body (required; return 400 if missing). Remove `isGoldenSpec` check. Pass `accountId` to pipeline. Save entry with `accountId`, `name`, `status: "success"`.
+4. **Pipeline** (`lib/compiler/pipeline.ts`): Replace `sessionId` with `id?: string`. When provided (update flow), use it; else `id = crypto.randomUUID().slice(0, 12)`. Remove hash-based id logic.
+5. **Compile API** (`app/api/compile-openapi/route.ts`): Accept `accountId` in body (required; return 400 if missing). Remove `isGoldenSpec` check. Save entry with `accountId`, `name`, `status: "success"` (accountId used for store only; pipeline does not receive it).
 6. **Compiler page** (`app/page.tsx`): Use `getOrCreateAccountId()` instead of `createSessionId()`. Pass `accountId` to compile API.
 7. **Pipeline test** (`tests/compiler/pipeline.test.ts`): Remove `expect(r1.id).toBe(r2.id)` from determinism test (UUID ids differ); keep specs comparison.
 8. **Cross-phase:** Verify all readers of `CompilationEntry` handle new optional fields (`accountId`, `name`, `status`, `diffFromPrevious`). Mock API and generated UI page only need `specs`, `apiIr`, `openapiCanonicalHash` — unchanged.
@@ -55,7 +55,7 @@ isProject: false
 | ---------------------------------- | ------------------------------------------------------------------ |
 | `lib/session.ts`                   | Add `getOrCreateAccountId`                                         |
 | `lib/compiler/store.ts`            | Extend entry; add `listCompilationsByAccount`, `deleteCompilation` |
-| `lib/compiler/pipeline.ts`         | accountId, idOverride, UUID id                                     |
+| `lib/compiler/pipeline.ts`         | id option, UUID                                                    |
 | `app/api/compile-openapi/route.ts` | accountId, remove isGoldenSpec                                     |
 | `app/page.tsx`                     | getOrCreateAccountId, pass accountId                               |
 | `tests/compiler/pipeline.test.ts`  | Remove id assertion                                                |
@@ -67,6 +67,16 @@ isProject: false
 - New compile produces 12-char UUID id (not hash).
 - Golden specs still compile. Custom spec (e.g. minimal valid OpenAPI) compiles (no 422).
 - `listCompilationsByAccount(accountId)` returns saved specs. `deleteCompilation(id)` removes entry.
+
+### Phase 1 Manual Testing
+
+1. **Start dev server:** `npm run dev`
+2. **accountId persistence:** Open compiler page → DevTools → Application → Local Storage → verify `rapidui_account_id` exists. Reload page → same value.
+3. **Golden spec compile:** Drop `tests/compiler/fixtures/golden_openapi_users_tagged_3_0.yaml` → should succeed. Id in URL should be 12 alphanumeric chars (e.g. `a1b2c3d4e5f6`), not a hash. Requires `OPENAI_API_KEY` in `.env.local` (compiler uses real LLM).
+4. **Custom spec compile:** Create minimal OpenAPI (e.g. `openapi: 3.0.3`, `info: { title: Test, version: 1 }`, one GET path with 200 response) → should compile (no 422). Previously would fail with "Only demo specs supported". Requires `OPENAI_API_KEY` (LLM generates plan).
+5. **Generated UI:** After golden compile, click link to `/u/{id}/users` → table should load with mock data.
+6. **API accountId required:** POST to `/api/compile-openapi` with `{ openapi: "..." }` but no `accountId` → 400 "Missing accountId". Add `accountId` to body → request proceeds.
+7. **listCompilationsByAccount / deleteCompilation:** Exercised in Phase 4. For Phase 1, `npm run test` passes.
 
 ---
 
@@ -142,7 +152,7 @@ isProject: false
 1. **GET /api/compilations** (`app/api/compilations/route.ts`): Create. Query param `accountId` (required; return 400 if missing). Return `{ items: [{ id, name, status }] }` from `listCompilationsByAccount`.
 2. **GET /api/compilations/[id]** (`app/api/compilations/[id]/route.ts`): Extend response with `apiIr`, `name`, `status`, `diffFromPrevious`, `isPredefined` (from `isPredefinedSpec(entry.openapiCanonicalHash)`). Require `accountId` query param (400 if missing). Verify ownership: if `entry.accountId !== accountId`, return 403.
 3. **DELETE /api/compilations/[id]** (`app/api/compilations/[id]/route.ts`): Add DELETE export. Require `accountId` query param (400 if missing). Verify ownership (403 if mismatch). Call `deleteCompilation(id)`. Clear mock data for id. Return 204.
-4. **POST /api/compilations/[id]/update** (`app/api/compilations/[id]/update/route.ts`): Create. Body `{ openapi: string, accountId: string }` (400 if accountId missing). Get existing entry; 404 if not found. Verify `entry.accountId === accountId` (403 if mismatch). Run pipeline with `idOverride: id` only. On failure: return 422 with errors; do not modify entry. On success: compute `computeMultiSpecDiff(prev, next)` → `formatMultiSpecDiffForDisplay` → store in `diffFromPrevious`. Clear mock, put compilation. Return 200.
+4. **POST /api/compilations/[id]/update** (`app/api/compilations/[id]/update/route.ts`): Create. Body `{ openapi: string, accountId: string }` (400 if accountId missing). Get existing entry; 404 if not found. Verify `entry.accountId === accountId` (403 if mismatch). Run pipeline with `id` (the compilation id from the URL). On failure: return 422 with errors; do not modify entry. On success: compute `computeMultiSpecDiff(prev, next)` → `formatMultiSpecDiffForDisplay` → store in `diffFromPrevious`. Clear mock, put compilation. Return 200.
 
 ### File Summary
 
@@ -268,7 +278,7 @@ isProject: false
 | ----- | -------------------------------------------------- | ----------------------------------- |
 | 1     | `lib/session.ts`                                   | Add `getOrCreateAccountId`          |
 | 1     | `lib/compiler/store.ts`                            | Extend entry; list, delete          |
-| 1     | `lib/compiler/pipeline.ts`                         | accountId, idOverride, UUID         |
+| 1     | `lib/compiler/pipeline.ts`                         | id option, UUID                     |
 | 1     | `app/api/compile-openapi/route.ts`                 | accountId, remove isGoldenSpec      |
 | 1     | `app/page.tsx`                                     | getOrCreateAccountId                |
 | 1     | `tests/compiler/pipeline.test.ts`                  | Remove id assertion                 |
@@ -299,11 +309,11 @@ Phase 1 extends `CompilationEntry` with `accountId`, `name`, `status`, `errors?`
 
 ### 2. Pipeline Options Change
 
-Phase 1: Remove `sessionId`, add `idOverride`. **Note:** Pipeline does not need `accountId` for id generation (uses `idOverride` or `crypto.randomUUID`). Compile API passes `accountId` to store entry only. **Action:** Update all callers:
+Phase 1: Remove `sessionId`, add `id` option. Pipeline does not receive `accountId`; compile API uses it for store entry only. **Action:** Update all callers:
 
-- `app/api/compile-openapi/route.ts` — pass `accountId` to pipeline (optional; used for store), or omit if pipeline drops sessionId entirely
-- `app/api/compilations/[id]/update/route.ts` (Phase 4) — pass `idOverride: id` only; `accountId` used for ownership verification, not pipeline
-- `tests/compiler/pipeline.test.ts` — no accountId/idOverride needed for determinism test
+- `app/api/compile-openapi/route.ts` — does not pass accountId to pipeline; adds it when saving store entry
+- `app/api/compilations/[id]/update/route.ts` (Phase 4) — pass `id` (compilation id from URL); `accountId` used for ownership verification only
+- `tests/compiler/pipeline.test.ts` — no id option needed for determinism test
 - Evals (`eval/utils/compile-openapi.ts`) — calls `compileOpenAPI(openapi, { source: "eval" })`; no sessionId today; will get random UUID; evals compare specs only, not id — no change needed
 
 ### 3. Compile API Response
@@ -328,21 +338,21 @@ After removing `isGoldenSpec` check, custom specs compile. `getPredefinedData` r
 ### Alignment verified
 
 
-| Area                        | Status                                                                                                                                                                            |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Pipeline**                | Remove `sessionId`; add `idOverride`. Id = `idOverride` or `crypto.randomUUID().slice(0,12)`. `accountId` in options is for compile API → store; pipeline does not use it for id. |
-| **Evals**                   | `eval/utils/compile-openapi.ts` calls `compileOpenAPI(openapi, { source: "eval" })`; no sessionId. Evals compare specs only; random UUID id is fine.                              |
-| **compute-golden-hashes**   | Script has hardcoded `FIXTURES` array; add 3 demo paths.                                                                                                                          |
-| **fixtures:generate-apiir** | Reads all `*.yaml` from fixtures dir; demo YAMLs auto-included. No script change.                                                                                                 |
-| **UISpec / diff types**     | `lib/spec/diff.ts` uses `UISpec` from `./schema`; `formatMultiSpecDiffForDisplay` will need `MultiSpecDiff` type (export from diff.ts).                                           |
-| **Store comment**           | After Phase 1, update store.ts comment: id is no longer "first 12 chars of hash" — it's UUID.                                                                                     |
+| Area                        | Status                                                                                                                                               |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Pipeline**                | Remove `sessionId`; add `id`. Id = `options.id` or `crypto.randomUUID().slice(0,12)`. Pipeline does not receive accountId.                           |
+| **Evals**                   | `eval/utils/compile-openapi.ts` calls `compileOpenAPI(openapi, { source: "eval" })`; no sessionId. Evals compare specs only; random UUID id is fine. |
+| **compute-golden-hashes**   | Script has hardcoded `FIXTURES` array; add 3 demo paths.                                                                                             |
+| **fixtures:generate-apiir** | Reads all `*.yaml` from fixtures dir; demo YAMLs auto-included. No script change.                                                                    |
+| **UISpec / diff types**     | `lib/spec/diff.ts` uses `UISpec` from `./schema`; `formatMultiSpecDiffForDisplay` will need `MultiSpecDiff` type (export from diff.ts).              |
+| **Store comment**           | After Phase 1, update store.ts comment: id is no longer "first 12 chars of hash" — it's UUID.                                                        |
 
 
 ### No discrepancies
 
 - Phase 2 checkpoint corrected: formatter returns raw strings; UI adds `++`/`--`.
 - Phase 4: explicit 400 for missing `accountId` on GET/DELETE/update.
-- Cross-phase: update route passes `idOverride` only; `accountId` for ownership only.
+- Cross-phase: update route passes `id` only; `accountId` for ownership only.
 
 ### Code smell prevention
 

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 import { compileOpenAPI } from "@/lib/compiler/pipeline";
 import { putCompilation } from "@/lib/compiler/store";
-import { isGoldenSpec } from "@/lib/compiler/mock/fixtures";
 import { clearForCompilation } from "@/lib/compiler/mock/store";
 
 export async function POST(request: Request) {
-  let body: { openapi?: string; sessionId?: string };
+  let body: { openapi?: string; accountId?: string };
   try {
     body = await request.json();
   } catch {
@@ -23,28 +22,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const sessionId = typeof body.sessionId === "string" ? body.sessionId : undefined;
-  const result = await compileOpenAPI(openapi, { source: "api", sessionId });
+  const accountId = typeof body.accountId === "string" ? body.accountId : undefined;
+  if (!accountId) {
+    return NextResponse.json(
+      { errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: "Missing accountId" }] },
+      { status: 400 }
+    );
+  }
+
+  const result = await compileOpenAPI(openapi, { source: "api" });
 
   if (!result.success) {
     return NextResponse.json({ errors: result.errors }, { status: 422 });
   }
 
-  if (!isGoldenSpec(result.openapiCanonicalHash)) {
-    return NextResponse.json(
-      {
-        errors: [
-          {
-            code: "UNSUPPORTED_SPEC",
-            stage: "Compile",
-            message:
-              "Only demo specs supported. Use golden_openapi_users_tagged_3_0.yaml or golden_openapi_products_path_3_1.yaml.",
-          },
-        ],
-      },
-      { status: 422 }
-    );
-  }
+  const name =
+    result.apiIr.api.title || result.resourceNames[0] || "Untitled";
 
   clearForCompilation(result.id);
   putCompilation(result.id, {
@@ -53,6 +46,9 @@ export async function POST(request: Request) {
     resourceSlugs: result.resourceSlugs,
     apiIr: result.apiIr,
     openapiCanonicalHash: result.openapiCanonicalHash,
+    accountId,
+    name,
+    status: "success",
   });
 
   const firstResource = result.resourceSlugs[0] ?? "resource";
