@@ -10,10 +10,10 @@ todos:
     status: completed
   - id: phase3-demo-specs
     content: "Phase 3: Demo specs and fixtures. CHECKPOINT: v1/v2/v3 compile, mock data works."
-    status: pending
+    status: completed
   - id: phase4-api
     content: "Phase 4: Compilations API. CHECKPOINT: list, get, delete, update routes work."
-    status: pending
+    status: completed
   - id: phase5-compiler-ui
     content: "Phase 5: Compiler UI layout. CHECKPOINT: spec list, detail view, URL param, update/delete."
     status: pending
@@ -143,7 +143,7 @@ isProject: false
 
 ---
 
-## Phase 4: Compilations API
+## Phase 4: Compilations API ✅
 
 **Goal:** List, get, delete, and update compilations via API.
 
