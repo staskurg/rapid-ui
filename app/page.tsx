@@ -565,7 +565,7 @@ function CompilerPageContent() {
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold">RapidUI.dev</h1>
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="break-words text-xs text-muted-foreground">
                 OpenAPI → deterministic schema-driven UI
               </p>
             </div>
