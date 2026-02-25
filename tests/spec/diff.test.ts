@@ -207,33 +207,42 @@ describe("computeMultiSpecDiff", () => {
 });
 
 describe("formatMultiSpecDiffForDisplay", () => {
-  it("returns empty arrays for empty multi-diff", () => {
+  it("returns empty byPage for empty multi-diff", () => {
     const specs = { users: baseSpec, tasks: taskSpec };
     const multiDiff = computeMultiSpecDiff(specs, specs);
     const result = formatMultiSpecDiffForDisplay(multiDiff, specs, specs);
-    expect(result.added).toEqual([]);
-    expect(result.removed).toEqual([]);
+    expect(result.byPage).toEqual([]);
   });
 
-  it("formats resource added with entity name", () => {
+  it("formats resource added as added page with fields", () => {
     const prev = { users: baseSpec };
     const next = { users: baseSpec, tasks: taskSpec };
     const multiDiff = computeMultiSpecDiff(prev, next);
     const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
-    expect(result.added).toContain("Task");
-    expect(result.removed).toEqual([]);
+    expect(result.byPage).toHaveLength(1);
+    expect(result.byPage[0]).toMatchObject({
+      name: "Task",
+      type: "added",
+      addedFields: ["ID", "Title", "Status"],
+      removedFields: [],
+    });
   });
 
-  it("formats resource removed with entity name", () => {
+  it("formats resource removed as removed page with fields", () => {
     const prev = { users: baseSpec, tasks: taskSpec };
     const next = { users: baseSpec };
     const multiDiff = computeMultiSpecDiff(prev, next);
     const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
-    expect(result.added).toEqual([]);
-    expect(result.removed).toContain("Task");
+    expect(result.byPage).toHaveLength(1);
+    expect(result.byPage[0]).toMatchObject({
+      name: "Task",
+      type: "removed",
+      addedFields: [],
+      removedFields: ["ID", "Title", "Status"],
+    });
   });
 
-  it("formats field changes with humanized names", () => {
+  it("formats field changes in unchanged page", () => {
     const prev: UISpecMap = { users: baseSpec };
     const next: UISpecMap = {
       users: {
@@ -248,11 +257,16 @@ describe("formatMultiSpecDiffForDisplay", () => {
     };
     const multiDiff = computeMultiSpecDiff(prev, next);
     const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
-    expect(result.added).toContain("Department");
-    expect(result.removed).toEqual([]);
+    expect(result.byPage).toHaveLength(1);
+    expect(result.byPage[0]).toMatchObject({
+      name: "User",
+      type: "unchanged",
+      addedFields: ["Department"],
+      removedFields: [],
+    });
   });
 
-  it("formats field removed", () => {
+  it("formats field removed in unchanged page", () => {
     const prev: UISpecMap = {
       users: {
         ...baseSpec,
@@ -267,7 +281,12 @@ describe("formatMultiSpecDiffForDisplay", () => {
     const next: UISpecMap = { users: baseSpec };
     const multiDiff = computeMultiSpecDiff(prev, next);
     const result = formatMultiSpecDiffForDisplay(multiDiff, prev, next);
-    expect(result.added).toEqual([]);
-    expect(result.removed).toContain("Role");
+    expect(result.byPage).toHaveLength(1);
+    expect(result.byPage[0]).toMatchObject({
+      name: "User",
+      type: "unchanged",
+      addedFields: [],
+      removedFields: ["Role"],
+    });
   });
 });

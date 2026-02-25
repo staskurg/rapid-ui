@@ -21,8 +21,15 @@ export interface CompilationEntry {
   name?: string;
   status?: "success" | "failed";
   errors?: unknown[];
-  /** Formatted diff from previous version (update flow). */
-  diffFromPrevious?: { added: string[]; removed: string[] };
+  /** Formatted diff from previous version (update flow). Grouped by page with per-page added/removed fields. */
+  diffFromPrevious?: {
+    byPage: Array<{
+      name: string;
+      type: "added" | "removed" | "unchanged";
+      addedFields: string[];
+      removedFields: string[];
+    }>;
+  };
   /** UTC ISO string. Set on create. */
   createdAt?: string;
   /** UTC ISO string. Set on create and every update. */

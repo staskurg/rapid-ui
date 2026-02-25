@@ -26,6 +26,19 @@ export interface FormatDiffResult {
   removed: string[];
 }
 
+/** Per-page diff entry for display. */
+export interface DiffPageEntry {
+  name: string;
+  type: "added" | "removed" | "unchanged";
+  addedFields: string[];
+  removedFields: string[];
+}
+
+/** Structured diff for multi-spec: grouped by page with per-page added/removed fields. */
+export interface FormatMultiSpecDiffResult {
+  byPage: DiffPageEntry[];
+}
+
 type Area = "Table" | "Form" | "Filters";
 
 function formatAreas(areas: Area[]): string {
@@ -179,61 +192,95 @@ export function formatDiffForDisplay(
 
 /**
  * Format multi-resource diff for display.
- * Returns raw semantic strings: page-level = entity name, field-level = field names.
- * UI adds ++/-- when rendering.
+ * Returns by-page structure: each page shows its type (added/removed/unchanged) and field changes.
+ * - Added page: green (page + all its fields)
+ * - Removed page: red (page + all its fields)
+ * - Unchanged page: muted page name, green for added fields, red for removed fields
  */
 export function formatMultiSpecDiffForDisplay(
   multiDiff: MultiSpecDiff,
   prevSpecs: UISpecMap,
   nextSpecs: UISpecMap
-): FormatDiffResult {
-  const added: string[] = [];
-  const removed: string[] = [];
+): FormatMultiSpecDiffResult {
+  const byPage: DiffPageEntry[] = [];
 
-  // Page-level: resource entity names
+  // Added pages (new resources): page + all fields in green
   for (const slug of multiDiff.resourcesAdded) {
     const spec = nextSpecs[slug];
-    added.push(spec?.entity ?? humanize(slug));
+    const name = spec?.entity ?? humanize(slug);
+    const addedFields = spec
+      ? spec.fields.map((f) => f.label ?? humanize(f.name))
+      : [];
+    byPage.push({
+      name,
+      type: "added",
+      addedFields,
+      removedFields: [],
+    });
   }
+
+  // Unchanged pages with field changes: page in muted, added/removed fields
+  for (const [slug, diff] of Object.entries(multiDiff.resourceDiffs)) {
+    const prevSpec = prevSpecs[slug];
+    const nextSpec = nextSpecs[slug];
+    const name = nextSpec?.entity ?? prevSpec?.entity ?? humanize(slug);
+
+    const addedFields: string[] = [];
+    const removedFields: string[] = [];
+
+    for (const name_ of diff.fieldsAdded) {
+      addedFields.push(getFieldLabel(nextSpec, name_));
+    }
+    for (const name_ of diff.fieldsRemoved) {
+      removedFields.push(getFieldLabel(prevSpec, name_));
+    }
+    for (const { prev, next } of diff.fieldsChanged) {
+      removedFields.push(prev.label);
+      addedFields.push(next.label !== prev.label ? next.label : `${prev.label} (type changed)`);
+    }
+    for (const name_ of diff.tableColumnsAdded) {
+      if (!diff.fieldsAdded.includes(name_)) addedFields.push(getFieldLabel(nextSpec, name_));
+    }
+    for (const name_ of diff.tableColumnsRemoved) {
+      if (!diff.fieldsRemoved.includes(name_)) removedFields.push(getFieldLabel(prevSpec, name_));
+    }
+    for (const name_ of diff.formFieldsAdded) {
+      if (!diff.fieldsAdded.includes(name_)) addedFields.push(getFieldLabel(nextSpec, name_));
+    }
+    for (const name_ of diff.formFieldsRemoved) {
+      if (!diff.fieldsRemoved.includes(name_)) removedFields.push(getFieldLabel(prevSpec, name_));
+    }
+    for (const name_ of diff.filtersAdded) {
+      if (!diff.fieldsAdded.includes(name_)) addedFields.push(getFieldLabel(nextSpec, name_));
+    }
+    for (const name_ of diff.filtersRemoved) {
+      if (!diff.fieldsRemoved.includes(name_)) removedFields.push(getFieldLabel(prevSpec, name_));
+    }
+
+    if (addedFields.length > 0 || removedFields.length > 0) {
+      byPage.push({
+        name,
+        type: "unchanged",
+        addedFields: [...new Set(addedFields)],
+        removedFields: [...new Set(removedFields)],
+      });
+    }
+  }
+
+  // Removed pages: page + all fields in red
   for (const slug of multiDiff.resourcesRemoved) {
     const spec = prevSpecs[slug];
-    removed.push(spec?.entity ?? humanize(slug));
+    const name = spec?.entity ?? humanize(slug);
+    const removedFields = spec
+      ? spec.fields.map((f) => f.label ?? humanize(f.name))
+      : [];
+    byPage.push({
+      name,
+      type: "removed",
+      addedFields: [],
+      removedFields,
+    });
   }
 
-  // Field-level: field names (humanized) from per-resource diffs
-  for (const diff of Object.values(multiDiff.resourceDiffs)) {
-    for (const name of diff.fieldsAdded) {
-      added.push(humanize(name));
-    }
-    for (const name of diff.fieldsRemoved) {
-      removed.push(humanize(name));
-    }
-    for (const { name } of diff.fieldsChanged) {
-      added.push(humanize(name));
-      removed.push(humanize(name));
-    }
-    for (const name of diff.tableColumnsAdded) {
-      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
-    }
-    for (const name of diff.tableColumnsRemoved) {
-      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
-    }
-    for (const name of diff.formFieldsAdded) {
-      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
-    }
-    for (const name of diff.formFieldsRemoved) {
-      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
-    }
-    for (const name of diff.filtersAdded) {
-      if (!diff.fieldsAdded.includes(name)) added.push(humanize(name));
-    }
-    for (const name of diff.filtersRemoved) {
-      if (!diff.fieldsRemoved.includes(name)) removed.push(humanize(name));
-    }
-  }
-
-  return {
-    added: [...new Set(added)],
-    removed: [...new Set(removed)],
-  };
+  return { byPage };
 }

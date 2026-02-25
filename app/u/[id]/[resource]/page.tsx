@@ -83,6 +83,8 @@ export default async function GeneratedUIPage({
       spec={currentSpec}
       resourceNames={entry.resourceNames}
       resourceSlugs={entry.resourceSlugs}
+      diffFromPrevious={entry.diffFromPrevious}
+      updatedAt={entry.updatedAt}
     />
   );
 }

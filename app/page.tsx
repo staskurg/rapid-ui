@@ -46,7 +46,14 @@ interface CompilationDetail {
   resourceNames: string[];
   resourceSlugs: string[];
   apiIr: ApiIR;
-  diffFromPrevious?: { added: string[]; removed: string[] };
+  diffFromPrevious?: {
+    byPage: Array<{
+      name: string;
+      type: "added" | "removed" | "unchanged";
+      addedFields: string[];
+      removedFields: string[];
+    }>;
+  };
   isPredefined?: boolean;
 }
 

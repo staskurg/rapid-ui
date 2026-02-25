@@ -206,7 +206,7 @@ isProject: false
 
 ---
 
-## Phase 6: Generated UI Diff Popup
+## Phase 6: Generated UI Diff Popup ✅
 
 **Goal:** Show diff popup on generated UI load when `diffFromPrevious` exists; button to reopen.
 
