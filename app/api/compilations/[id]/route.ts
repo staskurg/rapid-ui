@@ -72,7 +72,7 @@ export async function DELETE(
     return forbidden();
   }
 
+  clearForCompilation(accountId, id, entry.openapiCanonicalHash);
   deleteCompilation(id);
-  clearForCompilation(id);
   return new Response(null, { status: 204 });
 }

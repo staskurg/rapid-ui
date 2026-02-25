@@ -34,19 +34,29 @@ Otherwise omit readOnly (do not include readOnly: false).
 
 FIELD INCLUSION RULES (include ALL applicable fields; do not omit optional ones):
 - For list view: include all primitive and enum fields from responseSchema at top level; for nested objects, include their primitive/enum children as dot paths (e.g., inventory.quantity, inventory.backorderPolicy). Do NOT include arrays of objects. Arrays of primitives: include the array path.
+  EXCLUDE from list view (metadata — never show in table): id, createdAt, updatedAt, and any path ending with .id, .createdAt, .updatedAt.
 - For detail view: include ALL primitive and enum fields from responseSchema, including nested at depth 2 (object -> primitive/enum). Include optional nested fields. Do NOT include arrays of objects.
-- For create view: include ALL fields from requestSchema (create operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields.
+  EXCLUDE from detail view (metadata): same as list — id, createdAt, updatedAt, and paths ending with .id, .createdAt, .updatedAt.
+- For create view: include ALL fields from requestSchema (create operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields. (readOnly already excludes id, createdAt, updatedAt.)
 - For edit view: include ALL fields from requestSchema (update operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields. Path params (e.g., identifierParam) are NOT in requestSchema — do not add them.
+- Filters are derived from list view fields. Since id and createdAt are excluded from list, they will not appear as filters. Do NOT add id or createdAt to list view.
 
 NESTING / FIELD PATHS:
 - Represent nested fields using dot paths (e.g., "profile.firstName").
 - For arrays of primitives, use the array property path (e.g., "tags").
 
 ORDERING RULES (stable, always assign order):
+1) Use consecutive integers starting from 1.
+2) Apply entity-specific ordering when the resource name matches (case-insensitive); otherwise use the generic rules below.
+
+ENTITY-SPECIFIC ORDERING:
+- Users: Put email FIRST (order 1). Then firstName and lastName (or fullName if neither firstName nor lastName exist). Then all other fields. If both fullName and firstName/lastName exist, use firstName/lastName; use fullName only when firstName and lastName are absent.
+- Tasks: Put core task fields first — title, description, status, assignee (in that order), then all other fields.
+
+GENERIC ORDERING (when no entity-specific rule applies):
 1) required fields first (order 1, 2, 3...)
 2) then non-required fields
 3) within each group, sort lexicographically by field path
-4) Use consecutive integers starting from 1.
 
 LABEL RULES (stable, apply exactly):
 - Convert camelCase / snake_case / kebab-case to Title Case.
@@ -74,23 +84,27 @@ Input ApiIR (abbreviated):
 {"resources":[{"name":"Users","operations":[{"kind":"list","responseSchema":{"type":"array","items":{"properties":{"id":{"type":"string"},"email":{"type":"string"},"status":{"type":"string","enum":["active","suspended"]}}}}},{"kind":"detail","responseSchema":{"properties":{"id":{},"email":{},"status":{}}}},{"kind":"create","requestSchema":{"properties":{"email":{},"status":{}}}},{"kind":"update","requestSchema":{"properties":{"email":{},"status":{}}}}]}]}
 
 Expected UiPlanIR output:
-{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"status","label":"Status","order":3}]},"detail":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"status","label":"Status","order":3}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]}}}]}
+{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]},"detail":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"status","label":"Status","order":2}]}}}]}
 
-Note: id is readOnly (system field), so omitted from create/edit. Each field has path, label, order; readOnly only when true.
+Note: id is metadata — excluded from list and detail. id is readOnly, so omitted from create/edit. Each field has path, label, order; readOnly only when true.
 
-EXAMPLE 2 (nested fields, profile.firstName / profile.lastName):
+EXAMPLE 2 (Users with nested profile — entity-specific ordering):
 
 Input ApiIR (abbreviated):
 {"resources":[{"name":"Users","operations":[{"kind":"list","responseSchema":{"items":{"properties":{"id":{},"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}}},{"kind":"detail","responseSchema":{"properties":{"id":{},"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}},{"kind":"create","requestSchema":{"properties":{"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}},{"kind":"update","requestSchema":{"properties":{"email":{},"profile":{"properties":{"firstName":{},"lastName":{}}}}}}]}]}
 
-Expected UiPlanIR output (nested paths):
-{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"detail":{"fields":[{"path":"id","label":"Id","readOnly":true,"order":1},{"path":"email","label":"Email","order":2},{"path":"profile.firstName","label":"First Name","order":3},{"path":"profile.lastName","label":"Last Name","order":4}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]}}}]}
+Expected UiPlanIR output (Users ordering: email first, then firstName, lastName; id excluded from list/detail):
+{"resources":[{"name":"Users","views":{"list":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"detail":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"create":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]},"edit":{"fields":[{"path":"email","label":"Email","order":1},{"path":"profile.firstName","label":"First Name","order":2},{"path":"profile.lastName","label":"Last Name","order":3}]}}}]}
 
-Note: Nested object properties use dot paths. Labels for nested segments use the property name only (e.g., "profile.firstName" → "First Name", not "Profile First Name").
+Note: For Users, email FIRST, then firstName and lastName. If no firstName/lastName, use fullName. id is metadata — excluded from list and detail. Nested paths: "profile.firstName" → "First Name".
 
 EXAMPLE 3 (optional nested field — MUST include):
 - If profile has required: [firstName, lastName] and optional phone, you MUST include profile.phone in all views.
 - Optional fields are NOT optional to omit. Include every property that exists in the schema.
 - Example: profile { firstName, lastName, phone? } → list/detail/create/edit must all include profile.firstName, profile.lastName, AND profile.phone.
+
+EXAMPLE 4 (Tasks — entity-specific ordering):
+- For resource name "Tasks", order: title, description, status, assignee first, then all other fields.
+- id, createdAt, updatedAt excluded from list and detail (metadata).
 
 Remember: You are producing a plan for a deterministic renderer. Boring is correct.

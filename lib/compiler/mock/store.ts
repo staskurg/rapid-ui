@@ -1,10 +1,18 @@
 /**
- * Shared mock data store per compilation+resource.
- * Key: (compilationId, resourceSlug). No session — URLs are shareable.
- * Uses predefined fixtures for golden specs only.
+ * Mock data store. Data is keyed by accountId + (dataSourceId | compilationId) + resourceSlug.
+ *
+ * - Predefined specs (demo v1/v2/v3, golden): share data via dataSourceId. Same account +
+ *   same spec type = same data. Data persists across spec updates and multiple compilations.
+ * - Custom specs: keyed by compilationId. Data persists across updates (no clear on update).
+ *
+ * Seed: For predefined, generated once per account from fixtures. For custom, starts empty.
  */
 
-import { getPredefinedData } from "./fixtures";
+import {
+  getDataSourceId,
+  getPredefinedDataForDataSource,
+  isPredefinedSpec,
+} from "./fixtures";
 import { getObjectSchema } from "../lowering/schema-to-field";
 import type { JsonSchema } from "../apiir/types";
 import type { UISpec } from "@/lib/spec/types";
@@ -64,25 +72,30 @@ interface ResourceData {
   idField: string;
 }
 
-/** Map: compilationId:resourceSlug -> ResourceData */
+/** Map: accountId:dataKey:resourceSlug -> ResourceData. dataKey = dataSourceId (predefined) or compilationId (custom). */
 const dataStore = new Map<string, ResourceData>();
 
-function storeKey(compilationId: string, resourceSlug: string): string {
-  return `${compilationId}:${resourceSlug}`;
+function storeKey(accountId: string, dataKey: string, resourceSlug: string): string {
+  return `${accountId}:${dataKey}:${resourceSlug}`;
 }
 
 function getOrCreateResource(
-  compId: string,
+  accountId: string,
+  compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
   idField: string,
   openapiCanonicalHash: string
 ): ResourceData {
-  const key = storeKey(compId, resourceSlug);
+  const dataSourceId = getDataSourceId(openapiCanonicalHash);
+  const dataKey = dataSourceId ?? compilationId;
+  const key = storeKey(accountId, dataKey, resourceSlug);
   let data = dataStore.get(key);
   if (!data) {
-    const predefined = getPredefinedData(openapiCanonicalHash, resourceSlug);
-    const records = predefined ?? [];
+    const records =
+      dataSourceId !== null
+        ? (getPredefinedDataForDataSource(dataSourceId, resourceSlug) ?? [])
+        : [];
     data = {
       records: [...records],
       listSchema,
@@ -94,6 +107,7 @@ function getOrCreateResource(
 }
 
 export function getRecords(
+  accountId: string,
   compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
@@ -102,6 +116,7 @@ export function getRecords(
 ): Record<string, unknown>[] {
   const idField = spec.idField ?? "id";
   const data = getOrCreateResource(
+    accountId,
     compilationId,
     resourceSlug,
     listSchema,
@@ -112,6 +127,7 @@ export function getRecords(
 }
 
 export function createRecord(
+  accountId: string,
   compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
@@ -121,6 +137,7 @@ export function createRecord(
 ): Record<string, unknown> {
   const idField = spec.idField ?? "id";
   const data = getOrCreateResource(
+    accountId,
     compilationId,
     resourceSlug,
     listSchema,
@@ -145,6 +162,7 @@ export function createRecord(
 }
 
 export function getById(
+  accountId: string,
   compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
@@ -154,6 +172,7 @@ export function getById(
 ): Record<string, unknown> | undefined {
   const idField = spec.idField ?? "id";
   const data = getOrCreateResource(
+    accountId,
     compilationId,
     resourceSlug,
     listSchema,
@@ -164,6 +183,7 @@ export function getById(
 }
 
 export function updateRecord(
+  accountId: string,
   compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
@@ -174,6 +194,7 @@ export function updateRecord(
 ): Record<string, unknown> | undefined {
   const idField = spec.idField ?? "id";
   const data = getOrCreateResource(
+    accountId,
     compilationId,
     resourceSlug,
     listSchema,
@@ -198,6 +219,7 @@ export function updateRecord(
 }
 
 export function deleteRecord(
+  accountId: string,
   compilationId: string,
   resourceSlug: string,
   listSchema: JsonSchema,
@@ -207,6 +229,7 @@ export function deleteRecord(
 ): boolean {
   const idField = spec.idField ?? "id";
   const data = getOrCreateResource(
+    accountId,
     compilationId,
     resourceSlug,
     listSchema,
@@ -220,11 +243,20 @@ export function deleteRecord(
   return true;
 }
 
-/** Clear all mock data for a compilation (used on re-compile). */
-export function clearForCompilation(compilationId: string): void {
+/**
+ * Clear mock data for a custom compilation only. Predefined specs share data
+ * across compilations — we never clear those. Called on compilation delete.
+ */
+export function clearForCompilation(
+  accountId: string,
+  compilationId: string,
+  openapiCanonicalHash: string
+): void {
+  if (isPredefinedSpec(openapiCanonicalHash)) return;
+  const prefix = `${accountId}:${compilationId}:`;
   const keysToDelete: string[] = [];
   for (const key of dataStore.keys()) {
-    if (key.startsWith(`${compilationId}:`)) keysToDelete.push(key);
+    if (key.startsWith(prefix)) keysToDelete.push(key);
   }
   for (const k of keysToDelete) dataStore.delete(k);
 }

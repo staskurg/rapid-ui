@@ -13,6 +13,11 @@ export async function GET(
     return NextResponse.json({ error: "Compilation not found" }, { status: 404 });
   }
 
+  const accountId = entry.accountId;
+  if (!accountId) {
+    return NextResponse.json({ error: "Compilation has no account" }, { status: 400 });
+  }
+
   const spec = entry.specs[resource];
   if (!spec) {
     return NextResponse.json({ error: "Resource not found" }, { status: 404 });
@@ -27,6 +32,7 @@ export async function GET(
   const listSchema = listOp?.responseSchema ?? { type: "array", items: { type: "object" } };
 
   const records = mockStore.getRecords(
+    accountId,
     id,
     resource,
     listSchema,
@@ -45,6 +51,11 @@ export async function POST(
   const entry = getCompilation(id);
   if (!entry) {
     return NextResponse.json({ error: "Compilation not found" }, { status: 404 });
+  }
+
+  const accountId = entry.accountId;
+  if (!accountId) {
+    return NextResponse.json({ error: "Compilation has no account" }, { status: 400 });
   }
 
   const spec = entry.specs[resource];
@@ -68,6 +79,7 @@ export async function POST(
   }
 
   const record = mockStore.createRecord(
+    accountId,
     id,
     resource,
     listSchema,

@@ -8,10 +8,18 @@ function getResourceContext(
   id: string,
   resource: string
 ):
-  | { spec: UISpec; listSchema: JsonSchema; openapiCanonicalHash: string }
+  | {
+      accountId: string;
+      spec: UISpec;
+      listSchema: JsonSchema;
+      openapiCanonicalHash: string;
+    }
   | { error: string; status: number } {
   const entry = getCompilation(id);
   if (!entry) return { error: "Compilation not found", status: 404 };
+
+  const accountId = entry.accountId;
+  if (!accountId) return { error: "Compilation has no account", status: 400 };
 
   const spec = entry.specs[resource];
   if (!spec) return { error: "Resource not found", status: 404 };
@@ -22,7 +30,12 @@ function getResourceContext(
   const listOp = resourceIr.operations.find((o) => o.kind === "list");
   const listSchema = listOp?.responseSchema ?? { type: "array", items: { type: "object" } };
 
-  return { spec, listSchema, openapiCanonicalHash: entry.openapiCanonicalHash };
+  return {
+    accountId,
+    spec,
+    listSchema,
+    openapiCanonicalHash: entry.openapiCanonicalHash,
+  };
 }
 
 export async function GET(
@@ -37,6 +50,7 @@ export async function GET(
   }
 
   const record = mockStore.getById(
+    ctx.accountId,
     id,
     resource,
     ctx.listSchema,
@@ -67,6 +81,7 @@ export async function PATCH(
   }
 
   const record = mockStore.updateRecord(
+    ctx.accountId,
     id,
     resource,
     ctx.listSchema,
@@ -91,6 +106,7 @@ export async function DELETE(
   }
 
   const ok = mockStore.deleteRecord(
+    ctx.accountId,
     id,
     resource,
     ctx.listSchema,

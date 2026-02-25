@@ -20,7 +20,7 @@ import { normalizeUiPlanIR } from "./normalize";
 import { formatZodError } from "./format-errors";
 import { ZodError } from "zod";
 
-const MODEL = "gpt-4o-mini";
+const MODEL = "gpt-4.1-mini-2025-04-14";
 const MAX_RETRIES = 2;
 /** Fixed seed for reproducible outputs when supported by the model. */
 const SEED = 42;

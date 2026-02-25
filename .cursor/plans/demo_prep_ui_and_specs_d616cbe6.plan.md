@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: phase5-compiler-ui
     content: "Phase 5: Compiler UI layout. CHECKPOINT: spec list, detail view, URL param, update/delete."
-    status: pending
+    status: completed
   - id: phase6-diff-popup
     content: "Phase 6: Generated UI diff popup. CHECKPOINT: diff shows on load, button reopens."
     status: pending
@@ -181,7 +181,7 @@ isProject: false
 
 1. **Layout** (`app/page.tsx`): Left panel = drop zone at top + spec list. Right panel = empty state or detail view. Replace current single-compile flow.
 2. **URL param** (`app/page.tsx`): Use `?spec=id`. On load: read param, fetch list; if param id not in list (deleted or wrong account), clear param and show empty state. On spec click: `router.replace` with param. On list refresh: keep param; clear if spec deleted. After new compile: set param to new id.
-3. **List fetch** (`app/page.tsx`): On mount and after compile/update/delete, fetch `GET /api/compilations?accountId=xxx`. Compiling state: for new compile, disable drop zone + toast "Compiling..."; on success, refresh list. For update, show loading on that list item. Pass `accountId` for all compilations API calls (list, get, delete, update).
+3. **List fetch** (`app/page.tsx`): On mount and after compile/update/delete, fetch `GET /api/compilations?accountId=xxx`. Compiling state: for new compile, disable drop zone + show "Compiling..." in list; on success, refresh list. For update, show loading on that list item. Pass `accountId` for all compilations API calls (list, get, delete, update).
 4. **Detail fetch** (`app/page.tsx`): When spec selected, fetch `GET /api/compilations/[id]?accountId=xxx` for full details.
 5. **Detail view** (`app/page.tsx`): Title, URL link, API endpoints list, compiler progress, Output Spec JSON, "Update spec" button (file picker).
 6. **Delete** (`app/page.tsx`): Delete button per list item. Confirmation: "Are you sure you want to delete this?" On confirm: `DELETE /api/compilations/[id]?accountId=xxx`, re-fetch list.

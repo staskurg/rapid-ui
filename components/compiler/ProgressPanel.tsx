@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { CheckCircle2, XCircle, Loader2, AlertCircle, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { CompilerError } from "@/lib/compiler/errors";
@@ -53,6 +54,10 @@ export interface ProgressPanelProps {
   steps: Step[];
   errors?: CompilerError[];
   endpoints?: EndpointInfo[];
+  /** When provided, shows success message and URL link inside the card */
+  successUrl?: string;
+  /** Origin for full URL display (e.g. window.location.origin) */
+  origin?: string;
   className?: string;
 }
 
@@ -75,6 +80,8 @@ export function ProgressPanel({
   steps,
   errors = [],
   endpoints = [],
+  successUrl,
+  origin,
   className,
 }: ProgressPanelProps) {
   return (
@@ -159,6 +166,25 @@ export function ProgressPanel({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {successUrl && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-green-700 dark:text-green-500">
+            Generated UI
+          </h4>
+          <p className="text-xs text-muted-foreground">
+            Open in a new tab to view.
+          </p>
+          <Link
+            href={successUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block break-all text-sm text-green-700 dark:text-green-500 underline-offset-4 hover:underline"
+          >
+            {successUrl.startsWith("http") ? successUrl : origin ? `${origin}${successUrl}` : successUrl}
+          </Link>
         </div>
       )}
 

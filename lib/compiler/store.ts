@@ -23,6 +23,10 @@ export interface CompilationEntry {
   errors?: unknown[];
   /** Formatted diff from previous version (update flow). */
   diffFromPrevious?: { added: string[]; removed: string[] };
+  /** UTC ISO string. Set on create. */
+  createdAt?: string;
+  /** UTC ISO string. Set on create and every update. */
+  updatedAt?: string;
 }
 
 const GLOBAL_KEY = "__rapidui_compilation_store";
@@ -37,9 +41,16 @@ function getStore(): Map<string, CompilationEntry> {
 
 export function putCompilation(
   id: string,
-  entry: CompilationEntry
+  entry: Omit<CompilationEntry, "createdAt" | "updatedAt"> & Partial<Pick<CompilationEntry, "createdAt" | "updatedAt">>
 ): void {
-  getStore().set(id, entry);
+  const now = new Date().toISOString();
+  const existing = getStore().get(id);
+  const merged: CompilationEntry = {
+    ...entry,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
+  };
+  getStore().set(id, merged);
 }
 
 export function getCompilation(id: string): CompilationEntry | undefined {
@@ -54,10 +65,13 @@ export interface CompilationListItem {
   id: string;
   name: string;
   status: "success" | "failed";
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 /**
  * List compilations for an account. Filters by entry.accountId.
+ * Sorted by updatedAt descending (most recently updated first).
  */
 export function listCompilationsByAccount(
   accountId: string
@@ -69,9 +83,16 @@ export function listCompilationsByAccount(
         id,
         name: entry.name ?? id,
         status: entry.status ?? "success",
+        createdAt: entry.createdAt,
+        updatedAt: entry.updatedAt,
       });
     }
   }
+  items.sort((a, b) => {
+    const aAt = a.updatedAt ?? a.createdAt ?? "";
+    const bAt = b.updatedAt ?? b.createdAt ?? "";
+    return bAt.localeCompare(aAt);
+  });
   return items;
 }
 

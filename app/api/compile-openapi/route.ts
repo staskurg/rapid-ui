@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { compileOpenAPI } from "@/lib/compiler/pipeline";
 import { putCompilation } from "@/lib/compiler/store";
-import { clearForCompilation } from "@/lib/compiler/mock/store";
 
 export async function POST(request: Request) {
   let body: { openapi?: string; accountId?: string };
@@ -39,7 +38,6 @@ export async function POST(request: Request) {
   const name =
     result.apiIr.api.title || result.resourceNames[0] || "Untitled";
 
-  clearForCompilation(result.id);
   putCompilation(result.id, {
     specs: result.specs,
     resourceNames: result.resourceNames,
@@ -58,6 +56,9 @@ export async function POST(request: Request) {
     id: result.id,
     url,
     resourceNames: result.resourceNames,
+    resourceSlugs: result.resourceSlugs,
     specs: result.specs,
+    apiIr: result.apiIr,
+    name,
   });
 }

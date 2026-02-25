@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getCompilation, putCompilation } from "@/lib/compiler/store";
-import { clearForCompilation } from "@/lib/compiler/mock/store";
 import { compileOpenAPI } from "@/lib/compiler/pipeline";
 import { computeMultiSpecDiff } from "@/lib/spec/diff";
 import { formatMultiSpecDiffForDisplay } from "@/lib/spec/diffFormatters";
@@ -82,7 +81,6 @@ export async function POST(
   const name =
     result.apiIr.api.title || result.resourceNames[0] || "Untitled";
 
-  clearForCompilation(id);
   putCompilation(id, {
     specs: result.specs,
     resourceNames: result.resourceNames,
@@ -97,9 +95,11 @@ export async function POST(
 
   return NextResponse.json({
     id,
+    name,
     specs: result.specs,
     resourceNames: result.resourceNames,
     resourceSlugs: result.resourceSlugs,
+    apiIr: result.apiIr,
     diffFromPrevious,
   });
 }

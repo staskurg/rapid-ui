@@ -92,7 +92,7 @@ export function OpenApiDropZone({
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       className={cn(
-        "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-8 transition-colors",
+        "relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-4 transition-colors",
         "cursor-pointer hover:border-primary/50 hover:bg-muted/30",
         isDragOver && "border-primary bg-primary/5",
         disabled && "pointer-events-none opacity-50",
@@ -107,9 +107,9 @@ export function OpenApiDropZone({
         onChange={handleFileChange}
         disabled={disabled}
       />
-      <div className="flex flex-col items-center gap-3 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted">
-          <Upload className="h-7 w-7 text-muted-foreground" />
+      <div className="flex flex-col items-center gap-1.5 text-center">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-muted">
+          <Upload className="h-4 w-4 text-muted-foreground" />
         </div>
         <div>
           <p className="text-sm font-medium">
