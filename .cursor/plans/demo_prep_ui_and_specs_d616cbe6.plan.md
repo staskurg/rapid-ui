@@ -87,7 +87,7 @@ isProject: false
 ### Tasks
 
 1. **computeMultiSpecDiff** (`lib/spec/diff.ts`): Add `computeMultiSpecDiff(prevSpecs: Record<string, UISpec>, nextSpecs: Record<string, UISpec>)` returning `{ resourcesAdded, resourcesRemoved, resourceDiffs: Record<string, SpecDiff> }`. Use existing `computeSpecDiff` per resource.
-2. **formatMultiSpecDiffForDisplay** (`lib/spec/diffFormatters.ts`): Add `formatMultiSpecDiffForDisplay(multiDiff)` producing `{ added: string[], removed: string[] }`. Return raw semantic strings (e.g. `"Task Management"`, `"department"`); UI component adds `++`/`--` when rendering. Page-level = resource/entity name; field-level = field names.
+2. **formatMultiSpecDiffForDisplay** (`lib/spec/diffFormatters.ts`): Add `formatMultiSpecDiffForDisplay(multiDiff, prevSpecs, nextSpecs)` producing `{ byPage: DiffPageEntry[] }`. Each page has `type` (added/removed/unchanged) and per-page `addedFields`/`removedFields`. UI component adds `++`/`--` when rendering.
 3. **Tests** (`tests/spec/diff.test.ts`): Add tests for `computeMultiSpecDiff` and `formatMultiSpecDiffForDisplay` (resource add/remove, field changes).
 
 ### File Summary
@@ -103,7 +103,7 @@ isProject: false
 ### CHECKPOINT 2
 
 - `computeMultiSpecDiff(prev, next)` returns correct `resourcesAdded`, `resourcesRemoved`, `resourceDiffs`.
-- `formatMultiSpecDiffForDisplay` produces `{ added, removed }` with raw semantic strings (UI adds `++`/`--` when rendering).
+- `formatMultiSpecDiffForDisplay` produces `{ byPage }` with page-level grouping (added/removed/unchanged per resource).
 - Tests pass.
 
 ---
@@ -151,8 +151,8 @@ isProject: false
 
 1. **GET /api/compilations** (`app/api/compilations/route.ts`): Create. Query param `accountId` (required; return 400 if missing). Return `{ items: [{ id, name, status }] }` from `listCompilationsByAccount`.
 2. **GET /api/compilations/[id]** (`app/api/compilations/[id]/route.ts`): Extend response with `apiIr`, `name`, `status`, `diffFromPrevious`, `isPredefined` (from `isPredefinedSpec(entry.openapiCanonicalHash)`). Require `accountId` query param (400 if missing). Verify ownership: if `entry.accountId !== accountId`, return 403.
-3. **DELETE /api/compilations/[id]** (`app/api/compilations/[id]/route.ts`): Add DELETE export. Require `accountId` query param (400 if missing). Verify ownership (403 if mismatch). Call `deleteCompilation(id)`. Clear mock data for id. Return 204.
-4. **POST /api/compilations/[id]/update** (`app/api/compilations/[id]/update/route.ts`): Create. Body `{ openapi: string, accountId: string }` (400 if accountId missing). Get existing entry; 404 if not found. Verify `entry.accountId === accountId` (403 if mismatch). Run pipeline with `id` (the compilation id from the URL). On failure: return 422 with errors; do not modify entry. On success: compute `computeMultiSpecDiff(prev, next)` → `formatMultiSpecDiffForDisplay` → store in `diffFromPrevious`. Clear mock, put compilation. Return 200.
+3. **DELETE /api/compilations/[id]** (`app/api/compilations/[id]/route.ts`): Add DELETE export. Require `accountId` query param (400 if missing). Verify ownership (403 if mismatch). Call `clearForCompilation(accountId, id, entry.openapiCanonicalHash)`, then `deleteCompilation(id)`. Return 204.
+4. **POST /api/compilations/[id]/update** (`app/api/compilations/[id]/update/route.ts`): Create. Body `{ openapi: string, accountId: string }` (400 if accountId missing). Get existing entry; 404 if not found. Verify `entry.accountId === accountId` (403 if mismatch). Run pipeline with `id` (the compilation id from the URL). On failure: return 422 with errors; do not modify entry. On success: compute `computeMultiSpecDiff(prev, next)` → `formatMultiSpecDiffForDisplay` → store in `diffFromPrevious`. Put compilation. Return 200. **No clear mock on update** — mock API is decoupled from spec; spec update = UI recompile only; mock endpoints persist.
 
 ### File Summary
 
@@ -213,8 +213,8 @@ isProject: false
 ### Tasks
 
 1. **Pass diff** (`app/u/[id]/[resource]/page.tsx`): Entry from `getCompilation(id)` includes `diffFromPrevious`. Pass to `CompiledUIContent`.
-2. **CompiledUIContent** (`components/compiler/CompiledUIContent.tsx`): Add `diffFromPrevious?: { added: string[]; removed: string[] }` prop.
-3. **Diff popup** (`components/compiler/CompiledUIContent.tsx`): When `diffFromPrevious` exists and not empty, show modal/dialog on mount. Title "What changed". Content: `++` items (green), `--` items (red). Use `sessionStorage` key `rapidui_diff_dismissed_${id}`: show once per compilation per browser session; if key set, skip auto-show (user can still reopen via "View changes").
+2. **CompiledUIContent** (`components/compiler/CompiledUIContent.tsx`): Add `diffFromPrevious?: { byPage: DiffPageEntry[] }` prop (matches `formatMultiSpecDiffForDisplay` output).
+3. **Diff popup** (`components/compiler/CompiledUIContent.tsx`): When `diffFromPrevious` exists and not empty, show modal/dialog on mount. Title "What changed". Content: `++` items (green), `--` items (red). Use `sessionStorage` key `rapidui_diff_dismissed_${id}_${updatedAt}`: show once per version; if key set, skip auto-show (user can still reopen via "View changes"). Including `updatedAt` ensures the popup shows again after each spec update when user refreshes.
 4. **View changes button** (`components/compiler/CompiledUISidebar.tsx` or `CompiledUIContent`): Add "View changes" button when `diffFromPrevious` exists. Reopens diff popup.
 
 ### File Summary
@@ -229,13 +229,13 @@ isProject: false
 
 ### CHECKPOINT 6
 
-- Update a spec → visit generated UI → diff popup shows on first load (per session).
+- Update a spec → visit generated UI → diff popup shows on first load (per version; key includes `updatedAt`).
 - "View changes" button reopens popup anytime.
 - No diff (new spec) or empty diff → no popup, no button.
 
 ---
 
-## Phase 7: Polish
+## Phase 7: Polish ✅
 
 **Goal:** Banners, custom spec messaging, and demo specs download.
 
@@ -327,6 +327,8 @@ Unchanged: `{ id, url, resourceNames, specs }`. Client (Phase 5) uses this to se
 
 After removing `isGoldenSpec` check, custom specs compile. `getPredefinedData` returns null for unknown hashes → mock store uses `[]`. Custom spec UIs have empty tables. Acceptable for demo ("Experimental support").
 
+**Mock API decoupled from spec:** The mock API is decoupled from the OpenAPI spec. The spec generates UI for existing endpoints; it does not define or change the API. Real-world: user does backend work, uploads new spec, compiles — UI adjusts, mock endpoints stay the same. For demo: API holds all data for v1/v2/v3; each spec version only controls what the UI displays. `clearForCompilation` is called on **delete** only. On update, we recompile the spec and adjust the UI; mock data persists.
+
 ---
 
 ## Implementation Notes
@@ -353,16 +355,16 @@ After removing `isGoldenSpec` check, custom specs compile. `getPredefinedData` r
 
 ### No discrepancies
 
-- Phase 2 checkpoint corrected: formatter returns raw strings; UI adds `++`/`--`.
-- Phase 4: explicit 400 for missing `accountId` on GET/DELETE/update.
+- Phase 2: formatter returns `{ byPage }` for page-level grouping.
+- Phase 4: explicit 400 for missing `accountId` on GET/DELETE/update; no clear mock on update (intentional).
 - Cross-phase: update route passes `id` only; `accountId` for ownership only.
 
 ### Code smell prevention
 
 - **accountId everywhere:** All compilations API routes require `accountId`; client passes from `getOrCreateAccountId()`. Consistent.
-- **diffFromPrevious shape:** `{ added: string[], removed: string[] }` — same as `FormatDiffResult` from diffFormatters. Reuse type.
+- **diffFromPrevious shape:** `{ byPage: DiffPageEntry[] }` — matches `FormatMultiSpecDiffResult` from diffFormatters. Each page has `type`, `addedFields`, `removedFields`.
 - **isPredefinedSpec vs isGoldenSpec:** `isPredefinedSpec` = golden ∪ demo hashes. Keep `isGoldenSpec` if used elsewhere, or replace; ensure `getPredefinedData` and `isPredefinedSpec` share same hash set.
-- **sessionStorage key:** `rapidui_diff_dismissed_${id}` — ensure `id` is safe (alphanumeric, 12 chars).
+- **sessionStorage key:** `rapidui_diff_dismissed_${id}_${updatedAt}` — ensures diff popup shows again after each spec update when user refreshes.
 
 ### Implementation order
 
@@ -370,6 +372,15 @@ Phases 1–7 are sequential. Phase 3 depends on Phase 2 (diff types) only if upd
 
 ---
 
+## Implementation Decisions (Post-Merge)
+
+1. **Phase 1 — createSessionId:** Removed; no remaining callers. Plan said "Keep for backward compat if needed" — not needed.
+2. **Phase 2 — byPage diff format:** `formatMultiSpecDiffForDisplay` returns `{ byPage: DiffPageEntry[] }` for page-level grouping (added/removed/unchanged per resource). Richer than flat `{ added, removed }`.
+3. **Phase 4 — No clear on update:** Mock API is decoupled from the spec. Spec update = UI recompile only; mock endpoints persist. `clearForCompilation` only on delete.
+4. **Phase 6 — sessionStorage key with updatedAt:** Key `rapidui_diff_dismissed_${id}_${updatedAt}` ensures diff popup shows again after each spec update when user refreshes the generated UI.
+
+---
+
 ## Open Questions
 
-None at this time. Plan has been stress-tested and updated with recommendations.
+None at this time. Plan has been stress-tested, implemented, and updated with implementation decisions.
