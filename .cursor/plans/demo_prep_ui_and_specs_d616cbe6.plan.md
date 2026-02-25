@@ -33,7 +33,7 @@ isProject: false
 
 ---
 
-## Phase 1: Foundation (accountId, Store, Pipeline)
+## Phase 1: Foundation (accountId, Store, Pipeline) ✅
 
 **Goal:** Replace sessionId with accountId, UUID-based ids, and extend the store for account-based listing.
 
@@ -173,7 +173,7 @@ isProject: false
 
 ---
 
-## Phase 5: Compiler UI Layout
+## Phase 5: Compiler UI Layout ✅
 
 **Goal:** New two-panel layout with spec list, detail view, URL param, update/delete.
 
