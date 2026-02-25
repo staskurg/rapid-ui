@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Sparkles, Trash2, Upload, Loader2, FileText } from "lucide-react";
+import { Sparkles, Trash2, Upload, Loader2, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { OpenApiDropZone } from "@/components/connect/OpenApiDropZone";
 import { ProgressPanel } from "@/components/compiler/ProgressPanel";
@@ -24,10 +24,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const ACCEPT = ".yaml,.yml,.json";
+
+/** Demo specs available for download. Keys match API route param. */
+const DEMO_SPECS: { id: string; label: string }[] = [
+  { id: "golden_openapi_users_tagged_3_0", label: "Golden Users" },
+  { id: "golden_openapi_products_path_3_1", label: "Golden Products" },
+  { id: "demo_users_tasks_v1", label: "Demo v1 (Users only)" },
+  { id: "demo_users_tasks_v2", label: "Demo v2 (Users + Tasks)" },
+  { id: "demo_users_tasks_v3", label: "Demo v3 (updated fields)" },
+];
 
 /** URL param value during new spec compilation. Replaced with real id when done. */
 const COMPILING_SPEC_ID = "__compiling__";
@@ -99,6 +116,7 @@ function CompilerPageContent() {
   );
   const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [demoSpecsOpen, setDemoSpecsOpen] = React.useState(false);
   const updateInputRef = React.useRef<HTMLInputElement>(null);
   const updateTargetIdRef = React.useRef<string | null>(null);
 
@@ -312,6 +330,24 @@ function CompilerPageContent() {
     toast.error("Upload failed", { description: message });
   }, []);
 
+  const handleCompileDemoSpec = React.useCallback(
+    async (specId: string) => {
+      if (!ac || compileState) return;
+      setDemoSpecsOpen(false);
+      try {
+        const res = await fetch(`/api/demo-specs/${encodeURIComponent(specId)}`);
+        if (!res.ok) throw new Error("Failed to fetch spec");
+        const content = await res.text();
+        await handleFile(content);
+      } catch (err) {
+        toast.error("Failed to load demo spec", {
+          description: err instanceof Error ? err.message : "Unknown error",
+        });
+      }
+    },
+    [ac, compileState, handleFile]
+  );
+
   const handleSpecClick = React.useCallback(
     (id: string) => {
       setCompileState(null);
@@ -449,7 +485,7 @@ function CompilerPageContent() {
         });
       }
     },
-    [ac, fetchList, fetchDetail]
+    [ac, fetchList]
   );
 
   const handleDeleteClick = React.useCallback((id: string) => {
@@ -565,7 +601,7 @@ function CompilerPageContent() {
             <Sparkles className="h-5 w-5 shrink-0 text-primary" />
             <div className="min-w-0">
               <h1 className="truncate text-lg font-semibold">RapidUI.dev</h1>
-              <p className="break-words text-xs text-muted-foreground">
+              <p className="wrap-break-word text-xs text-muted-foreground">
                 OpenAPI → deterministic schema-driven UI
               </p>
             </div>
@@ -578,6 +614,17 @@ function CompilerPageContent() {
             onError={handleDropZoneError}
             disabled={compileState !== null}
           />
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="w-full justify-center gap-2"
+            disabled={compileState !== null}
+            onClick={() => setDemoSpecsOpen(true)}
+          >
+            <Sparkles className="h-4 w-4" />
+            Demo specs
+          </Button>
 
           <div className="space-y-1">
             <h2 className="text-sm font-semibold">Your specs</h2>
@@ -611,7 +658,7 @@ function CompilerPageContent() {
                         e.key === "Enter" && handleSpecClick(item.id)
                       }
                       className={cn(
-                        "group flex items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
+                        "group flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
                         effectiveSpecParam === item.id
                           ? "border-primary bg-primary/5"
                           : "border-border hover:bg-muted/50"
@@ -648,6 +695,9 @@ function CompilerPageContent() {
 
       {/* Right panel: compile flow, empty state, or detail */}
       <main className="min-w-0 flex-1 overflow-y-auto p-6">
+        <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+          Custom specs are in development. Use Golden Users, Golden Products, or Demo (Users + Tasks v1 → v2 → v3).
+        </div>
         <div className="flex w-full flex-col gap-6">
           {compileState ? (
             <>
@@ -702,6 +752,11 @@ function CompilerPageContent() {
             </div>
           ) : detail ? (
             <>
+              {detail.isPredefined === false && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
+                  This is a custom spec. Experimental support.
+                </div>
+              )}
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <h2 className="text-lg font-semibold">{detail.name}</h2>
                 <input
@@ -782,6 +837,49 @@ function CompilerPageContent() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={demoSpecsOpen} onOpenChange={setDemoSpecsOpen}>
+        <DialogContent showCloseButton={false} className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Demo specs</DialogTitle>
+            <DialogDescription>
+              Download a spec file or compile directly.
+            </DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-2 py-2">
+            {DEMO_SPECS.map((spec) => (
+              <li key={spec.id}>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 justify-start gap-2"
+                    disabled={compileState !== null}
+                    onClick={() => handleCompileDemoSpec(spec.id)}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    {spec.label}
+                  </Button>
+                  <a
+                    href={`/api/demo-specs/${encodeURIComponent(spec.id)}`}
+                    download={`${spec.id}.yaml`}
+                    className="shrink-0 rounded p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    title={`Download ${spec.label}`}
+                    aria-label={`Download ${spec.label}`}
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <DialogFooter showCloseButton={false}>
+            <Button variant="outline" onClick={() => setDemoSpecsOpen(false)}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

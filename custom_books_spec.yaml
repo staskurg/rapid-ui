@@ -1,0 +1,138 @@
+# Custom spec: Books API (for testing custom spec upload)
+openapi: 3.0.3
+info:
+  title: Custom Books API
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+tags:
+  - name: Books
+    description: Book catalog
+paths:
+  /books:
+    get:
+      tags: [Books]
+      operationId: listBooks
+      summary: List books
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+    post:
+      tags: [Books]
+      operationId: createBook
+      summary: Create book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookCreateInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+  /books/{bookId}:
+    get:
+      tags: [Books]
+      operationId: getBook
+      summary: Get book by id
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+    put:
+      tags: [Books]
+      operationId: updateBook
+      summary: Replace book
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+    delete:
+      tags: [Books]
+      operationId: deleteBook
+      summary: Delete book
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deleted:
+                    type: boolean
+components:
+  schemas:
+    Book:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string
+    BookCreateInput:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+        author:
+          type: string
+        isbn:
+          type: string

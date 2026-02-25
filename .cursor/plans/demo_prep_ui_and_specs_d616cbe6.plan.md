@@ -21,8 +21,8 @@ todos:
     content: "Phase 6: Generated UI diff popup. CHECKPOINT: diff shows on load, button reopens."
     status: completed
   - id: phase7-polish
-    content: "Phase 7: Polish. CHECKPOINT: banners, custom spec message."
-    status: pending
+    content: "Phase 7: Polish. CHECKPOINT: banners, demo specs download, custom spec message."
+    status: completed
 isProject: false
 ---
 
@@ -237,24 +237,27 @@ isProject: false
 
 ## Phase 7: Polish
 
-**Goal:** Banners and custom spec messaging.
+**Goal:** Banners, custom spec messaging, and demo specs download.
 
 ### Tasks
 
 1. **Compiler banner** (`app/page.tsx`): Persistent message: "Custom specs are currently in development. You can use: Golden Users, Golden Products, or Demo (Users + Tasks v1 → v2 → v3)."
-2. **Custom spec banner** (`app/page.tsx` or detail component): When detail fetch returns `isPredefined: false`, show "This is a custom spec. Experimental support." in detail view. (Uses `isPredefinedSpec` from Phase 3.)
+2. **Demo specs download** (`app/api/demo-specs/[name]/route.ts`, `app/page.tsx`): Add API route to serve demo spec YAML files from `tests/compiler/fixtures/` (whitelist: golden users, golden products, demo v1/v2/v3). On compiler page, add "Demo specs" section with download links and "Compile" buttons so users can download files or compile directly.
+3. **Custom spec banner** (`app/page.tsx` or detail component): When detail fetch returns `isPredefined: false`, show "This is a custom spec. Experimental support." in detail view. (Uses `isPredefinedSpec` from Phase 3.)
 
 ### File Summary
 
 
-| File           | Action                                                  |
-| -------------- | ------------------------------------------------------- |
-| `app/page.tsx` | Add banners, custom spec banner (isPredefined from GET) |
+| File                                 | Action                                              |
+| ------------------------------------ | --------------------------------------------------- |
+| `app/api/demo-specs/[name]/route.ts` | Create GET route to serve demo spec files           |
+| `app/page.tsx`                       | Add banners, demo specs section, custom spec banner |
 
 
 ### CHECKPOINT 7
 
 - Compiler page shows custom specs message.
+- Demo specs section: users can download or compile Golden Users, Golden Products, Demo v1/v2/v3.
 - Selecting a custom spec shows experimental banner in detail view.
 
 ---
