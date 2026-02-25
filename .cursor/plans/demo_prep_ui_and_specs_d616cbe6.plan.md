@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: phase6-diff-popup
     content: "Phase 6: Generated UI diff popup. CHECKPOINT: diff shows on load, button reopens."
-    status: pending
+    status: completed
   - id: phase7-polish
     content: "Phase 7: Polish. CHECKPOINT: banners, custom spec message."
     status: pending
