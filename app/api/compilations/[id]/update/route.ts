@@ -52,7 +52,7 @@ export async function POST(
   }
 
   const { id } = await params;
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
 
   if (!entry) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -81,7 +81,7 @@ export async function POST(
   const name =
     result.apiIr.api.title || result.resourceNames[0] || "Untitled";
 
-  putCompilation(id, {
+  await putCompilation(id, {
     specs: result.specs,
     resourceNames: result.resourceNames,
     resourceSlugs: result.resourceSlugs,

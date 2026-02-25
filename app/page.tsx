@@ -3,7 +3,7 @@
 import * as React from "react";
 import { Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Sparkles, Trash2, Upload, Loader2, FileText, Download } from "lucide-react";
+import { Sparkles, Trash2, Upload, Loader2, FileText, Download, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { OpenApiDropZone } from "@/components/connect/OpenApiDropZone";
 import { ProgressPanel } from "@/components/compiler/ProgressPanel";
@@ -11,7 +11,7 @@ import type { Step } from "@/components/compiler/ProgressPanel";
 import type { EndpointInfo } from "@/components/compiler/ProgressPanel";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { getOrCreateAccountId } from "@/lib/session";
+import { getOrCreateAccountId, resetAccountId } from "@/lib/session";
 import type { ApiIR } from "@/lib/compiler/apiir/types";
 import type { CompilerError } from "@/lib/compiler/errors";
 import {
@@ -116,6 +116,7 @@ function CompilerPageContent() {
   );
   const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
+  const [resetSessionOpen, setResetSessionOpen] = React.useState(false);
   const [demoSpecsOpen, setDemoSpecsOpen] = React.useState(false);
   const updateInputRef = React.useRef<HTMLInputElement>(null);
   const updateTargetIdRef = React.useRef<string | null>(null);
@@ -520,6 +521,19 @@ function CompilerPageContent() {
     }
   }, [deleteTargetId, ac, effectiveSpecParam, router, fetchList]);
 
+  const handleResetSession = React.useCallback(() => {
+    setResetSessionOpen(false);
+    const newId = resetAccountId();
+    setAccountId(newId);
+    setItems([]);
+    setDetail(null);
+    setCompletedSpecId(null);
+    router.replace("/", { scroll: false });
+    toast.success("Session reset", {
+      description: "You now have a fresh account. Your previous compilations are still in the database.",
+    });
+  }, [router]);
+
   const steps: Step[] = React.useMemo(() => {
     if (compileState) {
       const err = compileState.status === "error" ? compileState.errors[0] : null;
@@ -691,6 +705,19 @@ function CompilerPageContent() {
             )}
           </div>
         </div>
+
+        <div className="shrink-0 border-t border-border p-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center gap-2 text-muted-foreground hover:text-foreground"
+            disabled={compileState !== null}
+            onClick={() => setResetSessionOpen(true)}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reset session
+          </Button>
+        </div>
       </aside>
 
       {/* Right panel: compile flow, empty state, or detail */}
@@ -833,6 +860,24 @@ function CompilerPageContent() {
               ) : (
                 "Delete"
               )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={resetSessionOpen} onOpenChange={setResetSessionOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reset session</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will create a new account ID. Your spec list will appear empty. Your previous
+              compilations remain in the database but won&apos;t be visible under this session.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetSession}>
+              Reset
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

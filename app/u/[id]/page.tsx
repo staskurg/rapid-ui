@@ -14,7 +14,7 @@ export default async function CompilationRootPage({
   if (!id?.trim()) {
     redirect("/");
   }
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
 
   if (!entry) {
     redirect("/");

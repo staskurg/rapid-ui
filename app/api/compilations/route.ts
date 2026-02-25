@@ -12,6 +12,6 @@ export async function GET(request: Request) {
     );
   }
 
-  const items = listCompilationsByAccount(accountId);
+  const items = await listCompilationsByAccount(accountId);
   return NextResponse.json({ items });
 }

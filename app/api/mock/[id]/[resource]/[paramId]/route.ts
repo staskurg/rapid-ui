@@ -4,18 +4,19 @@ import * as mockStore from "@/lib/compiler/mock/store";
 import type { JsonSchema } from "@/lib/compiler/apiir/types";
 import type { UISpec } from "@/lib/spec/types";
 
-function getResourceContext(
+async function getResourceContext(
   id: string,
   resource: string
-):
+): Promise<
   | {
       accountId: string;
       spec: UISpec;
       listSchema: JsonSchema;
       openapiCanonicalHash: string;
     }
-  | { error: string; status: number } {
-  const entry = getCompilation(id);
+  | { error: string; status: number }
+> {
+  const entry = await getCompilation(id);
   if (!entry) return { error: "Compilation not found", status: 404 };
 
   const accountId = entry.accountId;
@@ -44,7 +45,7 @@ export async function GET(
 ) {
   const { id, resource, paramId } = await params;
 
-  const ctx = getResourceContext(id, resource);
+  const ctx = await getResourceContext(id, resource);
   if ("error" in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }
@@ -68,7 +69,7 @@ export async function PATCH(
 ) {
   const { id, resource, paramId } = await params;
 
-  const ctx = getResourceContext(id, resource);
+  const ctx = await getResourceContext(id, resource);
   if ("error" in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }
@@ -100,7 +101,7 @@ export async function DELETE(
 ) {
   const { id, resource, paramId } = await params;
 
-  const ctx = getResourceContext(id, resource);
+  const ctx = await getResourceContext(id, resource);
   if ("error" in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }

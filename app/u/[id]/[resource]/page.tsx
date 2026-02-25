@@ -14,7 +14,7 @@ export default async function GeneratedUIPage({
   if (!id?.trim()) {
     redirect("/");
   }
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
 
   if (!entry) {
     return (

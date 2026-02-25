@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   const name =
     result.apiIr.api.title || result.resourceNames[0] || "Untitled";
 
-  putCompilation(result.id, {
+  await putCompilation(result.id, {
     specs: result.specs,
     resourceNames: result.resourceNames,
     resourceSlugs: result.resourceSlugs,

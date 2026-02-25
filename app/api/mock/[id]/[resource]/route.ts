@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { id, resource } = await params;
 
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
   if (!entry) {
     return NextResponse.json({ error: "Compilation not found" }, { status: 404 });
   }
@@ -48,7 +48,7 @@ export async function POST(
 ) {
   const { id, resource } = await params;
 
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
   if (!entry) {
     return NextResponse.json({ error: "Compilation not found" }, { status: 404 });
   }

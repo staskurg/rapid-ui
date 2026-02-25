@@ -29,7 +29,7 @@ export async function GET(
   }
 
   const { id } = await params;
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
 
   if (!entry) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -62,7 +62,7 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const entry = getCompilation(id);
+  const entry = await getCompilation(id);
 
   if (!entry) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -73,6 +73,6 @@ export async function DELETE(
   }
 
   clearForCompilation(accountId, id, entry.openapiCanonicalHash);
-  deleteCompilation(id);
+  await deleteCompilation(id);
   return new Response(null, { status: 204 });
 }
