@@ -21,7 +21,10 @@ import {
   compareSpecsMulti,
   diffCanonical,
   canonicalString,
+  diffUnified,
 } from "./utils/comparator";
+import { computeMultiSpecDiff } from "@/lib/spec/diff";
+import { buildFullReport } from "./utils/report-schema";
 
 const DEFAULT_RUNS = 5;
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
@@ -169,6 +172,14 @@ interface FixtureResult {
   minSimilarity: number;
   passed: boolean;
   errors: string[];
+  worstPair?: {
+    runA: number;
+    runB: number;
+    similarity: number;
+    structuralDifferences: string[];
+  };
+  multiSpecDiff?: import("@/lib/spec/diff").MultiSpecDiff;
+  unifiedDiff?: string;
 }
 
 async function runSingleEval(
@@ -260,9 +271,13 @@ async function evaluateFixture(
   let minSimilarity = 1;
   const errors = [...new Set(runResults.flatMap((r) => r.errors))];
 
+  let worstPair: FixtureResult["worstPair"];
+  let multiSpecDiff: FixtureResult["multiSpecDiff"];
+  let unifiedDiff: FixtureResult["unifiedDiff"];
+
   if (validRuns.length >= 2) {
     let minAcrossPairs = 1;
-    let worstPair: { i: number; j: number; comp: ReturnType<typeof compareSpecsMulti> } | null = null;
+    let worst: { i: number; j: number; comp: ReturnType<typeof compareSpecsMulti> } | null = null;
     for (let i = 0; i < validRuns.length; i++) {
       for (let j = i + 1; j < validRuns.length; j++) {
         const comp = compareSpecsMulti(validRuns[i].specs!, validRuns[j].specs!);
@@ -272,19 +287,31 @@ async function evaluateFixture(
         } else {
           if (comp.minSimilarity < minAcrossPairs) {
             minAcrossPairs = comp.minSimilarity;
-            worstPair = { i, j, comp };
+            worst = { i, j, comp };
           }
         }
       }
     }
     minSimilarity = minAcrossPairs;
-    // Diff on failure for prompt debugging
-    if (minAcrossPairs < SIMILARITY_THRESHOLD && worstPair) {
-      const { i, j, comp } = worstPair;
+    // Include diffs whenever there's any drift (< 100%), not just on failure
+    if (minAcrossPairs < 1 && worst) {
+      const { i, j, comp } = worst;
+      const runA = validRuns[i].runNumber;
+      const runB = validRuns[j].runNumber;
+      worstPair = {
+        runA,
+        runB,
+        similarity: comp.minSimilarity,
+        structuralDifferences: comp.differences,
+      };
+      multiSpecDiff = computeMultiSpecDiff(validRuns[i].specs!, validRuns[j].specs!);
       const a = canonicalString(validRuns[i].specs!);
       const b = canonicalString(validRuns[j].specs!);
-      console.log(`\n  Diff (runs ${i + 1} vs ${j + 1}, similarity ${(comp.minSimilarity * 100).toFixed(1)}%):`);
-      console.log(diffCanonical(a, b).split("\n").slice(0, 20).join("\n"));
+      unifiedDiff = diffUnified(a, b, `Run ${runA}`, `Run ${runB}`);
+      if (minAcrossPairs < SIMILARITY_THRESHOLD) {
+        console.log(`\n  Diff (runs ${runA} vs ${runB}, similarity ${(comp.minSimilarity * 100).toFixed(1)}%):`);
+        console.log(diffCanonical(a, b));
+      }
     }
   }
 
@@ -302,6 +329,9 @@ async function evaluateFixture(
     minSimilarity,
     passed,
     errors,
+    worstPair,
+    multiSpecDiff,
+    unifiedDiff,
   };
 }
 
@@ -345,18 +375,16 @@ async function main() {
   const results: FixtureResult[] = [];
 
   if (config.parallel) {
-    const fixtureResults = await Promise.all(
-      fixtures.map(async (path) => {
-        const name = path.split("/").pop() ?? "?";
-        console.log(`\nFixture: ${name}`);
-        const result = await evaluateFixture(path, config.runs, true);
-        console.log(
-          `  Valid: ${result.validRuns}/${config.runs}, Min similarity: ${(result.minSimilarity * 100).toFixed(1)}%`
-        );
-        return result;
-      })
-    );
-    results.push(...fixtureResults);
+    // Parallel runs per fixture only (not fixtures) — avoids rate limits
+    for (const path of fixtures) {
+      const name = path.split("/").pop() ?? "?";
+      console.log(`\nFixture: ${name}`);
+      const result = await evaluateFixture(path, config.runs, true);
+      results.push(result);
+      console.log(
+        `  Valid: ${result.validRuns}/${config.runs}, Min similarity: ${(result.minSimilarity * 100).toFixed(1)}%`
+      );
+    }
   } else {
     for (const path of fixtures) {
       const name = path.split("/").pop() ?? "?";
@@ -404,7 +432,18 @@ async function main() {
   if (config.outputDir) {
     mkdirSync(config.outputDir, { recursive: true });
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    const reportPath = join(config.outputDir, `report-full-${ts}.txt`);
+    const jsonReport = buildFullReport(
+      { runs: config.runs, parallel: config.parallel ?? false },
+      results,
+      totalRuns,
+      totalValid,
+      validityRate,
+      minSimAcross,
+      allPassed
+    );
+    const jsonPath = join(config.outputDir, `report-full-${ts}.json`);
+    writeFileSync(jsonPath, JSON.stringify(jsonReport, null, 2));
+    const txtPath = join(config.outputDir, `report-full-${ts}.txt`);
     const lines = [
       `Full Pipeline Eval Report - ${new Date().toISOString()}`,
       `Validity: ${(validityRate * 100).toFixed(1)}%`,
@@ -415,8 +454,8 @@ async function main() {
           `${r.fixtureName}: valid ${r.validRuns}/${r.runs.length}, sim ${(r.minSimilarity * 100).toFixed(1)}%`
       ),
     ];
-    writeFileSync(reportPath, lines.join("\n"));
-    console.log(`\nReport: ${reportPath}`);
+    writeFileSync(txtPath, lines.join("\n"));
+    console.log(`\nReports: ${jsonPath}, ${txtPath}`);
   }
 
   if (config.json) {

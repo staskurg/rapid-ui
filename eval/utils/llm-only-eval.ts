@@ -13,6 +13,8 @@ import type { ApiIR } from "@/lib/compiler/apiir";
 import {
   extractUiPlanIRFingerprint,
   compareUiPlanIRFingerprints,
+  canonicalUiPlanIR,
+  diffUnified,
 } from "./comparator";
 
 const SIMILARITY_THRESHOLD = 0.9;
@@ -22,6 +24,12 @@ export interface LlmOnlyRunResult {
   uiPlan: import("@/lib/compiler/uiplan/uiplan.schema").UiPlanIR | null;
   fingerprint: ReturnType<typeof extractUiPlanIRFingerprint> | null;
   error?: string;
+}
+
+export interface WorstPair {
+  runA: number;
+  runB: number;
+  similarity: number;
 }
 
 export interface LlmOnlyFixtureResult {
@@ -36,8 +44,12 @@ export interface LlmOnlyFixtureResult {
   maxSimilarity: number;
   passed: boolean;
   errors: string[];
-  /** Structural differences from worst pair when similarity < threshold (for prompt debugging). */
+  /** Structural differences from worst pair when similarity < threshold (for prompt debugging). Full list, no truncation. */
   similarityDifferences?: string[];
+  /** Worst pair indices (1-based run numbers) and similarity. */
+  worstPair?: WorstPair;
+  /** Full unified diff between worst pair canonical UiPlanIR strings. */
+  unifiedDiff?: string;
 }
 
 /**
@@ -131,6 +143,8 @@ export async function evaluateLlmOnlyFixture(
   let maxSimilarity = 1;
 
   let similarityDifferences: string[] | undefined;
+  let worstPair: WorstPair | undefined;
+  let unifiedDiff: string | undefined;
 
   if (validRuns.length >= 2) {
     const fingerprints = validRuns.map((r) => r.fingerprint!);
@@ -152,10 +166,19 @@ export async function evaluateLlmOnlyFixture(
       minSimilarity = Math.min(...sims);
       maxSimilarity = Math.max(...sims);
 
-      if (minSimilarity < SIMILARITY_THRESHOLD) {
-        const worst = comparisons.find((c) => c.similarity === minSimilarity);
-        if (worst && worst.differences.length > 0) {
-          similarityDifferences = worst.differences;
+      const worst = comparisons.find((c) => c.similarity === minSimilarity);
+      if (worst) {
+        worstPair = {
+          runA: validRuns[worst.i].runNumber,
+          runB: validRuns[worst.j].runNumber,
+          similarity: worst.similarity,
+        };
+        similarityDifferences = worst.differences; // Full list, no truncation
+        // Include unified diff whenever there's any drift (< 100%), not just on failure
+        if (minSimilarity < 1 && validRuns[worst.i].uiPlan && validRuns[worst.j].uiPlan) {
+          const canonA = canonicalUiPlanIR(validRuns[worst.i].uiPlan!);
+          const canonB = canonicalUiPlanIR(validRuns[worst.j].uiPlan!);
+          unifiedDiff = diffUnified(canonA, canonB, `Run ${worstPair.runA}`, `Run ${worstPair.runB}`);
         }
       }
     }
@@ -178,6 +201,8 @@ export async function evaluateLlmOnlyFixture(
     passed,
     errors,
     similarityDifferences,
+    worstPair,
+    unifiedDiff,
   };
 }
 

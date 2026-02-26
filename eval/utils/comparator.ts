@@ -2,6 +2,7 @@
  * Structural comparison utilities for detecting drift across AI runs
  */
 
+import * as Diff from "diff";
 import stringify from "fast-json-stable-stringify";
 import type { UISpec } from "@/lib/spec/types";
 import type { UiPlanIR } from "@/lib/compiler/uiplan/uiplan.schema";
@@ -341,6 +342,36 @@ export function diffCanonical(a: string, b: string): string {
     }
   }
   return out.length > 0 ? out.join("\n") : "(identical)";
+}
+
+/**
+ * Produce stable canonical string for UiPlanIR.
+ * Used for byte-identical comparison and unified diff.
+ */
+export function canonicalUiPlanIR(uiPlan: UiPlanIR): string {
+  return stringify(uiPlan);
+}
+
+/**
+ * Unified diff (Git-style) between two strings.
+ * Uses jsdiff for proper insert/delete handling.
+ */
+export function diffUnified(
+  a: string,
+  b: string,
+  oldHeader = "run1",
+  newHeader = "run2",
+  context = 2
+): string {
+  return Diff.createTwoFilesPatch(
+    oldHeader,
+    newHeader,
+    a,
+    b,
+    oldHeader,
+    newHeader,
+    { context }
+  );
 }
 
 // --- UiPlanIR fingerprint (for LLM-only evals) ---

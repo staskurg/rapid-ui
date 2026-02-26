@@ -15,6 +15,7 @@ import {
   evaluateLlmOnlyFixture,
   type LlmOnlyFixtureResult,
 } from "./utils/llm-only-eval";
+import { buildLlmOnlyReport } from "./utils/report-schema";
 
 const DEFAULT_RUNS = 5;
 const FIXTURES_APIIR_DIR = join(process.cwd(), "tests/compiler/fixtures/apiir");
@@ -113,26 +114,24 @@ async function main() {
   const results: LlmOnlyFixtureResult[] = [];
 
   if (config.parallel) {
-    const fixtureResults = await Promise.all(
-      fixtures.map(async (fixturePath) => {
-        const name = fixturePath.split("/").pop()?.replace(".json", "") ?? "?";
-        console.log(`\nEvaluating: ${name} (${config.runs} runs in parallel)`);
-        const result = await evaluateLlmOnlyFixture(
-          fixturePath,
-          config.runs,
-          true
-        );
-        const statuses = result.runs.map((r) =>
-          r.uiPlan ? "✓" : `✗ (${r.error ?? "?"})`
-        );
-        console.log(`  ${statuses.join(" ")}`);
-        console.log(
-          `  Valid: ${result.validRuns}/${result.totalRuns}, Similarity: ${(result.minSimilarity * 100).toFixed(1)}% (min)`
-        );
-        return result;
-      })
-    );
-    results.push(...fixtureResults);
+    // Parallel runs per fixture only (not fixtures) — avoids rate limits
+    for (const fixturePath of fixtures) {
+      const name = fixturePath.split("/").pop()?.replace(".json", "") ?? "?";
+      console.log(`\nEvaluating: ${name} (${config.runs} runs in parallel)`);
+      const result = await evaluateLlmOnlyFixture(
+        fixturePath,
+        config.runs,
+        true
+      );
+      results.push(result);
+      const statuses = result.runs.map((r) =>
+        r.uiPlan ? "✓" : `✗ (${r.error ?? "?"})`
+      );
+      console.log(`  ${statuses.join(" ")}`);
+      console.log(
+        `  Valid: ${result.validRuns}/${result.totalRuns}, Similarity: ${(result.minSimilarity * 100).toFixed(1)}% (min)`
+      );
+    }
   } else {
     for (const fixturePath of fixtures) {
       const name = fixturePath.split("/").pop()?.replace(".json", "") ?? "?";
@@ -192,17 +191,25 @@ async function main() {
     );
     for (const r of failedWithDiffs) {
       console.log(`\n  Diff [${r.fixtureName}] (similarity ${(r.minSimilarity * 100).toFixed(1)}%):`);
-      r.similarityDifferences!.slice(0, 15).forEach((d) => console.log(`    ${d}`));
-      if (r.similarityDifferences!.length > 15) {
-        console.log(`    ... and ${r.similarityDifferences!.length - 15} more`);
-      }
+      r.similarityDifferences!.forEach((d) => console.log(`    ${d}`));
     }
   }
 
   if (config.outputDir) {
     mkdirSync(config.outputDir, { recursive: true });
     const ts = new Date().toISOString().replace(/[:.]/g, "-");
-    const reportPath = join(config.outputDir, `report-llm-only-${ts}.txt`);
+    const jsonReport = buildLlmOnlyReport(
+      { runs: config.runs, parallel: config.parallel ?? false },
+      results,
+      totalRuns,
+      totalValid,
+      validityRate,
+      minSimAcross,
+      allPassed
+    );
+    const jsonPath = join(config.outputDir, `report-llm-only-${ts}.json`);
+    writeFileSync(jsonPath, JSON.stringify(jsonReport, null, 2));
+    const txtPath = join(config.outputDir, `report-llm-only-${ts}.txt`);
     const lines = [
       `LLM-only Eval Report - ${new Date().toISOString()}`,
       `Validity: ${(validityRate * 100).toFixed(1)}%`,
@@ -213,8 +220,8 @@ async function main() {
           `${r.fixtureName}: valid ${r.validRuns}/${r.totalRuns}, sim ${(r.minSimilarity * 100).toFixed(1)}%`
       ),
     ];
-    writeFileSync(reportPath, lines.join("\n"));
-    console.log(`\nReport: ${reportPath}`);
+    writeFileSync(txtPath, lines.join("\n"));
+    console.log(`\nReports: ${jsonPath}, ${txtPath}`);
   }
 
   if (config.json) {

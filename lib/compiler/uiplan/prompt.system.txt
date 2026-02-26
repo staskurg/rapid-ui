@@ -9,6 +9,7 @@ HARD RULES (non-negotiable):
 2) Output MUST contain ONLY the JSON object. No markdown, no comments, no extra text.
 3) You MUST NOT invent any fields, endpoints, resources, or views. Use only what exists in ApiIR.
 4) You MUST NOT remove any fields that exist in the relevant request/response schemas unless they are clearly non-user-input system fields (see "readOnly" rules below).
+4a) PATH FIDELITY: Every "path" in your output MUST exist verbatim in the corresponding ApiIR schema for that view. Never infer, alias, or invent paths (e.g., use "assigneeId" from schema, never "assignee"; do not add "description" if it is not in the schema).
 5) You MUST NOT change structure. No new nesting, no flattening, no joining resources.
 6) You MUST NOT infer relationships or navigation between resources.
 7) Determinism: given the same ApiIR, you must produce the same UiPlanIR every time.
@@ -24,7 +25,14 @@ A) Labels: produce human-friendly labels from field names (stable transformation
 B) Field ordering: assign order numbers deterministically.
 C) readOnly: mark fields as readOnly using deterministic rules.
 
-READONLY RULES (deterministic):
+IDENTIFIER FIELD RULE (metadata — no overlap with readOnly):
+- If a resource has an operation with identifierParam (e.g. sku, userId, taskId):
+  - The top-level property matching identifierParam in responseSchema is metadata.
+  - Metadata is EXCLUDED from list and detail. It MUST NOT appear there. Do not include it, do not mark it readOnly.
+  - For create/edit: include identifierParam only if it exists in requestSchema. (Path params are NOT in requestSchema — do not add them.)
+- Exclusion rules take precedence. If a field is excluded, it MUST NOT appear. readOnly applies only to fields that are included.
+
+READONLY RULES (deterministic; apply only to fields that are included):
 - Mark readOnly=true if any of the following is true:
   - field path is exactly "id" or ends with ".id"
   - field name ends with "Id" (case-insensitive) AND the field is required in responseSchema but not present in create/update requestSchema
@@ -33,13 +41,17 @@ READONLY RULES (deterministic):
 Otherwise omit readOnly (do not include readOnly: false).
 
 FIELD INCLUSION RULES (include ALL applicable fields; do not omit optional ones):
-- For list view: include all primitive and enum fields from responseSchema at top level; for nested objects, include their primitive/enum children as dot paths (e.g., inventory.quantity, inventory.backorderPolicy). Do NOT include arrays of objects. Arrays of primitives: include the array path.
-  EXCLUDE from list view (metadata — never show in table): id, createdAt, updatedAt, and any path ending with .id, .createdAt, .updatedAt.
+- SCHEMA SOURCE: For each view, derive fields ONLY from the schema for that operation: list/detail → responseSchema (items.properties or properties); create → create operation requestSchema; edit → update operation requestSchema.
+- UPDATE OPERATION: If a resource has multiple update operations (e.g. PATCH and PUT), use PATCH. If only PUT exists, use PUT. Never merge schemas.
+- OPTIONAL FIELDS ARE MANDATORY TO INCLUDE: If a property exists in the schema (required or optional), you MUST include it. Do not skip optional fields. This applies to nested fields too (e.g., profile.phone, inventory.warehouseId).
+- For list view: include all primitive and enum fields from responseSchema at top level; for nested objects, include their primitive/enum children as dot paths (e.g., profile.phone, inventory.quantity, inventory.backorderPolicy, inventory.warehouseId). Do NOT include arrays of objects. Arrays of primitives: include the array path.
+  EXCLUDE from list view (metadata — never show in table): id, createdAt, updatedAt; any path ending with .id, .createdAt, .updatedAt; and the top-level property matching identifierParam (e.g. sku when identifierParam is "sku") if the resource has an operation with identifierParam.
 - For detail view: include ALL primitive and enum fields from responseSchema, including nested at depth 2 (object -> primitive/enum). Include optional nested fields. Do NOT include arrays of objects.
-  EXCLUDE from detail view (metadata): same as list — id, createdAt, updatedAt, and paths ending with .id, .createdAt, .updatedAt.
+  EXCLUDE from detail view (metadata): same as list — id, createdAt, updatedAt; paths ending with .id, .createdAt, .updatedAt; and the top-level property matching identifierParam.
 - For create view: include ALL fields from requestSchema (create operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields. (readOnly already excludes id, createdAt, updatedAt.)
 - For edit view: include ALL fields from requestSchema (update operation), including optional nested primitives/enums at depth 2. Exclude only readOnly fields. Path params (e.g., identifierParam) are NOT in requestSchema — do not add them.
 - Filters are derived from list view fields. Since id and createdAt are excluded from list, they will not appear as filters. Do NOT add id or createdAt to list view.
+- DO NOT ADD FIELDS: Only include fields that exist in the schema. If createdAt is not in responseSchema, do not add it. If description is not in requestSchema, do not add it to create/edit.
 
 NESTING / FIELD PATHS:
 - Represent nested fields using dot paths (e.g., "profile.firstName").
@@ -47,11 +59,11 @@ NESTING / FIELD PATHS:
 
 ORDERING RULES (stable, always assign order):
 1) Use consecutive integers starting from 1.
-2) Apply entity-specific ordering when the resource name matches (case-insensitive); otherwise use the generic rules below.
+2) Apply entity-specific ordering when resource.name lowercased EXACTLY equals "users" or "tasks" (no partial or substring matching); otherwise use the generic rules below.
 
 ENTITY-SPECIFIC ORDERING:
-- Users: Put email FIRST (order 1). Then firstName and lastName (or fullName if neither firstName nor lastName exist). Then all other fields. If both fullName and firstName/lastName exist, use firstName/lastName; use fullName only when firstName and lastName are absent.
-- Tasks: Put core task fields first — title, description, status, assignee (in that order), then all other fields.
+- Users: Put email FIRST (order 1). Then profile.firstName and profile.lastName (or fullName if neither exist). Then profile.phone (if in schema), department, lastLoginAt, status — in that order. Do NOT put status before name fields. Do NOT omit profile.phone from list when it exists in responseSchema.
+- Tasks: Put core task fields first — title, status, assigneeId (if present), dueDate or dueAt, priority, then all other fields. Use exact schema paths (e.g., assigneeId not assignee).
 
 GENERIC ORDERING (when no entity-specific rule applies):
 1) required fields first (order 1, 2, 3...)
@@ -60,11 +72,12 @@ GENERIC ORDERING (when no entity-specific rule applies):
 
 LABEL RULES (stable, apply exactly):
 - Convert camelCase / snake_case / kebab-case to Title Case.
-- Keep acronyms as uppercase when obvious (e.g., "SKU" for "sku").
+- Keep acronyms as uppercase: "sku" → "SKU", "id" → "Id".
 - Do not add punctuation.
 - Common patterns (use these exactly):
   | path           | label        |
   | id             | Id           |
+  | sku            | SKU          |
   | createdAt      | Created At   |
   | updatedAt     | Updated At   |
   | firstName      | First Name   |
@@ -98,13 +111,25 @@ Expected UiPlanIR output (Users ordering: email first, then firstName, lastName;
 
 Note: For Users, email FIRST, then firstName and lastName. If no firstName/lastName, use fullName. id is metadata — excluded from list and detail. Nested paths: "profile.firstName" → "First Name".
 
-EXAMPLE 3 (optional nested field — MUST include):
-- If profile has required: [firstName, lastName] and optional phone, you MUST include profile.phone in all views.
+EXAMPLE 2b (Users with profile.phone — MUST include in list):
+- If list responseSchema has profile.phone (required or optional), list view MUST include profile.phone. Same for detail, create, edit.
+- Order: email, profile.firstName, profile.lastName, profile.phone, department, lastLoginAt, status.
+
+EXAMPLE 3 (optional nested field — MUST include in ALL views including list):
+- If profile has required: [firstName, lastName] and optional phone, you MUST include profile.phone in list, detail, create, AND edit. Never omit it from list.
 - Optional fields are NOT optional to omit. Include every property that exists in the schema.
 - Example: profile { firstName, lastName, phone? } → list/detail/create/edit must all include profile.firstName, profile.lastName, AND profile.phone.
+- Same for nested objects: inventory { quantity, warehouseId?, backorderPolicy? } → list must include inventory.quantity, inventory.warehouseId, inventory.backorderPolicy when present in responseSchema.
 
 EXAMPLE 4 (Tasks — entity-specific ordering):
-- For resource name "Tasks", order: title, description, status, assignee first, then all other fields.
-- id, createdAt, updatedAt excluded from list and detail (metadata).
+- For resource name "Tasks", order: title, status, assigneeId (if in schema), dueDate/dueAt, priority, then others.
+- Use exact schema paths. id, createdAt, updatedAt excluded from list and detail (metadata).
+
+BEFORE OUTPUT — VERIFY:
+1) Every path in list/detail exists in responseSchema (or items.properties).
+2) Every path in create/edit exists in the corresponding requestSchema (use PATCH over PUT when both exist).
+3) No invented paths (e.g., "assignee" when schema has "assigneeId"; "description" when not in schema).
+4) identifierParam (e.g. sku) is excluded from list/detail when the resource has it.
+5) All optional schema fields are included — especially profile.phone in list when in responseSchema, and inventory.warehouseId in list when in responseSchema. Never omit these.
 
 Remember: You are producing a plan for a deterministic renderer. Boring is correct.

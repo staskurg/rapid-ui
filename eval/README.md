@@ -15,6 +15,9 @@ npm run eval:ai
 # LLM-only: ApiIR → UiPlanIR (loads pre-computed ApiIR, no pipeline)
 npm run eval:llm
 
+# Run both evals in parallel (faster)
+npm run eval:all
+
 # Generate ApiIR fixtures from OpenAPI (run after parse/validate/build changes)
 npm run fixtures:generate-apiir
 ```
@@ -30,6 +33,8 @@ npm run fixtures:generate-apiir
 - **OpenAPI** (`tests/compiler/fixtures/*.yaml`): Source for full pipeline. Excludes `golden_openapi_invalid_expected_failure.yaml`.
 - **ApiIR** (`tests/compiler/fixtures/apiir/*.json`): Pre-generated from OpenAPI. Source for LLM-only. Regenerate via `npm run fixtures:generate-apiir` when parse/validate/build changes.
 
+**Adding a new spec:** Add YAML to `tests/compiler/fixtures/`, then run `npm run fixtures:generate-apiir` to create ApiIR fixtures. Use `--runs 10` or higher for thorough determinism checks.
+
 ## CLI Options
 
 Both `eval:ai` and `eval:llm` support:
@@ -43,8 +48,12 @@ Both `eval:ai` and `eval:llm` support:
 ```
 
 Both evals write reports to `eval/reports/` (created automatically if missing):
-- `report-full-{timestamp}.txt` — full pipeline
-- `report-llm-only-{timestamp}.txt` — LLM-only
+- `report-full-{timestamp}.json` — full pipeline (machine-readable, includes full diffs)
+- `report-full-{timestamp}.txt` — full pipeline (human summary)
+- `report-llm-only-{timestamp}.json` — LLM-only (machine-readable, includes full diffs)
+- `report-llm-only-{timestamp}.txt` — LLM-only (human summary)
+
+The JSON reports use the `diff` package (jsdiff) for unified diffs and include `computeMultiSpecDiff` (full) or `similarityDifferences` (llm-only) for structured diffs. No truncation — full diffs for prompt debugging.
 
 `eval:ai` also supports:
 
