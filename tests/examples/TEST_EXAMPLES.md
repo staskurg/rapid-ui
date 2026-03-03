@@ -1,5 +1,9 @@
 # Test Examples for AI Generation
 
+> **⚠️ DEPRECATED (MVP v3):** This document describes the legacy Paste JSON / Demo API / External API flow, which has been removed in MVP v3. RapidUI now compiles from OpenAPI specs only. For testing, use the demo specs (Golden Users, Golden Products, Demo v1/v2/v3) or your own OpenAPI files. See [docs/openapi-compiler.md](../../docs/openapi-compiler.md) and [docs/getting-started.md](../../docs/getting-started.md).
+
+---
+
 Use these examples to test the AI generation feature. Copy and paste them into the JSON Payload field (Paste JSON tab), optionally add an Intent, and click "Generate with AI".
 
 > **Note:** These examples also work via the **Demo API** tab (select a matching resource like Users, Products, or Tasks) or the **External API** tab (if you have a REST endpoint that returns similar data).

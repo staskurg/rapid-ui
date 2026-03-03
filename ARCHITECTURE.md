@@ -1,278 +1,253 @@
 # Architecture Overview
 
-This document describes the RapidUI.dev architecture: a one-click internal dashboard generator that connects to real APIs (demo API first, external APIs in read-only preview mode).
+This document describes the RapidUI MVP v3 architecture: an OpenAPI compiler that produces deterministic schema-driven CRUD interfaces.
 
 ## System Overview
 
-RapidUI transforms backend data into schema-driven CRUD interfaces. Users can:
+RapidUI transforms OpenAPI specs into live UIs:
 
-1. **Demo API** — Connect to built-in demo resources (Users, Products, Tasks, etc.) with full CRUD
-2. **External API** — Connect to any public REST API for read-only preview
-3. **Paste JSON** — Paste arbitrary JSON for backward compatibility and ad-hoc use
+1. **Upload** — User drops OpenAPI (YAML/JSON) or selects a demo spec
+2. **Compile** — Parse → Validate → Canonicalize → ApiIR → UiPlanIR (LLM) → UISpec
+3. **Store** — Compilations saved to Postgres, scoped by account
+4. **View** — Navigate to `/u/[id]/[resource]` for CRUD UI backed by mock API
 
-All flows use AI (OpenAI) to generate UI specifications, with deterministic fallbacks for reliability.
+The LLM is a **constrained compiler phase**. It infers labels, field order, and readOnly—it cannot add/remove fields or change structure.
 
 ## High-Level Architecture
 
-The diagram below shows the **generation workflow** (how a UI spec is produced) and the **runtime flow** (how the rendered UI fetches and mutates data).
+### Compiler Pipeline
 
-### Generation Workflow
-
-User configures a data source, clicks Generate, and the system produces a validated UI spec:
-
-1. **Connect** — User selects tab (Demo / External / Paste) and configures (resource+version, URL, or JSON).
-2. **Sample** — `adapter.getSample()` fetches sample data: Demo API returns seeds; Proxy fetches external URL; Paste uses textarea.
-3. **Spec** — Sample → `generate-ui` API → Zod validation → UISpec.
-4. **Output** — Spec is passed to SchemaRenderer (renders table/form/filters) and Spec Preview (shows JSON).
+```
+OpenAPI Upload
+   ↓
+Parse (YAML/JSON)
+   ↓
+Validate Subset (reject unsupported)
+   ↓
+Resolve $ref (local only)
+   ↓
+Canonicalize + Hash
+   ↓
+OpenAPI → ApiIR (deterministic)
+   ↓
+LLM Planning (ApiIR → UiPlanIR)
+   ↓
+Normalize UiPlanIR
+   ↓
+Lower (UiPlanIR → UISpec)
+   ↓
+Store in Postgres
+```
 
 ### Runtime Flow
 
-After generation, the rendered UI fetches and mutates data:
+After compilation, the generated UI at `/u/[id]/[resource]`:
 
-- **Demo**: SchemaRenderer uses `adapter.list()` → Demo API (session store); CRUD → Demo API.
-- **External**: SchemaRenderer uses `adapter.list()` → Proxy → external URL; read-only.
-- **Paste**: No adapter. SchemaRenderer uses `initialData` (parsed JSON); CRUD is local React state.
-
-**Note:** Demo API and Proxy API are mutually exclusive—the active tab determines which path is used. Paste JSON skips the sample fetch and sends the pasted payload directly to `generate-ui`; it also skips the adapter and uses local state for CRUD.
+- **SchemaRenderer** renders table, form, filters from UISpec
+- **MockAdapter** calls `/api/mock/[id]/[resource]` for list, create, get, update, delete
+- **Mock store** generates seed data from OpenAPI schemas; CRUD persists in memory per compilation+resource
 
 ```mermaid
 graph TB
-    subgraph Connect [1. Connect]
-        Tabs[Demo, External, Paste]
-        Config[Resource+Version or URL or JSON]
-        Generate[Generate Button]
+    subgraph Compiler [Compiler Page /]
+        Drop[OpenApiDropZone]
+        List[Your specs]
+        Detail[Spec detail + View UI]
     end
 
-    subgraph Sample [2. Fetch Sample]
-        GetSample[adapter.getSample]
-        DemoAPI[Demo API sample]
-        ProxyAPI[Proxy API]
+    subgraph Compile [Compile Pipeline]
+        Parse[Parse]
+        Validate[Validate]
+        ApiIR[ApiIR]
+        LLM[LLM UiPlanIR]
+        Lower[Lower]
     end
 
-    subgraph Spec [3. Generate Spec]
-        GenerateUI[generate-ui API]
-        Validate[Zod]
-    end
-
-    subgraph Output [4. Output]
+    subgraph Runtime [View UI /u/id/resource]
         Renderer[SchemaRenderer]
-        SpecPreview[Spec Preview]
+        Adapter[MockAdapter]
+        MockAPI[Mock API]
     end
 
-    subgraph Runtime [5. Runtime Data - Demo or External only]
-        Adapter[CrudAdapter]
-        DemoSession[Demo API session]
-        ProxyFetch[Proxy fetch]
-    end
-
-    Tabs --> Config
-    Config --> Generate
-    Generate --> GetSample
-    GetSample --> DemoAPI
-    GetSample --> ProxyAPI
-    DemoAPI --> GenerateUI
-    ProxyAPI --> GenerateUI
-    GenerateUI --> Validate
-    Validate --> Renderer
-    Validate --> SpecPreview
+    Drop --> Parse
+    Parse --> Validate
+    Validate --> ApiIR
+    ApiIR --> LLM
+    LLM --> Lower
+    Lower --> Store[(Postgres)]
+    Store --> List
+    Detail --> Renderer
     Renderer --> Adapter
-    Adapter --> DemoSession
-    Adapter --> ProxyFetch
+    Adapter --> MockAPI
 ```
 
-## Data Sources
+## Data Flow
 
-| Source    | Data Flow                    | CRUD      | Session      |
-| --------- | ---------------------------- | --------- | ------------ |
-| **Demo**  | Seeds → Spec gen; Session → UI | Full      | In-memory    |
-| **External** | Proxy → Spec gen; Proxy → UI | Read-only | None         |
-| **Paste** | Pasted JSON → Spec gen; Local → UI | Local state | React state |
+| Stage | Input | Output |
+| ----- | ----- | ------ |
+| Parse | OpenAPI string | Parsed document or error |
+| Validate | Parsed doc | Pass or structured errors |
+| Canonicalize | Resolved doc | Canonical JSON + hash |
+| ApiIR | Canonical doc | Resources, operations, schemas |
+| UiPlanIR | ApiIR | Field plans (labels, order, readOnly) |
+| Lower | UiPlanIR + ApiIR | UISpec per resource |
+| Store | Compilation | Postgres row |
 
-### Session Design
+## Account & Compilation Model
 
-- **Session ID** is generated via `createSessionId()` (UUID) and stored in React state only
-- **No localStorage** — reload = fresh start; two users = separate data
-- **Client components** — `app/page.tsx` and `SchemaRenderer.tsx` use `"use client"`
-- Demo API routes receive `?session={id}&v={version}` to scope data per session and version
+- **Account ID** — Generated client-side via `getOrCreateAccountId()` (stored in localStorage); used to scope compilations
+- **Compilation** — One row per compiled spec: id, accountId, specs, resourceNames, resourceSlugs, apiIr, openapiCanonicalHash
+- **Reset session** — Creates new accountId; previous compilations remain in DB but are no longer visible
 
 ## Adapter Layer
 
-The `CrudAdapter` interface abstracts data access so the renderer works with Demo API, External API, or local state.
+The `CrudAdapter` interface abstracts data access. MVP v3 uses **MockAdapter** only.
 
 ### CrudAdapter Interface (`lib/adapters/types.ts`)
 
 ```typescript
 interface CrudAdapter {
-  mode: "demo" | "external";
+  mode: "mock";
   capabilities: { create, read, update, delete };
 
-  getSample(): Promise<Record<string, unknown>[]>;  // For spec generation
-  list(): Promise<Record<string, unknown>[]>;       // For table display
-
-  getById?(id): Promise<Record<string, unknown>>;   // Optional, for edit form
+  getSample(): Promise<Record<string, unknown>[]>;
+  list(): Promise<Record<string, unknown>[]>;
+  getById?(id): Promise<Record<string, unknown>>;
   create?(input): Promise<Record<string, unknown>>;
   update?(id, input): Promise<Record<string, unknown>>;
   remove?(id): Promise<void>;
 }
 ```
 
-### getSample vs list
+### MockAdapter
 
-| Method     | Purpose                    | Data source                          |
-| ---------- | -------------------------- | ------------------------------------ |
-| `getSample()` | Spec generation only      | Seeds (demo) or proxy (external)      |
-| `list()`   | Table display              | Session store (demo) or proxy (external) |
+- **Base URL**: `/api/mock/[compilationId]/[resource]`
+- **List**: `GET` → returns records (seeded from schema or in-memory store)
+- **Create**: `POST` with JSON body
+- **Get**: `GET /[paramId]`
+- **Update**: `PATCH /[paramId]` with JSON body
+- **Delete**: `DELETE /[paramId]`
 
-- **Demo**: Seeds are immutable; per-session data is a mutable copy. `getSample()` returns seeds; `list()`/create/update/delete use the session copy.
-- **External**: Both call the proxy; no session. Read-only.
-- **Empty list** → Table shows "No data" (no crash).
-
-### Adapters
-
-- **DemoAdapter** (`lib/adapters/demo-adapter.ts`): Full CRUD via `/api/demo/[resource]`. Uses `getResourceBySlug` for `idField`.
-- **ExternalAdapter** (`lib/adapters/external-adapter.ts`): Read-only. `getSample()` and `list()` both call `/api/proxy` with `{ url, dataPath? }`.
+Data is shared per `accountId + compilationId + resource`; no session param. URLs are shareable.
 
 ## API Routes
 
-### Demo API (`app/api/demo/`)
+### Compiler API
 
-| Route                    | Method | Purpose                          |
-| ------------------------ | ------ | -------------------------------- |
-| `[resource]/route.ts`   | GET    | List records (session-scoped)    |
-| `[resource]/route.ts`   | POST   | Create record                    |
-| `[resource]/[id]/route.ts` | GET | Get single record                |
-| `[resource]/[id]/route.ts` | PUT | Update record                    |
-| `[resource]/[id]/route.ts` | DELETE | Delete record                 |
-| `[resource]/sample/route.ts` | GET | Seed sample (no session)      |
-| `[resource]/reset/route.ts` | POST | Reset session to seeds        |
+| Route | Method | Purpose |
+| ----- | ------ | ------- |
+| `/api/compile-openapi` | POST | Compile OpenAPI string; store in DB; return id, specs, apiIr. Body: `{ openapi, accountId }` |
+| `/api/compilations` | GET | List compilations. Query: `?accountId=...` |
+| `/api/compilations/[id]` | GET | Get compilation detail (specs, apiIr, etc.). Query: `?accountId=...` |
+| `/api/compilations/[id]` | DELETE | Delete compilation. Query: `?accountId=...` |
+| `/api/compilations/[id]/update` | POST | Recompile with new OpenAPI; update in place. Body: `{ openapi, accountId }` |
+| `/api/demo-specs/[name]` | GET | Download demo OpenAPI file (YAML) |
 
-### Proxy API (`app/api/proxy/route.ts`)
+### Mock API (Runtime)
 
-- **POST** `{ url, dataPath? }` — Fetches URL and returns extracted array
-- **Security**: URL validation (reject localhost, private IPs, non-http(s)), 10s timeout, 30 req/min per IP
-- **Data path**: `dataPath` supports `data`, `results`, `items`, `records`.
-- **Auto-detect**: If omitted, tries array → as-is; object → `data`/`results`/`items`/`records`
+| Route | Method | Purpose |
+| ----- | ------ | ------- |
+| `/api/mock/[id]/[resource]` | GET | List records |
+| `/api/mock/[id]/[resource]` | POST | Create record |
+| `/api/mock/[id]/[resource]/[paramId]` | GET | Get single record |
+| `/api/mock/[id]/[resource]/[paramId]` | PATCH | Update record |
+| `/api/mock/[id]/[resource]/[paramId]` | DELETE | Delete record |
 
-### Generate UI (`app/api/generate-ui/route.ts`)
+## Compiler Components
 
-- **POST** `{ payload, intent?, existingSpec? }` — AI or fallback spec generation
-- Returns `{ spec: UISpec, source: "ai" | "fallback" }`
+| Component | Purpose |
+| --------- | ------- |
+| `OpenApiDropZone.tsx` | Drag-and-drop or click to upload OpenAPI file |
+| `ProgressPanel.tsx` | Shows parse/validate/compile steps; endpoints; View UI link |
+| `CompiledUISidebar.tsx` | Resource switcher for multi-resource compilations |
+| `CompiledUIContent.tsx` | Wraps SchemaRenderer + MockAdapter; diff dialog |
 
-## Connect Components
+## Renderer Components (Unchanged)
 
-| Component                 | Purpose                                      |
-| ------------------------- | -------------------------------------------- |
-| `ConnectSection.tsx`      | Demo API tab: resource + version selector    |
-| `ExternalApiSection.tsx`  | External API tab: URL, DataPathSelector, prompt |
-| `DataPathSelector.tsx`    | Dropdown: Auto \| data \| results \| items \| records |
-| `ResourceSelector.tsx`    | Dropdown for demo resources                  |
-| `VersionSelector.tsx`     | v1 / v2 / v3 for demo                        |
-| `GenerateButton.tsx`      | Triggers generation pipeline                 |
-| `GenerationSuccessToast.tsx` | Diff toast for version/prompt changes       |
-
-## Generation Pipeline
-
-1. User selects resource (e.g. Users v1) or enters external URL
-2. `adapter.getSample()` fetches sample data
-3. Client calls `generate-ui` with `{ payload, intent? }`
-4. Zod validates spec
-5. `SchemaRenderer` receives spec + adapter; renders table via `adapter.list()`
-
-## Renderer Components
-
-| Component          | Purpose                                                |
-| ------------------ | ------------------------------------------------------ |
-| `SchemaRenderer.tsx` | Main controller; adapter integration; loading/error; read-only banner |
-| `DataTable.tsx`    | TanStack Table; optional `onEdit`/`onDelete`; conditional actions column |
-| `FormModal.tsx`    | Create/Edit; async `onSubmit`; submit button loader    |
-| `FiltersPanel.tsx` | Type-specific filter inputs                            |
-
-### Read-Only Mode
-
-When `adapter.mode === "external"` (or capabilities lack create/update/delete):
-
-- `onEdit` and `onDelete` are undefined → no actions column
-- Create button hidden
-- "Read-only preview" banner shown
+| Component | Purpose |
+| --------- | ------- |
+| `SchemaRenderer.tsx` | Main controller; adapter integration; loading/error |
+| `DataTable.tsx` | TanStack Table; optional onEdit/onDelete |
+| `FormModal.tsx` | Create/Edit; nested schema support |
+| `FiltersPanel.tsx` | Type-specific filter inputs |
 
 ## Core Libraries
 
+### Compiler (`lib/compiler/`)
+
+- **openapi/** — `parser.ts`, `subset-validator.ts`, `ref-resolver.ts`, `canonicalize.ts`
+- **apiir/** — `build.ts`, `grouping.ts`, `operations.ts`, `types.ts`
+- **uiplan/** — `llm-plan.ts`, `prompt.system.txt`, `prompt.user.ts`, `uiplan.schema.ts`, `normalize.ts`
+- **lowering/** — `lower.ts`, `schema-to-field.ts`
+- **pipeline.ts** — Orchestrates full compile
+- **store.ts** — Re-exports from `lib/db/compilations`
+- **hash.ts** — sha256 for canonical outputs
+- **errors.ts** — Error taxonomy (OAS_*, IR_*, UIPLAN_*, UISPEC_*)
+
+### DB (`lib/db/`)
+
+- **compilations.ts** — Postgres CRUD for compilations; requires POSTGRES_URL or DATABASE_URL
+
 ### Spec (`lib/spec/`)
 
-- `schema.ts` — Zod schema; `idField?: string` (default `"id"`)
-- `types.ts` — TypeScript types
-- `diff.ts` — `computeSpecDiff(prev, next)` for version/prompt change toast
-- `diffFormatters.ts` — `formatDiffForDisplay(diff)` for human-readable bullets
+- **schema.ts** — Zod schema for UISpec
+- **types.ts** — TypeScript types
+- **diff.ts** — `computeSpecDiff`, `computeMultiSpecDiff` for version change display
+- **diffFormatters.ts** — `formatMultiSpecDiffForDisplay` for update diff dialog
 
-### Demo Store (`lib/demoStore/`)
+### Mock Store (`lib/compiler/mock/`)
 
-- `resources.ts` — `{ label, slug, idField }[]` per resource
-- `seeds.ts` — Versioned seed data (v1, v2, v3)
-- `store.ts` — per-session mutable copy; CRUD operations
-
-### Session (`lib/session.ts`)
-
-- `createSessionId()` — Returns UUID; no localStorage
-
-### Utils
-
-- `extractDataPath.ts` — `extractArrayFromResponse(body, dataPath?)` for proxy
-- `urlValidation.ts` — SSRF protection for proxy URLs
+- **store.ts** — In-memory CRUD; seed from OpenAPI schema
+- **fixtures.ts** — Predefined hashes for golden specs
 
 ## File Structure
 
 ```
 app/
-  page.tsx                 # Three tabs: Demo API, External API, Paste JSON
+  page.tsx                    # Compiler page (upload, list, detail)
+  u/
+    [id]/page.tsx             # Redirect to first resource
+    [id]/[resource]/page.tsx  # CRUD UI
   api/
-    generate-ui/route.ts
-    demo/
-      [resource]/route.ts
-      [resource]/[id]/route.ts
-      [resource]/sample/route.ts
-      [resource]/reset/route.ts
-    proxy/route.ts
+    compile-openapi/route.ts
+    compilations/route.ts
+    compilations/[id]/route.ts
+    compilations/[id]/update/route.ts
+    demo-specs/[name]/route.ts
+    mock/[id]/[resource]/route.ts
+    mock/[id]/[resource]/[paramId]/route.ts
 
 components/
+  compiler/
+    ProgressPanel.tsx
+    CompiledUISidebar.tsx
+    CompiledUIContent.tsx
+  connect/
+    OpenApiDropZone.tsx
   renderer/
     SchemaRenderer.tsx
     DataTable.tsx
     FormModal.tsx
     FiltersPanel.tsx
-  ui/
-    alert-dialog.tsx       # Delete confirmation
-  connect/
-    ResourceSelector.tsx
-    VersionSelector.tsx
-    ConnectSection.tsx
-    ExternalApiSection.tsx
-    DataPathSelector.tsx
-    GenerateButton.tsx
-    GenerationSuccessToast.tsx
 
 lib/
-  session.ts
+  compiler/
+    openapi/
+    apiir/
+    uiplan/
+    lowering/
+    mock/
+    pipeline.ts
+    store.ts
+    hash.ts
+    errors.ts
+  db/
+    compilations.ts
   adapters/
     types.ts
-    demo-adapter.ts
-    external-adapter.ts
-    index.ts
-  demoStore/
-    store.ts
-    seeds.ts
-    resources.ts
+    mock-adapter.ts
   spec/
-    schema.ts
-    types.ts
-    diff.ts
-    diffFormatters.ts
-  utils/
-    extractDataPath.ts
-    urlValidation.ts
-  inference/
-  ai/
-  examples.ts
-  externalApiExamples.ts
+  session.ts
 ```
 
 ## Technology Stack
@@ -281,14 +256,15 @@ lib/
 - **UI**: shadcn/ui + Tailwind CSS
 - **Table**: TanStack Table
 - **Forms**: React Hook Form + Zod
-- **AI**: OpenAI SDK (gpt-4o-mini)
+- **AI**: OpenAI SDK (gpt-4o-mini, temperature 0)
+- **Database**: Neon Postgres
 - **Notifications**: Sonner (toasts)
 
 ## Key Design Decisions
 
-1. **Single page** — Connect and dashboard on one page; no spec in URL
-2. **Session in React state** — No localStorage; reload = fresh start
-3. **Versioned seeds** — Each version (v1/v2/v3) has separate data; no shared records
-4. **Adapter abstraction** — Same renderer for demo, external, and paste (when using initialData)
-5. **Read-only external** — Preview only; no create/update/delete
-6. **Proxy security** — URL validation, SSRF protection, timeout, rate limit
+1. **OpenAPI as source of truth** — No paste JSON, no external API; compile from spec only
+2. **Determinism** — Same OpenAPI → same UISpec → same UI; canonicalization + hashing enforce this
+3. **LLM boundary** — LLM sees ApiIR only; cannot add/remove fields or change structure
+4. **Account-scoped compilations** — Postgres stores compilations; accountId from client
+5. **Mock backend** — Generated UIs use mock API; no real backend required for demo
+6. **Shareable URLs** — `/u/[id]/[resource]` works without session; mock data keyed by accountId+compilationId

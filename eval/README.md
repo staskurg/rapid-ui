@@ -1,10 +1,10 @@
 # LLM Determinism Evaluation
 
-Evaluation harness for OpenAPI → UISpec compiler determinism. Proves the LLM step (ApiIR → UiPlanIR) and full pipeline produce sufficiently stable output before shipping UI.
+Evaluation harness for the **MVP v3 OpenAPI compiler** determinism. Proves the LLM step (ApiIR → UiPlanIR) and full pipeline (OpenAPI → UISpec) produce sufficiently stable output.
 
 ## Prerequisites
 
-**OPENAI_API_KEY is required.** Add it to `.env.local` to run evals. The harness fails fast if the key is missing.
+**OPENAI_API_KEY is required.** Add it to `.env.local` to run evals. The harness fails fast if the key is missing. Postgres is not required for evals—they run the compiler pipeline only.
 
 ## Scripts
 
@@ -70,7 +70,7 @@ The JSON reports use the `diff` package (jsdiff) for unified diffs and include `
 
 ## When to Run
 
-- **Before Phase 6.5**: Evals must pass before shipping full generated UI.
+- **Before shipping**: Evals must pass before releasing compiler changes.
 - **After changes to**: UiPlanIR prompts (`lib/compiler/uiplan/prompt.*`), schema (`uiplan.schema.ts`), or LLM model/temperature.
 - **After parse/validate/build changes**: Regenerate ApiIR fixtures (`npm run fixtures:generate-apiir`), then run evals.
 

@@ -2,6 +2,8 @@
 
 This document describes how FormModal handles nested field paths (e.g. `profile.firstName`) and aligns with React Hook Form's data structure.
 
+**Context:** FormModal is used by SchemaRenderer, which is rendered inside CompiledUIContent for generated UIs. The MockAdapter provides nested data from the mock API; form submit payloads are passed directly to the adapter.
+
 ## Problem
 
 The UISpec uses flat dot-path names for fields (e.g. `profile.firstName`, `profile.lastName`). React Hook Form, when using `register("profile.firstName")`, stores values in a **nested** structure:
@@ -69,10 +71,10 @@ Deep merge for combining defaults with initialValues. Ensures optional booleans 
 - Use `getErrorByPath(form.formState.errors, fieldName)` for error display
 - `initialValues` and `onSubmit` data are both nested
 
-### 6. SchemaRenderer Changes
+### 6. SchemaRenderer / CompiledUIContent
 
-- **Edit modal**: Pass `editRecord` directly (no `flattenRecord`). API returns nested data.
-- **handleCreate / handleUpdate**: Pass `record` directly (no `unflattenRecord`). Form submits nested data; adapter expects nested.
+- **Edit modal**: Pass `editRecord` directly (no `flattenRecord`). Mock API returns nested data.
+- **handleCreate / handleUpdate**: Pass `record` directly (no `unflattenRecord`). Form submits nested data; MockAdapter expects nested.
 
 ## Data Flow
 

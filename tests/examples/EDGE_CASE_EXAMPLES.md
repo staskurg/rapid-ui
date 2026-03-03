@@ -1,5 +1,9 @@
 # Edge Case Test Examples
 
+> **⚠️ DEPRECATED (MVP v3):** This document describes the legacy Paste JSON / Demo API flow, which has been removed in MVP v3. RapidUI now compiles from OpenAPI specs only. For OpenAPI edge cases, see the subset validator and compiler error taxonomy in [docs/openapi-compiler.md](../../docs/openapi-compiler.md).
+
+---
+
 Use these examples to test edge case handling in the UI. Copy and paste them into the JSON Payload field (Paste JSON tab) and test both "Parse JSON" and "Generate with AI" to verify edge cases are handled correctly.
 
 > **Note:** These examples also work via the **Demo API** tab or **External API** tab when the data structure matches.
