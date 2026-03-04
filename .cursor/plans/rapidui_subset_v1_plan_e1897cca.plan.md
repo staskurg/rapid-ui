@@ -129,7 +129,7 @@ Create a small reference table in the doc or a separate `docs/subset-v1-feature-
 
 ---
 
-## Phase 2: Align Implementation with Docs
+## Phase 2: Align Implementation with Docs ✅ COMPLETE
 
 > **Agent execution:** Phase 2 is split into **2a–2f** in the [Agent Execution Guide](#agent-execution-guide-refined-phases) for manageable sessions. Use that order when implementing.
 
@@ -660,7 +660,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2a: Schema Allowlist Foundation (1 session)
+### Phase 2a: Schema Allowlist Foundation (1 session) ✅ COMPLETE
 
 **Scope:** Replace reject list with allowlist; add $ref restriction; add schema hygiene. **Depends on:** Phase 1.
 
@@ -678,7 +678,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2b: Path, Method, and Response Structure (1 session)
+### Phase 2b: Path, Method, and Response Structure (1 session) ✅ COMPLETE
 
 **Scope:** Empty paths; path-level params; request body rules; response strictness; zero ops. **Depends on:** Phase 2a.
 
@@ -699,7 +699,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2c: Parameter Schema Validation (1 session)
+### Phase 2c: Parameter Schema Validation (1 session) ✅ COMPLETE
 
 **Scope:** Validate path + query param schemas; primitive-only for query. **Depends on:** Phase 2b.
 
@@ -718,7 +718,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2d: Root Schema Type Validation (1 session)
+### Phase 2d: Root Schema Type Validation (1 session) ✅ COMPLETE
 
 **Scope:** Root success schema must resolve to object or array. **Depends on:** Phase 2c.
 
@@ -735,7 +735,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2e: Grouping and Determinism (1 session)
+### Phase 2e: Grouping and Determinism (1 session) ✅ COMPLETE
 
 **Scope:** Mixed grouping rejection; verify resource sorting and enum order. **Depends on:** Phase 2d.
 
@@ -752,7 +752,7 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ---
 
-### Phase 2f: Nullable Normalization and Stability Tests (1 session)
+### Phase 2f: Nullable Normalization and Stability Tests (1 session) ✅ COMPLETE
 
 **Scope:** Nullable normalization; canonicalization stability tests. **Depends on:** Phase 2e.
 
@@ -764,6 +764,19 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 
 **Acceptance:** Two specs (nullable vs union type) produce identical ApiIR hash. Property/path/op order differences produce identical hash.
+
+---
+
+### Phase 2 Post-Complete Fixes (addressed 2025-03)
+
+Two minor spec–implementation gaps identified during Phase 2 review were fixed:
+
+
+| Fix                              | Spec reference                                                            | Implementation                                                                                                                                                                                                                               |
+| -------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Request body schema required** | §5: "POST, PUT, PATCH must have requestBody with application/json schema" | Subset validator now rejects when `requestBody.content["application/json"]` exists but has no `schema` (or schema is not an object). Error: `OAS_INVALID_OPERATION_STRUCTURE` — "requestBody content must have schema for application/json". |
+| **Resolve stage**                | §11: `OAS_INVALID_REF` / ref errors use stage `Resolve`                   | Added `"Resolve"` to `CompilerStage` in `lib/compiler/errors.ts`. Updated `ref-resolver.ts` to use `stage: "Resolve"` instead of `"Canonicalize"` for external ref, circular ref, and invalid ref target errors.                             |
+
 
 ---
 
@@ -800,9 +813,9 @@ Each phase below is designed to be **one Cursor Agent session**. Complete phases
 
 ### Error Code and Stage Prerequisites
 
-Before or during Phase 2a, ensure:
+~~Before or during Phase 2a, ensure:~~ **Done (Phase 2 post-complete fixes):**
 
-- **CompilerStage:** Add `"Resolve"` to `lib/compiler/errors.ts` if ref-resolver errors should use it (per Appendix D).
+- **CompilerStage:** Add `"Resolve"` to `lib/compiler/errors.ts` — ✅ Added. Ref-resolver now uses `stage: "Resolve"` (per Appendix D).
 - **Error codes:** Add `OAS_INVALID_SCHEMA_SHAPE`, `OAS_INVALID_OPERATION_STRUCTURE`, `OAS_INVALID_RESPONSE_STRUCTURE`, `OAS_INVALID_PARAMETER` if not present. Map existing codes to coarse set where sensible.
 
 ---
@@ -810,17 +823,17 @@ Before or during Phase 2a, ensure:
 ### Phase Summary Table
 
 
-| Phase | Sessions | Key deliverable                |
-| ----- | -------- | ------------------------------ |
-| 1     | 1        | `docs/openapi-subset-v1.md`    |
-| 2a    | 1        | Schema allowlist + hygiene     |
-| 2b    | 1        | Path/method/response structure |
-| 2c    | 1        | Parameter schema validation    |
-| 2d    | 1        | Root schema type validation    |
-| 2e    | 1        | Mixed grouping + determinism   |
-| 2f    | 1        | Nullable + stability tests     |
-| 3     | 1        | `npm run check:openapi`        |
-| 4     | 1+       | Corpus prediction + run        |
+| Phase | Sessions | Key deliverable                | Status   |
+| ----- | -------- | ------------------------------ | -------- |
+| 1     | 1        | `docs/openapi-subset-v1.md`    | ✅ Done   |
+| 2a    | 1        | Schema allowlist + hygiene     | ✅ Done   |
+| 2b    | 1        | Path/method/response structure | ✅ Done   |
+| 2c    | 1        | Parameter schema validation    | ✅ Done   |
+| 2d    | 1        | Root schema type validation    | ✅ Done   |
+| 2e    | 1        | Mixed grouping + determinism   | ✅ Done   |
+| 2f    | 1        | Nullable + stability tests     | ✅ Done   |
+| 3     | 1        | `npm run check:openapi`        | Pending  |
+| 4     | 1+       | Corpus prediction + run        | Deferred |
 
 
 **Total: 8 agent sessions** (Phases 1, 2a–2f, 3) before corpus. Phase 4 is optional/deferred.

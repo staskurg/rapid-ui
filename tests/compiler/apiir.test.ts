@@ -86,6 +86,15 @@ describe("ApiIR build", () => {
     expect(result.error.code).toBe("OAS_AMBIGUOUS_RESOURCE_GROUPING");
   });
 
+  it("fails with mixed grouping (some tagged, some not)", () => {
+    const doc = loadAndProcess("golden_openapi_invalid_mixed_grouping_expected_failure.yaml");
+    const result = buildApiIR(doc);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("OAS_AMBIGUOUS_RESOURCE_GROUPING");
+    expect(result.error.message).toContain("Mixed resource grouping");
+  });
+
   it("fails when paths is missing", () => {
     const doc = {
       openapi: "3.0.0",

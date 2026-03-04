@@ -6,6 +6,7 @@ import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
 import { canonicalize, canonicalStringify } from "@/lib/compiler/openapi/canonicalize";
+import { buildApiIR } from "@/lib/compiler/apiir/build";
 import { sha256Hash } from "@/lib/compiler/hash";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -20,6 +21,13 @@ function loadAndProcess(specPath: string) {
   const resolveResult = resolveRefs(parseResult.doc);
   if (!resolveResult.success) throw new Error(`Ref resolve failed: ${resolveResult.error.message}`);
   return resolveResult.doc;
+}
+
+function docToApiIrHash(doc: Record<string, unknown>): string {
+  const canonical = canonicalize(doc);
+  const result = buildApiIR(canonical);
+  if (!result.success) throw new Error(`buildApiIR failed: ${result.error.message}`);
+  return result.apiIrHash;
 }
 
 describe("canonicalization and hashing", () => {
@@ -177,5 +185,337 @@ describe("canonicalization and hashing", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.code).toBe("OAS_EXTERNAL_REF");
+  });
+
+  it("nullable: true and type: [string,null] produce identical ApiIR hash", () => {
+    const specNullable = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        status: { type: "string", nullable: true },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specUnion = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        status: { type: ["string", "null"] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specNullable);
+    const validateB = validateSubset(specUnion);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specNullable);
+    const resolveB = resolveRefs(specUnion);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
+  });
+
+  it("properties order A,B,C vs C,B,A produce identical canonical hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        a: { type: "string" },
+                        b: { type: "string" },
+                        c: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        c: { type: "string" },
+                        b: { type: "string" },
+                        a: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const strA = canonicalStringify(resolveA.doc);
+    const strB = canonicalStringify(resolveB.doc);
+    expect(strA).toBe(strB);
+  });
+
+  it("paths order X,Y vs Y,X produce identical ApiIR hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/a": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/b": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/b": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        "/a": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
+  });
+
+  it("operations order get,post vs post,get produce identical ApiIR hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { id: { type: "string" } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          post: {
+            requestBody: {
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { name: { type: "string" } },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          post: {
+            requestBody: {
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { name: { type: "string" } },
+                  },
+                },
+              },
+            },
+            responses: {
+              "201": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { id: { type: "string" } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
   });
 });

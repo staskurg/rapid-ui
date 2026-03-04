@@ -64,7 +64,7 @@ This validates:
 Expected error:
 
 * `OAS_MULTIPLE_PATH_PARAMS`
-* Stage: ApiIR construction
+* Stage: Subset
 
 This validates:
 

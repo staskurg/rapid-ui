@@ -102,6 +102,23 @@ export function groupOperations(
     };
   }
 
+  const hasAnyTag = allOps.some(
+    (op) => Array.isArray(op.tags) && op.tags.length === 1
+  );
+  const hasNoTag = allOps.some(
+    (op) => !op.tags || op.tags.length === 0
+  );
+  if (hasAnyTag && hasNoTag) {
+    return {
+      success: false,
+      error: createError(
+        "OAS_AMBIGUOUS_RESOURCE_GROUPING",
+        "ApiIR",
+        "Mixed resource grouping: some operations have tags and some do not; use either all tagged or all untagged"
+      ),
+    };
+  }
+
   const allHaveSingleTag = allOps.every(
     (op) => Array.isArray(op.tags) && op.tags.length === 1
   );

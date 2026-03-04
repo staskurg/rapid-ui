@@ -44,7 +44,7 @@ function resolveRef(
       ok: false,
       error: createError(
         "OAS_EXTERNAL_REF",
-        "Canonicalize",
+        "Resolve",
         `External $ref not supported: ${ref}`,
         ref
       ),
@@ -55,7 +55,7 @@ function resolveRef(
       ok: false,
       error: createError(
         "OAS_EXTERNAL_REF",
-        "Canonicalize",
+        "Resolve",
         `Only local $ref (#/...) supported: ${ref}`,
         ref
       ),
@@ -66,7 +66,7 @@ function resolveRef(
       ok: false,
       error: createError(
         "OAS_CIRCULAR_REF",
-        "Canonicalize",
+        "Resolve",
         `Circular $ref: ${ref}`,
         ref
       ),
@@ -79,7 +79,7 @@ function resolveRef(
       ok: false,
       error: createError(
         "OAS_EXTERNAL_REF",
-        "Canonicalize",
+        "Resolve",
         `Invalid $ref target: ${ref}`,
         ref
       ),

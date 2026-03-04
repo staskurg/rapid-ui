@@ -6,6 +6,7 @@
 export type CompilerStage =
   | "Parse"
   | "Subset"
+  | "Resolve"
   | "Canonicalize"
   | "ApiIR"
   | "UiPlan"
@@ -14,10 +15,14 @@ export type CompilerStage =
 export type CompilerErrorCode =
   | "OAS_PARSE_ERROR"
   | "OAS_UNSUPPORTED_SCHEMA_KEYWORD"
+  | "OAS_INVALID_SCHEMA_SHAPE"
+  | "OAS_INVALID_OPERATION_STRUCTURE"
+  | "OAS_INVALID_RESPONSE_STRUCTURE"
   | "OAS_MULTIPLE_SUCCESS_RESPONSES"
   | "OAS_MULTIPLE_TAGS"
   | "OAS_MISSING_REQUEST_BODY"
   | "OAS_MULTIPLE_PATH_PARAMS"
+  | "OAS_INVALID_PARAMETER"
   | "OAS_EXTERNAL_REF"
   | "OAS_CIRCULAR_REF"
   | "OAS_AMBIGUOUS_RESOURCE_GROUPING"

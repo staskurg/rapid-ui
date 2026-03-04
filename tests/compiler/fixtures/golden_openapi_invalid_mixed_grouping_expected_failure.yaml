@@ -1,0 +1,36 @@
+# Golden spec: INVALID — mixed grouping (some ops tagged, some not).
+# Should always fail at ApiIR stage with OAS_AMBIGUOUS_RESOURCE_GROUPING.
+openapi: 3.0.0
+info:
+  title: Mixed Grouping Test
+  version: 1.0.0
+paths:
+  /users:
+    get:
+      tags: [Users]
+      operationId: listUsers
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+  /products:
+    get:
+      operationId: listProducts
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
