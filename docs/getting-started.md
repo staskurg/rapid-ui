@@ -62,6 +62,8 @@ Open [http://localhost:3000](http://localhost:3000).
 3. If validation passes, the UI compiles and appears in **Your specs**
 4. Click a spec → **View UI**
 
+**Validate before uploading:** `npm run check:openapi -- path/to/spec.yaml` — prints VALID or INVALID with error codes.
+
 See [docs/openapi-compiler.md](./openapi-compiler.md) for the supported subset. Unsupported features cause clear compile errors.
 
 ## Troubleshooting

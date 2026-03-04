@@ -832,7 +832,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 | 2d    | 1        | Root schema type validation    | ✅ Done   |
 | 2e    | 1        | Mixed grouping + determinism   | ✅ Done   |
 | 2f    | 1        | Nullable + stability tests     | ✅ Done   |
-| 3     | 1        | `npm run check:openapi`        | Pending  |
+| 3     | 1        | `npm run check:openapi`        | ✅ Done   |
 | 4     | 1+       | Corpus prediction + run        | Deferred |
 
 

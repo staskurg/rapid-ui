@@ -1,0 +1,39 @@
+# Golden spec: INVALID — non-CRUD operation (POST with path param).
+# Passes Subset validation but fails at ApiIR stage with IR_INVALID.
+# POST must be create (0 path params); POST /items/{id} is not a valid CRUD pattern.
+openapi: 3.0.0
+info:
+  title: Non-CRUD Test
+  version: 1.0.0
+paths:
+  /items/{id}:
+    post:
+      tags: [Items]
+      operationId: customPostAction
+      summary: Custom POST with path param (invalid CRUD)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string

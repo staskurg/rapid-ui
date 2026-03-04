@@ -163,7 +163,7 @@ Error codes are a stable public interface. Must not change between patch release
 
 ## Compliance Tool
 
-Run RUS-v1 compliance check:
+We use npm scripts for validation. No separate CLI binary for external clients.
 
 ```bash
 npm run check:openapi -- path/to/spec.yaml
@@ -171,7 +171,7 @@ npm run check:openapi -- path/to/spec.yaml
 
 Output: **VALID** or **INVALID** with `code`, `message`, `jsonPointer` for each violation.
 
-> **Note:** The check script is added in Phase 3. Until then, validation runs only within the full compilation pipeline.
+The check runs **parse → validateSubset → resolveRefs → buildApiIR** (all mandatory). Exit code: 0 for VALID, 1 for INVALID.
 
 ---
 

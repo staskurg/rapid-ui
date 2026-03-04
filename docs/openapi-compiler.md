@@ -39,6 +39,8 @@ RapidUI supports a **strict subset** (RUS-v1). Unsupported features cause **comp
 
 > **Canonical spec:** See [RUS-v1 (openapi-subset-v1.md)](openapi-subset-v1.md) for the single source of truth. The [feature matrix](subset-v1-feature-matrix.md) lists features used by golden/demo specs.
 
+**Compliance check:** `npm run check:openapi -- path/to/spec.yaml` — runs parse → validate → resolve → buildApiIR; prints VALID or INVALID with error codes.
+
 ### Summary
 
 - **Versions:** OpenAPI 3.0.x, 3.1.x
