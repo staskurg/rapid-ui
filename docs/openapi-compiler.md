@@ -35,53 +35,20 @@ UISpec (one per resource)
 
 ## Supported OpenAPI Subset
 
-RapidUI supports a **strict subset**. Unsupported features cause **compile errors**.
+RapidUI supports a **strict subset** (RUS-v1). Unsupported features cause **compile errors**.
 
-### Versions
+> **Canonical spec:** See [RUS-v1 (openapi-subset-v1.md)](openapi-subset-v1.md) for the single source of truth. The [feature matrix](subset-v1-feature-matrix.md) lists features used by golden/demo specs.
 
-- ✅ OpenAPI 3.0.x
-- ✅ OpenAPI 3.1.x
-- OpenAPI 3.2: 3.2-only features ignored or rejected
+### Summary
 
-### API Style
-
-- **CRUD only**: GET (list/detail), POST (create), PUT/PATCH (update), DELETE
-- **Unsupported**: RPC-style, side-effect-only, workflows, streaming
-
-### Paths
-
-- ✅ Static paths: `/users`, `/products`
-- ✅ One path parameter: `/users/{id}`, `/orders/{orderId}`
-- ❌ Multiple path params: `/orders/{orderId}/{lineId}`
-
-### Request Bodies
-
-- **Required** for POST, PUT, PATCH
-- Content type: `application/json` only
-- ❌ Missing body, multipart, file uploads
-
-### Responses
-
-- Exactly **one** success response (200 or 201)
-- `application/json` only
-- ❌ Multiple success responses, non-JSON, streaming
-
-### Resource Grouping
-
-1. If **all** operations have exactly one tag → group by tag
-2. Else → group by path (strip `api`, `v1`, `v2`, `v3`; use first segment)
-3. ❌ Operations with multiple tags; ambiguous grouping
-
-### Schemas
-
-- **Supported**: `type`, `properties`, `required`, `enum`, `items`, `nullable`, `format`, `description`
-- **Types**: object, array, string, number, integer, boolean
-- **❌ Unsupported**: `oneOf`, `anyOf`, `allOf`, `not`, discriminators
-
-### $ref
-
-- ✅ Local refs within same document
-- ❌ External refs, multi-file specs
+- **Versions:** OpenAPI 3.0.x, 3.1.x
+- **Methods:** GET, POST, PUT, PATCH, DELETE
+- **Paths:** Static or one path param per path; operation-level params only
+- **Request body:** Required for POST/PUT/PATCH; forbidden for GET/DELETE
+- **Responses:** Exactly one success (200 or 201); `application/json` only
+- **Grouping:** Tag-based (all ops tagged) or path-based (none tagged); mixed → reject
+- **Schemas:** Allowlist (`type`, `properties`, `required`, `items`, `enum`, `nullable`, `format`, `description`, `$ref`, `additionalProperties`, `minimum`, `maximum`); unknown keyword → error
+- **$ref:** Local only; no external; no circular
 
 ## Error Taxonomy
 

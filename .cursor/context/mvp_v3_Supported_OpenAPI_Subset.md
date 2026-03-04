@@ -1,6 +1,8 @@
 # RapidUI — Supported OpenAPI Subset (MVP v3)
 
-This document defines the **exact subset of OpenAPI** supported by RapidUI MVP v3.
+> **⚠️ DEPRECATED:** This document is superseded by [docs/openapi-subset-v1.md](../../docs/openapi-subset-v1.md) (RUS-v1), the canonical subset spec. Kept for internal context only.
+
+This document defined the **exact subset of OpenAPI** supported by RapidUI MVP v3.
 
 RapidUI is a **deterministic OpenAPI → UI compiler**.
 If a feature is not listed here, it is **not supported** and will result in a **compile-time error**.
