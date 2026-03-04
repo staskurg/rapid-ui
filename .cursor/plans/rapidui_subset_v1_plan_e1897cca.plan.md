@@ -799,15 +799,105 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 
 ### Phase 4: Corpus Measurement (deferred)
 
-**Scope:** Prediction doc; corpus run; document results. **Depends on:** Phase 3.
+**Scope:** Prediction doc; corpus run; produce corpus report per requirements. **Depends on:** Phase 3.
+
+**Report requirements:** See [docs/subset-v1-corpus-report-requirements.md](../../docs/subset-v1-corpus-report-requirements.md). The corpus report is the empirical map of the OpenAPI ecosystem — it tells you how reality differs from RUS-v1 and defines the RUS-v2 roadmap.
+
+**Stress test & alignment:** See [docs/subset-v1-corpus-phase4-stress-test.md](../../docs/subset-v1-corpus-phase4-stress-test.md) — gaps resolved, stress scenarios documented, readiness confirmed.
 
 
 | Subphase | Task                                                                            |
 | -------- | ------------------------------------------------------------------------------- |
-| 4.1      | Create `docs/subset-v1-corpus-prediction.md` with 4–7% prediction and rationale |
-| 4.2      | Pull 100–200 specs from APIs.guru; run check; categorize failures               |
-| 4.3      | Document actual pass rate; compare to prediction; decide v2 priorities          |
+| 4.1      | Use existing `docs/subset-v1-corpus-prediction.md` (4–7% prediction, rationale) |
+| 4.2      | Run `corpus:run --batch N`; output raw + report to reports/                     |
+| 4.3      | Run `corpus:report` on raw file → report-batch{N}-{timestamp}.md in reports/    |
+| 4.4      | Compare actual pass rate to prediction; document RUS-v2 roadmap implications    |
 
+
+**Report deliverables (required):** Pass rate; **near-pass analysis**; **fixability cost**; **endpoint coverage**; **Natural Fit Score**; rejection reason distribution (top 10); feature presence; spec complexity; OpenAPI version; determinism; **compiler crash count** (must be 0); **spec sampling method**.
+
+**Report deliverables (recommended):** CRUD pattern distribution; schema reuse/ref graph; error location heatmap; compatibility projection; compilation time; IR size; top spec outliers; real API examples; response shapes; query params; path structure; spec size.
+
+---
+
+#### Phase 4 Implementation Details
+
+**Current state:** Specs already in `scripts/corpus-data/specs/` — **20 batches**, each ~100 specs (last batch may have fewer). **All specs pre-filtered to 3.0.x and 3.1.x.** No fetch, no version filtering needed. Run one batch at a time.
+
+**Workflow:** Select batch → run corpus → per-batch report. Canonical set selection deferred.
+
+**Reports:** Per-batch, stored like evals. Each run produces timestamped outputs. Naming: **batch number + timestamp** (when run).
+
+**Artifacts to create:**
+
+
+| Artifact                         | Purpose                                            |
+| -------------------------------- | -------------------------------------------------- |
+| `scripts/corpus-run.ts`          | Run check on batch, capture structured output      |
+| `scripts/corpus-report.ts`       | Consume raw data, generate report per requirements |
+| `scripts/corpus-data/specs/{N}/` | Specs by batch (existing; gitignored)              |
+| `scripts/corpus-data/reports/`   | Per-batch outputs (raw + report)                   |
+
+
+**Manifest vs clean-list:** Same thing. **clean-list** embedded in raw JSON `meta.cleanList` (id, path, openapiVersion).
+
+**4.1 Prediction doc** — Use existing [docs/subset-v1-corpus-prediction.md](../../docs/subset-v1-corpus-prediction.md).
+
+**4.2 Corpus run (`scripts/corpus-run.ts`)**
+
+- **Input:** `--batch N` (e.g. `--batch 20`) — selects `scripts/corpus-data/specs/N/`
+- **Process:** Scan batch folder; **all specs already 3.0.x/3.1.x** — no version filtering
+- **Per spec:** Read file → run `parseOpenAPI` → `validateSubset` → `resolveRefs` → `buildApiIR`
+- **Capture:** `valid`, `errors[]` (**all errors** per spec), `violationCount`, `compileTimeMs`, `crashed`, `parseFailed` (parse error only), `path` (relative)
+- **Output:** `scripts/corpus-data/reports/raw-batch{N}-{timestamp}.json` with `meta` (batch, sampleSize, timestamp, cleanList) and `results[]`
+- **Naming:** Timestamp = ISO 8601, e.g. `2026-03-04T12-30-45.123Z` (same as evals)
+- **Error handling:** try/catch per spec; uncaught → `crashed: true`, `COMPILER_CRASH`. **Parse failure** (invalid YAML) → separate `parseFailed: true` / `parseError`; do NOT count as compiler crash so crash count stays accurate.
+- **No fetch:** Specs are local; run one by one
+
+**4.3 Report generator (`scripts/corpus-report.ts`)**
+
+- **Input:** Path to `corpus-data/reports/raw-batch{N}-{timestamp}.json`; needs access to spec files (paths in results, relative to cwd)
+- **Processing:** Compute all report sections per [report requirements](../../docs/subset-v1-corpus-report-requirements.md):
+  - Layer 1: pass rate, near-pass, fixability, Natural Fit Score
+  - Layer 2: CRUD patterns, schema reuse, complexity — **re-read spec files** for valid specs
+  - Layer 3: rejection distribution, error location heatmap, compatibility projection
+  - Layer 4: compile time, crash count, IR size
+  - Additional: sampling method, top outliers, real examples
+- **Output:** `scripts/corpus-data/reports/report-batch{N}-{timestamp}.md` and optionally `.json` (structured)
+- **Stored:** Like evals — each run adds new files; commit or gitignore per preference
+- **docs/subset-v1-corpus-report.md:** Keep reports in `reports/` only; copy to `docs/` only when publishing a final combined report (e.g. after all batches or a synthesis)
+
+**4.4 Post-run (manual)** — Compare pass rate to prediction; document RUS-v2 roadmap implications.
+
+**Decisions (locked):**
+
+
+| Topic                  | Decision                                                                    |
+| ---------------------- | --------------------------------------------------------------------------- |
+| Version filtering      | **N/A** — specs pre-filtered to 3.0.x/3.1.x                                 |
+| Sampling               | Batches of 100; select batch via `--batch N`                                |
+| manifest vs clean-list | **Same** — embedded in raw JSON `meta.cleanList`                            |
+| Errors per spec        | **All errors** (not first only)                                             |
+| Endpoint coverage      | **Defer** for v1; document "N/A" in report                                  |
+| Feature presence       | **corpus-report re-reads** spec files for valid specs                       |
+| Determinism check      | **Skip** for v1                                                             |
+| Canonical set          | **Defer** — focus on first report only                                      |
+| Tests                  | Manual for now                                                              |
+| Parse failure vs crash | **Separate** — `parseFailed` / `parseError`; do not count as compiler crash |
+| Report location        | **reports/** only; copy to `docs/` only when publishing final synthesis     |
+| Batch aggregation      | **None** for v1 — reports stay per-batch                                    |
+
+
+**NPM scripts:**
+
+```json
+"corpus:run": "tsx scripts/corpus-run.ts --batch N",
+"corpus:report": "tsx scripts/corpus-report.ts -- <path-to-raw-batchN-timestamp.json>"
+```
+
+Example: `npm run corpus:run -- --batch 20` → `reports/raw-batch20-2026-03-04T12-30-45.123Z.json`; then `npm run corpus:report -- scripts/corpus-data/reports/raw-batch20-2026-03-04T12-30-45.123Z.json`.
+
+**Gitignore:** `scripts/corpus-data/specs/`. Reports: `scripts/corpus-data/reports/` — gitignore (like eval/reports/) or commit for historical tracking; document choice.
 
 ---
 

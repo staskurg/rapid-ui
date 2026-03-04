@@ -179,3 +179,5 @@ The check runs **parse → validateSubset → resolveRefs → buildApiIR** (all 
 
 - [OpenAPI Compiler Pipeline](openapi-compiler.md) — pipeline stages, error taxonomy
 - [RUS-v1 Feature Matrix](subset-v1-feature-matrix.md) — features used by golden/demo specs
+- [Corpus Report Requirements](subset-v1-corpus-report-requirements.md) — Phase 4 report structure and deliverables
+- [Corpus Prediction](subset-v1-corpus-prediction.md) — pre-run prediction (4–7%) and rationale
