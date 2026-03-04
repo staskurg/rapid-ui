@@ -24,7 +24,6 @@ describe("invalid spec", () => {
 
     const codes = validateResult.errors.map((e) => e.code);
     expect(codes).toContain("OAS_MULTIPLE_TAGS");
-    expect(codes).toContain("OAS_MULTIPLE_SUCCESS_RESPONSES");
     expect(codes).toContain("OAS_MULTIPLE_PATH_PARAMS");
     expect(codes).toContain("OAS_UNSUPPORTED_SCHEMA_KEYWORD");
   });

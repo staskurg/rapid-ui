@@ -2,7 +2,7 @@
 
 **Purpose:** Document predicted outcomes before running the corpus. Compare to actual results after the run.
 
-**Date:** 2025-03-04  
+**Date:** 2026-03-04  
 **Sample size:** 100–200 specs  
 **Source:** APIs.guru
 
@@ -240,7 +240,45 @@ Those are exactly the APIs where **RapidUI provides the most value**.
 
 After corpus run, update this doc or create `docs/subset-v1-corpus-report.md` with:
 
-- [ ] Actual pass rate vs prediction
-- [ ] Actual rejection distribution vs prediction
-- [ ] Top 5 RUS-v2 expansion candidates
+- [x] Actual pass rate vs prediction
+- [x] Actual rejection distribution vs prediction
+- [x] Top 5 RUS-v2 expansion candidates
 - [ ] Strategy decision (A, B, or hybrid)
+
+## Corpus-Valid-v1 Fixtures
+
+Valid specs from the corpus run are extracted and copied to `tests/compiler/fixtures/corpus-valid-v1/` via `npm run corpus:copy-valid-to-fixtures`. These 99 specs:
+
+- Serve as regression tests (all must pass `check:openapi`)
+- Will be used for **LLM determinism testing** — validating that LLM output is stable across runs on real APIs
+
+---
+
+## Post-Run: v1.2 Corpus Results (20 batches, ~1970 specs)
+
+**Aggregate pass rate:** ~5.0% (99 valid / ~1970 total) — **within predicted 4–7%**
+
+| Batch | Valid | Total | Pass % |
+| ----- | ----- | ----- | ------ |
+| 1–20  | 99    | ~1970 | ~5.0%  |
+
+**Rejection distribution (actual vs predicted):**
+
+| Category | Predicted | Actual (varies by batch) |
+| -------- | --------- | ------------------------ |
+| oneOf/anyOf/allOf | 28–35% | 5–19% (lower than predicted) |
+| multiple success responses | 18–25% | 1–34% (batch-dependent) |
+| example/default | 10–15% | &lt;3% |
+| operation structure | — | 8–30% (major factor) |
+| schema shape / hygiene | — | 6–28% (major factor) |
+| multiple path params | — | 5–32% (major factor) |
+| other unsupported schema | — | 1–26% |
+
+**Language analysis (passing specs):** Resource shape, CRUD coverage, grouping strategy, spec complexity — see per-batch reports in `scripts/corpus-data/reports/formatted_reports_v1.2/`.
+
+**Top RUS-v2 expansion candidates (aggregate):**
+1. multiple success responses
+2. operation structure
+3. other unsupported schema keyword / schema shape
+4. multiple path params
+5. oneOf / anyOf / allOf

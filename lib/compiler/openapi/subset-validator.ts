@@ -25,6 +25,19 @@ const ALLOWED_SCHEMA_KEYS = new Set([
   "additionalProperties",
   "minimum",
   "maximum",
+  // v1.1: annotation-only, ignored structurally
+  "example",
+  "default",
+  "pattern",
+  "maxLength",
+  "minLength",
+  "title",
+  "exclusiveMinimum",
+  "exclusiveMaximum",
+  "multipleOf",
+  "deprecated",
+  "readOnly",
+  "writeOnly",
 ]);
 
 const REF_ONLY_KEYS = new Set(["$ref", "description"]);
@@ -366,18 +379,6 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
     const pathObj = pathItem as Record<string, unknown>;
     const pathPointer = `/paths/${escapeJsonPointerSegment(pathKey)}`;
 
-    // Path-level parameters → reject
-    if ("parameters" in pathObj && pathObj.parameters !== undefined) {
-      errors.push(
-        createError(
-          "OAS_INVALID_OPERATION_STRUCTURE",
-          "Subset",
-          "Parameters must be at operation level only; path-level parameters are not supported",
-          pathPointer
-        )
-      );
-    }
-
     // Path must have ≥1 supported method
     const supportedMethodsOnPath = METHOD_ORDER.filter(
       (m) => pathObj[m] && typeof pathObj[m] === "object"
@@ -425,24 +426,39 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
       }
 
       // Parameter schema validation (path + query)
-      const parameters = op.parameters as Record<string, unknown>[] | undefined;
-      if (parameters && Array.isArray(parameters)) {
-        for (let i = 0; i < parameters.length; i++) {
-          const param = parameters[i];
-          if (!param || typeof param !== "object") continue;
-          const paramObj = param as Record<string, unknown>;
-          const inLocation = paramObj.in as string | undefined;
-          if (inLocation === "path" || inLocation === "query") {
-            const err = validateParameterSchema(
-              doc,
-              paramObj,
-              i,
-              opPath,
-              inLocation as "path" | "query"
-            );
-            if (err) errors.push(err);
+      // v1.2: Merge path-level params with op-level params; op params override by (name, in)
+      const pathLevelParams = pathObj.parameters as Record<string, unknown>[] | undefined;
+      const opParams = op.parameters as Record<string, unknown>[] | undefined;
+      const merged = new Map<string, { param: Record<string, unknown>; index: number }>();
+      const paramKey = (p: Record<string, unknown>) =>
+        `${String(p.in ?? "")}:${String(p.name ?? "")}`;
+      if (pathLevelParams && Array.isArray(pathLevelParams)) {
+        pathLevelParams.forEach((p, i) => {
+          if (p && typeof p === "object") {
+            const obj = p as Record<string, unknown>;
+            merged.set(paramKey(obj), { param: obj, index: i });
           }
-          // header, cookie: ignored for v1
+        });
+      }
+      if (opParams && Array.isArray(opParams)) {
+        opParams.forEach((p, i) => {
+          if (p && typeof p === "object") {
+            const obj = p as Record<string, unknown>;
+            merged.set(paramKey(obj), { param: obj, index: i });
+          }
+        });
+      }
+      for (const { param, index } of merged.values()) {
+        const inLocation = param.in as string | undefined;
+        if (inLocation === "path" || inLocation === "query") {
+          const err = validateParameterSchema(
+            doc,
+            param,
+            index,
+            opPath,
+            inLocation as "path" | "query"
+          );
+          if (err) errors.push(err);
         }
       }
 
@@ -451,22 +467,13 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
         ? SUCCESS_CODES.filter((c) => c in responses).length
         : 0;
 
-      // Missing success response → reject
+      // Missing success response → reject. Multiple success (200 and 201) → accept; pick first deterministically downstream.
       if (successCount === 0) {
         errors.push(
           createError(
             "OAS_INVALID_OPERATION_STRUCTURE",
             "Subset",
-            "Operation must have exactly one success response (200 or 201)",
-            opPath
-          )
-        );
-      } else if (successCount > 1) {
-        errors.push(
-          createError(
-            "OAS_MULTIPLE_SUCCESS_RESPONSES",
-            "Subset",
-            "Operation has multiple success responses (200 and/or 201)",
+            "Operation must have at least one success response (200 or 201)",
             opPath
           )
         );
@@ -540,14 +547,16 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
         }
       }
 
-      // Response validation
+      // Response validation: validate only the first success response (200 before 201) when multiple exist
       if (responses && typeof responses === "object") {
-        for (const [code, resp] of Object.entries(responses)) {
-          if (!SUCCESS_CODES.includes(code)) continue;
+        const firstSuccessCode = SUCCESS_CODES.find((c) => c in responses);
+        if (firstSuccessCode) {
+          const resp = responses[firstSuccessCode];
           const r = resp as Record<string, unknown> | undefined;
+          const code = firstSuccessCode;
           const contentObj = r?.content as Record<string, unknown> | undefined;
 
-          // Content object must have exactly one key: application/json
+          // v1.2: Use application/json if present; otherwise reject (do not require exactly one content type)
           if (!contentObj || typeof contentObj !== "object") {
             errors.push(
               createError(
@@ -557,87 +566,80 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
                 `${opPath}/responses/${code}`
               )
             );
-            continue;
-          }
-          const contentKeys = Object.keys(contentObj);
-          if (contentKeys.length !== 1 || !("application/json" in contentObj)) {
+          } else if (!("application/json" in contentObj)) {
             errors.push(
               createError(
                 "OAS_INVALID_RESPONSE_STRUCTURE",
                 "Subset",
-                "Success response content must have exactly one key: application/json",
+                "Success response content must include application/json",
                 `${opPath}/responses/${code}/content`
               )
             );
-            continue;
-          }
-
-          const content = contentObj["application/json"];
-          if (!content || typeof content !== "object") {
-            errors.push(
-              createError(
-                "OAS_INVALID_RESPONSE_STRUCTURE",
-                "Subset",
-                "Success response must have schema",
-                `${opPath}/responses/${code}/content/application~1json`
-              )
-            );
-            continue;
-          }
-
-          const schema = (content as Record<string, unknown>)?.schema;
-          if (!schema || typeof schema !== "object") {
-            errors.push(
-              createError(
-                "OAS_INVALID_RESPONSE_STRUCTURE",
-                "Subset",
-                "Success response must have schema",
-                `${opPath}/responses/${code}/content/application~1json`
-              )
-            );
-            continue;
-          }
-
-          const schemaPointer = `${opPath}/responses/${code}/content/application~1json/schema`;
-          const visited = new Set<string>();
-          const err = checkSchemaRecursive(
-            doc,
-            schema as Record<string, unknown>,
-            schemaPointer,
-            visited
-          );
-          if (err) {
-            errors.push(err);
           } else {
-            // Root success schema must resolve to object or array (CRUD assumes structured data)
-            const concrete = resolveSchemaToConcrete(
-              doc,
-              schema as Record<string, unknown>,
-              new Set<string>()
-            );
-            if (concrete) {
-              const primaryType = getPrimaryType(concrete);
-              if (
-                !primaryType ||
-                (primaryType !== "object" && primaryType !== "array")
-              ) {
+              const content = contentObj["application/json"];
+              if (!content || typeof content !== "object") {
                 errors.push(
                   createError(
                     "OAS_INVALID_RESPONSE_STRUCTURE",
                     "Subset",
-                    `Root success schema must resolve to object or array; got ${primaryType ?? "unknown"}`,
-                    schemaPointer
+                    "Success response must have schema",
+                    `${opPath}/responses/${code}/content/application~1json`
                   )
                 );
+              } else {
+                const schema = (content as Record<string, unknown>)?.schema;
+                if (!schema || typeof schema !== "object") {
+                  errors.push(
+                    createError(
+                      "OAS_INVALID_RESPONSE_STRUCTURE",
+                      "Subset",
+                      "Success response must have schema",
+                      `${opPath}/responses/${code}/content/application~1json`
+                    )
+                  );
+                } else {
+                  const schemaPointer = `${opPath}/responses/${code}/content/application~1json/schema`;
+                  const visited = new Set<string>();
+                  const err = checkSchemaRecursive(
+                    doc,
+                    schema as Record<string, unknown>,
+                    schemaPointer,
+                    visited
+                  );
+                  if (err) {
+                    errors.push(err);
+                  } else {
+                    const concrete = resolveSchemaToConcrete(
+                      doc,
+                      schema as Record<string, unknown>,
+                      new Set<string>()
+                    );
+                    if (concrete) {
+                      const primaryType = getPrimaryType(concrete);
+                      if (
+                        !primaryType ||
+                        (primaryType !== "object" && primaryType !== "array")
+                      ) {
+                        errors.push(
+                          createError(
+                            "OAS_INVALID_RESPONSE_STRUCTURE",
+                            "Subset",
+                            `Root success schema must resolve to object or array; got ${primaryType ?? "unknown"}`,
+                            schemaPointer
+                          )
+                        );
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         }
       }
     }
-  }
 
-  // Zero operations globally → reject
+  // Zero operations globally
   if (validOpCount === 0) {
     errors.push(
       createError(

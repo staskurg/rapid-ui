@@ -35,7 +35,7 @@ describe("subset validator", () => {
     expect(validateResult.success).toBe(true);
   });
 
-  it("rejects unsupported schema keyword (example)", () => {
+  it("accepts example, default, pattern, maxLength (v1.1: annotation-only)", () => {
     const doc = {
       openapi: "3.0.0",
       paths: {
@@ -47,7 +47,11 @@ describe("subset validator", () => {
                   "application/json": {
                     schema: {
                       type: "object",
-                      properties: { id: { type: "string", example: "x" } },
+                      properties: {
+                        id: { type: "string", example: "x" },
+                        name: { type: "string", default: "unknown", maxLength: 100 },
+                        code: { type: "string", pattern: "^[A-Z]+$" },
+                      },
                     },
                   },
                 },
@@ -58,10 +62,7 @@ describe("subset validator", () => {
       },
     } as Record<string, unknown>;
     const result = validateSubset(doc);
-    expect(result.success).toBe(false);
-    if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_UNSUPPORTED_SCHEMA_KEYWORD")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("example"))).toBe(true);
+    expect(result.success).toBe(true);
   });
 
   it("rejects additionalProperties: true", () => {
@@ -147,12 +148,12 @@ describe("subset validator", () => {
     expect(result.errors.some((e) => e.message.includes("at least one supported"))).toBe(true);
   });
 
-  it("rejects path-level parameters", () => {
+  it("accepts path-level parameters merged with op params (v1.2)", () => {
     const doc = {
       openapi: "3.0.0",
       paths: {
         "/items": {
-          parameters: [{ name: "x", in: "query", schema: { type: "string" } }],
+          parameters: [{ name: "filter", in: "query", schema: { type: "string" } }],
           get: {
             responses: {
               "200": {
@@ -171,10 +172,85 @@ describe("subset validator", () => {
       },
     } as Record<string, unknown>;
     const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts path-level path param merged with op (v1.2)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items/{id}": {
+          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts response content with multiple types when application/json present (v1.2)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                  "text/plain": { schema: { type: "string" } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects response content without application/json", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "text/plain": { schema: { type: "string" } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("operation level"))).toBe(true);
+    expect(result.errors.some((e) => e.code === "OAS_INVALID_RESPONSE_STRUCTURE")).toBe(true);
+    expect(result.errors.some((e) => e.message.includes("application/json"))).toBe(true);
   });
 
   it("rejects POST with requestBody content but missing schema", () => {
@@ -250,6 +326,52 @@ describe("subset validator", () => {
     expect(result.errors.some((e) => e.message.includes("must not have requestBody"))).toBe(true);
   });
 
+  it("accepts multiple success responses (200 and 201) — v1.1: pick first deterministically", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          post: {
+            requestBody: {
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { name: { type: "string" } },
+                  },
+                },
+              },
+            },
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+              "201": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
   it("rejects operation with missing success response", () => {
     const doc = {
       openapi: "3.0.0",
@@ -267,7 +389,7 @@ describe("subset validator", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("exactly one success"))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes("at least one success"))).toBe(true);
   });
 
   it("rejects path param with non-primitive schema", () => {

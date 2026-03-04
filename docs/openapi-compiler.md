@@ -45,11 +45,11 @@ RapidUI supports a **strict subset** (RUS-v1). Unsupported features cause **comp
 
 - **Versions:** OpenAPI 3.0.x, 3.1.x
 - **Methods:** GET, POST, PUT, PATCH, DELETE
-- **Paths:** Static or one path param per path; operation-level params only
+- **Paths:** Static or one path param per path; path-level params merged with operation-level (v1.2)
 - **Request body:** Required for POST/PUT/PATCH; forbidden for GET/DELETE
-- **Responses:** Exactly one success (200 or 201); `application/json` only
+- **Responses:** At least one success (200 or 201); multiple success → pick first (v1.1); `application/json` if present (v1.2)
 - **Grouping:** Tag-based (all ops tagged) or path-based (none tagged); mixed → reject
-- **Schemas:** Allowlist (`type`, `properties`, `required`, `items`, `enum`, `nullable`, `format`, `description`, `$ref`, `additionalProperties`, `minimum`, `maximum`); unknown keyword → error
+- **Schemas:** Allowlist per [RUS-v1](openapi-subset-v1.md); unknown keyword → error
 - **$ref:** Local only; no external; no circular
 
 ## Error Taxonomy

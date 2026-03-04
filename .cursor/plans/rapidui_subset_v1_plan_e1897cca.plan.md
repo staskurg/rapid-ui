@@ -797,7 +797,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 
 ---
 
-### Phase 4: Corpus Measurement (deferred)
+### Phase 4: Corpus Measurement ✅ COMPLETE
 
 **Scope:** Prediction doc; corpus run; produce corpus report per requirements. **Depends on:** Phase 3.
 
@@ -897,7 +897,9 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 
 Example: `npm run corpus:run -- --batch 20` → `reports/raw-batch20-2026-03-04T12-30-45.123Z.json`; then `npm run corpus:report -- scripts/corpus-data/reports/raw-batch20-2026-03-04T12-30-45.123Z.json`.
 
-**Gitignore:** `scripts/corpus-data/specs/`. Reports: `scripts/corpus-data/reports/` — gitignore (like eval/reports/) or commit for historical tracking; document choice.
+**Gitignore:** `scripts/corpus-data/specs/`, `scripts/corpus-data/reports/` — gitignored (like eval/reports/).
+
+**Corpus-valid-v1 fixtures:** `scripts/corpus-extract-valid.ts` extracts valid specs from raw reports; `--copy-to-fixtures` copies to `tests/compiler/fixtures/corpus-valid-v1/`. These 99 specs are committed and serve as: (1) regression tests — all must pass `check:openapi`; (2) **LLM determinism testing** — future step to validate LLM output stability on real APIs. See `docs/openapi-subset-v1.md` § Corpus Workflow.
 
 ---
 
@@ -923,10 +925,10 @@ Example: `npm run corpus:run -- --batch 20` → `reports/raw-batch20-2026-03-04T
 | 2e    | 1        | Mixed grouping + determinism   | ✅ Done   |
 | 2f    | 1        | Nullable + stability tests     | ✅ Done   |
 | 3     | 1        | `npm run check:openapi`        | ✅ Done   |
-| 4     | 1+       | Corpus prediction + run        | Deferred |
+| 4     | 1+       | Corpus prediction + run        | ✅ Done   |
 
 
-**Total: 8 agent sessions** (Phases 1, 2a–2f, 3) before corpus. Phase 4 is optional/deferred.
+**Total: 9 agent sessions** (Phases 1, 2a–2f, 3, 4). Phase 4 complete: ~5% pass rate (within 4–7% prediction), 99 valid specs in `corpus-valid-v1` fixtures.
 
 ---
 

@@ -4,6 +4,10 @@
 
 > RapidUI is a constrained OpenAPI language for deterministic internal UI compilation.
 
+**v1.1** adds minimal relaxations (corpus-driven): multiple success responses (pick first), ignore example/default/pattern, allow harmless schema keywords.
+
+**v1.2** relaxations: response content uses `application/json` if present (do not require exactly one type); path-level parameters merged with operation parameters deterministically.
+
 ---
 
 ## 1. Supported OpenAPI Versions
@@ -49,9 +53,10 @@ Algorithmically explicit:
 
 ## 4. Supported Response Rules
 
-- **Exactly one success code in {200, 201}.** Missing (zero) success response → reject
+- **At least one success code in {200, 201}.** Missing (zero) success response → reject
+- **Multiple success (200 and 201):** Accept; pick first deterministically (200 before 201). v1.1 relaxation.
 - No other 2xx allowed (204, 206, etc. → reject)
-- Only `application/json`. Content object must have exactly one key
+- **Response content:** Use `application/json` if present; otherwise reject. v1.2: do not require exactly one content type
 - **Success response must have `schema`** — empty schema or missing schema → reject
 - **Root success schema must resolve to object or array** — reject `type: string`, `type: number`, `type: boolean` at root (CRUD assumes structured data). Root-type validation must follow `$ref`
 
@@ -71,12 +76,14 @@ Algorithmically explicit:
 
 `type`, `properties`, `required`, `items`, `enum`, `nullable`, `format`, `description`, `$ref`, `additionalProperties`, `minimum`, `maximum`
 
+**v1.1 additions (annotation-only, ignored structurally):** `example`, `default`, `pattern`, `maxLength`, `minLength`, `title`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`, `deprecated`, `readOnly`, `writeOnly`
+
 - **Unknown schema keyword → compile error** (`OAS_UNSUPPORTED_SCHEMA_KEYWORD`)
 - **$ref rule:** If `$ref` exists, only `$ref` and `description` allowed. No other keys (e.g. `$ref` + `type: object` → reject)
 
 ### Annotation-only (accepted but ignored structurally)
 
-`description`, `format`, `minimum`, `maximum` — they do not affect UI structure or validation. If later add numeric validation UI → RUS-v2.
+`description`, `format`, `minimum`, `maximum`, `example`, `default`, `pattern`, `maxLength`, `minLength`, `title`, etc. — they do not affect UI structure or validation.
 
 ### Numeric types
 
@@ -88,7 +95,7 @@ Must be `false` if present. Does NOT change UI structure; accepted but ignored s
 
 ### Rejected (explicit)
 
-`oneOf`, `anyOf`, `allOf`, `not`, `discriminator`, `patternProperties`, `pattern`, `example`, `default`, etc.
+`oneOf`, `anyOf`, `allOf`, `not`, `discriminator`, `patternProperties`, etc.
 
 ### Schema hygiene (compiler invariants)
 
@@ -115,7 +122,7 @@ Must be `false` if present. Does NOT change UI structure; accepted but ignored s
 
 ### Parameters location
 
-For v1, parameters must be declared at **operation level only**. Path-level parameters → reject.
+**v1.2:** Path-level parameters are merged with operation-level parameters deterministically (op params override by `name` + `in`). Both path-level and operation-level parameters are supported.
 
 ### Query params
 
@@ -151,10 +158,10 @@ Error codes are a stable public interface. Must not change between patch release
 
 | Code | Stage | Use for |
 | ---- | ----- | ------- |
-| `OAS_UNSUPPORTED_SCHEMA_KEYWORD` | Subset | Unknown schema keyword; oneOf, anyOf, allOf; example, default, pattern |
+| `OAS_UNSUPPORTED_SCHEMA_KEYWORD` | Subset | Unknown schema keyword; oneOf, anyOf, allOf |
 | `OAS_INVALID_SCHEMA_SHAPE` | Subset | Hygiene: required⊆properties; array→items; object→properties; enum↔type; additionalProperties≠false; $ref+extra keys |
-| `OAS_INVALID_OPERATION_STRUCTURE` | Subset | Empty paths; path has no supported ops; path-level parameters; missing request body; GET/DELETE with body; missing success response; zero ops globally |
-| `OAS_INVALID_RESPONSE_STRUCTURE` | Subset | Multiple success; wrong content type; empty schema; root schema primitive |
+| `OAS_INVALID_OPERATION_STRUCTURE` | Subset | Empty paths; path has no supported ops; missing request body; GET/DELETE with body; missing success response; zero ops globally |
+| `OAS_INVALID_RESPONSE_STRUCTURE` | Subset | Wrong content type; empty schema; root schema primitive |
 | `OAS_INVALID_PARAMETER` | Subset | Path param not primitive; query param schema invalid (non-primitive, unsupported keyword) |
 | `OAS_INVALID_REF` | Resolve | External ref; circular ref; invalid ref target |
 | `OAS_AMBIGUOUS_RESOURCE_GROUPING` | ApiIR | Mixed tags; multiple tags per op; no CRUD ops |
@@ -172,6 +179,35 @@ npm run check:openapi -- path/to/spec.yaml
 Output: **VALID** or **INVALID** with `code`, `message`, `jsonPointer` for each violation.
 
 The check runs **parse → validateSubset → resolveRefs → buildApiIR** (all mandatory). Exit code: 0 for VALID, 1 for INVALID.
+
+---
+
+## Corpus Workflow (Phase 4)
+
+RUS-v1 corpus measurement validates the subset against real APIs from APIs.guru.
+
+### Commands
+
+```bash
+# Run check on a batch of specs (specs in scripts/corpus-data/specs/{N}/)
+npm run corpus:run -- --batch N
+
+# Generate report from raw output
+npm run corpus:report -- scripts/corpus-data/reports/raw-batch{N}-{timestamp}.json
+
+# Extract valid specs from all raw reports into manifest
+npm run corpus:extract-valid
+
+# Copy valid specs to fixtures (for LLM determinism testing)
+npm run corpus:copy-valid-to-fixtures
+```
+
+### Corpus-Valid-v1 Fixtures
+
+Specs that pass RUS-v1 validation across all corpus batches are extracted and copied to `tests/compiler/fixtures/corpus-valid-v1/`. These serve as:
+
+- **Regression tests** — All 99 corpus-valid-v1 fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
+- **LLM determinism testing** — Future step: use these real APIs to validate LLM output stability across runs
 
 ---
 

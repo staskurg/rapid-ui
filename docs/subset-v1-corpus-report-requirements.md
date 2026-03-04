@@ -21,9 +21,9 @@ The report covers four layers of insight:
 
 ## Report Deliverable
 
-The corpus run produces a single artifact: **`docs/subset-v1-corpus-report.md`** (or equivalent dated report). This document specifies what that report must contain.
+The corpus run produces per-batch reports: **`scripts/corpus-data/reports/report-batch{N}-{timestamp}.md`**. Copy to `docs/subset-v1-corpus-report.md` only when publishing a final synthesis. This document specifies what each report must contain.
 
-**Corpus workflow:** Fetch all specs → filter to OpenAPI 3.0/3.1 only → clean list → run corpus → first report → select canonical set for future testing. See plan Phase 4 Implementation Details.
+**Corpus workflow:** Specs in `scripts/corpus-data/specs/{N}/` (pre-filtered 3.0/3.1) → `corpus:run --batch N` → raw JSON → `corpus:report` → report MD. Valid specs extracted via `corpus:extract-valid` and optionally copied to `tests/compiler/fixtures/corpus-valid-v1/` for regression and LLM determinism testing. See plan Phase 4 Implementation Details.
 
 ---
 

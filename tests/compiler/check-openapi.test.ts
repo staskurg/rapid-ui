@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
+import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
@@ -60,7 +60,6 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
 
     const codes = result.errors.map((e) => e.code);
     expect(codes).toContain("OAS_MULTIPLE_TAGS");
-    expect(codes).toContain("OAS_MULTIPLE_SUCCESS_RESPONSES");
     expect(codes).toContain("OAS_MISSING_REQUEST_BODY");
     expect(codes).toContain("OAS_MULTIPLE_PATH_PARAMS");
     expect(codes).toContain("OAS_UNSUPPORTED_SCHEMA_KEYWORD");
@@ -86,5 +85,25 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
     expect(result.errors[0].message).toContain("Non-CRUD operation");
     expect(result.errors[0].message).toContain("POST");
     expect(result.errors[0].message).toContain("path params");
+  });
+
+  it("corpus-valid-v1 fixtures → all VALID (RUS-v1 compliant from APIs.guru corpus)", () => {
+    const corpusDir = join(FIXTURES, "corpus-valid-v1");
+    if (!existsSync(corpusDir)) {
+      return; // skip if corpus fixtures not yet extracted
+    }
+    const files = readdirSync(corpusDir).filter(
+      (f) => f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")
+    );
+    const failures: string[] = [];
+    for (const file of files) {
+      const content = readFileSync(join(corpusDir, file), "utf-8");
+      const result = checkOpenAPI(content);
+      if (!result.valid) {
+        const msg = result.errors?.map((e) => `${e.code}: ${e.message}`).join("; ") ?? "unknown";
+        failures.push(`${file}: ${msg}`);
+      }
+    }
+    expect(failures).toEqual([]);
   });
 });
