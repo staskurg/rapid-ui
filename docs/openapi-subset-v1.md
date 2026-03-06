@@ -202,6 +202,8 @@ npm run corpus:extract-valid
 npm run corpus:copy-valid-to-fixtures
 ```
 
+**GitHub corpus:** For crawling and validating OpenAPI specs from GitHub, see [corpus-github.md](corpus-github.md).
+
 ### Corpus-Valid-v1 Fixtures
 
 Specs that pass RUS-v1 validation across all corpus batches are extracted and copied to `tests/compiler/fixtures/corpus-valid-v1/`. These serve as:
@@ -217,3 +219,4 @@ Specs that pass RUS-v1 validation across all corpus batches are extracted and co
 - [RUS-v1 Feature Matrix](subset-v1-feature-matrix.md) — features used by golden/demo specs
 - [Corpus Report Requirements](subset-v1-corpus-report-requirements.md) — Phase 4 report structure and deliverables
 - [Corpus Prediction](subset-v1-corpus-prediction.md) — pre-run prediction (4–7%) and rationale
+- [GitHub Corpus](corpus-github.md) — crawling and validating OpenAPI specs from GitHub
