@@ -8,7 +8,8 @@
  *
  * Usage: npm run corpus:extract-valid
  *   or:  npm run corpus:extract-valid -- --copy-to-fixtures
- *   or:  tsx scripts/corpus-extract-valid.ts [--reports-dir PATH] [--copy-to-fixtures]
+ *   or:  npm run corpus:extract-valid -- --github-only   # only raw-github-*.json (exclude APIs.guru batches)
+ *   or:  tsx scripts/corpus-extract-valid.ts [--reports-dir PATH] [--copy-to-fixtures] [--github-only]
  */
 
 import {
@@ -55,11 +56,14 @@ function main(): number {
   let reportsDir = join(cwd, "scripts", "corpus-data", "reports");
 
   let copyToFixtures = false;
+  let githubOnly = false;
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--reports-dir" && args[i + 1]) {
       reportsDir = args[++i];
     } else if (args[i] === "--copy-to-fixtures") {
       copyToFixtures = true;
+    } else if (args[i] === "--github-only") {
+      githubOnly = true;
     }
   }
 
@@ -69,10 +73,11 @@ function main(): number {
   }
 
   const files = readdirSync(reportsDir)
-    .filter((f) =>
-      (f.startsWith("raw-batch") || f.startsWith("raw-github-")) &&
-      f.endsWith(".json")
-    )
+    .filter((f) => {
+      if (!f.endsWith(".json")) return false;
+      if (githubOnly) return f.startsWith("raw-github-");
+      return f.startsWith("raw-batch") || f.startsWith("raw-github-");
+    })
     .sort((a, b) => {
       const isBatchA = a.startsWith("raw-batch");
       const isBatchB = b.startsWith("raw-batch");
@@ -87,7 +92,11 @@ function main(): number {
     });
 
   if (files.length === 0) {
-    console.error(`No raw-batch*.json or raw-github-*.json files found in ${reportsDir}`);
+    console.error(
+      githubOnly
+        ? `No raw-github-*.json files found in ${reportsDir}`
+        : `No raw-batch*.json or raw-github-*.json files found in ${reportsDir}`
+    );
     return 1;
   }
 

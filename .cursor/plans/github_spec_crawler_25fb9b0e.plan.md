@@ -1,7 +1,10 @@
 ---
 name: GitHub Spec Crawler
 overview: "Implement a GitHub crawler script that searches for OpenAPI specs using multiple query groups: generic (200), frameworks (100 per framework × 5+ frameworks), vendors (broadened list), plus optional groups (platforms, cloud, api-docs). Stores in corpus-github, then runs the existing validation pipeline to identify subset-compatible specs and ecosystem patterns."
-todos: []
+todos:
+  - id: todo-1772826559182-sg3a82u0c
+    content: ""
+    status: pending
 isProject: false
 ---
 
@@ -158,80 +161,89 @@ npm run corpus:pattern-mining -- --output scripts/corpus-data/reports/pattern-mi
 
 - Run query groups against GitHub Code Search API
 - Fetch raw file content for each result
-- Enforce deduplication (1 per repo, sha256 content)
+- Enforce deduplication (max 5 per repo, sha256 content)
 - Per-group caps: generic 200, frameworks 100 per framework, vendors flexible
 - Store in `scripts/corpus-data/corpus-github/{group}/`
 
 ### Query Groups
 
+**Validated via `npm run test:github-search`** — these queries return actual results. See `scripts/test-github-search.ts` for the source of truth.
+
 #### Group A — Generic (200 specs)
 
-Broad ecosystem sampling. One combined group.
+Broad ecosystem sampling. One combined group. `"paths:"` filters out specs with no endpoints; JSON uses `"openapi": "3` to exclude Swagger 2.0.
 
 
-| Target    | Queries                                                          |
-| --------- | ---------------------------------------------------------------- |
-| 200 specs | `filename:openapi.yaml "openapi: 3" size:5000..200000 stars:>10` |
-|           | `filename:openapi.yml "openapi: 3" size:5000..200000 stars:>10`  |
-|           | `filename:openapi.json "openapi" size:5000..200000 stars:>10`    |
+| Target    | Query                                                           |
+| --------- | --------------------------------------------------------------- |
+| 200 specs | `filename:openapi.yaml "openapi: 3" "paths:" size:5000..200000` |
+|           | `filename:openapi.yml "openapi: 3" "paths:" size:5000..200000`  |
+|           | `filename:openapi.json "\"openapi\": \"3" size:5000..200000`    |
 
 
 #### Group B — Frameworks (100 specs per framework × 5+ frameworks)
 
-**Purpose:** Realistic backend APIs. Each framework generates OpenAPI from code; high probability of valid specs.
+**Purpose:** Realistic backend APIs. Each framework generates OpenAPI from code; high probability of valid specs. OpenAPI 3 enforced via `"openapi: 3" "paths:"` (YAML) or `"\"openapi\": \"3"` (JSON).
 
 
-| Framework       | Search keywords               | Notes                                    |
-| --------------- | ----------------------------- | ---------------------------------------- |
-| **FastAPI**     | `fastapi`                     | Python, native OpenAPI 3.0               |
-| **NestJS**      | `nestjs`                      | Node, @nestjs/swagger                    |
-| **Spring Boot** | `springdoc` or `spring boot`  | Java, springdoc-openapi                  |
-| **Django**      | `drf-spectacular` or `django` | Python, DRF + drf-spectacular            |
-| **Laravel**     | `laravel`                     | PHP, L5-Swagger / darkaonline/l5-swagger |
-| **Rails**       | `rswag` or `rails`            | Ruby, rswag                              |
-| **Express**     | `tsoa` or `express`           | Node, tsoa or swagger-jsdoc              |
-| **Micronaut**   | `micronaut`                   | JVM, micronaut-openapi                   |
-| **Ktor**        | `ktor`                        | Kotlin, ktor-openapi                     |
+| Framework       | Query                                                         |
+| --------------- | ------------------------------------------------------------- |
+| **FastAPI**     | `filename:openapi.yaml fastapi "openapi: 3" "paths:"`         |
+| **NestJS**      | `filename:openapi.json nestjs "\"openapi\": \"3"`             |
+| **Spring Boot** | `filename:openapi.yaml springdoc "openapi: 3" "paths:"`       |
+| **Django**      | `filename:openapi.yaml drf-spectacular "openapi: 3" "paths:"` |
+| **Laravel**     | `filename:openapi.yaml laravel "openapi: 3" "paths:"`         |
+| **Rails**       | `filename:openapi.yaml rswag "openapi: 3" "paths:"`           |
+| **Express**     | `filename:openapi.json tsoa "\"openapi\": \"3"`               |
+| **Micronaut**   | `filename:openapi.yaml micronaut "openapi: 3" "paths:"`       |
+| **Ktor**        | `filename:openapi.yaml ktor "openapi: 3" "paths:"`            |
 
 
 **Target:** 5+ frameworks, **100 specs each** (500+ total). Use subdirs: `group-frameworks/fastapi/`, `group-frameworks/nestjs/`, etc.
 
-**Example queries:**
+#### Group C — Vendors (~200 specs total)
 
-```
-filename:openapi.yaml fastapi "openapi: 3"
-filename:openapi.json nestjs
-filename:openapi.yaml springdoc
-filename:openapi.yaml drf-spectacular
-filename:openapi.yaml laravel
-```
-
-#### Group C — Vendors (broadened list)
-
-**Purpose:** Production API designs from known SaaS/API providers.
+**Purpose:** Production API designs from known SaaS/API providers. Cap per-vendor at 20–30 to avoid dominance.
 
 
-| Category           | Vendors                           |
-| ------------------ | --------------------------------- |
-| Payments / fintech | stripe, plaid, adyen              |
-| Communications     | twilio, sendgrid, mailgun         |
-| Productivity       | slack, notion, linear, asana      |
-| Dev tools          | github, gitlab, circleci, vercel  |
-| Cloud / infra      | digitalocean, cloudflare, datadog |
-| AI                 | openai, anthropic                 |
-| Other              | postman, rapidapi                 |
+| Vendor       | Query                                          |
+| ------------ | ---------------------------------------------- |
+| stripe       | `filename:openapi.yaml stripe "openapi"`       |
+| plaid        | `filename:openapi.yaml plaid "openapi"`        |
+| adyen        | `filename:openapi.yaml adyen "openapi"`        |
+| twilio       | `filename:openapi.yaml twilio "openapi"`       |
+| sendgrid     | `filename:openapi.yaml sendgrid "openapi"`     |
+| mailgun      | `filename:openapi.yaml mailgun "openapi"`      |
+| slack        | `filename:openapi.yaml slack "openapi"`        |
+| notion       | `filename:openapi.yaml notion "openapi"`       |
+| linear       | `filename:openapi.yaml linear "openapi"`       |
+| asana        | `filename:openapi.yaml asana "openapi"`        |
+| github       | `filename:openapi.yaml github "openapi"`       |
+| gitlab       | `filename:openapi.yaml gitlab "openapi"`       |
+| circleci     | `filename:openapi.yaml circleci "openapi"`     |
+| vercel       | `filename:openapi.yaml vercel "openapi"`       |
+| digitalocean | `filename:openapi.yaml digitalocean "openapi"` |
+| cloudflare   | `filename:openapi.yaml cloudflare "openapi"`   |
+| datadog      | `filename:openapi.yaml datadog "openapi"`      |
+| openai       | `filename:openapi.yaml openai "openapi"`       |
+| anthropic    | `filename:openapi.yaml anthropic "openapi"`    |
+| postman      | `filename:openapi.yaml postman "openapi"`      |
+| rapidapi     | `filename:openapi.yaml rapidapi "openapi"`     |
 
-
-**Target:** ~200 specs total across vendors (or cap per-vendor at 20–30 to avoid dominance).
 
 #### Group D — Additional (optional)
 
 
-| Group         | Purpose                    | Example queries                                         |
-| ------------- | -------------------------- | ------------------------------------------------------- |
-| **platforms** | BaaS / auto-generated APIs | `filename:openapi.yaml postgrest`, `supabase`, `hasura` |
-| **cloud**     | Cloud provider APIs        | `filename:openapi.yaml aws`, `googleapis`, `azure`      |
-| **api-docs**  | Spec-first / doc tooling   | `filename:openapi.yaml redoc`, `openapi-generator`      |
+| Group         | Vendor            | Query                                               |
+| ------------- | ----------------- | --------------------------------------------------- |
+| **platforms** | postgrest         | `filename:openapi.yaml postgrest "openapi"`         |
+|               | supabase          | `filename:openapi.yaml supabase "openapi"`          |
+|               | hasura            | `filename:openapi.yaml hasura "openapi"`            |
+| **cloud**     | aws               | `filename:openapi.yaml aws "openapi"`               |
+|               | googleapis        | `filename:openapi.yaml googleapis "openapi"`        |
+|               | azure             | `filename:openapi.yaml azure "openapi"`             |
+| **api-docs**  | redoc             | `filename:openapi.yaml redoc "openapi"`             |
+|               | openapi-generator | `filename:openapi.yaml openapi-generator "openapi"` |
 
 
 Include 1–2 if time permits. Swagger 2.0 specs excluded — only OpenAPI 3.x.
@@ -243,9 +255,18 @@ Include 1–2 if time permits. Swagger 2.0 specs excluded — only OpenAPI 3.x.
 - **Pagination:** Search returns max 100 per page. Use `?page=1`, `?page=2`, etc. until target reached or no more results.
 - **Rate limit:** On 429, respect `Retry-After`; exponential backoff. Throttle ~1 search / 2 sec; small delays between content fetches.
 
+### Safety Rule (required)
+
+**Max 5 specs per repo.** Otherwise one repo with 50 specs dominates your dataset.
+
+- Track `repoSpecCount[repo.full_name]` — before storing any spec, check how many specs this repo has already contributed
+- If count ≥ 5: **skip** (do not download, do not count toward caps)
+- If count < 5: increment, then proceed
+- **Global across all groups** — counts apply across generic, frameworks, vendors, etc.
+
 ### Script Rules
 
-1. **repoSeen[fullRepoName]** — skip if repo already contributed a spec. **Global across all groups.**
+1. **repoSpecCount** — max 5 specs per repo (see Safety Rule above). Skip when limit reached.
 2. **contentHashes[sha256(content)]** — skip duplicate specs. **Global across all groups.**
 3. **Per-group caps:** generic 200; frameworks 100 per framework; vendors ~200 total (or per-vendor cap).
 4. **GITHUB_TOKEN** — required env var (create at github.com/settings/tokens). Exit with clear error if missing.
