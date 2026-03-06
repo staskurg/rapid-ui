@@ -1,0 +1,319 @@
+{
+  "api": {
+    "title": "Local Services API",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "accountReports",
+      "key": "accountreports",
+      "operations": [
+        {
+          "id": "localservices.accountReports.search",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/accountReports:search",
+          "queryParamCount": 20,
+          "responseSchema": {
+            "description": "A page of the response received from the SearchAccountReports method. A paginated response where more pages are available has `next_page_token` set. This token can be used in a subsequent request to retrieve the next request page.",
+            "properties": {
+              "accountReports": {
+                "description": "List of account reports which maps 1:1 to a particular linked GLS account.",
+                "items": {
+                  "description": "An Account Report of a GLS account identified by their account id containing aggregate data gathered from a particular date range. Next ID: 18",
+                  "properties": {
+                    "accountId": {
+                      "description": "Unique identifier of the GLS account.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "aggregatorInfo": {
+                      "description": "Conatiner for aggregator specific information if lead is for an aggregator GLS account.",
+                      "properties": {
+                        "aggregatorProviderId": {
+                          "description": "Provider id (listed in aggregator system) which maps to a account id in GLS system.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "averageFiveStarRating": {
+                      "description": "Average review rating score from 1-5 stars.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "averageWeeklyBudget": {
+                      "description": "Average weekly budget in the currency code of the account.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "businessName": {
+                      "description": "Business name of the account.",
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "description": "Currency code of the account.",
+                      "type": "string"
+                    },
+                    "currentPeriodChargedLeads": {
+                      "description": "Number of charged leads the account received in current specified period.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "currentPeriodConnectedPhoneCalls": {
+                      "description": "Number of connected phone calls (duration over 30s) in current specified period.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "currentPeriodPhoneCalls": {
+                      "description": "Number of phone calls in current specified period, including both connected and unconnected calls.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "currentPeriodTotalCost": {
+                      "description": "Total cost of the account in current specified period in the account's specified currency.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "impressionsLastTwoDays": {
+                      "description": "Number of impressions that customers have had in the past 2 days.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "phoneLeadResponsiveness": {
+                      "description": "Phone lead responsiveness of the account for the past 90 days from current date. This is computed by taking the total number of connected calls from charged phone leads and dividing by the total number of calls received.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "previousPeriodChargedLeads": {
+                      "description": "Number of charged leads the account received in previous specified period.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "previousPeriodConnectedPhoneCalls": {
+                      "description": "Number of connected phone calls (duration over 30s) in previous specified period.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "previousPeriodPhoneCalls": {
+                      "description": "Number of phone calls in previous specified period, including both connected and unconnected calls.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "previousPeriodTotalCost": {
+                      "description": "Total cost of the account in previous specified period in the account's specified currency.",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "totalReview": {
+                      "description": "Total number of reviews the account has up to current date.",
+                      "format": "int32",
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nextPageToken": {
+                "description": "Pagination token to retrieve the next page of results. When `next_page_token` is not filled in, there is no next page and the list returned is the last page in the result set.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "detailedLeadReports",
+      "key": "detailedleadreports",
+      "operations": [
+        {
+          "id": "localservices.detailedLeadReports.search",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/detailedLeadReports:search",
+          "queryParamCount": 20,
+          "responseSchema": {
+            "description": "A page of the response received from the SearchDetailedLeadReports method. A paginated response where more pages are available has `next_page_token` set. This token can be used in a subsequent request to retrieve the next request page.",
+            "properties": {
+              "detailedLeadReports": {
+                "description": "List of detailed lead reports uniquely identified by external lead id.",
+                "items": {
+                  "description": "A Detailed Lead Report of a lead identified by their lead id and contains consumer, account, monetization, and lead data.",
+                  "properties": {
+                    "accountId": {
+                      "description": "Identifies account that received the lead.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "aggregatorInfo": {
+                      "description": "Conatiner for aggregator specific information if lead is for an aggregator GLS account.",
+                      "properties": {
+                        "aggregatorProviderId": {
+                          "description": "Provider id (listed in aggregator system) which maps to a account id in GLS system.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "bookingLead": {
+                      "description": "Container for booking lead specific information.",
+                      "properties": {
+                        "bookingAppointmentTimestamp": {
+                          "description": "Timestamp of when service is provided by advertiser.",
+                          "format": "google-datetime",
+                          "type": "string"
+                        },
+                        "consumerEmail": {
+                          "description": "Consumer email associated with the booking lead.",
+                          "type": "string"
+                        },
+                        "consumerPhoneNumber": {
+                          "description": "Consumer phone number associated with the booking lead.",
+                          "type": "string"
+                        },
+                        "customerName": {
+                          "description": "Name of the customer who created the lead.",
+                          "type": "string"
+                        },
+                        "jobType": {
+                          "description": "The job type of the specified lead.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "businessName": {
+                      "description": "Business name associated to the account.",
+                      "type": "string"
+                    },
+                    "chargeStatus": {
+                      "description": "Whether the lead has been charged.",
+                      "enum": [
+                        "CHARGE_STATUS_UNSPECIFIED",
+                        "CHARGED",
+                        "NOT_CHARGED"
+                      ],
+                      "type": "string"
+                    },
+                    "currencyCode": {
+                      "description": "Currency code.",
+                      "type": "string"
+                    },
+                    "disputeStatus": {
+                      "description": "Dispute status related to the lead.",
+                      "type": "string"
+                    },
+                    "geo": {
+                      "description": "Location of the associated account's home city.",
+                      "type": "string"
+                    },
+                    "googleAdsLeadId": {
+                      "description": "Unique identifier of a Detailed Lead Report.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "leadCategory": {
+                      "description": "Lead category (e.g. hvac, plumber)",
+                      "type": "string"
+                    },
+                    "leadCreationTimestamp": {
+                      "description": "Timestamp of when the lead was created.",
+                      "format": "google-datetime",
+                      "type": "string"
+                    },
+                    "leadId": {
+                      "description": "Deprecated in favor of google_ads_lead_id. Unique identifier of a Detailed Lead Report.",
+                      "format": "int64",
+                      "type": "string"
+                    },
+                    "leadPrice": {
+                      "description": "Price of the lead (available only after it has been charged).",
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "leadType": {
+                      "description": "Lead type.",
+                      "enum": [
+                        "LEAD_TYPE_UNSPECIFIED",
+                        "MESSAGE",
+                        "PHONE_CALL",
+                        "BOOKING"
+                      ],
+                      "type": "string"
+                    },
+                    "messageLead": {
+                      "description": "Container for message lead specific information.",
+                      "properties": {
+                        "consumerPhoneNumber": {
+                          "description": "Consumer phone number associated with the message lead.",
+                          "type": "string"
+                        },
+                        "customerName": {
+                          "description": "Name of the customer who created the lead.",
+                          "type": "string"
+                        },
+                        "jobType": {
+                          "description": "The job type of the specified lead.",
+                          "type": "string"
+                        },
+                        "postalCode": {
+                          "description": "The postal code of the customer who created the lead.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "phoneLead": {
+                      "description": "Container for phone lead specific information.",
+                      "properties": {
+                        "chargedCallTimestamp": {
+                          "description": "Timestamp of the phone call which resulted in a charged phone lead.",
+                          "format": "google-datetime",
+                          "type": "string"
+                        },
+                        "chargedConnectedCallDurationSeconds": {
+                          "description": "Duration of the charged phone call in seconds.",
+                          "format": "google-duration",
+                          "type": "string"
+                        },
+                        "consumerPhoneNumber": {
+                          "description": "Consumer phone number associated with the phone lead.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "timezone": {
+                      "description": "Represents a time zone from the [IANA Time Zone Database](https://www.iana.org/time-zones).",
+                      "properties": {
+                        "id": {
+                          "description": "IANA Time Zone Database time zone, e.g. \"America/New_York\".",
+                          "type": "string"
+                        },
+                        "version": {
+                          "description": "Optional. IANA Time Zone Database version number, e.g. \"2019a\".",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nextPageToken": {
+                "description": "Pagination token to retrieve the next page of results. When `next_page_token` is not filled in, there is no next page and the list returned is the last page in the result set.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

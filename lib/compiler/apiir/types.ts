@@ -34,6 +34,8 @@ export interface OperationIR {
   path: string;
   /** Path param name for detail/update/delete (e.g. "userId", "sku"). */
   identifierParam?: string;
+  /** Number of query parameters (path-level + op-level merged; op overrides). */
+  queryParamCount?: number;
   requestSchema?: JsonSchema;
   responseSchema: JsonSchema;
 }

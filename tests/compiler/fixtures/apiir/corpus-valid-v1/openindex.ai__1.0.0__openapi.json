@@ -1,0 +1,240 @@
+{
+  "api": {
+    "title": "OpenIndex Retrieval Plugin API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "query_query_post",
+          "method": "POST",
+          "kind": "create",
+          "path": "/query",
+          "requestSchema": {
+            "properties": {
+              "namespace": {
+                "title": "Namespace",
+                "type": "string"
+              },
+              "queries": {
+                "items": {
+                  "properties": {
+                    "filter": {
+                      "properties": {
+                        "author": {
+                          "title": "Author",
+                          "type": "string"
+                        },
+                        "collection_id": {
+                          "title": "Collection Id",
+                          "type": "string"
+                        },
+                        "document_id": {
+                          "title": "Document Id",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "title": "End Date",
+                          "type": "string"
+                        },
+                        "keywords": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "title": "Keywords",
+                          "type": "array"
+                        },
+                        "language": {
+                          "title": "Language",
+                          "type": "string"
+                        },
+                        "source": {
+                          "description": "An enumeration.",
+                          "enum": [
+                            "email",
+                            "web",
+                            "file",
+                            "chat"
+                          ],
+                          "title": "Source",
+                          "type": "string"
+                        },
+                        "source_id": {
+                          "title": "Source Id",
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "title": "Start Date",
+                          "type": "string"
+                        },
+                        "time_period": {
+                          "title": "Time Period",
+                          "type": "string"
+                        },
+                        "user_id": {
+                          "title": "User Id",
+                          "type": "string"
+                        }
+                      },
+                      "title": "DocumentMetadataFilter",
+                      "type": "object"
+                    },
+                    "query": {
+                      "title": "Query",
+                      "type": "string"
+                    },
+                    "top_k": {
+                      "default": 3,
+                      "title": "Top K",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "query"
+                  ],
+                  "title": "Query",
+                  "type": "object"
+                },
+                "title": "Queries",
+                "type": "array"
+              }
+            },
+            "required": [
+              "queries"
+            ],
+            "title": "QueryRequest",
+            "type": "object"
+          },
+          "responseSchema": {
+            "properties": {
+              "results": {
+                "items": {
+                  "properties": {
+                    "query": {
+                      "title": "Query",
+                      "type": "string"
+                    },
+                    "results": {
+                      "items": {
+                        "properties": {
+                          "embedding": {
+                            "items": {
+                              "type": "number"
+                            },
+                            "title": "Embedding",
+                            "type": "array"
+                          },
+                          "id": {
+                            "title": "Id",
+                            "type": "string"
+                          },
+                          "metadata": {
+                            "properties": {
+                              "author": {
+                                "title": "Author",
+                                "type": "string"
+                              },
+                              "collection_id": {
+                                "title": "Collection Id",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "title": "Created At",
+                                "type": "string"
+                              },
+                              "document_id": {
+                                "title": "Document Id",
+                                "type": "string"
+                              },
+                              "keywords": {
+                                "items": {
+                                  "type": "string"
+                                },
+                                "title": "Keywords",
+                                "type": "array"
+                              },
+                              "language": {
+                                "title": "Language",
+                                "type": "string"
+                              },
+                              "source": {
+                                "description": "An enumeration.",
+                                "enum": [
+                                  "email",
+                                  "web",
+                                  "file",
+                                  "chat"
+                                ],
+                                "title": "Source",
+                                "type": "string"
+                              },
+                              "source_id": {
+                                "title": "Source Id",
+                                "type": "string"
+                              },
+                              "time_period": {
+                                "title": "Time Period",
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "title": "Updated At",
+                                "type": "string"
+                              },
+                              "url": {
+                                "title": "Url",
+                                "type": "string"
+                              },
+                              "user_id": {
+                                "title": "User Id",
+                                "type": "string"
+                              }
+                            },
+                            "title": "DocumentChunkMetadata",
+                            "type": "object"
+                          },
+                          "score": {
+                            "title": "Score",
+                            "type": "number"
+                          },
+                          "text": {
+                            "title": "Text",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text",
+                          "metadata",
+                          "score"
+                        ],
+                        "title": "DocumentChunkWithScore",
+                        "type": "object"
+                      },
+                      "title": "Results",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "query",
+                    "results"
+                  ],
+                  "title": "QueryResult",
+                  "type": "object"
+                },
+                "title": "Results",
+                "type": "array"
+              }
+            },
+            "required": [
+              "results"
+            ],
+            "title": "QueryResponse",
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

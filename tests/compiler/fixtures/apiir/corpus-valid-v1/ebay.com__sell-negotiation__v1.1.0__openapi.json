@@ -1,0 +1,254 @@
+{
+  "api": {
+    "title": "Negotiation API",
+    "version": "v1.1.0"
+  },
+  "resources": [
+    {
+      "name": "offer",
+      "key": "offer",
+      "operations": [
+        {
+          "id": "findEligibleItems",
+          "method": "GET",
+          "kind": "list",
+          "path": "/find_eligible_items",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "description": "This complex type defines a collection of listings that are eligible for an offer to a buyer.",
+            "properties": {
+              "eligibleItems": {
+                "description": "A list of items that are eligible for a seller-initiated offer to a buyer. Each element in the list contains the listing ID of a listed item. These IDs represent the listings for which buyers have shown an interest.",
+                "items": {
+                  "description": "A listing that is eligible for a seller-initiated offer to a buyer. Listings are identified by a listingId value that is generated and assigned by eBay when a seller lists an item using the Trading API. Note: The Negotiation API does not currently support listings that are managed with the Inventory API.",
+                  "properties": {
+                    "listingId": {
+                      "description": "The unique eBay-assigned ID for an eBay listing. A listingId is assigned by eBay when a seller creates a listing with the Trading API.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "href": {
+                "description": "The URI of the current page of results from the result set.",
+                "type": "string"
+              },
+              "limit": {
+                "description": "The number of items returned on a single page from the result set. This value can be set in the request with the limit query parameter.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "next": {
+                "description": "The URI for the following page of results. This value is returned only if there is an additional page of results to display from the result set. Max length: 2048",
+                "type": "string"
+              },
+              "offset": {
+                "description": "The number of results skipped in the result set before listing the first returned result. This value can be set in the request with the offset query parameter. Note: The items in a paginated result set use a zero-based list where the first item in the list has an offset of 0.",
+                "format": "int32",
+                "type": "integer"
+              },
+              "prev": {
+                "description": "The URI for the preceding page of results. This value is returned only if there is a previous page of results to display from the result set. Max length: 2048",
+                "type": "string"
+              },
+              "total": {
+                "description": "The total number of items retrieved in the result set. If no items match the search criteria, the server returns the HTTP status code 204 No Content.",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "sendOfferToInterestedBuyers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/send_offer_to_interested_buyers",
+          "requestSchema": {
+            "description": "This complex type contains the fields needed to create an offer to a buyer that is initiated by the seller.",
+            "properties": {
+              "allowCounterOffer": {
+                "description": "If set to true, the buyer is allowed to make a counter-offer to the seller's offer. Note: Currently, you must set this field to false; counter-offers are not supported in this release. Default: false",
+                "type": "boolean"
+              },
+              "message": {
+                "description": "A seller-defined message related to the offer being made. This message is sent to the list of &quot;interested&quot; buyers. To increase the conversion rate of the offers a seller makes to buyers, eBay recommends you always add a customized message to your offers. Maximum length: 2,000 characters",
+                "type": "string"
+              },
+              "offerDuration": {
+                "description": "A complex type that specifies a period of time using a specified time-measurement unit.",
+                "properties": {
+                  "unit": {
+                    "description": "A time-measurement unit that specifies a singular period of time. A span of time is defined when you apply the value specified in the value field to the value specified for unit. Time-measurement units can be YEAR, MONTH, DAY, and so on. See TimeDurationUnitEnum for a complete list of possible time-measurement units. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/bas:TimeDurationUnitEnum'>eBay API documentation</a>",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "An integer that represents an amount of time, as measured by the time-measurement unit specified in the unit field.",
+                    "format": "int32",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "offeredItems": {
+                "description": "An array of objects where each object contains the details of an offer and the ID of the listing on which the offer is being made. Note that the service does not currently support the creation of multiple offers with a single call to sendOfferToInterestedBuyer. With this, each request can target only one listing at a time and you must populate this array with a single element that contains the details of one offer.",
+                "items": {
+                  "description": "A complex type that defines the offer being made to an &quot;interested&quot; buyer.",
+                  "properties": {
+                    "discountPercentage": {
+                      "description": "This value denotes the percentage that the listing in the offer will be discounted from its original listed price. The seller can specify either the exact price of the discounted items with the price field or they can use this field to specify the percentage that the listing will be discounted, but not both. Minimum: 5 Required if you do not specify a price value.",
+                      "type": "string"
+                    },
+                    "listingId": {
+                      "description": "This value is a unique eBay-assigned ID that identifies the listing to which the offer pertains. A listingId value is generated by eBay when you list an item with the Trading API.",
+                      "type": "string"
+                    },
+                    "price": {
+                      "description": "A complex type that describes the value of a monetary amount as represented by a global currency.",
+                      "properties": {
+                        "currency": {
+                          "description": "The base currency applied to the value field to establish a monetary amount. The currency is represented as a 3-letter ISO4217 currency code. For example, the code for the Canadian Dollar is CAD. Default: The default currency of the eBay marketplace that hosts the listing. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/bas:CurrencyCodeEnum'>eBay API documentation</a>",
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "The monetary amount in the specified currency.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "quantity": {
+                      "description": "This integer value indicates the number of items in the eBay listing for which the offer is being made. The offer being made by the seller is an &quot;all or nothing&quot; offer, meaning the buyer must purchase the indicated quantity of items in order to receive the discount on the transaction. Default: 1",
+                      "format": "int32",
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "The response object returned from a SendOfferToInterestedBuyers request.",
+            "properties": {
+              "offers": {
+                "description": "The offers container returns a list of the offers sent to buyers who have shown an interest in listings included in the offer.",
+                "items": {
+                  "description": "A complex type that defines an offer that a seller makes to eligible buyers.",
+                  "properties": {
+                    "allowCounterOffer": {
+                      "description": "If set to true, the buyer is allowed to make a counter-offer to the seller's offer.",
+                      "type": "boolean"
+                    },
+                    "buyer": {
+                      "description": "This complex type identifies an eBay user.",
+                      "properties": {
+                        "maskedUsername": {
+                          "description": "The masked user name is a user name that has certain characters hidden for privacy of the user.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "creationDate": {
+                      "description": "The date and time when the seller's offer was created. The returned timestamp is formatted as an ISO 8601 string, which is based on the 24-hour Coordinated Universal Time (UTC) clock. Format: [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss].[sss]Z Example: 2018-08-20T07:09:00.000Z",
+                      "type": "string"
+                    },
+                    "initiatedBy": {
+                      "description": "The eBay UserName of the user (seller) who initiated the offer.",
+                      "type": "string"
+                    },
+                    "lastModifiedDate": {
+                      "description": "The date and time when the offer was last modified. The returned timestamp is formatted as an ISO 8601 string.",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "A seller-defined message related to the offer being made. This message is sent to the list of &quot;interested&quot; buyers along with the offer message from eBay.",
+                      "type": "string"
+                    },
+                    "offerDuration": {
+                      "description": "A complex type that specifies a period of time using a specified time-measurement unit.",
+                      "properties": {
+                        "unit": {
+                          "description": "A time-measurement unit that specifies a singular period of time. A span of time is defined when you apply the value specified in the value field to the value specified for unit. Time-measurement units can be YEAR, MONTH, DAY, and so on. See TimeDurationUnitEnum for a complete list of possible time-measurement units. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/bas:TimeDurationUnitEnum'>eBay API documentation</a>",
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "An integer that represents an amount of time, as measured by the time-measurement unit specified in the unit field.",
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "offerId": {
+                      "description": "A unique eBay-assigned identifier for the offer.",
+                      "type": "string"
+                    },
+                    "offerStatus": {
+                      "description": "The current state, or status, of an offer. Status states include PENDING, COUNTERED, ACCEPTED, and DECLINED. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/api:OfferStatusEnum'>eBay API documentation</a>",
+                      "type": "string"
+                    },
+                    "offerType": {
+                      "description": "The type of offer being made. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/api:OfferTypeEnum'>eBay API documentation</a>",
+                      "type": "string"
+                    },
+                    "offeredItems": {
+                      "description": "The list of items associated with the offer. Currently, the offer list is restricted to a single offer.",
+                      "items": {
+                        "description": "A complex type that defines the offer being made to an &quot;interested&quot; buyer.",
+                        "properties": {
+                          "discountPercentage": {
+                            "description": "This value denotes the percentage that the listing in the offer will be discounted from its original listed price. The seller can specify either the exact price of the discounted items with the price field or they can use this field to specify the percentage that the listing will be discounted, but not both. Minimum: 5 Required if you do not specify a price value.",
+                            "type": "string"
+                          },
+                          "listingId": {
+                            "description": "This value is a unique eBay-assigned ID that identifies the listing to which the offer pertains. A listingId value is generated by eBay when you list an item with the Trading API.",
+                            "type": "string"
+                          },
+                          "price": {
+                            "description": "A complex type that describes the value of a monetary amount as represented by a global currency.",
+                            "properties": {
+                              "currency": {
+                                "description": "The base currency applied to the value field to establish a monetary amount. The currency is represented as a 3-letter ISO4217 currency code. For example, the code for the Canadian Dollar is CAD. Default: The default currency of the eBay marketplace that hosts the listing. For implementation help, refer to <a href='https://developer.ebay.com/api-docs/sell/negotiation/types/bas:CurrencyCodeEnum'>eBay API documentation</a>",
+                                "type": "string"
+                              },
+                              "value": {
+                                "description": "The monetary amount in the specified currency.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "quantity": {
+                            "description": "This integer value indicates the number of items in the eBay listing for which the offer is being made. The offer being made by the seller is an &quot;all or nothing&quot; offer, meaning the buyer must purchase the indicated quantity of items in order to receive the discount on the transaction. Default: 1",
+                            "format": "int32",
+                            "type": "integer"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "revision": {
+                      "description": "A unique, eBay-assigned ID for the revision of the offer.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

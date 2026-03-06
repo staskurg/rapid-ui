@@ -86,6 +86,30 @@ function stableOperationId(method: string, path: string, operationId?: string): 
   return `${method.toUpperCase()}:${path}`;
 }
 
+/** Merge path-level and op-level parameters; op overrides by (name, in). Count query params. */
+function countQueryParams(pathItem: Record<string, unknown>, op: Record<string, unknown>): number {
+  const paramKey = (p: Record<string, unknown>) =>
+    `${String(p.in ?? "")}:${String(p.name ?? "")}`;
+  const merged = new Map<string, Record<string, unknown>>();
+  const pathLevelParams = pathItem.parameters as Record<string, unknown>[] | undefined;
+  const opParams = op.parameters as Record<string, unknown>[] | undefined;
+  if (pathLevelParams && Array.isArray(pathLevelParams)) {
+    for (const p of pathLevelParams) {
+      if (p && typeof p === "object") merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
+    }
+  }
+  if (opParams && Array.isArray(opParams)) {
+    for (const p of opParams) {
+      if (p && typeof p === "object") merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
+    }
+  }
+  let count = 0;
+  for (const param of merged.values()) {
+    if (param.in === "query") count++;
+  }
+  return count;
+}
+
 export interface MapOperationResult {
   success: true;
   operation: OperationIR;
@@ -178,6 +202,7 @@ export function mapOperation(
 
   const id = stableOperationId(raw.method, raw.path, raw.operationId);
   const method = raw.method.toUpperCase() as OperationIR["method"];
+  const queryParamCount = countQueryParams(pathItem as Record<string, unknown>, op);
 
   return {
     success: true,
@@ -187,6 +212,7 @@ export function mapOperation(
       kind: kindResult.kind,
       path: raw.path,
       ...(kindResult.identifierParam && { identifierParam: kindResult.identifierParam }),
+      ...(queryParamCount > 0 && { queryParamCount }),
       ...(requestSchema && { requestSchema }),
       responseSchema,
     },

@@ -1,0 +1,52 @@
+{
+  "api": {
+    "title": "Adyen Data Protection API",
+    "version": "1"
+  },
+  "resources": [
+    {
+      "name": "General",
+      "key": "general",
+      "operations": [
+        {
+          "id": "post-requestSubjectErasure",
+          "method": "POST",
+          "kind": "create",
+          "path": "/requestSubjectErasure",
+          "requestSchema": {
+            "properties": {
+              "forceErasure": {
+                "description": "Set this to **true** if you want to delete shopper-related data, even if the shopper has an existing recurring transaction. This only deletes the shopper-related data for the specific payment, but does not cancel the existing recurring transaction.",
+                "type": "boolean"
+              },
+              "merchantAccount": {
+                "description": "Your merchant account",
+                "type": "string"
+              },
+              "pspReference": {
+                "description": "The PSP reference of the payment. We will delete all shopper-related data for this payment.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "properties": {
+              "result": {
+                "description": "The result of this operation.",
+                "enum": [
+                  "ACTIVE_RECURRING_TOKEN_EXISTS",
+                  "ALREADY_PROCESSED",
+                  "PAYMENT_NOT_FOUND",
+                  "SUCCESS"
+                ],
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -3,8 +3,10 @@
  * Used only on passing specs to answer: What is the real language of APIs?
  */
 
-import type { ApiIR, OperationIR, JsonSchema } from "@/lib/compiler/apiir";
+import type { ApiIR, OperationIR, JsonSchema, ResourceIR } from "@/lib/compiler/apiir";
 import type { GroupingStrategy } from "@/lib/compiler/apiir/grouping";
+
+const KIND_ORDER: OperationIR["kind"][] = ["list", "detail", "create", "update", "delete"];
 
 export interface ResourceShapeStats {
   fieldsPerResource: number[];
@@ -92,6 +94,37 @@ function schemaDepth(schema: JsonSchema, current = 0): number {
     }
   }
   return max;
+}
+
+function countNestedObjects(props: Record<string, unknown>): number {
+  let count = 0;
+  for (const v of Object.values(props)) {
+    if (v && typeof v === "object") {
+      const obj = v as Record<string, unknown>;
+      const t = obj.type;
+      if (t === "object" || (Array.isArray(t) && (t as unknown[]).includes("object"))) count++;
+    }
+  }
+  return count;
+}
+
+function hasIdField(props: Record<string, unknown>): boolean {
+  const idPattern = /^(id|_id|.*Id|.*_id)$/i;
+  for (const name of Object.keys(props)) {
+    if (idPattern.test(name)) return true;
+  }
+  return false;
+}
+
+export interface ResourceSignature {
+  fields: number;
+  has_id: boolean;
+  enums: number;
+  arrays: number;
+  nested_objects: number;
+  depth: number;
+  query_params: number;
+  operations: OperationIR["kind"][];
 }
 
 export function analyzeResourceShape(apiIr: ApiIR): ResourceShapeStats {
@@ -267,6 +300,164 @@ export function formatGroupingStrategyReport(
   lines.push("");
   lines.push(`tag-based:   ${pct(tagCount)}%`);
   lines.push(`path-based:  ${pct(pathCount)}%`);
+
+  return lines;
+}
+
+export function extractResourceSignature(res: ResourceIR): ResourceSignature | null {
+  if (res.operations.length === 0) return null;
+
+  let fields = 0;
+  let has_id = false;
+  let enums = 0;
+  let arrays = 0;
+  let nested_objects = 0;
+  let depth = 0;
+  let query_params = 0;
+
+  for (const op of res.operations) {
+    const obj = getObjectSchema(op.responseSchema);
+    if (obj) {
+      const keys = Object.keys(obj);
+      if (keys.length > fields) fields = keys.length;
+      if (!has_id && hasIdField(obj)) has_id = true;
+      const e = countEnumFields(obj);
+      if (e > enums) enums = e;
+      const a = countArrayFields(obj);
+      if (a > arrays) arrays = a;
+      const n = countNestedObjects(obj);
+      if (n > nested_objects) nested_objects = n;
+      const d = schemaDepth(op.responseSchema);
+      if (d > depth) depth = d;
+    }
+    const q = op.queryParamCount ?? 0;
+    if (q > query_params) query_params = q;
+  }
+
+  const opKinds = [...new Set(res.operations.map((o) => o.kind))].sort(
+    (a, b) => KIND_ORDER.indexOf(a) - KIND_ORDER.indexOf(b)
+  );
+
+  return {
+    fields,
+    has_id,
+    enums,
+    arrays,
+    nested_objects,
+    depth,
+    query_params,
+    operations: opKinds,
+  };
+}
+
+function bucketFields(n: number): string {
+  if (n <= 4) return "fields≤4";
+  if (n <= 6) return "fields≤6";
+  if (n <= 8) return "fields≤8";
+  if (n <= 10) return "fields≤10";
+  if (n <= 12) return "fields≤12";
+  return "fields>12";
+}
+
+function bucketDepth(d: number): string {
+  if (d === 0) return "depth0";
+  if (d === 1) return "depth1";
+  if (d === 2) return "depth2";
+  return "depth3+";
+}
+
+/** Normalize signature to canonical bucketed pattern string for report. */
+export function normalizePattern(sig: ResourceSignature): string {
+  const fieldsBucket = bucketFields(sig.fields);
+  const depthBucket = bucketDepth(sig.depth);
+  const opsStr = sig.operations.join("+");
+  return `${fieldsBucket} ${depthBucket} ops:${opsStr}`;
+}
+
+export interface PatternMiningEntry {
+  apiIr: ApiIR;
+  specPath?: string;
+}
+
+export interface PatternMiningResult {
+  pattern: string;
+  count: number;
+  share: number;
+  examples: string[];
+}
+
+export function mineStructuralPatterns(
+  entries: PatternMiningEntry[]
+): { results: PatternMiningResult[]; totalResources: number } {
+  const patternMap = new Map<string, { count: number; examples: string[] }>();
+  let totalResources = 0;
+
+  for (const { apiIr, specPath } of entries) {
+    const specId = specPath
+      ? specPath.split("/").pop()?.replace(/\.(json|yaml|yml)$/, "").replace(/__openapi$/, "") ?? "unknown"
+      : "unknown";
+
+    for (const res of apiIr.resources) {
+      const sig = extractResourceSignature(res);
+      if (!sig) continue;
+      if (sig.fields === 0 && sig.operations.length === 0) continue;
+
+      const pattern = normalizePattern(sig);
+      totalResources++;
+
+      const existing = patternMap.get(pattern);
+      const examples = existing?.examples ?? [];
+      const example = `${specId}/${res.key}`;
+      if (examples.length < 3 && !examples.includes(example)) {
+        examples.push(example);
+      }
+
+      patternMap.set(pattern, {
+        count: (existing?.count ?? 0) + 1,
+        examples,
+      });
+    }
+  }
+
+  const results: PatternMiningResult[] = [];
+  for (const [pattern, { count, examples }] of patternMap.entries()) {
+    results.push({
+      pattern,
+      count,
+      share: totalResources > 0 ? (count / totalResources) * 100 : 0,
+      examples,
+    });
+  }
+  results.sort((a, b) => b.count - a.count);
+
+  return { results, totalResources };
+}
+
+export function formatPatternMiningReport(
+  results: PatternMiningResult[],
+  totalResources: number
+): string[] {
+  const lines: string[] = [];
+  lines.push("#### Structural Pattern Distribution");
+  lines.push("");
+  lines.push("Top Resource Patterns");
+  lines.push("");
+
+  if (results.length === 0 || totalResources === 0) {
+    lines.push("No resources with object schemas analyzed.");
+    return lines;
+  }
+
+  for (let i = 0; i < results.length; i++) {
+    const r = results[i]!;
+    const pct = Math.round(r.share);
+    lines.push(`${i + 1}. ${r.pattern}`);
+    lines.push(`   ${r.count} resources (${pct}%)`);
+    if (r.examples.length > 0) {
+      lines.push(`   examples: ${r.examples.join(", ")}`);
+    }
+    lines.push("");
+  }
 
   return lines;
 }

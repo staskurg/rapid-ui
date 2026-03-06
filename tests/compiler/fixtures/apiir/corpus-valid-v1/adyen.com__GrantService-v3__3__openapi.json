@@ -1,0 +1,641 @@
+{
+  "api": {
+    "title": "Capital API",
+    "version": "3"
+  },
+  "resources": [
+    {
+      "name": "Capital",
+      "key": "capital",
+      "operations": [
+        {
+          "id": "get-grants",
+          "method": "GET",
+          "kind": "list",
+          "path": "/grants",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "properties": {
+              "grants": {
+                "description": "The unique identifier of the grant.",
+                "items": {
+                  "properties": {
+                    "amount": {
+                      "properties": {
+                        "currency": {
+                          "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                          "maxLength": 3,
+                          "minLength": 3,
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "value",
+                        "currency"
+                      ],
+                      "type": "object"
+                    },
+                    "balances": {
+                      "properties": {
+                        "currency": {
+                          "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                          "type": "string"
+                        },
+                        "fee": {
+                          "description": "Fee amount.",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "principal": {
+                          "description": "Principal amount.",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "total": {
+                          "description": "Total amount. A sum of principal amount and fee amount.",
+                          "format": "int64",
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "principal",
+                        "fee",
+                        "total",
+                        "currency"
+                      ],
+                      "type": "object"
+                    },
+                    "counterparty": {
+                      "properties": {
+                        "accountHolderId": {
+                          "description": "The identifier of the receiving account holder. The payout will default to the primary balance account of this account holder if no `balanceAccountId` is provided.",
+                          "type": "string"
+                        },
+                        "balanceAccountId": {
+                          "description": "The identifier of the balance account that belongs to the receiving account holder.",
+                          "type": "string"
+                        },
+                        "transferInstrumentId": {
+                          "description": "The identifier of the transfer instrument that belongs to the legal entity of the account holder.",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "fee": {
+                      "properties": {
+                        "amount": {
+                          "properties": {
+                            "currency": {
+                              "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                              "maxLength": 3,
+                              "minLength": 3,
+                              "type": "string"
+                            },
+                            "value": {
+                              "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                              "format": "int64",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "value",
+                            "currency"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "amount"
+                      ],
+                      "type": "object"
+                    },
+                    "grantAccountId": {
+                      "description": "The identifier of the grant account used for the grant.",
+                      "type": "string"
+                    },
+                    "grantOfferId": {
+                      "description": "The identifier of the grant offer that has been selected and from which the grant details will be used.",
+                      "type": "string"
+                    },
+                    "id": {
+                      "description": "The identifier of the grant reference.",
+                      "type": "string"
+                    },
+                    "repayment": {
+                      "properties": {
+                        "basisPoints": {
+                          "description": "The repayment that is deducted daily from incoming net volume, in [basis points](https://www.investopedia.com/terms/b/basispoint.asp).",
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "term": {
+                          "properties": {
+                            "estimatedDays": {
+                              "description": "The estimated term for repaying the grant, in days.",
+                              "format": "int32",
+                              "type": "integer"
+                            },
+                            "maximumDays": {
+                              "description": "The maximum term for repaying the grant, in days. Only applies when `contractType` is **loan**.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "estimatedDays"
+                          ],
+                          "type": "object"
+                        },
+                        "threshold": {
+                          "properties": {
+                            "amount": {
+                              "properties": {
+                                "currency": {
+                                  "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                                  "maxLength": 3,
+                                  "minLength": 3,
+                                  "type": "string"
+                                },
+                                "value": {
+                                  "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                                  "format": "int64",
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "value",
+                                "currency"
+                              ],
+                              "type": "object"
+                            }
+                          },
+                          "required": [
+                            "amount"
+                          ],
+                          "type": "object"
+                        }
+                      },
+                      "required": [
+                        "basisPoints"
+                      ],
+                      "type": "object"
+                    },
+                    "status": {
+                      "description": "The current status of the grant. Possible values: **Pending**, **Active**, **Repaid**.",
+                      "enum": [
+                        "Pending",
+                        "Active",
+                        "Repaid"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "grantAccountId",
+                    "grantOfferId",
+                    "id",
+                    "status",
+                    "balances"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "grants"
+            ],
+            "type": "object"
+          }
+        },
+        {
+          "id": "get-grants-id",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/grants/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "properties": {
+              "amount": {
+                "properties": {
+                  "currency": {
+                    "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                    "maxLength": 3,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "value",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "balances": {
+                "properties": {
+                  "currency": {
+                    "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                    "type": "string"
+                  },
+                  "fee": {
+                    "description": "Fee amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "principal": {
+                    "description": "Principal amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "total": {
+                    "description": "Total amount. A sum of principal amount and fee amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "principal",
+                  "fee",
+                  "total",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "counterparty": {
+                "properties": {
+                  "accountHolderId": {
+                    "description": "The identifier of the receiving account holder. The payout will default to the primary balance account of this account holder if no `balanceAccountId` is provided.",
+                    "type": "string"
+                  },
+                  "balanceAccountId": {
+                    "description": "The identifier of the balance account that belongs to the receiving account holder.",
+                    "type": "string"
+                  },
+                  "transferInstrumentId": {
+                    "description": "The identifier of the transfer instrument that belongs to the legal entity of the account holder.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "fee": {
+                "properties": {
+                  "amount": {
+                    "properties": {
+                      "currency": {
+                        "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                        "maxLength": 3,
+                        "minLength": 3,
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                        "format": "int64",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "currency"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "amount"
+                ],
+                "type": "object"
+              },
+              "grantAccountId": {
+                "description": "The identifier of the grant account used for the grant.",
+                "type": "string"
+              },
+              "grantOfferId": {
+                "description": "The identifier of the grant offer that has been selected and from which the grant details will be used.",
+                "type": "string"
+              },
+              "id": {
+                "description": "The identifier of the grant reference.",
+                "type": "string"
+              },
+              "repayment": {
+                "properties": {
+                  "basisPoints": {
+                    "description": "The repayment that is deducted daily from incoming net volume, in [basis points](https://www.investopedia.com/terms/b/basispoint.asp).",
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "term": {
+                    "properties": {
+                      "estimatedDays": {
+                        "description": "The estimated term for repaying the grant, in days.",
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maximumDays": {
+                        "description": "The maximum term for repaying the grant, in days. Only applies when `contractType` is **loan**.",
+                        "format": "int32",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "estimatedDays"
+                    ],
+                    "type": "object"
+                  },
+                  "threshold": {
+                    "properties": {
+                      "amount": {
+                        "properties": {
+                          "currency": {
+                            "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                            "maxLength": 3,
+                            "minLength": 3,
+                            "type": "string"
+                          },
+                          "value": {
+                            "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                            "format": "int64",
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "amount"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "basisPoints"
+                ],
+                "type": "object"
+              },
+              "status": {
+                "description": "The current status of the grant. Possible values: **Pending**, **Active**, **Repaid**.",
+                "enum": [
+                  "Pending",
+                  "Active",
+                  "Repaid"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "grantAccountId",
+              "grantOfferId",
+              "id",
+              "status",
+              "balances"
+            ],
+            "type": "object"
+          }
+        },
+        {
+          "id": "post-grants",
+          "method": "POST",
+          "kind": "create",
+          "path": "/grants",
+          "requestSchema": {
+            "properties": {
+              "counterparty": {
+                "properties": {
+                  "accountHolderId": {
+                    "description": "The identifier of the receiving account holder. The payout will default to the primary balance account of this account holder if no `balanceAccountId` is provided.",
+                    "type": "string"
+                  },
+                  "balanceAccountId": {
+                    "description": "The identifier of the balance account that belongs to the receiving account holder.",
+                    "type": "string"
+                  },
+                  "transferInstrumentId": {
+                    "description": "The identifier of the transfer instrument that belongs to the legal entity of the account holder.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "grantAccountId": {
+                "description": "The identifier of the grant account used for the grant.",
+                "type": "string"
+              },
+              "grantOfferId": {
+                "description": "The identifier of the grant offer that has been selected and from which the grant details will be used.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "grantAccountId",
+              "grantOfferId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "properties": {
+              "amount": {
+                "properties": {
+                  "currency": {
+                    "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                    "maxLength": 3,
+                    "minLength": 3,
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "value",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "balances": {
+                "properties": {
+                  "currency": {
+                    "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                    "type": "string"
+                  },
+                  "fee": {
+                    "description": "Fee amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "principal": {
+                    "description": "Principal amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "total": {
+                    "description": "Total amount. A sum of principal amount and fee amount.",
+                    "format": "int64",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "principal",
+                  "fee",
+                  "total",
+                  "currency"
+                ],
+                "type": "object"
+              },
+              "counterparty": {
+                "properties": {
+                  "accountHolderId": {
+                    "description": "The identifier of the receiving account holder. The payout will default to the primary balance account of this account holder if no `balanceAccountId` is provided.",
+                    "type": "string"
+                  },
+                  "balanceAccountId": {
+                    "description": "The identifier of the balance account that belongs to the receiving account holder.",
+                    "type": "string"
+                  },
+                  "transferInstrumentId": {
+                    "description": "The identifier of the transfer instrument that belongs to the legal entity of the account holder.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "fee": {
+                "properties": {
+                  "amount": {
+                    "properties": {
+                      "currency": {
+                        "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                        "maxLength": 3,
+                        "minLength": 3,
+                        "type": "string"
+                      },
+                      "value": {
+                        "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                        "format": "int64",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "currency"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "amount"
+                ],
+                "type": "object"
+              },
+              "grantAccountId": {
+                "description": "The identifier of the grant account used for the grant.",
+                "type": "string"
+              },
+              "grantOfferId": {
+                "description": "The identifier of the grant offer that has been selected and from which the grant details will be used.",
+                "type": "string"
+              },
+              "id": {
+                "description": "The identifier of the grant reference.",
+                "type": "string"
+              },
+              "repayment": {
+                "properties": {
+                  "basisPoints": {
+                    "description": "The repayment that is deducted daily from incoming net volume, in [basis points](https://www.investopedia.com/terms/b/basispoint.asp).",
+                    "format": "int32",
+                    "type": "integer"
+                  },
+                  "term": {
+                    "properties": {
+                      "estimatedDays": {
+                        "description": "The estimated term for repaying the grant, in days.",
+                        "format": "int32",
+                        "type": "integer"
+                      },
+                      "maximumDays": {
+                        "description": "The maximum term for repaying the grant, in days. Only applies when `contractType` is **loan**.",
+                        "format": "int32",
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "estimatedDays"
+                    ],
+                    "type": "object"
+                  },
+                  "threshold": {
+                    "properties": {
+                      "amount": {
+                        "properties": {
+                          "currency": {
+                            "description": "The three-character [ISO currency code](https://docs.adyen.com/development-resources/currency-codes).",
+                            "maxLength": 3,
+                            "minLength": 3,
+                            "type": "string"
+                          },
+                          "value": {
+                            "description": "The amount of the transaction, in [minor units](https://docs.adyen.com/development-resources/currency-codes).",
+                            "format": "int64",
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "value",
+                          "currency"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "amount"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "basisPoints"
+                ],
+                "type": "object"
+              },
+              "status": {
+                "description": "The current status of the grant. Possible values: **Pending**, **Active**, **Repaid**.",
+                "enum": [
+                  "Pending",
+                  "Active",
+                  "Repaid"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "grantAccountId",
+              "grantOfferId",
+              "id",
+              "status",
+              "balances"
+            ],
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

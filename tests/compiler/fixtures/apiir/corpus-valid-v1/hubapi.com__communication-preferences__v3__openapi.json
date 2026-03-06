@@ -1,0 +1,407 @@
+{
+  "api": {
+    "title": "Subscriptions",
+    "version": "v3"
+  },
+  "resources": [
+    {
+      "name": "Definition",
+      "key": "definition",
+      "operations": [
+        {
+          "id": "get-/communication-preferences/v3/definitions_getPage",
+          "method": "GET",
+          "kind": "list",
+          "path": "/communication-preferences/v3/definitions",
+          "responseSchema": {
+            "description": "A collection of subscription definitions for the portal.",
+            "properties": {
+              "subscriptionDefinitions": {
+                "description": "A list of all subscription definitions.",
+                "items": {
+                  "properties": {
+                    "communicationMethod": {
+                      "description": "The method or technology used to contact.",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "description": "Time at which the definition was created.",
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "description": {
+                      "description": "A description of the subscription.",
+                      "type": "string"
+                    },
+                    "id": {
+                      "description": "The ID of the definition.",
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "description": "Whether the definition is active or archived.",
+                      "type": "boolean"
+                    },
+                    "isDefault": {
+                      "description": "A subscription definition created by HubSpot.",
+                      "type": "boolean"
+                    },
+                    "isInternal": {
+                      "description": "A default description that is used by some HubSpot tools and cannot be edited.",
+                      "type": "boolean"
+                    },
+                    "name": {
+                      "description": "The name of the subscription.",
+                      "type": "string"
+                    },
+                    "purpose": {
+                      "description": "The purpose of this subscription or the department in your organization that uses it.",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "description": "Time at which the definition was last updated.",
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "createdAt",
+                    "description",
+                    "id",
+                    "isActive",
+                    "isDefault",
+                    "isInternal",
+                    "name",
+                    "updatedAt"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "subscriptionDefinitions"
+            ],
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status",
+      "key": "status",
+      "operations": [
+        {
+          "id": "get-/communication-preferences/v3/status/email/{emailAddress}_getEmailStatus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/communication-preferences/v3/status/email/{emailAddress}",
+          "identifierParam": "emailAddress",
+          "responseSchema": {
+            "description": "A collection of subscription statuses for a contact.",
+            "properties": {
+              "recipient": {
+                "description": "Email address of the contact.",
+                "type": "string"
+              },
+              "subscriptionStatuses": {
+                "description": "A list of all of the contact's subscriptions statuses.",
+                "items": {
+                  "description": "The status of a subscription for a contact.",
+                  "properties": {
+                    "brandId": {
+                      "description": "The ID of the brand that the subscription is associated with, if there is one.",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "description": {
+                      "description": "A description of the subscription.",
+                      "type": "string"
+                    },
+                    "id": {
+                      "description": "The ID for the subscription.",
+                      "type": "string"
+                    },
+                    "legalBasis": {
+                      "description": "The legal reason for the current status of the subscription.",
+                      "enum": [
+                        "LEGITIMATE_INTEREST_PQL",
+                        "LEGITIMATE_INTEREST_CLIENT",
+                        "PERFORMANCE_OF_CONTRACT",
+                        "CONSENT_WITH_NOTICE",
+                        "NON_GDPR",
+                        "PROCESS_AND_STORE",
+                        "LEGITIMATE_INTEREST_OTHER"
+                      ],
+                      "type": "string"
+                    },
+                    "legalBasisExplanation": {
+                      "description": "A more detailed explanation to go with the legal basis.",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "The name of the subscription.",
+                      "type": "string"
+                    },
+                    "preferenceGroupName": {
+                      "description": "The name of the preferences group that the subscription is associated with.",
+                      "type": "string"
+                    },
+                    "sourceOfStatus": {
+                      "description": "Where the status is determined from e.g. PORTAL_WIDE_STATUS if the contact opted out from the portal.",
+                      "enum": [
+                        "PORTAL_WIDE_STATUS",
+                        "BRAND_WIDE_STATUS",
+                        "SUBSCRIPTION_STATUS"
+                      ],
+                      "type": "string"
+                    },
+                    "status": {
+                      "description": "Whether the contact is subscribed.",
+                      "enum": [
+                        "SUBSCRIBED",
+                        "NOT_SUBSCRIBED"
+                      ],
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "description",
+                    "id",
+                    "name",
+                    "sourceOfStatus",
+                    "status"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "recipient",
+              "subscriptionStatuses"
+            ],
+            "type": "object"
+          }
+        },
+        {
+          "id": "post-/communication-preferences/v3/subscribe_subscribe",
+          "method": "POST",
+          "kind": "create",
+          "path": "/communication-preferences/v3/subscribe",
+          "requestSchema": {
+            "description": "A request to change the status of a contact's subscription.",
+            "properties": {
+              "emailAddress": {
+                "description": "Contact's email address.",
+                "type": "string"
+              },
+              "legalBasis": {
+                "description": "Legal basis for updating the contact's status (required for GDPR enabled portals).",
+                "enum": [
+                  "LEGITIMATE_INTEREST_PQL",
+                  "LEGITIMATE_INTEREST_CLIENT",
+                  "PERFORMANCE_OF_CONTRACT",
+                  "CONSENT_WITH_NOTICE",
+                  "NON_GDPR",
+                  "PROCESS_AND_STORE",
+                  "LEGITIMATE_INTEREST_OTHER"
+                ],
+                "type": "string"
+              },
+              "legalBasisExplanation": {
+                "description": "A more detailed explanation to go with the legal basis (required for GDPR enabled portals).",
+                "type": "string"
+              },
+              "subscriptionId": {
+                "description": "ID of the subscription being updated for the contact.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "emailAddress",
+              "subscriptionId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "The status of a subscription for a contact.",
+            "properties": {
+              "brandId": {
+                "description": "The ID of the brand that the subscription is associated with, if there is one.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "description": {
+                "description": "A description of the subscription.",
+                "type": "string"
+              },
+              "id": {
+                "description": "The ID for the subscription.",
+                "type": "string"
+              },
+              "legalBasis": {
+                "description": "The legal reason for the current status of the subscription.",
+                "enum": [
+                  "LEGITIMATE_INTEREST_PQL",
+                  "LEGITIMATE_INTEREST_CLIENT",
+                  "PERFORMANCE_OF_CONTRACT",
+                  "CONSENT_WITH_NOTICE",
+                  "NON_GDPR",
+                  "PROCESS_AND_STORE",
+                  "LEGITIMATE_INTEREST_OTHER"
+                ],
+                "type": "string"
+              },
+              "legalBasisExplanation": {
+                "description": "A more detailed explanation to go with the legal basis.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The name of the subscription.",
+                "type": "string"
+              },
+              "preferenceGroupName": {
+                "description": "The name of the preferences group that the subscription is associated with.",
+                "type": "string"
+              },
+              "sourceOfStatus": {
+                "description": "Where the status is determined from e.g. PORTAL_WIDE_STATUS if the contact opted out from the portal.",
+                "enum": [
+                  "PORTAL_WIDE_STATUS",
+                  "BRAND_WIDE_STATUS",
+                  "SUBSCRIPTION_STATUS"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "description": "Whether the contact is subscribed.",
+                "enum": [
+                  "SUBSCRIBED",
+                  "NOT_SUBSCRIBED"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "description",
+              "id",
+              "name",
+              "sourceOfStatus",
+              "status"
+            ],
+            "type": "object"
+          }
+        },
+        {
+          "id": "post-/communication-preferences/v3/unsubscribe_unsubscribe",
+          "method": "POST",
+          "kind": "create",
+          "path": "/communication-preferences/v3/unsubscribe",
+          "requestSchema": {
+            "description": "A request to change the status of a contact's subscription.",
+            "properties": {
+              "emailAddress": {
+                "description": "Contact's email address.",
+                "type": "string"
+              },
+              "legalBasis": {
+                "description": "Legal basis for updating the contact's status (required for GDPR enabled portals).",
+                "enum": [
+                  "LEGITIMATE_INTEREST_PQL",
+                  "LEGITIMATE_INTEREST_CLIENT",
+                  "PERFORMANCE_OF_CONTRACT",
+                  "CONSENT_WITH_NOTICE",
+                  "NON_GDPR",
+                  "PROCESS_AND_STORE",
+                  "LEGITIMATE_INTEREST_OTHER"
+                ],
+                "type": "string"
+              },
+              "legalBasisExplanation": {
+                "description": "A more detailed explanation to go with the legal basis (required for GDPR enabled portals).",
+                "type": "string"
+              },
+              "subscriptionId": {
+                "description": "ID of the subscription being updated for the contact.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "emailAddress",
+              "subscriptionId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "The status of a subscription for a contact.",
+            "properties": {
+              "brandId": {
+                "description": "The ID of the brand that the subscription is associated with, if there is one.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "description": {
+                "description": "A description of the subscription.",
+                "type": "string"
+              },
+              "id": {
+                "description": "The ID for the subscription.",
+                "type": "string"
+              },
+              "legalBasis": {
+                "description": "The legal reason for the current status of the subscription.",
+                "enum": [
+                  "LEGITIMATE_INTEREST_PQL",
+                  "LEGITIMATE_INTEREST_CLIENT",
+                  "PERFORMANCE_OF_CONTRACT",
+                  "CONSENT_WITH_NOTICE",
+                  "NON_GDPR",
+                  "PROCESS_AND_STORE",
+                  "LEGITIMATE_INTEREST_OTHER"
+                ],
+                "type": "string"
+              },
+              "legalBasisExplanation": {
+                "description": "A more detailed explanation to go with the legal basis.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The name of the subscription.",
+                "type": "string"
+              },
+              "preferenceGroupName": {
+                "description": "The name of the preferences group that the subscription is associated with.",
+                "type": "string"
+              },
+              "sourceOfStatus": {
+                "description": "Where the status is determined from e.g. PORTAL_WIDE_STATUS if the contact opted out from the portal.",
+                "enum": [
+                  "PORTAL_WIDE_STATUS",
+                  "BRAND_WIDE_STATUS",
+                  "SUBSCRIPTION_STATUS"
+                ],
+                "type": "string"
+              },
+              "status": {
+                "description": "Whether the contact is subscribed.",
+                "enum": [
+                  "SUBSCRIBED",
+                  "NOT_SUBSCRIBED"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "description",
+              "id",
+              "name",
+              "sourceOfStatus",
+              "status"
+            ],
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}
