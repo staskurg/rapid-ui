@@ -49,7 +49,7 @@ interface CorpusResult {
 
 interface RawOutput {
   meta: {
-    batch: number;
+    batch: number | string;
     sampleSize: number;
     timestamp: string;
     cleanList: Array< { id: string; path: string; openapiVersion?: string } >;
@@ -340,6 +340,9 @@ function main(): number {
 
   const lines: string[] = [];
 
+  const isGitHubBatch = typeof meta.batch === "string" && meta.batch.startsWith("github-");
+  const sourceLabel = isGitHubBatch ? "GitHub" : "APIs.guru (via openapi-directory)";
+
   lines.push("# RapidUI RUS-v1 Corpus Report");
   lines.push("");
   lines.push(`**Date:** ${new Date().toISOString().split("T")[0]}`);
@@ -347,7 +350,7 @@ function main(): number {
   lines.push("");
   lines.push("## SAMPLING METHOD");
   lines.push("");
-  lines.push("Source: APIs.guru (via openapi-directory)");
+  lines.push(`Source: ${sourceLabel}`);
   lines.push(`Selection: Batch ${meta.batch}`);
   lines.push(`Total in batch: ${meta.sampleSize}`);
   lines.push(`Sample size: ${meta.sampleSize}`);

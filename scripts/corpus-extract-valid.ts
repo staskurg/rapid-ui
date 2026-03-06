@@ -36,13 +36,13 @@ interface CorpusResult {
 }
 
 interface RawOutput {
-  meta: { batch: number; sampleSize: number; timestamp: string };
+  meta: { batch: number | string; sampleSize: number; timestamp: string };
   results: CorpusResult[];
 }
 
 interface ValidSpecEntry {
   path: string;
-  batch: number;
+  batch: number | string;
   openapiVersion?: string;
   resourceCount?: number;
   fieldCount?: number;
@@ -69,15 +69,25 @@ function main(): number {
   }
 
   const files = readdirSync(reportsDir)
-    .filter((f) => f.startsWith("raw-batch") && f.endsWith(".json"))
+    .filter((f) =>
+      (f.startsWith("raw-batch") || f.startsWith("raw-github-")) &&
+      f.endsWith(".json")
+    )
     .sort((a, b) => {
-      const na = parseInt(a.replace("raw-batch", "").split("-")[0], 10);
-      const nb = parseInt(b.replace("raw-batch", "").split("-")[0], 10);
-      return na - nb;
+      const isBatchA = a.startsWith("raw-batch");
+      const isBatchB = b.startsWith("raw-batch");
+      if (isBatchA && isBatchB) {
+        const na = parseInt(a.replace("raw-batch", "").split("-")[0], 10);
+        const nb = parseInt(b.replace("raw-batch", "").split("-")[0], 10);
+        return na - nb;
+      }
+      if (isBatchA) return -1;
+      if (isBatchB) return 1;
+      return a.localeCompare(b);
     });
 
   if (files.length === 0) {
-    console.error(`No raw-batch*.json files found in ${reportsDir}`);
+    console.error(`No raw-batch*.json or raw-github-*.json files found in ${reportsDir}`);
     return 1;
   }
 
@@ -113,7 +123,14 @@ function main(): number {
   }
 
   const validList = Array.from(validByPath.values()).sort((a, b) => {
-    if (a.batch !== b.batch) return a.batch - b.batch;
+    if (a.batch !== b.batch) {
+      const na = typeof a.batch === "number" ? a.batch : 0;
+      const nb = typeof b.batch === "number" ? b.batch : 0;
+      if (typeof a.batch === "number" && typeof b.batch === "number") return na - nb;
+      if (typeof a.batch === "number") return -1;
+      if (typeof b.batch === "number") return 1;
+      return String(a.batch).localeCompare(String(b.batch));
+    }
     return a.path.localeCompare(b.path);
   });
 
@@ -123,11 +140,22 @@ function main(): number {
   const manifestPath = join(outputDir, "rapidui-corpus-valid-v1.json");
   const listPath = join(outputDir, "rapidui-corpus-valid-v1.txt");
 
+  const hasCorpusGithub = validList.some((s) => s.path.includes("corpus-github"));
+  const hasApisGuru = validList.some((s) => s.path.includes("specs/"));
+  let source: string;
+  if (hasCorpusGithub && hasApisGuru) {
+    source = "APIs.guru (via openapi-directory) + GitHub";
+  } else if (hasCorpusGithub) {
+    source = "GitHub";
+  } else {
+    source = "APIs.guru (via openapi-directory)";
+  }
+
   const manifest = {
     meta: {
       name: "rapidui-corpus-valid-v1",
       description: "OpenAPI specs that pass RUS-v1 validation",
-      source: "APIs.guru (via openapi-directory)",
+      source,
       extractedAt: new Date().toISOString(),
       totalSpecs: validList.length,
     },

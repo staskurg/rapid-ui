@@ -35,7 +35,7 @@ function processSource(source: Source): number {
 
   const files = readdirSync(inputDir).filter(
     (f) =>
-      (f.endsWith(".yaml") || f.endsWith(".yml")) &&
+      (f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")) &&
       !f.startsWith(INVALID_FIXTURE)
   );
 
@@ -49,7 +49,7 @@ function processSource(source: Source): number {
 
   let processed = 0;
   for (const file of files) {
-    const baseName = file.replace(/\.(yaml|yml)$/, "");
+    const baseName = file.replace(/\.(yaml|yml|json)$/i, "");
     const inputPath = join(inputDir, file);
     const outputPath = join(outputDir, `${baseName}.json`);
 

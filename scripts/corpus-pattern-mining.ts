@@ -9,8 +9,8 @@
  *          npm run corpus:pattern-mining tests/compiler/fixtures/apiir/corpus-valid-v1
  */
 
-import { readFileSync, readdirSync, existsSync } from "fs";
-import { join } from "path";
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "fs";
+import { join, dirname } from "path";
 import type { ApiIR } from "@/lib/compiler/apiir";
 import {
   mineStructuralPatterns,
@@ -23,7 +23,18 @@ const DEFAULT_DIR = join(
 );
 
 function main(): number {
-  const dirArg = process.argv[2];
+  const args = process.argv.slice(2);
+  let dirArg: string | null = null;
+  let outputPath: string | null = null;
+
+  for (let i = 0; i < args.length; i++) {
+    if ((args[i] === "--output" || args[i] === "-o") && args[i + 1]) {
+      outputPath = args[++i];
+    } else if (!args[i].startsWith("-")) {
+      dirArg = args[i];
+    }
+  }
+
   const dir = dirArg ? join(process.cwd(), dirArg) : DEFAULT_DIR;
 
   if (!existsSync(dir)) {
@@ -62,7 +73,16 @@ function main(): number {
 
   const { results, totalResources } = mineStructuralPatterns(entries);
   const lines = formatPatternMiningReport(results, totalResources);
-  console.log(lines.join("\n"));
+  const reportContent = lines.join("\n");
+
+  if (outputPath) {
+    const absPath = join(process.cwd(), outputPath);
+    mkdirSync(dirname(absPath), { recursive: true });
+    writeFileSync(absPath, reportContent, "utf-8");
+    console.log(`Report written to: ${absPath}`);
+  } else {
+    console.log(reportContent);
+  }
 
   return 0;
 }
