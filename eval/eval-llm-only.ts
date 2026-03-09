@@ -89,9 +89,10 @@ async function main() {
 
   let fixtures = getApiIRFixtures(FIXTURES_APIIR_DIR);
   if (config.fixtureName) {
-    const path = join(FIXTURES_APIIR_DIR, `${config.fixtureName}.json`);
-    if (fixtures.includes(path)) {
-      fixtures = [path];
+    const base = config.fixtureName.replace(/\.json$/i, "");
+    const match = fixtures.find((p) => p.endsWith(`${base}.json`));
+    if (match) {
+      fixtures = [match];
     } else {
       console.error(`Fixture not found: ${config.fixtureName}`);
       process.exit(1);

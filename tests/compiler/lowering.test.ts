@@ -140,7 +140,7 @@ function productsUiPlan(apiIr: ApiIR): UiPlanIR {
 
 describe("lower", () => {
   it("golden Users: UiPlanIR + ApiIR → valid UISpec", () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
     const result = lower(uiPlan, apiIr);
     expect(result.success).toBe(true);
@@ -156,7 +156,7 @@ describe("lower", () => {
   });
 
   it("golden Products: UiPlanIR + ApiIR → valid UISpec", () => {
-    const apiIr = loadApiIr("golden_openapi_products_path_3_1.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_products_path_3_1.yaml");
     const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr));
     const result = lower(uiPlan, apiIr);
     expect(result.success).toBe(true);
@@ -169,7 +169,7 @@ describe("lower", () => {
   });
 
   it("same UiPlanIR + ApiIR → byte-identical UISpec (determinism)", () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
     const r1 = lower(uiPlan, apiIr);
     const r2 = lower(uiPlan, apiIr);
@@ -179,7 +179,7 @@ describe("lower", () => {
   });
 
   it("snapshot: Users UISpec", () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
     const result = lower(uiPlan, apiIr);
     expect(result.success).toBe(true);
@@ -188,7 +188,7 @@ describe("lower", () => {
   });
 
   it("snapshot: Products UISpec", () => {
-    const apiIr = loadApiIr("golden_openapi_products_path_3_1.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_products_path_3_1.yaml");
     const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr));
     const result = lower(uiPlan, apiIr);
     expect(result.success).toBe(true);

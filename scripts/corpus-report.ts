@@ -2,8 +2,8 @@
 /**
  * Phase 4 corpus report: generate markdown report from raw corpus run output.
  *
- * Usage: npm run corpus:report -- scripts/corpus-data/reports/raw-batch{N}-{timestamp}.json
- * Output: scripts/corpus-data/reports/report-batch{N}-{timestamp}.md
+ * Usage: npm run corpus:report -- scripts/corpus-data/reports/raw-{name}-{timestamp}.json
+ * Output: scripts/corpus-data/reports/report-{name}-{timestamp}.md
  *
  * Language Analysis: For passing specs, re-compiles to ApiIR and reports
  * resource shape, CRUD pattern, grouping strategy, spec complexity.
@@ -186,8 +186,8 @@ function collectAllErrors(results: CorpusResult[]): Array<{ code: string; messag
 function main(): number {
   const rawPath = process.argv[2];
   if (!rawPath) {
-    console.error("Usage: npm run corpus:report -- <path-to-raw-batchN-timestamp.json>");
-    console.error("Example: npm run corpus:report -- scripts/corpus-data/reports/raw-batch20-2026-03-04T12-30-45.json");
+    console.error("Usage: npm run corpus:report -- <path-to-raw-output.json>");
+    console.error("Example: npm run corpus:report -- scripts/corpus-data/reports/raw-api-guru-2026-03-04T12-30-45.json");
     return 1;
   }
 

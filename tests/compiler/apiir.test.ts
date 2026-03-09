@@ -25,7 +25,7 @@ function loadAndProcess(specPath: string) {
 
 describe("ApiIR build", () => {
   it("golden_openapi_users_tagged_3_0.yaml produces expected ApiIR", () => {
-    const doc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
     const result = buildApiIR(doc);
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -34,7 +34,7 @@ describe("ApiIR build", () => {
   });
 
   it("golden_openapi_products_path_3_1.yaml produces expected ApiIR", () => {
-    const doc = loadAndProcess("golden_openapi_products_path_3_1.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
     const result = buildApiIR(doc);
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -43,7 +43,7 @@ describe("ApiIR build", () => {
   });
 
   it("ApiIR JSON is byte-stable (same input → same output)", () => {
-    const doc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
     const r1 = buildApiIR(doc);
     const r2 = buildApiIR(doc);
     expect(r1.success && r2.success).toBe(true);
@@ -53,7 +53,7 @@ describe("ApiIR build", () => {
   });
 
   it("same ApiIR produces same hash", () => {
-    const doc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
     const result = buildApiIR(doc);
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -64,8 +64,8 @@ describe("ApiIR build", () => {
   });
 
   it("different specs produce different ApiIR and hashes", () => {
-    const usersDoc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
-    const productsDoc = loadAndProcess("golden_openapi_products_path_3_1.yaml");
+    const usersDoc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
+    const productsDoc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
     const usersResult = buildApiIR(usersDoc);
     const productsResult = buildApiIR(productsDoc);
     expect(usersResult.success && productsResult.success).toBe(true);
@@ -87,7 +87,7 @@ describe("ApiIR build", () => {
   });
 
   it("fails with mixed grouping (some tagged, some not)", () => {
-    const doc = loadAndProcess("golden_openapi_invalid_mixed_grouping_expected_failure.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_invalid_mixed_grouping_expected_failure.yaml");
     const result = buildApiIR(doc);
     expect(result.success).toBe(false);
     if (result.success) return;

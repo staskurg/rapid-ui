@@ -67,11 +67,11 @@ flowchart LR
 
 ## 1.1 Extend `corpus-run.ts`
 
-**Current:** Reads from `scripts/corpus-data/specs/{batchNum}/` only via `--batch N`.
+**Current:** Reads from `scripts/corpus-data/specs/api_guru/` via `--specs-dir` or `--api-guru`.
 
 **Add:**
 
-- `--specs-dir PATH` — override base dir (default: `scripts/corpus-data/specs`)
+- `--specs-dir PATH` — specs directory; `--api-guru` shorthand uses `scripts/corpus-data/specs/api_guru`
 - `--output-name NAME` — output `raw-{NAME}-{timestamp}.json` instead of `raw-batch{N}-{timestamp}.json`
 - `--recurse` — when set, recursively scan subdirs of `--specs-dir` (needed for `group-frameworks/` with fastapi/, nestjs/, etc.)
 

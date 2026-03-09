@@ -1,10 +1,10 @@
 #!/usr/bin/env tsx
 /**
- * Copy OpenAPI 3.0.x and 3.1.x specs from openapi-directory to corpus-data/specs.
- * Splits into batches of 100, each batch in a separate folder (1, 2, 3, ...).
+ * Copy OpenAPI 3.0.x and 3.1.x specs from openapi-directory to corpus-data/specs/api_guru.
+ * All specs in a single flat folder.
  *
  * Usage: npm run copy:openapi-specs
- *   or:  tsx scripts/copy-openapi-specs.ts [--openapi-dir PATH] [--batch-size N]
+ *   or:  tsx scripts/copy-openapi-specs.ts [--openapi-dir PATH]
  */
 
 import {
@@ -14,11 +14,10 @@ import {
   readdirSync,
   statSync,
   rmSync,
+  existsSync,
 } from "fs";
 import { join, relative, extname } from "path";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-
-const BATCH_SIZE = 100;
 const SPEC_EXTENSIONS = [".yaml", ".yml", ".json"];
 
 function findSpecFiles(dir: string, baseDir: string): string[] {
@@ -54,22 +53,18 @@ function sanitizeFilename(relPath: string): string {
 function main(): number {
   const args = process.argv.slice(2);
   let openapiDir = join(process.cwd(), "..", "openapi-directory", "APIs");
-  let batchSize = BATCH_SIZE;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--openapi-dir" && args[i + 1]) {
       openapiDir = args[++i];
-    } else if (args[i] === "--batch-size" && args[i + 1]) {
-      batchSize = parseInt(args[++i], 10) || BATCH_SIZE;
     }
   }
 
-  const outputBase = join(process.cwd(), "scripts", "corpus-data", "specs");
+  const outputBase = join(process.cwd(), "scripts", "corpus-data", "specs", "api_guru");
 
   console.log("Scanning OpenAPI specs...");
   console.log(`  Source: ${openapiDir}`);
   console.log(`  Output: ${outputBase}`);
-  console.log(`  Batch size: ${batchSize}`);
 
   let specFiles: string[];
   try {
@@ -120,50 +115,42 @@ function main(): number {
   console.log(`Skipped (Swagger 2.0 or other): ${skipped}`);
   console.log(`Invalid/unparseable: ${invalid}`);
 
-  // Clear existing batch folders
-  try {
+  // Clear existing output folder
+  if (existsSync(outputBase)) {
     const existing = readdirSync(outputBase);
     for (const name of existing) {
       const p = join(outputBase, name);
-      if (statSync(p).isDirectory() && /^\d+$/.test(name)) {
+      if (statSync(p).isDirectory()) {
         rmSync(p, { recursive: true });
+      } else {
+        rmSync(p);
       }
     }
-  } catch {
-    // outputBase might not exist yet
   }
 
   mkdirSync(outputBase, { recursive: true });
 
-  let batchIndex = 1;
   let copied = 0;
-  const totalBatches = Math.ceil(validSpecs.length / batchSize);
+  const copyProgressInterval = Math.max(100, Math.floor(validSpecs.length / 20));
 
-  console.log(`\nCopying to batches (${totalBatches} batch(es))...`);
-  for (let i = 0; i < validSpecs.length; i += batchSize) {
-    const batch = validSpecs.slice(i, i + batchSize);
-    const batchDir = join(outputBase, String(batchIndex));
-    mkdirSync(batchDir, { recursive: true });
-
-    for (const { path: srcPath, relPath } of batch) {
-      const safeName = sanitizeFilename(relPath);
-      const destPath = join(batchDir, safeName);
-      try {
-        copyFileSync(srcPath, destPath);
-        copied++;
-      } catch (err) {
-        console.error(`Failed to copy ${relPath}: ${err}`);
-      }
+  console.log(`\nCopying ${validSpecs.length} specs...`);
+  for (let i = 0; i < validSpecs.length; i++) {
+    const { path: srcPath, relPath } = validSpecs[i];
+    const safeName = sanitizeFilename(relPath);
+    const destPath = join(outputBase, safeName);
+    try {
+      copyFileSync(srcPath, destPath);
+      copied++;
+    } catch (err) {
+      console.error(`Failed to copy ${relPath}: ${err}`);
     }
-
-    process.stdout.write(
-      `  Batch ${batchIndex}/${totalBatches}: ${copied}/${validSpecs.length} copied\r`
-    );
-    batchIndex++;
+    if ((i + 1) % copyProgressInterval === 0 || i === validSpecs.length - 1) {
+      process.stdout.write(`  ${i + 1}/${validSpecs.length} copied\r`);
+    }
   }
-  console.log(""); // newline after \r
+  console.log("");
 
-  console.log(`\nDone. Copied ${copied} specs into ${batchIndex - 1} batch(es).`);
+  console.log(`\nDone. Copied ${copied} specs to ${outputBase}`);
   return 0;
 }
 

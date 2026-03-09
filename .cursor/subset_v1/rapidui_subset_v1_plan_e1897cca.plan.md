@@ -809,7 +809,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 | Subphase | Task                                                                            |
 | -------- | ------------------------------------------------------------------------------- |
 | 4.1      | Use existing `docs/subset-v1-corpus-prediction.md` (4–7% prediction, rationale) |
-| 4.2      | Run `corpus:run --batch N`; output raw + report to reports/                     |
+| 4.2      | Run `corpus:run --api-guru`; output raw + report to reports/                    |
 | 4.3      | Run `corpus:report` on raw file → report-batch{N}-{timestamp}.md in reports/    |
 | 4.4      | Compare actual pass rate to prediction; document RUS-v2 roadmap implications    |
 
@@ -822,7 +822,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 
 #### Phase 4 Implementation Details
 
-**Current state:** Specs already in `scripts/corpus-data/specs/` — **20 batches**, each ~100 specs (last batch may have fewer). **All specs pre-filtered to 3.0.x and 3.1.x.** No fetch, no version filtering needed. Run one batch at a time.
+**Current state:** Specs in `scripts/corpus-data/specs/api_guru/` — single flat folder (~2000 specs from openapi-directory). **All specs pre-filtered to 3.0.x and 3.1.x.** No fetch, no version filtering needed. Run one batch at a time.
 
 **Workflow:** Select batch → run corpus → per-batch report. Canonical set selection deferred.
 
@@ -835,7 +835,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 | -------------------------------- | -------------------------------------------------- |
 | `scripts/corpus-run.ts`          | Run check on batch, capture structured output      |
 | `scripts/corpus-report.ts`       | Consume raw data, generate report per requirements |
-| `scripts/corpus-data/specs/{N}/` | Specs by batch (existing; gitignored)              |
+| `scripts/corpus-data/specs/api_guru/` | API guru specs (flat; gitignored)                  |
 | `scripts/corpus-data/reports/`   | Per-batch outputs (raw + report)                   |
 
 
@@ -845,7 +845,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 
 **4.2 Corpus run (`scripts/corpus-run.ts`)**
 
-- **Input:** `--batch N` (e.g. `--batch 20`) — selects `scripts/corpus-data/specs/N/`
+- **Input:** `--api-guru` or `--specs-dir scripts/corpus-data/specs/api_guru --output-name api-guru` — selects `scripts/corpus-data/specs/api_guru/`
 - **Process:** Scan batch folder; **all specs already 3.0.x/3.1.x** — no version filtering
 - **Per spec:** Read file → run `parseOpenAPI` → `validateSubset` → `resolveRefs` → `buildApiIR`
 - **Capture:** `valid`, `errors[]` (**all errors** per spec), `violationCount`, `compileTimeMs`, `crashed`, `parseFailed` (parse error only), `path` (relative)
@@ -875,7 +875,7 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 | Topic                  | Decision                                                                    |
 | ---------------------- | --------------------------------------------------------------------------- |
 | Version filtering      | **N/A** — specs pre-filtered to 3.0.x/3.1.x                                 |
-| Sampling               | Batches of 100; select batch via `--batch N`                                |
+| Sampling               | All specs in single folder; `corpus:run --api-guru`                         |
 | manifest vs clean-list | **Same** — embedded in raw JSON `meta.cleanList`                            |
 | Errors per spec        | **All errors** (not first only)                                             |
 | Endpoint coverage      | **Defer** for v1; document "N/A" in report                                  |
@@ -891,13 +891,13 @@ Two minor spec–implementation gaps identified during Phase 2 review were fixed
 **NPM scripts:**
 
 ```json
-"corpus:run": "tsx scripts/corpus-run.ts --batch N",
+"corpus:run": "tsx scripts/corpus-run.ts",
 "corpus:report": "tsx scripts/corpus-report.ts -- <path-to-raw-batchN-timestamp.json>"
 ```
 
-Example: `npm run corpus:run -- --batch 20` → `reports/raw-batch20-2026-03-04T12-30-45.123Z.json`; then `npm run corpus:report -- scripts/corpus-data/reports/raw-batch20-2026-03-04T12-30-45.123Z.json`.
+Example: `npm run corpus:run -- --api-guru` → `reports/raw-api-guru-2026-03-04T12-30-45.123Z.json`; then `npm run corpus:report -- scripts/corpus-data/reports/raw-api-guru-2026-03-04T12-30-45.123Z.json`.
 
-**Gitignore:** `scripts/corpus-data/specs/`, `scripts/corpus-data/reports/` — gitignored (like eval/reports/).
+**Gitignore:** `scripts/corpus-data/specs/` (covers api_guru/ and github/), `scripts/corpus-data/reports/` — gitignored (like eval/reports/).
 
 **Corpus-valid-v1 fixtures:** `scripts/corpus-extract-valid.ts` extracts valid specs from raw reports; `--copy-to-fixtures` copies to `tests/compiler/fixtures/corpus-valid-v1/`. These 99 specs are committed and serve as: (1) regression tests — all must pass `check:openapi`; (2) **LLM determinism testing** — future step to validate LLM output stability on real APIs. See `docs/openapi-subset-v1.md` § Corpus Workflow.
 

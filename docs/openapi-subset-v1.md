@@ -189,11 +189,11 @@ RUS-v1 corpus measurement validates the subset against real APIs from APIs.guru.
 ### Commands
 
 ```bash
-# Run check on a batch of specs (specs in scripts/corpus-data/specs/{N}/)
-npm run corpus:run -- --batch N
+# Run check on API guru specs (specs in scripts/corpus-data/specs/api_guru/)
+npm run corpus:run -- --api-guru
 
 # Generate report from raw output
-npm run corpus:report -- scripts/corpus-data/reports/raw-batch{N}-{timestamp}.json
+npm run corpus:report -- scripts/corpus-data/reports/raw-api-guru-{timestamp}.json
 
 # Extract valid specs from all raw reports into manifest
 npm run corpus:extract-valid
@@ -206,9 +206,9 @@ npm run corpus:copy-valid-to-fixtures
 
 ### Corpus-Valid-v1 Fixtures
 
-Specs that pass RUS-v1 validation across all corpus batches are extracted and copied to `tests/compiler/fixtures/corpus-valid-v1/`. These serve as:
+Specs that pass RUS-v1 validation across all corpus batches are extracted and copied to `tests/compiler/fixtures/valid-specs-api-guru/`. These serve as:
 
-- **Regression tests** — All 99 corpus-valid-v1 fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
+- **Regression tests** — All 99 valid-specs-api-guru fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
 - **LLM determinism testing** — Future step: use these real APIs to validate LLM output stability across runs
 
 ---

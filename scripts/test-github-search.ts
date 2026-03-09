@@ -1,11 +1,16 @@
 #!/usr/bin/env tsx
 /**
  * Test script for GitHub Code Search API.
- * Reports result count for each query from the corpus-github-crawl plan.
+ * Reports result count for each query from corpus-github-queries.ts.
+ *
+ * Use this to validate queries before running the crawler. Queries hitting 1000
+ * are capped by GitHub; path-based splits provide granularity to get more.
  *
  * Run: npm run test:github-search
  * Requires: GITHUB_TOKEN in .env.local
  */
+
+import { QUERIES } from "./corpus-github-queries";
 
 const GITHUB_API = "https://api.github.com";
 const THROTTLE_MS = 7000; // 9 req/min → ~7s between requests
@@ -37,56 +42,6 @@ async function searchCode(
   const data = await res.json();
   return { total_count: data.total_count, incomplete_results: data.incomplete_results };
 }
-
-const QUERIES: { group: string; name: string; q: string }[] = [
-  // Group A — Generic (stars removed — not supported for code search)
-  // YAML: "paths:" filters out specs with no endpoints
-  { group: "generic", name: "openapi.yaml", q: 'filename:openapi.yaml "openapi: 3" "paths:" size:5000..200000' },
-  { group: "generic", name: "openapi.yml", q: 'filename:openapi.yml "openapi: 3" "paths:" size:5000..200000' },
-  // JSON: "\"openapi\": \"3" ensures OpenAPI 3.x only (excludes 2.0, etc.)
-  { group: "generic", name: "openapi.json", q: 'filename:openapi.json "\\"openapi\\": \\"3" size:5000..200000' },
-  // Group B — Frameworks (OpenAPI 3 enforced)
-  { group: "frameworks", name: "fastapi", q: 'filename:openapi.yaml fastapi "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "nestjs", q: 'filename:openapi.json nestjs "\\"openapi\\": \\"3"' },
-  { group: "frameworks", name: "springdoc", q: 'filename:openapi.yaml springdoc "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "drf-spectacular", q: 'filename:openapi.yaml drf-spectacular "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "laravel", q: 'filename:openapi.yaml laravel "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "rswag", q: 'filename:openapi.yaml rswag "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "tsoa", q: 'filename:openapi.json tsoa "\\"openapi\\": \\"3"' },
-  { group: "frameworks", name: "micronaut", q: 'filename:openapi.yaml micronaut "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "ktor", q: 'filename:openapi.yaml ktor "openapi: 3" "paths:"' },
-  // Group C — Vendors
-  { group: "vendors", name: "stripe", q: 'filename:openapi.yaml stripe "openapi"' },
-  { group: "vendors", name: "plaid", q: 'filename:openapi.yaml plaid "openapi"' },
-  { group: "vendors", name: "adyen", q: 'filename:openapi.yaml adyen "openapi"' },
-  { group: "vendors", name: "twilio", q: 'filename:openapi.yaml twilio "openapi"' },
-  { group: "vendors", name: "sendgrid", q: 'filename:openapi.yaml sendgrid "openapi"' },
-  { group: "vendors", name: "mailgun", q: 'filename:openapi.yaml mailgun "openapi"' },
-  { group: "vendors", name: "slack", q: 'filename:openapi.yaml slack "openapi"' },
-  { group: "vendors", name: "notion", q: 'filename:openapi.yaml notion "openapi"' },
-  { group: "vendors", name: "linear", q: 'filename:openapi.yaml linear "openapi"' },
-  { group: "vendors", name: "asana", q: 'filename:openapi.yaml asana "openapi"' },
-  { group: "vendors", name: "github", q: 'filename:openapi.yaml github "openapi"' },
-  { group: "vendors", name: "gitlab", q: 'filename:openapi.yaml gitlab "openapi"' },
-  { group: "vendors", name: "circleci", q: 'filename:openapi.yaml circleci "openapi"' },
-  { group: "vendors", name: "vercel", q: 'filename:openapi.yaml vercel "openapi"' },
-  { group: "vendors", name: "digitalocean", q: 'filename:openapi.yaml digitalocean "openapi"' },
-  { group: "vendors", name: "cloudflare", q: 'filename:openapi.yaml cloudflare "openapi"' },
-  { group: "vendors", name: "datadog", q: 'filename:openapi.yaml datadog "openapi"' },
-  { group: "vendors", name: "openai", q: 'filename:openapi.yaml openai "openapi"' },
-  { group: "vendors", name: "anthropic", q: 'filename:openapi.yaml anthropic "openapi"' },
-  { group: "vendors", name: "postman", q: 'filename:openapi.yaml postman "openapi"' },
-  { group: "vendors", name: "rapidapi", q: 'filename:openapi.yaml rapidapi "openapi"' },
-  // Group D — Optional
-  { group: "platforms", name: "postgrest", q: 'filename:openapi.yaml postgrest "openapi"' },
-  { group: "platforms", name: "supabase", q: 'filename:openapi.yaml supabase "openapi"' },
-  { group: "platforms", name: "hasura", q: 'filename:openapi.yaml hasura "openapi"' },
-  { group: "cloud", name: "aws", q: 'filename:openapi.yaml aws "openapi"' },
-  { group: "cloud", name: "googleapis", q: 'filename:openapi.yaml googleapis "openapi"' },
-  { group: "cloud", name: "azure", q: 'filename:openapi.yaml azure "openapi"' },
-  { group: "api-docs", name: "redoc", q: 'filename:openapi.yaml redoc "openapi"' },
-  { group: "api-docs", name: "openapi-generator", q: 'filename:openapi.yaml openapi-generator "openapi"' },
-];
 
 async function main() {
   const token = process.env.GITHUB_TOKEN;
@@ -122,6 +77,7 @@ async function main() {
   // Summary by group
   console.log("\n--- Summary by group ---");
   const byGroup = new Map<string, number>();
+  const hitLimit = results.filter((r) => r.count >= 1000 || r.incomplete);
   for (const r of results) {
     if (r.count >= 0) {
       byGroup.set(r.group, (byGroup.get(r.group) ?? 0) + r.count);
@@ -129,6 +85,12 @@ async function main() {
   }
   for (const [group, total] of [...byGroup.entries()].sort()) {
     console.log(`  ${group}: ${total} total (sum of query counts, may have overlap)`);
+  }
+  if (hitLimit.length > 0) {
+    console.log(`\n--- Queries at 1000 limit (${hitLimit.length}) ---`);
+    for (const r of hitLimit) {
+      console.log(`  ${r.group}/${r.name}: ${r.count}${r.incomplete ? " (incomplete)" : ""}`);
+    }
   }
 }
 

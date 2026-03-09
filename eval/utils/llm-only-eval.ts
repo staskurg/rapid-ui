@@ -207,13 +207,23 @@ export async function evaluateLlmOnlyFixture(
 }
 
 /**
- * Get list of ApiIR fixture paths.
+ * Get list of ApiIR fixture paths (recursively from apiir root and subdirs like demo/, valid-specs-api-guru/).
  */
 export function getApiIRFixtures(apiIrDir: string): string[] {
   if (!existsSync(apiIrDir)) {
     return [];
   }
-  return readdirSync(apiIrDir)
-    .filter((f) => f.endsWith(".json"))
-    .map((f) => join(apiIrDir, f));
+  const results: string[] = [];
+  function walk(dir: string) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) {
+        walk(full);
+      } else if (entry.name.endsWith(".json")) {
+        results.push(full);
+      }
+    }
+  }
+  walk(apiIrDir);
+  return results.sort();
 }

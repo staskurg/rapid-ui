@@ -11,7 +11,7 @@ const FIXTURES = join(__dirname, "fixtures");
 describe("subset validator", () => {
   it("golden_openapi_users_tagged_3_0.yaml passes validation", () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_users_tagged_3_0.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
       "utf-8"
     );
     const parseResult = parseOpenAPI(yaml);
@@ -24,7 +24,7 @@ describe("subset validator", () => {
 
   it("golden_openapi_products_path_3_1.yaml passes validation", () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_products_path_3_1.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_products_path_3_1.yaml"),
       "utf-8"
     );
     const parseResult = parseOpenAPI(yaml);

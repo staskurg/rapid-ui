@@ -8,7 +8,7 @@
  *
  * Usage: npm run corpus:extract-valid
  *   or:  npm run corpus:extract-valid -- --copy-to-fixtures
- *   or:  npm run corpus:extract-valid -- --github-only   # only raw-github-*.json (exclude APIs.guru batches)
+ *   or:  npm run corpus:extract-valid -- --github-only   # only raw-github-*.json (exclude APIs.guru)
  *   or:  tsx scripts/corpus-extract-valid.ts [--reports-dir PATH] [--copy-to-fixtures] [--github-only]
  */
 
@@ -76,26 +76,15 @@ function main(): number {
     .filter((f) => {
       if (!f.endsWith(".json")) return false;
       if (githubOnly) return f.startsWith("raw-github-");
-      return f.startsWith("raw-batch") || f.startsWith("raw-github-");
+      return f.startsWith("raw-api-guru-") || f.startsWith("raw-github-");
     })
-    .sort((a, b) => {
-      const isBatchA = a.startsWith("raw-batch");
-      const isBatchB = b.startsWith("raw-batch");
-      if (isBatchA && isBatchB) {
-        const na = parseInt(a.replace("raw-batch", "").split("-")[0], 10);
-        const nb = parseInt(b.replace("raw-batch", "").split("-")[0], 10);
-        return na - nb;
-      }
-      if (isBatchA) return -1;
-      if (isBatchB) return 1;
-      return a.localeCompare(b);
-    });
+    .sort((a, b) => a.localeCompare(b));
 
   if (files.length === 0) {
     console.error(
       githubOnly
         ? `No raw-github-*.json files found in ${reportsDir}`
-        : `No raw-batch*.json or raw-github-*.json files found in ${reportsDir}`
+        : `No raw-api-guru-*.json or raw-github-*.json files found in ${reportsDir}`
     );
     return 1;
   }
@@ -149,12 +138,12 @@ function main(): number {
   const manifestPath = join(outputDir, "rapidui-corpus-valid-v1.json");
   const listPath = join(outputDir, "rapidui-corpus-valid-v1.txt");
 
-  const hasCorpusGithub = validList.some((s) => s.path.includes("corpus-github"));
-  const hasApisGuru = validList.some((s) => s.path.includes("specs/"));
+  const hasGithub = validList.some((s) => s.path.includes("corpus-github") || s.path.includes("specs/github"));
+  const hasApisGuru = validList.some((s) => s.path.includes("specs/api_guru"));
   let source: string;
-  if (hasCorpusGithub && hasApisGuru) {
+  if (hasGithub && hasApisGuru) {
     source = "APIs.guru (via openapi-directory) + GitHub";
-  } else if (hasCorpusGithub) {
+  } else if (hasGithub) {
     source = "GitHub";
   } else {
     source = "APIs.guru (via openapi-directory)";
@@ -179,7 +168,7 @@ function main(): number {
   console.log(`  Path list: ${listPath}`);
 
   if (copyToFixtures) {
-    const fixturesDir = join(cwd, "tests", "compiler", "fixtures", "corpus-valid-v1");
+    const fixturesDir = join(cwd, "tests", "compiler", "fixtures", "valid-specs-api-guru");
     mkdirSync(fixturesDir, { recursive: true });
     let copied = 0;
     for (const spec of validList) {

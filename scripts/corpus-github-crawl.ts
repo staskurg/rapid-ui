@@ -3,11 +3,12 @@
  * GitHub OpenAPI Spec Crawler
  *
  * Searches GitHub for OpenAPI specs, fetches content, deduplicates, and stores
- * in corpus-github for the corpus pipeline.
+ * in scripts/corpus-data/specs/github for the corpus pipeline.
  *
- * Run: npm run corpus:github-crawl [--limit N]
+ * Run: npm run corpus:github-crawl [--limit N] [--group NAME]
  * Requires: GITHUB_TOKEN in .env.local
  * Use --limit N to cap each group at N specs (for quick testing)
+ * Use --group NAME to run only a specific group (e.g. frameworks, frameworks/laravel, generic, crud)
  *
  * See .cursor/plans/github_spec_crawler_25fb9b0e.plan.md Phase 2.
  */
@@ -16,6 +17,8 @@ import { createHash } from "crypto";
 import { mkdirSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 
+import { QUERIES } from "./corpus-github-queries";
+
 const GITHUB_API = "https://api.github.com";
 const SEARCH_THROTTLE_MS = 7000; // 9 req/min → ~7s between search requests
 const CONTENT_DELAY_MS = 100; // Small delay between content fetches
@@ -23,71 +26,17 @@ const MAX_SPECS_PER_REPO = 5;
 const FETCH_TIMEOUT_MS = 30000; // 30s per request (avoids connect timeout)
 const FETCH_MAX_RETRIES = 3;
 
-const CORPUS_GITHUB = join(process.cwd(), "scripts/corpus-data/corpus-github");
+const SPECS_OUTPUT = join(process.cwd(), "scripts/corpus-data/specs/github");
 
-// Query groups — same as test-github-search.ts (source of truth)
-interface QueryDef {
-  group: string;
-  name: string;
-  q: string;
-}
-
-const QUERIES: QueryDef[] = [
-  // Group A — Generic
-  { group: "generic", name: "openapi.yaml", q: 'filename:openapi.yaml "openapi: 3" "paths:" size:5000..200000' },
-  { group: "generic", name: "openapi.yml", q: 'filename:openapi.yml "openapi: 3" "paths:" size:5000..200000' },
-  { group: "generic", name: "openapi.json", q: 'filename:openapi.json "\\"openapi\\": \\"3" size:5000..200000' },
-  // Group B — Frameworks
-  { group: "frameworks", name: "fastapi", q: 'filename:openapi.yaml fastapi "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "nestjs", q: 'filename:openapi.json nestjs "\\"openapi\\": \\"3"' },
-  { group: "frameworks", name: "springdoc", q: 'filename:openapi.yaml springdoc "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "drf-spectacular", q: 'filename:openapi.yaml drf-spectacular "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "laravel", q: 'filename:openapi.yaml laravel "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "rswag", q: 'filename:openapi.yaml rswag "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "tsoa", q: 'filename:openapi.json tsoa "\\"openapi\\": \\"3"' },
-  { group: "frameworks", name: "micronaut", q: 'filename:openapi.yaml micronaut "openapi: 3" "paths:"' },
-  { group: "frameworks", name: "ktor", q: 'filename:openapi.yaml ktor "openapi: 3" "paths:"' },
-  // Group C — Vendors
-  { group: "vendors", name: "stripe", q: 'filename:openapi.yaml stripe "openapi"' },
-  { group: "vendors", name: "plaid", q: 'filename:openapi.yaml plaid "openapi"' },
-  { group: "vendors", name: "adyen", q: 'filename:openapi.yaml adyen "openapi"' },
-  { group: "vendors", name: "twilio", q: 'filename:openapi.yaml twilio "openapi"' },
-  { group: "vendors", name: "sendgrid", q: 'filename:openapi.yaml sendgrid "openapi"' },
-  { group: "vendors", name: "mailgun", q: 'filename:openapi.yaml mailgun "openapi"' },
-  { group: "vendors", name: "slack", q: 'filename:openapi.yaml slack "openapi"' },
-  { group: "vendors", name: "notion", q: 'filename:openapi.yaml notion "openapi"' },
-  { group: "vendors", name: "linear", q: 'filename:openapi.yaml linear "openapi"' },
-  { group: "vendors", name: "asana", q: 'filename:openapi.yaml asana "openapi"' },
-  { group: "vendors", name: "github", q: 'filename:openapi.yaml github "openapi"' },
-  { group: "vendors", name: "gitlab", q: 'filename:openapi.yaml gitlab "openapi"' },
-  { group: "vendors", name: "circleci", q: 'filename:openapi.yaml circleci "openapi"' },
-  { group: "vendors", name: "vercel", q: 'filename:openapi.yaml vercel "openapi"' },
-  { group: "vendors", name: "digitalocean", q: 'filename:openapi.yaml digitalocean "openapi"' },
-  { group: "vendors", name: "cloudflare", q: 'filename:openapi.yaml cloudflare "openapi"' },
-  { group: "vendors", name: "datadog", q: 'filename:openapi.yaml datadog "openapi"' },
-  { group: "vendors", name: "openai", q: 'filename:openapi.yaml openai "openapi"' },
-  { group: "vendors", name: "anthropic", q: 'filename:openapi.yaml anthropic "openapi"' },
-  { group: "vendors", name: "postman", q: 'filename:openapi.yaml postman "openapi"' },
-  { group: "vendors", name: "rapidapi", q: 'filename:openapi.yaml rapidapi "openapi"' },
-  // Group D — Optional
-  { group: "platforms", name: "postgrest", q: 'filename:openapi.yaml postgrest "openapi"' },
-  { group: "platforms", name: "supabase", q: 'filename:openapi.yaml supabase "openapi"' },
-  { group: "platforms", name: "hasura", q: 'filename:openapi.yaml hasura "openapi"' },
-  { group: "cloud", name: "aws", q: 'filename:openapi.yaml aws "openapi"' },
-  { group: "cloud", name: "googleapis", q: 'filename:openapi.yaml googleapis "openapi"' },
-  { group: "cloud", name: "azure", q: 'filename:openapi.yaml azure "openapi"' },
-  { group: "api-docs", name: "redoc", q: 'filename:openapi.yaml redoc "openapi"' },
-  { group: "api-docs", name: "openapi-generator", q: 'filename:openapi.yaml openapi-generator "openapi"' },
-];
-
-// Per-group caps
-const GROUP_CAPS: Record<string, number> = {
-  generic: 200,
-  frameworks: 100, // per framework subdir
-  vendors: 20, // per vendor, ~200 total across 21 vendors
-  platforms: 15,
-  cloud: 15,
-  "api-docs": 15,
+// Per-query caps — each query contributes up to cap; increases diversity across path/version/format
+const PER_QUERY_CAPS: Record<string, number> = {
+  generic: 400, // 21 queries × 400 = 8400; yaml/yml/json, path splits, 3.0/3.1
+  frameworks: 400, // 4 frameworks × 400 = 1600; fastapi, springdoc, laravel, ktor
+  crud: 400, // 5 queries × 400 = 2000; users, orders, projects, products, tasks
+  vendors: 50, // 21 vendors × 50 = 1050; stripe, github, openai, etc.
+  platforms: 50, // 3 × 50 = 150; postgrest, supabase, hasura
+  cloud: 50, // 3 × 50 = 150; aws, googleapis, azure
+  "api-docs": 50, // 2 × 50 = 100; redoc, openapi-generator
 };
 
 interface SearchItem {
@@ -129,6 +78,17 @@ async function searchCode(
     return searchCode(token, q, page, perPage);
   }
 
+  // GitHub code search returns max 1000 results; pagination beyond page 10 returns 422.
+  // We handle this gracefully: log, return empty items (we already have up to 1000 from prior pages), continue crawling.
+  if (res.status === 422) {
+    const body = await res.text();
+    if (body.includes("Cannot access beyond the first 1000 results")) {
+      console.log(`  [Hit 1000-result limit, stopping pagination for this query]`);
+      return { total_count: 1000, incomplete_results: true, items: [] };
+    }
+    throw new Error(`GitHub API ${res.status}: ${body}`);
+  }
+
   if (!res.ok) {
     const body = await res.text();
     throw new Error(`GitHub API ${res.status}: ${body}`);
@@ -167,6 +127,30 @@ function isOpenAPI3(content: string): boolean {
   const trimmed = content.trim().slice(0, 500);
   return /openapi:\s*["']?3\./i.test(trimmed) || /"openapi"\s*:\s*["']?3\./i.test(trimmed);
 }
+
+/** CRUD operation score: post + put + delete. Read-only APIs have crudScore 0. Handles YAML (post:) and JSON ("post":). */
+function detectCrudScore(content: string): { get: number; post: number; put: number; delete: number; crudScore: number } {
+  const lower = content.toLowerCase();
+  const count = (yaml: RegExp, json: RegExp) =>
+    (lower.match(yaml) || []).length + (lower.match(json) || []).length;
+  const score = {
+    get: count(/\bget:\s/g, /"get"\s*:/g),
+    post: count(/\bpost:\s/g, /"post"\s*:/g),
+    put: count(/\bput:\s/g, /"put"\s*:/g),
+    delete: count(/\bdelete:\s/g, /"delete"\s*:/g),
+  };
+  return {
+    ...score,
+    crudScore: score.post + score.put + score.delete,
+  };
+}
+
+/** Detect list + detail pattern: /resource with get: and /resource/{id} with get: */
+function detectResourcePattern(content: string): boolean {
+  return /\/[a-z0-9-]+:\s*\n\s+get:/i.test(content) && /\/[a-z0-9-]+\/\{[^}]+\}:/i.test(content);
+}
+
+const MIN_CRUD_SCORE = 2; // Require at least 2 write ops (post/put/delete) to filter read-only APIs
 
 function safeFilename(owner: string, repo: string, path: string): string {
   const pathPart = path.replace(/\//g, "__");
@@ -212,68 +196,82 @@ async function main() {
   }
 
   // --limit N: cap each group at N specs (for quick testing)
+  // --no-crud-filter: skip CRUD score filter (saves read-only APIs too)
+  // --group NAME: run only queries for this group (e.g. frameworks, frameworks/laravel)
   let limitOverride: number | null = null;
+  let crudFilterEnabled = true;
+  let groupFilter: string | null = null;
   const args = process.argv.slice(2);
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--limit" && args[i + 1]) {
       limitOverride = parseInt(args[++i], 10);
-      break;
+    } else if (args[i] === "--no-crud-filter") {
+      crudFilterEnabled = false;
+    } else if (args[i] === "--group" && args[i + 1]) {
+      groupFilter = args[++i];
     }
   }
 
   console.log("GitHub OpenAPI Spec Crawler\n");
-  console.log(`Output: ${CORPUS_GITHUB}`);
+  console.log(`Output: ${SPECS_OUTPUT}`);
   if (limitOverride != null) console.log(`[TEST MODE] --limit ${limitOverride} per group\n`);
+  if (groupFilter) console.log(`[GROUP FILTER] --group ${groupFilter}\n`);
+  if (!crudFilterEnabled) console.log(`[CRUD filter disabled] --no-crud-filter\n`);
   console.log(`Search rate limit: 9 req/min (throttle ${SEARCH_THROTTLE_MS / 1000}s)\n`);
 
   const repoSpecCount: Record<string, number> = {};
   const contentHashes = new Set<string>();
-  let genericTotal = 0;
-  let vendorsTotal = 0;
-  const VENDORS_GROUP_CAP = 200;
   const manifest: {
     startedAt: string;
     finishedAt?: string;
     groups: Record<
       string,
-      { queries: string[]; downloaded: number; skippedRepo: number; skippedDup: number; repos: string[] }
+      { queries: string[]; downloaded: number; skippedRepo: number; skippedDup: number; skippedCrud: number; repos: string[] }
     >;
   } = {
     startedAt: new Date().toISOString(),
     groups: {},
   };
 
-  for (const { group, name, q } of QUERIES) {
-    const groupKey = group === "frameworks" || group === "vendors" ? `${group}/${name}` : group;
+  const queriesToRun = groupFilter
+    ? QUERIES.filter(({ group, name }) => {
+        const groupKey = group === "frameworks" || group === "vendors" || group === "crud" ? `${group}/${name}` : group;
+        return groupKey === groupFilter || group === groupFilter;
+      })
+    : QUERIES;
+
+  if (groupFilter && queriesToRun.length === 0) {
+    console.error(`No queries match --group ${groupFilter}. Valid groups: frameworks, frameworks/laravel, generic, crud, vendors, etc.`);
+    process.exit(1);
+  }
+
+  for (const { group, name, q } of queriesToRun) {
+    const groupKey = group === "frameworks" || group === "vendors" || group === "crud" ? `${group}/${name}` : group;
     if (!manifest.groups[groupKey]) {
-      manifest.groups[groupKey] = { queries: [], downloaded: 0, skippedRepo: 0, skippedDup: 0, repos: [] };
+      manifest.groups[groupKey] = { queries: [], downloaded: 0, skippedRepo: 0, skippedDup: 0, skippedCrud: 0, repos: [] };
     }
     manifest.groups[groupKey].queries.push(q);
 
-    // Generic: 200 total across all 3 queries; vendors: 200 total across all vendor queries
-    if (group === "generic" && genericTotal >= GROUP_CAPS.generic) continue;
-    if (group === "vendors" && vendorsTotal >= VENDORS_GROUP_CAP) continue;
+    const applyCrudFilter = group === "generic" || group === "frameworks" || group === "crud";
 
-    let cap =
-      group === "generic"
-        ? GROUP_CAPS.generic - genericTotal
-        : group === "frameworks" || group === "vendors"
-          ? Math.min(GROUP_CAPS[group] ?? 100, group === "vendors" ? VENDORS_GROUP_CAP - vendorsTotal : 999)
-          : GROUP_CAPS[group] ?? 200;
-    if (limitOverride != null) cap = Math.min(cap, limitOverride);
+    // All groups use per-query caps from PER_QUERY_CAPS
+    const baseCap = PER_QUERY_CAPS[group] ?? 100;
+    const cap = limitOverride != null ? Math.min(baseCap, limitOverride) : baseCap;
     if (cap <= 0) continue;
     const storageDir =
       group === "frameworks"
-        ? join(CORPUS_GITHUB, "group-frameworks", name)
-        : group === "vendors"
-          ? join(CORPUS_GITHUB, "group-vendors")
-          : group === "platforms"
-            ? join(CORPUS_GITHUB, "group-platforms")
-            : group === "cloud"
-              ? join(CORPUS_GITHUB, "group-cloud")
-              : group === "api-docs"
-                ? join(CORPUS_GITHUB, "group-api-docs")
-                : join(CORPUS_GITHUB, "group-generic");
+        ? join(SPECS_OUTPUT, "group-frameworks", name)
+        : group === "crud"
+          ? join(SPECS_OUTPUT, "group-crud")
+          : group === "vendors"
+            ? join(SPECS_OUTPUT, "group-vendors")
+            : group === "platforms"
+              ? join(SPECS_OUTPUT, "group-platforms")
+              : group === "cloud"
+                ? join(SPECS_OUTPUT, "group-cloud")
+                : group === "api-docs"
+                  ? join(SPECS_OUTPUT, "group-api-docs")
+                  : join(SPECS_OUTPUT, "group-generic");
 
     mkdirSync(storageDir, { recursive: true });
 
@@ -283,11 +281,14 @@ async function main() {
     let page = 1;
     const seenInThisQuery = new Set<string>(); // repo+path for this query
 
-    console.log(`\n--- ${groupKey} (cap ${cap}) ---`);
+    const queryLabel = groupKey !== name ? `${groupKey}/${name}` : groupKey;
+    console.log(`\n--- ${queryLabel} (cap ${cap}) ---`);
 
     while (downloaded < cap) {
+      console.log(`  [${name}] Searching page ${page}...`);
       const data = await searchCode(token, q, page, 100);
       const items = data.items ?? [];
+      console.log(`  [${name}] Got ${items.length} items`);
 
       if (items.length === 0) break;
 
@@ -328,6 +329,18 @@ async function main() {
             continue; // Skip Swagger 2.0 etc.
           }
 
+          if (applyCrudFilter) {
+            const { crudScore } = detectCrudScore(content);
+            const hasResourcePattern = detectResourcePattern(content);
+            // Require crudScore >= 2, or crudScore >= 1 with list+detail path pattern
+            const passesCrudFilter =
+              crudScore >= MIN_CRUD_SCORE || (crudScore >= 1 && hasResourcePattern);
+            if (!passesCrudFilter) {
+              manifest.groups[groupKey].skippedCrud++;
+              continue; // Filter out read-only APIs
+            }
+          }
+
           contentHashes.add(hash);
           repoSpecCount[fullName] = (repoSpecCount[fullName] ?? 0) + 1;
 
@@ -356,17 +369,16 @@ async function main() {
     manifest.groups[groupKey].downloaded += downloaded;
     manifest.groups[groupKey].skippedRepo += skippedRepo;
     manifest.groups[groupKey].skippedDup += skippedDup;
-    if (group === "generic") genericTotal += downloaded;
-    if (group === "vendors") vendorsTotal += downloaded;
+    const skippedCrud = manifest.groups[groupKey].skippedCrud ?? 0;
 
-    console.log(`  Downloaded: ${downloaded}, skipped (repo limit): ${skippedRepo}, skipped (dup): ${skippedDup}`);
+    console.log(`  Downloaded: ${downloaded}, skipped (repo limit): ${skippedRepo}, skipped (dup): ${skippedDup}${applyCrudFilter ? `, skipped (low CRUD): ${skippedCrud}` : ""}`);
 
     await sleep(SEARCH_THROTTLE_MS);
   }
 
   manifest.finishedAt = new Date().toISOString();
 
-  const manifestPath = join(CORPUS_GITHUB, "corpus-github-manifest.json");
+  const manifestPath = join(SPECS_OUTPUT, "corpus-github-manifest.json");
   mkdirSync(dirname(manifestPath), { recursive: true });
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf8");
 

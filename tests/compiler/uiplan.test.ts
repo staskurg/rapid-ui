@@ -120,7 +120,7 @@ describe("UiPlanIR schema and normalizer", () => {
 
 describe("llmPlan with mock", () => {
   it("golden Users ApiIR → mock UiPlanIR → snapshot", async () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const result = await llmPlan(apiIr, { llmPlanFn: mockLlmPlan });
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -129,7 +129,7 @@ describe("llmPlan with mock", () => {
   });
 
   it("golden Products ApiIR → mock UiPlanIR → snapshot", async () => {
-    const apiIr = loadApiIr("golden_openapi_products_path_3_1.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_products_path_3_1.yaml");
     const result = await llmPlan(apiIr, { llmPlanFn: mockLlmPlan });
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -137,7 +137,7 @@ describe("llmPlan with mock", () => {
   });
 
   it("same ApiIR → same normalized UiPlanIR (determinism)", async () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const r1 = await llmPlan(apiIr, { llmPlanFn: mockLlmPlan });
     const r2 = await llmPlan(apiIr, { llmPlanFn: mockLlmPlan });
     expect(r1.success && r2.success).toBe(true);
@@ -147,7 +147,7 @@ describe("llmPlan with mock", () => {
   });
 
   it("returns UIPLAN_LLM_UNAVAILABLE when no API key and no mock", async () => {
-    const apiIr = loadApiIr("golden_openapi_users_tagged_3_0.yaml");
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
     const orig = process.env.OPENAI_API_KEY;
     delete process.env.OPENAI_API_KEY;
     try {

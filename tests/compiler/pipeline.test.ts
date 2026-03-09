@@ -213,7 +213,7 @@ function mockLlmPlan(apiIr: ApiIR): UiPlanIR {
 describe("compileOpenAPI full pipeline", () => {
   it("golden Users spec → full compile → UISpec snapshot", async () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_users_tagged_3_0.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
       "utf-8"
     );
     const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
@@ -227,7 +227,7 @@ describe("compileOpenAPI full pipeline", () => {
 
   it("golden Products spec → full compile → UISpec snapshot", async () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_products_path_3_1.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_products_path_3_1.yaml"),
       "utf-8"
     );
     const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
@@ -241,7 +241,7 @@ describe("compileOpenAPI full pipeline", () => {
 
   it("same OpenAPI → same UISpec (determinism)", async () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_users_tagged_3_0.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
       "utf-8"
     );
     const r1 = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
@@ -253,7 +253,7 @@ describe("compileOpenAPI full pipeline", () => {
   });
 
   it("demo v1 → Users only", async () => {
-    const yaml = readFileSync(join(FIXTURES, "demo_users_tasks_v1.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "demo", "demo_users_tasks_v1.yaml"), "utf-8");
     const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -263,7 +263,7 @@ describe("compileOpenAPI full pipeline", () => {
   });
 
   it("demo v2 → Users + Tasks", async () => {
-    const yaml = readFileSync(join(FIXTURES, "demo_users_tasks_v2.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "demo", "demo_users_tasks_v2.yaml"), "utf-8");
     const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
     expect(result.success).toBe(true);
     if (!result.success) return;
@@ -276,7 +276,7 @@ describe("compileOpenAPI full pipeline", () => {
   });
 
   it("demo v3 → Users + Tasks with updated fields", async () => {
-    const yaml = readFileSync(join(FIXTURES, "demo_users_tasks_v3.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "demo", "demo_users_tasks_v3.yaml"), "utf-8");
     const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
     expect(result.success).toBe(true);
     if (!result.success) return;

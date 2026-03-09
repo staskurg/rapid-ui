@@ -32,14 +32,14 @@ function docToApiIrHash(doc: Record<string, unknown>): string {
 
 describe("canonicalization and hashing", () => {
   it("golden_openapi_users_tagged_3_0.yaml produces stable canonical JSON", () => {
-    const doc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
     const str = canonicalStringify(doc);
 
     expect(str).toMatchSnapshot();
   });
 
   it("golden_openapi_products_path_3_1.yaml produces stable canonical JSON", () => {
-    const doc = loadAndProcess("golden_openapi_products_path_3_1.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
     const str = canonicalStringify(doc);
 
     expect(str).toMatchSnapshot();
@@ -47,7 +47,7 @@ describe("canonicalization and hashing", () => {
 
   it("same spec with reordered keys produces same canonical JSON", () => {
     const yaml = readFileSync(
-      join(FIXTURES, "golden_openapi_users_tagged_3_0.yaml"),
+      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
       "utf-8"
     );
     const parse1 = parseOpenAPI(yaml);
@@ -125,7 +125,7 @@ describe("canonicalization and hashing", () => {
   });
 
   it("same canonical JSON produces same hash", () => {
-    const doc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
+    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
     const canonical = canonicalize(doc);
     const hash1 = sha256Hash(canonical);
     const hash2 = sha256Hash(canonical);
@@ -134,8 +134,8 @@ describe("canonicalization and hashing", () => {
   });
 
   it("different specs produce different hashes", () => {
-    const usersDoc = loadAndProcess("golden_openapi_users_tagged_3_0.yaml");
-    const productsDoc = loadAndProcess("golden_openapi_products_path_3_1.yaml");
+    const usersDoc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
+    const productsDoc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
     const usersCanonical = canonicalize(usersDoc);
     const productsCanonical = canonicalize(productsDoc);
     const usersHash = sha256Hash(usersCanonical);

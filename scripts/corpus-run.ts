@@ -1,10 +1,11 @@
 #!/usr/bin/env tsx
 /**
- * Phase 4 corpus run: run RUS-v1 check on a batch of OpenAPI specs.
+ * Phase 4 corpus run: run RUS-v1 check on OpenAPI specs.
  * parse → validateSubset → resolveRefs → buildApiIR per spec.
  *
- * Usage: npm run corpus:run -- --batch N
- * Output: scripts/corpus-data/reports/raw-batch{N}-{timestamp}.json
+ * Usage: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]
+ *   or:  npm run corpus:run -- --api-guru   (shorthand for specs/api_guru)
+ * Output: scripts/corpus-data/reports/raw-{NAME}-{timestamp}.json
  */
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, statSync } from "fs";
@@ -187,14 +188,14 @@ function runSpec(
 
 function main(): number {
   const args = process.argv.slice(2);
-  let batchNum: number | null = null;
   let specsDirArg: string | null = null;
   let outputName: string | null = null;
   let recurse = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--batch" && args[i + 1]) {
-      batchNum = parseInt(args[++i], 10);
+    if (args[i] === "--api-guru") {
+      specsDirArg = "scripts/corpus-data/specs/api_guru";
+      outputName = "api-guru";
     } else if (args[i] === "--specs-dir" && args[i + 1]) {
       specsDirArg = args[++i];
     } else if (args[i] === "--output-name" && args[i + 1]) {
@@ -204,40 +205,24 @@ function main(): number {
     }
   }
 
+  if (specsDirArg == null || outputName == null || outputName === "") {
+    console.error("Usage: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]");
+    console.error("   or: npm run corpus:run -- --api-guru");
+    console.error("Example: npm run corpus:run -- --api-guru");
+    console.error("Example: npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic");
+    return 1;
+  }
+
   const cwd = process.cwd();
   const reportsDir = join(cwd, "scripts", "corpus-data", "reports");
-  let specsDir: string;
-  let batch: number | string;
-  let specFiles: Array<{ absPath: string; relPath: string }>;
+  const specsDir = join(cwd, specsDirArg);
 
-  if (specsDirArg != null) {
-    if (outputName == null || outputName === "") {
-      console.error("When using --specs-dir, --output-name is required.");
-      return 1;
-    }
-    specsDir = join(cwd, specsDirArg);
-    batch = outputName;
-    if (!existsSync(specsDir)) {
-      console.error(`Specs directory not found: ${specsDir}`);
-      return 1;
-    }
-    specFiles = collectSpecFiles(specsDir, recurse);
-  } else {
-    if (batchNum == null || isNaN(batchNum) || batchNum < 1) {
-      console.error("Usage: npm run corpus:run -- --batch N");
-      console.error("   or: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]");
-      console.error("Example: npm run corpus:run -- --batch 20");
-      console.error("Example: npm run corpus:run -- --specs-dir scripts/corpus-data/corpus-github/group-generic --output-name github-generic");
-      return 1;
-    }
-    specsDir = join(cwd, "scripts", "corpus-data", "specs", String(batchNum));
-    batch = batchNum;
-    if (!existsSync(specsDir)) {
-      console.error(`Batch directory not found: ${specsDir}`);
-      return 1;
-    }
-    specFiles = collectSpecFiles(specsDir, false);
+  if (!existsSync(specsDir)) {
+    console.error(`Specs directory not found: ${specsDir}`);
+    return 1;
   }
+
+  const specFiles = collectSpecFiles(specsDir, recurse);
 
   if (specFiles.length === 0) {
     console.error(`No spec files in ${specsDir}`);
@@ -245,12 +230,11 @@ function main(): number {
   }
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const outputBase = typeof batch === "number" ? `raw-batch${batch}` : `raw-${batch}`;
-  const outputPath = join(reportsDir, `${outputBase}-${timestamp}.json`);
+  const outputPath = join(reportsDir, `raw-${outputName}-${timestamp}.json`);
 
   mkdirSync(reportsDir, { recursive: true });
 
-  console.log(`Running corpus on ${batch} (${specFiles.length} specs)...`);
+  console.log(`Running corpus on ${outputName} (${specFiles.length} specs)...`);
 
   const results: CorpusResult[] = [];
   const cleanList: CleanListItem[] = [];
@@ -281,7 +265,7 @@ function main(): number {
 
   const output: RawOutput = {
     meta: {
-      batch,
+      batch: outputName,
       sampleSize: results.length,
       timestamp: new Date().toISOString(),
       cleanList,

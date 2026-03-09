@@ -22,7 +22,7 @@ export async function GET(
   }
 
   const filename = `${base}.yaml`;
-  const filepath = join(process.cwd(), "tests", "compiler", "fixtures", filename);
+  const filepath = join(process.cwd(), "tests", "compiler", "fixtures", "demo", filename);
 
   try {
     const content = await readFile(filepath, "utf-8");

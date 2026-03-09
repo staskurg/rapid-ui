@@ -2,9 +2,9 @@
 /**
  * Generate ApiIR JSON fixtures from OpenAPI YAML fixtures.
  * Reads from:
- *   - tests/compiler/fixtures/*.yaml (excludes invalid)
- *   - tests/compiler/fixtures/corpus-valid-v1/*.yaml
- * Writes to tests/compiler/fixtures/apiir/*.json and apiir/corpus-valid-v1/*.json
+ *   - tests/compiler/fixtures/demo/*.yaml (excludes invalid)
+ *   - tests/compiler/fixtures/valid-specs-api-guru/*.yaml
+ * Writes to tests/compiler/fixtures/apiir/demo/*.json, apiir/valid-specs-api-guru/*.json
  *
  * Run after parse/validate/build changes. Commit updated ApiIR files.
  *
@@ -20,7 +20,8 @@ import { buildApiIR } from "@/lib/compiler/apiir";
 
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const APIIR_DIR = join(FIXTURES_DIR, "apiir");
-const CORPUS_DIR = join(FIXTURES_DIR, "corpus-valid-v1");
+const CORPUS_DIR = join(FIXTURES_DIR, "valid-specs-api-guru");
+const DEMO_DIR = join(FIXTURES_DIR, "demo");
 const INVALID_FIXTURE = "golden_openapi_invalid_expected_failure";
 
 type Source = { inputDir: string; outputSubdir: string };
@@ -101,8 +102,8 @@ function main() {
   }
 
   const sources: Source[] = [
-    { inputDir: FIXTURES_DIR, outputSubdir: "" },
-    { inputDir: CORPUS_DIR, outputSubdir: "corpus-valid-v1" },
+    { inputDir: DEMO_DIR, outputSubdir: "demo" },
+    { inputDir: CORPUS_DIR, outputSubdir: "valid-specs-api-guru" },
   ];
 
   let total = 0;

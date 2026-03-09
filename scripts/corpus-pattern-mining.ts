@@ -1,12 +1,12 @@
 #!/usr/bin/env tsx
 /**
  * Standalone structural pattern mining on ApiIR fixtures.
- * Reads ApiIR JSON from tests/compiler/fixtures/apiir/corpus-valid-v1/ (or path arg).
+ * Reads ApiIR JSON from tests/compiler/fixtures/apiir/valid-specs-api-guru/ (or path arg).
  * Prints pattern distribution report to stdout.
  *
  * Usage: npm run corpus:pattern-mining [path-to-apiir-dir]
  * Example: npm run corpus:pattern-mining
- *          npm run corpus:pattern-mining tests/compiler/fixtures/apiir/corpus-valid-v1
+ *          npm run corpus:pattern-mining tests/compiler/fixtures/apiir/valid-specs-api-guru
  */
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "fs";
@@ -19,7 +19,7 @@ import {
 
 const DEFAULT_DIR = join(
   process.cwd(),
-  "tests/compiler/fixtures/apiir/corpus-valid-v1"
+  "tests/compiler/fixtures/apiir/valid-specs-api-guru"
 );
 
 function main(): number {
