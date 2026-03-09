@@ -1,0 +1,158 @@
+openapi: 3.0.3
+info:
+  title: DMXControl Plugin Library
+  version: '1.0'
+servers:
+  - url: https://dmxcontrol.github.io/DMXCPluginLibrary/
+paths:
+  /versions.json:
+    get:
+      responses:
+        '200':
+          description: DMXC Version with last update time.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Versionarray'
+              examples:
+                Versionresponse:
+                  value: >-
+                    [{ "name": "DMXC323", "timestamp":
+                    "2023-05-19T09:17:44.379780+00:00" }]
+
+  /{version}.json:
+    get:
+      parameters:
+      - in: path
+        name: version
+        schema:
+          type: string
+        required: true
+      responses:
+        '200':
+          description: All plugins for the desired Version.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginList"
+              examples:
+                Pluginlistresponse:
+                  value: >-
+                    {"version": "DMXC323", "timestamp": "2022-11-20T23:17:48.546337+00:00",
+                    "plugins": [{
+                    "name": "3Dconnexion Plugin",
+                    "desc": "DMXControl 3.x Plugin to control DMXControl3.x with 3Dconnexion devices.",
+                    "author": "Arne Lüdtke (DMXControl)",
+                    "license": "MIT",
+                    "icon-url": "https://raw.githubusercontent.com/DMXControl/3Dconnexion-dmxc3-plugin/master/3DxIcon.png",
+                    "details": "https://DMXControl.github.io/DMXCPluginLibrary/plugins/3dconnexion.json" }]}
+
+  /plugins/{pluginname}.json:
+    get:
+      parameters:
+        - in: path
+          name: pluginname
+          schema: 
+            type: string
+          required: true
+      responses: 
+        '200':
+          description: Get Plugindetails
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PluginDetails"
+              examples:
+                PluginDetailResponse:
+                  value: >-
+                    {
+                      "name": "3Dconnexion Plugin",
+                      "author": "Arne Lüdtke (DMXControl)",
+                      "short-desc": "DMXControl 3.x Plugin to control DMXControl3.x with 3Dconnexion devices.",
+                      "desc": "This plugin allows you to control DMXControl3.x with 3Dconnexion devices.",
+                      "license": "MIT",
+                      "url": "https://github.com/DMXControl/3Dconnexion-dmxc3-plugin",
+                      "icon-url": "https://raw.githubusercontent.com/DMXControl/3Dconnexion-dmxc3-plugin/master/3DxIcon.png",
+                      "versions": [
+                        {
+                          "version": "3.2.3 - 1.0",
+                          "dmxc-version": [
+                            "3.2.3"
+                          ],
+                          "url": "https://github.com/DMXControl/3Dconnexion-dmxc3-plugin/releases/download/v3.2.3/Lumos3DconnexionPlugin.zip",
+                          "hash": "$SHA256$5D7D06A792C87AE40EA89E536E89E9B47567682C3C81A2F2989672C1A8C5F8DA"
+                        }
+                      ]
+                    }
+
+components:
+  schemas:
+    Versionarray:
+      type: array
+      items:
+        $ref: '#/components/schemas/Version'
+    Version:
+      type: object
+      properties:
+        name:
+          type: string
+        timestamp:
+          type: string
+    ShortPlugin:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        desc:
+          type: "string"
+        author:
+          type: "string"
+        license:
+          type: "string"
+        icon-url:
+          type: "string"
+        details:
+          type: "string"
+    PluginList:
+      type: "object"
+      properties:
+        version:
+          type: "string"
+        timestamp:
+          type: "string"
+        plugins:
+          type: "array"
+          items:
+           $ref: "#/components/schemas/ShortPlugin"
+    PluginDetails:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+        author:
+          type: "string"
+        short-desc:
+          type: "string"
+        desc:
+          type: "string"
+        license:
+          type: "string"
+        url:
+          type: "string"
+        icon-url:
+          type: "string"
+        versions:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              version:
+                type: "string"
+              dmxc-version:
+                type: "array"
+                items:
+                  type: "string"
+              url:
+                type: "string"
+              hash:
+                type: "string"

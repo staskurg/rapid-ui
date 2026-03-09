@@ -1,0 +1,143 @@
+openapi: 3.0.0
+info:
+  title: Product Service API
+  version: 1.0.0
+  description: API for managing products
+servers:
+  - url: https://ic4qlwt2a5.execute-api.eu-west-1.amazonaws.com/
+
+paths:
+  /products:
+    get:
+      summary: Get all products
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal Server Error occurred
+
+    post:
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewProduct'
+      responses:
+        '200':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: ValidationError
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: ID of the product
+    get:
+      summary: Get a product by ID
+      responses:
+        '200':
+          description: Details of the product
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product not found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Internal Server Error occurred
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The unique identifier for the product
+        title:
+          type: string
+          description: The title of the product
+        description:
+          type: string
+          description: The description of the product
+        price:
+          type: number
+          description: The price of the product
+
+    NewProduct:
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier for the product
+        title:
+          type: string
+          description: The title of the product
+        description:
+          type: string
+          description: The description of the product
+        price:
+          type: number
+          description: The price of the product
+        count:
+          type: number
+          description: The count of the product
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message

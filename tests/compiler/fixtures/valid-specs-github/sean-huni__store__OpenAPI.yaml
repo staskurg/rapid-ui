@@ -1,0 +1,391 @@
+openapi: 3.0.0
+info:
+  title: store
+  version: '1.0'
+  description: A simple store
+  contact:
+    name: SecuritEase Dev
+    url: 'https://www.securitease.com'
+    email: internal@securitease.com
+  termsOfService: 'https://www.securitease.com'
+  license:
+    name: Apache 2.0
+    url: 'https://www.apache.org/licenses/LICENSE-2.0.htm'
+servers:
+  - url: 'http://localhost:8080'
+    description: dev
+paths:
+  /orders:
+    get:
+      summary: Get Orders
+      tags:
+        - store
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Page number (0-indexed)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 5
+          description: Number of items per page
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Field to sort by
+        - name: sortDir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+          description: Sort direction
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
+      operationId: findOrders
+      description: Get all orders
+    post:
+      summary: Create Order
+      tags:
+        - store
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+      operationId: createOrder
+      description: Create a new order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderInput'
+        required: true
+  /orders/{id}:
+    get:
+      summary: Get Order by ID
+      tags:
+        - store
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Order ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+      operationId: getOrderById
+      description: Get order by ID
+  /customers:
+    get:
+      summary: Get Customers
+      tags:
+        - store
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter customers by name
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Page number (0-indexed)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 5
+          description: Number of items per page
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Field to sort by
+        - name: sortDir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+          description: Sort direction
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+      operationId: findCustomers
+      description: Get all customers
+    post:
+      summary: Create Customer
+      tags:
+        - store
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+      operationId: createCustomer
+      description: Create a new customer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerInput'
+        required: true
+  /customers/{id}:
+    get:
+      summary: Get Customer by ID
+      tags:
+        - store
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Customer ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+      operationId: findCustomerById
+      description: Get customer by ID
+  /products:
+    get:
+      summary: Get Products
+      tags:
+        - store
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+          description: Page number (0-indexed)
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 5
+          description: Number of items per page
+        - name: sortBy
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Field to sort by
+        - name: sortDir
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ASC, DESC]
+          description: Sort direction
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+      operationId: findProducts
+      description: Get all products
+    post:
+      summary: Create Product
+      tags:
+        - store
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+      operationId: createProduct
+      description: Create a new product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+        required: true
+  /products/{id}:
+    get:
+      summary: Get Product by ID
+      tags:
+        - store
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          description: Product ID
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+      operationId: findProductById
+      description: Get product by ID
+components:
+  schemas:
+    Order:
+      title: Order
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+        customerId:
+          type: integer
+          format: int64
+        customer:
+          $ref: '#/components/schemas/Customer'
+        productIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+    OrderInput:
+      title: OrderInput
+      type: object
+      required:
+        - description
+        - customerId
+      properties:
+        description:
+          type: string
+        customerId:
+          type: integer
+          format: int64
+        productIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    Customer:
+      title: Customer
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        orders:
+          type: array
+          items:
+            type: integer
+            format: int64
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+    CustomerInput:
+      title: CustomerInput
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+    Product:
+      title: Product
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        description:
+          type: string
+        sku:
+          type: string
+          format: uuid
+        orderIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+        created:
+          type: string
+          format: date-time
+        updated:
+          type: string
+          format: date-time
+    ProductInput:
+      title: ProductInput
+      type: object
+      required:
+        - description
+        - sku
+      properties:
+        description:
+          type: string
+        sku:
+          type: string
+          format: uuid
+tags:
+  - name: store
+    description: store operations

@@ -1,0 +1,240 @@
+openapi: 3.0.3
+info:
+  title: Laravel
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost:80'
+paths:
+  /api/account-banks/store:
+    post:
+      summary: 'Cria uma nova conta bancária.'
+      operationId: criaUmaNovaContaBancria
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: uuid
+                  name: 'John Doe'
+                  balance: 1000.0
+                  created_at: '2024-08-06 19:46:33'
+                  updated_at: '2024-08-06 19:46:33'
+                properties:
+                  id:
+                    type: string
+                    example: uuid
+                  name:
+                    type: string
+                    example: 'John Doe'
+                  balance:
+                    type: number
+                    example: 1000.0
+                  created_at:
+                    type: string
+                    example: '2024-08-06 19:46:33'
+                  updated_at:
+                    type: string
+                    example: '2024-08-06 19:46:33'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  errors:
+                    name:
+                      - 'O campo nome é obrigatório.'
+                    balance:
+                      - 'O saldo deve ser um número.'
+                      - 'O saldo deve ser maior ou igual a zero.'
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      name:
+                        type: array
+                        example:
+                          - 'O campo nome é obrigatório.'
+                        items:
+                          type: string
+                      balance:
+                        type: array
+                        example:
+                          - 'O saldo deve ser um número.'
+                          - 'O saldo deve ser maior ou igual a zero.'
+                        items:
+                          type: string
+      tags:
+        - 'Account Bank'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'O nome do titular da conta. Exemplo: John Doe'
+                  example: voluptas
+                balance:
+                  type: numeric
+                  description: 'nullable O saldo inicial da conta. Exemplo: 1000.00'
+                  example: dolores
+              required:
+                - name
+      security: []
+  /api/account-banks/transfer:
+    post:
+      summary: 'Realiza uma transferência de valores entre contas.'
+      operationId: realizaUmaTransfernciaDeValoresEntreContas
+      description: ''
+      parameters: []
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: uuid
+                  amount: 1000.0
+                  sender_id: 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6
+                  recipient_id: 6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1
+                  status: completed
+                  scheduled_at: '2024-08-07 00:00:00'
+                  processed_at: '2024-08-07 00:00:00'
+                  created_at: '2024-08-06 00:00:00'
+                  updated_at: '2024-08-06 00:00:00'
+                properties:
+                  id:
+                    type: string
+                    example: uuid
+                  amount:
+                    type: number
+                    example: 1000.0
+                  sender_id:
+                    type: string
+                    example: 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6
+                  recipient_id:
+                    type: string
+                    example: 6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1
+                  status:
+                    type: string
+                    example: completed
+                  scheduled_at:
+                    type: string
+                    example: '2024-08-07 00:00:00'
+                  processed_at:
+                    type: string
+                    example: '2024-08-07 00:00:00'
+                  created_at:
+                    type: string
+                    example: '2024-08-06 00:00:00'
+                  updated_at:
+                    type: string
+                    example: '2024-08-06 00:00:00'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  errors:
+                    amount:
+                      - 'O valor da transação é obrigatório.'
+                      - 'O valor da transação deve ser um número.'
+                      - 'O valor da transação deve ser maior ou igual a zero.'
+                    sender_id:
+                      - 'O campo de ID do remetente é obrigatório.'
+                      - 'O ID do remetente deve ser um UUID válido.'
+                      - 'A conta do remetente não foi encontrada.'
+                    recipient_id:
+                      - 'O campo de ID do destinatário é obrigatório.'
+                      - 'O ID do destinatário deve ser um UUID válido.'
+                      - 'A conta do destinatário não foi encontrada.'
+                    scheduled_at:
+                      - 'A data e hora agendadas devem estar no formato Y-m-d.'
+                      - 'A data e hora agendadas devem ser no futuro.'
+                properties:
+                  errors:
+                    type: object
+                    properties:
+                      amount:
+                        type: array
+                        example:
+                          - 'O valor da transação é obrigatório.'
+                          - 'O valor da transação deve ser um número.'
+                          - 'O valor da transação deve ser maior ou igual a zero.'
+                        items:
+                          type: string
+                      sender_id:
+                        type: array
+                        example:
+                          - 'O campo de ID do remetente é obrigatório.'
+                          - 'O ID do remetente deve ser um UUID válido.'
+                          - 'A conta do remetente não foi encontrada.'
+                        items:
+                          type: string
+                      recipient_id:
+                        type: array
+                        example:
+                          - 'O campo de ID do destinatário é obrigatório.'
+                          - 'O ID do destinatário deve ser um UUID válido.'
+                          - 'A conta do destinatário não foi encontrada.'
+                        items:
+                          type: string
+                      scheduled_at:
+                        type: array
+                        example:
+                          - 'A data e hora agendadas devem estar no formato Y-m-d.'
+                          - 'A data e hora agendadas devem ser no futuro.'
+                        items:
+                          type: string
+      tags:
+        - 'Account Bank Transactions'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sender_id:
+                  type: uuid
+                  description: 'O ID da conta de origem. Exemplo: 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6'
+                  example: provident
+                recipient_id:
+                  type: uuid
+                  description: 'O ID da conta de destino. Exemplo: 6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1'
+                  example: aperiam
+                amount:
+                  type: numeric
+                  description: 'O valor a ser transferido. Exemplo: 1000.00'
+                  example: placeat
+                scheduled_at:
+                  type: 'date_format:Y-m-d'
+                  description: 'nullable A data e hora agendadas para a transação. Exemplo: 2024-08-07'
+                  example: omnis
+              required:
+                - sender_id
+                - recipient_id
+                - amount
+      security: []
+tags:
+  -
+    name: 'Account Bank'
+    description: "\nAPIs para criar e gerenciar contas bancárias."
+  -
+    name: 'Account Bank Transactions'
+    description: "\nAPIs para gerenciar transações entre contas bancárias."

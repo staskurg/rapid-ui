@@ -1,0 +1,133 @@
+{
+  "api": {
+    "title": "isdfwriter-la",
+    "version": "1.0"
+  },
+  "resources": [
+    {
+      "name": "Isdf",
+      "key": "isdf",
+      "operations": [
+        {
+          "id": "isdf",
+          "method": "POST",
+          "kind": "create",
+          "path": "/isdf",
+          "requestSchema": {
+            "title": "ISDF Cloud Sync Request",
+            "required": [
+              "device",
+              "isdf"
+            ],
+            "type": "object",
+            "properties": {
+              "device": {
+                "required": [
+                  "aadDeviceId",
+                  "hostname",
+                  "aadTenantId"
+                ],
+                "type": "object",
+                "properties": {
+                  "aadDeviceId": {
+                    "pattern": "^[0-9a-fA-F-]{36}$",
+                    "type": "string",
+                    "description": "Entra deviceId (GUID)"
+                  },
+                  "hostname": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
+                  "aadTenantId": {
+                    "pattern": "^[0-9a-fA-F-]{36}$",
+                    "type": "string",
+                    "description": "Entra tenantId (GUID)"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "isdf": {
+                "required": [
+                  "channel",
+                  "ea2",
+                  "signalHash",
+                  "originTupleHash",
+                  "baselineVer",
+                  "timestampUtc"
+                ],
+                "type": "object",
+                "properties": {
+                  "channel": {
+                    "enum": [
+                      "ISDF:W365",
+                      "ISDF:DevBox",
+                      "ISDF:AVD",
+                      "ISDF:DevTestLabs",
+                      "ISDF:AzureVM"
+                    ],
+                    "type": "string"
+                  },
+                  "ea2": {
+                    "minLength": 1,
+                    "type": "string",
+                    "description": "Base64 of DPAPI-protected signal blob"
+                  },
+                  "signalHash": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string",
+                    "description": "SHA-256 hex of live signal"
+                  },
+                  "originTupleHash": {
+                    "pattern": "^[a-f0-9]{64}$",
+                    "type": "string",
+                    "description": "SHA-256 hex of tuple used to derive key"
+                  },
+                  "baselineVer": {
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "timestampUtc": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          },
+          "responseSchema": {
+            "title": "ISDF Cloud Sync Success Response",
+            "required": [
+              "syncResult",
+              "processedAtUtc",
+              "echo"
+            ],
+            "type": "object",
+            "properties": {
+              "syncResult": {
+                "enum": [
+                  "Success"
+                ],
+                "type": "string"
+              },
+              "processedAtUtc": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "echo": {
+                "type": "object",
+                "properties": {
+                  "aadDeviceId": {
+                    "pattern": "^[0-9a-fA-F-]{36}$",
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

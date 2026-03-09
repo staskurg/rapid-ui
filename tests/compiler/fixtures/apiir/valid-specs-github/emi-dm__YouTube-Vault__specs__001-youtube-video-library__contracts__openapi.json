@@ -1,0 +1,126 @@
+{
+  "api": {
+    "title": "YouTube Video Library API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Videos",
+      "key": "videos",
+      "operations": [
+        {
+          "id": "searchVideos",
+          "method": "GET",
+          "kind": "list",
+          "path": "/videos/search",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "thumbnail_path": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "excerpt": {
+                      "type": "string",
+                      "description": "Relevant excerpt from transcription"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getVideo",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/videos/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "url": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "thumbnail_path": {
+                "type": "string"
+              },
+              "video_path": {
+                "type": "string"
+              },
+              "transcription": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "addVideo",
+          "method": "POST",
+          "kind": "create",
+          "path": "/videos",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "YouTube video URL",
+                "example": "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Video ID",
+                "example": 1
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "processing",
+                  "completed"
+                ],
+                "example": "processing"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

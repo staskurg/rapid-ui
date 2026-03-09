@@ -1,0 +1,688 @@
+openapi: 3.0.3
+info:
+  title: Users API - Huron Portal
+  description: API pour la gestion des utilisateurs (Admin seulement)
+  version: 1.0.0
+  contact:
+    name: Huron Portal Team
+
+servers:
+  - url: https://huronportal.azurestaticapps.net/api
+    description: Production
+  - url: http://localhost:3000/api
+    description: Local Development
+
+tags:
+  - name: users
+    description: Opérations sur les utilisateurs (Admin seulement)
+
+paths:
+  /users:
+    get:
+      summary: Liste tous les utilisateurs
+      description: Retourne la liste de tous les utilisateurs (Admin seulement)
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Numéro de page (1-indexed)
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Nombre d'utilisateurs par page
+          required: false
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+        - name: role
+          in: query
+          description: Filtrer par rôle
+          required: false
+          schema:
+            type: string
+            enum: [Admin, Contrôleur, Utilisateur]
+        - name: isActive
+          in: query
+          description: Filtrer par statut actif
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Liste des utilisateurs récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit (seuls les Admins)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+                  message:
+                    type: string
+                    example: Seuls les Administrateurs peuvent gérer les utilisateurs
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    post:
+      summary: Créer un nouvel utilisateur
+      description: Crée un nouvel utilisateur avec mot de passe (Admin seulement)
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreateRequest'
+      responses:
+        '201':
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Utilisateur créé avec succès
+        '400':
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Données invalides
+                  code:
+                    type: string
+                    example: VALIDATION_ERROR
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: username
+                        message:
+                          type: string
+                          example: Le nom d'utilisateur est requis
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+        '409':
+          description: Nom d'utilisateur déjà utilisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Ce nom d'utilisateur existe déjà
+                  code:
+                    type: string
+                    example: DUPLICATE_USERNAME
+                  message:
+                    type: string
+                    example: Le nom d'utilisateur "{username}" est déjà utilisé. Veuillez en choisir un autre.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{id}:
+    get:
+      summary: Obtenir un utilisateur par ID
+      description: Retourne les détails d'un utilisateur (Admin seulement)
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de l'utilisateur (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Utilisateur trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+                  code:
+                    type: string
+                    example: USER_NOT_FOUND
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    put:
+      summary: Modifier un utilisateur
+      description: Met à jour les informations d'un utilisateur (Admin seulement)
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de l'utilisateur (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: If-Match
+          in: header
+          description: ETag de la version actuelle (concurrence optimiste)
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdateRequest'
+      responses:
+        '200':
+          description: Utilisateur modifié avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+                  message:
+                    type: string
+                    example: Utilisateur modifié avec succès
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+                  code:
+                    type: string
+                    example: USER_NOT_FOUND
+        '409':
+          description: Nom d'utilisateur déjà utilisé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Ce nom d'utilisateur existe déjà
+                  code:
+                    type: string
+                    example: DUPLICATE_USERNAME
+        '412':
+          description: Conflit de concurrence
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Une autre modification a été effectuée
+                  code:
+                    type: string
+                    example: CONCURRENT_MODIFICATION
+                  message:
+                    type: string
+                    example: Cet utilisateur a été modifié par un autre administrateur. Veuillez rafraîchir et réessayer.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+    delete:
+      summary: Supprimer un utilisateur
+      description: Supprime un utilisateur (Admin seulement). Ne peut pas supprimer son propre compte.
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de l'utilisateur (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Utilisateur supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Utilisateur supprimé avec succès
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+                  code:
+                    type: string
+                    example: USER_NOT_FOUND
+        '409':
+          description: Impossible de supprimer son propre compte
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Impossible de supprimer votre propre compte
+                  code:
+                    type: string
+                    example: CANNOT_DELETE_SELF
+                  message:
+                    type: string
+                    example: Vous ne pouvez pas supprimer votre propre compte utilisateur.
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+  /users/{id}/password:
+    put:
+      summary: Réinitialiser le mot de passe
+      description: Réinitialise le mot de passe d'un utilisateur (Admin seulement)
+      tags:
+        - users
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: ID de l'utilisateur (UUID)
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - newPassword
+              properties:
+                newPassword:
+                  type: string
+                  format: password
+                  minLength: 8
+                  maxLength: 128
+                  description: Nouveau mot de passe (min 8 caractères)
+                  example: "NouveauMdp123!"
+      responses:
+        '200':
+          description: Mot de passe réinitialisé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Mot de passe réinitialisé avec succès
+        '400':
+          description: Mot de passe invalide
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Mot de passe invalide
+                  code:
+                    type: string
+                    example: INVALID_PASSWORD
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        field:
+                          type: string
+                          example: newPassword
+                        message:
+                          type: string
+                          example: Le mot de passe doit contenir au moins 8 caractères
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Accès interdit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Accès interdit
+                  code:
+                    type: string
+                    example: FORBIDDEN_ROLE
+        '404':
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Utilisateur non trouvé
+                  code:
+                    type: string
+                    example: USER_NOT_FOUND
+        '500':
+          $ref: '#/components/responses/ServerError'
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+
+  schemas:
+    User:
+      type: object
+      required:
+        - id
+        - username
+        - role
+        - isActive
+        - createdAt
+        - updatedAt
+        - _etag
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Identifiant unique de l'utilisateur
+        username:
+          type: string
+          maxLength: 50
+          description: Nom d'utilisateur (unique)
+          example: "jdupont"
+        role:
+          type: string
+          enum: [Admin, Contrôleur, Utilisateur]
+          description: Rôle de l'utilisateur
+          example: "Contrôleur"
+        isActive:
+          type: boolean
+          description: Statut actif de l'utilisateur
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Date de création
+        updatedAt:
+          type: string
+          format: date-time
+          description: Date de dernière modification
+        lastLogin:
+          type: string
+          format: date-time
+          description: Date de dernière connexion (optionnel)
+        _etag:
+          type: string
+          description: Version de l'entité pour la concurrence optimiste
+
+    UserCreateRequest:
+      type: object
+      required:
+        - username
+        - password
+        - role
+        - isActive
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-z0-9._-]+$'
+          description: Nom d'utilisateur (lettres minuscules, chiffres, ., _, -)
+          example: "jdupont"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+          description: Mot de passe initial (min 8 caractères)
+          example: "MotDePasse123!"
+        role:
+          type: string
+          enum: [Admin, Contrôleur, Utilisateur]
+          description: Rôle de l'utilisateur
+          example: "Contrôleur"
+        isActive:
+          type: boolean
+          description: Statut actif de l'utilisateur
+          default: true
+          example: true
+
+    UserUpdateRequest:
+      type: object
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-z0-9._-]+$'
+          description: Nom d'utilisateur (optionnel pour modification)
+        role:
+          type: string
+          enum: [Admin, Contrôleur, Utilisateur]
+          description: Rôle de l'utilisateur
+        isActive:
+          type: boolean
+          description: Statut actif de l'utilisateur
+
+    Pagination:
+      type: object
+      required:
+        - currentPage
+        - totalPages
+        - totalItems
+        - itemsPerPage
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 5
+        totalItems:
+          type: integer
+          example: 42
+        itemsPerPage:
+          type: integer
+          example: 50
+        hasNextPage:
+          type: boolean
+          example: true
+        hasPreviousPage:
+          type: boolean
+          example: false
+
+  responses:
+    Unauthorized:
+      description: Non authentifié
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Authentification requise
+              code:
+                type: string
+                example: UNAUTHORIZED
+
+    ValidationError:
+      description: Erreur de validation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Données invalides
+              code:
+                type: string
+                example: VALIDATION_ERROR
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    field:
+                      type: string
+                    message:
+                      type: string
+
+    ServerError:
+      description: Erreur serveur
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Une erreur est survenue
+              code:
+                type: string
+                example: SERVER_ERROR

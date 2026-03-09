@@ -1,0 +1,274 @@
+openapi: 3.0.3
+info:
+  title: Integrated RAG Chatbot API
+  description: API for the Physical AI Book RAG Chatbot with OpenAI Agents SDK integration
+  version: 1.0.0
+servers:
+  - url: https://api.book-chatbot.com/v1
+    description: Production server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+paths:
+  /chat:
+    post:
+      summary: Create or continue a chat session
+      description: Handles user queries and returns AI-generated responses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful response with chat message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limited
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /retrieve:
+    post:
+      summary: Retrieve relevant book content
+      description: Performs vector search to find relevant book content for a query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetrieveRequest'
+      responses:
+        '200':
+          description: Successfully retrieved content
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetrieveResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions/{sessionId}:
+    get:
+      summary: Get session details
+      description: Retrieve information about a specific chat session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Session details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+        - sessionId
+        - mode
+      properties:
+        message:
+          type: string
+          description: The user's message/query
+          example: "Explain the concept of forward kinematics in robotics"
+        sessionId:
+          type: string
+          format: uuid
+          description: The chat session ID
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        mode:
+          type: string
+          enum: [full-book, selected-text]
+          description: The query mode to use
+        selectedText:
+          type: string
+          description: Text selected by user (required for selected-text mode)
+          example: "Forward kinematics is the use of kinematic equations to determine the position of the end-effector based on joint parameters."
+
+    ChatResponse:
+      type: object
+      required:
+        - id
+        - message
+        - citations
+        - timestamp
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The response ID
+        message:
+          type: string
+          description: The AI-generated response
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        timestamp:
+          type: string
+          format: date-time
+          description: When the response was generated
+
+    RetrieveRequest:
+      type: object
+      required:
+        - query
+        - mode
+      properties:
+        query:
+          type: string
+          description: The search query
+          example: "kinematics in robotics"
+        mode:
+          type: string
+          enum: [full-book, selected-text]
+          description: The retrieval mode to use
+        selectedText:
+          type: string
+          description: Text selected by user (required for selected-text mode)
+
+    RetrieveResponse:
+      type: object
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/RetrievedContent'
+
+    SessionResponse:
+      type: object
+      required:
+        - id
+        - createdAt
+        - mode
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The session ID
+        userId:
+          type: string
+          format: uuid
+          description: The user ID (if authenticated)
+        mode:
+          type: string
+          enum: [full-book, selected-text]
+          description: The default query mode for this session
+        createdAt:
+          type: string
+          format: date-time
+          description: When the session was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the session was last updated
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Citation:
+      type: object
+      properties:
+        contentId:
+          type: string
+          format: uuid
+          description: ID of the cited content
+        chapter:
+          type: string
+          description: Chapter where the content appears
+        section:
+          type: string
+          description: Section where the content appears
+        page:
+          type: integer
+          description: Page number where the content appears
+
+    RetrievedContent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the retrieved content
+        content:
+          type: string
+          description: The actual content text
+        chapter:
+          type: string
+          description: Chapter where the content appears
+        section:
+          type: string
+          description: Section where the content appears
+        page:
+          type: integer
+          description: Page number where the content appears
+        relevanceScore:
+          type: number
+          format: float
+          description: Relevance score from vector search
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Message ID
+        role:
+          type: string
+          enum: [user, assistant]
+          description: The role of the message sender
+        content:
+          type: string
+          description: The message content
+        timestamp:
+          type: string
+          format: date-time
+          description: When the message was sent
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message

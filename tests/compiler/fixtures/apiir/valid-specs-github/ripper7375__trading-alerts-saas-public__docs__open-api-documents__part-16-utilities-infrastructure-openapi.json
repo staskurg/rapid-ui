@@ -1,0 +1,273 @@
+{
+  "api": {
+    "title": "Trading Alerts SaaS - Utilities & Infrastructure (Part 16)",
+    "version": "2.0.0"
+  },
+  "resources": [
+    {
+      "name": "Infrastructure",
+      "key": "infrastructure",
+      "operations": [
+        {
+          "id": "GET:/internal/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/internal/health",
+          "responseSchema": {
+            "type": "object",
+            "description": "System health check response",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string",
+                "example": "2.0.0"
+              },
+              "services": {
+                "type": "object",
+                "properties": {
+                  "database": {
+                    "type": "object",
+                    "description": "Individual service health status",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "up",
+                          "down",
+                          "degraded"
+                        ]
+                      },
+                      "latency": {
+                        "type": "integer",
+                        "description": "Response time in milliseconds"
+                      },
+                      "lastChecked": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "redis": {
+                    "type": "object",
+                    "description": "Individual service health status",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "up",
+                          "down",
+                          "degraded"
+                        ]
+                      },
+                      "latency": {
+                        "type": "integer",
+                        "description": "Response time in milliseconds"
+                      },
+                      "lastChecked": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "email": {
+                    "type": "object",
+                    "description": "Individual service health status",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "up",
+                          "down",
+                          "degraded"
+                        ]
+                      },
+                      "latency": {
+                        "type": "integer",
+                        "description": "Response time in milliseconds"
+                      },
+                      "lastChecked": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "mt5Api": {
+                    "type": "object",
+                    "description": "Individual service health status",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "up",
+                          "down",
+                          "degraded"
+                        ]
+                      },
+                      "latency": {
+                        "type": "integer",
+                        "description": "Response time in milliseconds"
+                      },
+                      "lastChecked": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  },
+                  "stripe": {
+                    "type": "object",
+                    "description": "Individual service health status",
+                    "properties": {
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "up",
+                          "down",
+                          "degraded"
+                        ]
+                      },
+                      "latency": {
+                        "type": "integer",
+                        "description": "Response time in milliseconds"
+                      },
+                      "lastChecked": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "error": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/internal/metrics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/internal/metrics",
+          "responseSchema": {
+            "type": "object",
+            "description": "System performance metrics",
+            "properties": {
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uptime": {
+                "type": "integer",
+                "description": "Uptime in seconds"
+              },
+              "memory": {
+                "type": "object",
+                "properties": {
+                  "used": {
+                    "type": "integer",
+                    "description": "Used memory in bytes"
+                  },
+                  "total": {
+                    "type": "integer",
+                    "description": "Total memory in bytes"
+                  },
+                  "percentage": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                }
+              },
+              "cpu": {
+                "type": "object",
+                "properties": {
+                  "usage": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "CPU usage percentage"
+                  }
+                }
+              },
+              "requests": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer"
+                  },
+                  "perSecond": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "averageLatency": {
+                    "type": "integer",
+                    "description": "Average latency in milliseconds"
+                  },
+                  "errorRate": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                }
+              },
+              "cache": {
+                "type": "object",
+                "properties": {
+                  "hitRate": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "keys": {
+                    "type": "integer"
+                  },
+                  "memoryUsed": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "activeConnections": {
+                "type": "object",
+                "properties": {
+                  "database": {
+                    "type": "integer"
+                  },
+                  "redis": {
+                    "type": "integer"
+                  },
+                  "websocket": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

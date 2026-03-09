@@ -1,0 +1,645 @@
+{
+  "api": {
+    "title": "Inkspire",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Books",
+      "key": "books",
+      "operations": [
+        {
+          "id": "get-books",
+          "method": "GET",
+          "kind": "list",
+          "path": "/books",
+          "queryParamCount": 6,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "authorId"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The Lusty Argonian Maid"
+                    },
+                    "authorId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "1a3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "seriesId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "2b3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Fantasy",
+                        "Epic",
+                        "Thriller"
+                      ]
+                    },
+                    "pages": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "example": 1690
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "read",
+                        "to-be-read"
+                      ]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-30T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "get-book",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/books/{bookId}",
+          "identifierParam": "bookId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "authorId"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The Lusty Argonian Maid"
+                    },
+                    "authorId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "1a3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "seriesId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "2b3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Fantasy",
+                        "Epic",
+                        "Thriller"
+                      ]
+                    },
+                    "pages": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "example": 1690
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "read",
+                        "to-be-read"
+                      ]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-30T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "add-book",
+          "method": "POST",
+          "kind": "create",
+          "path": "/books",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "The Lusty Argonian Maid"
+              },
+              "authorId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "1a3e4567-e89b-12d3-a456-426614174000"
+              },
+              "seriesId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "2b3e4567-e89b-12d3-a456-426614174000"
+              },
+              "genres": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Fantasy",
+                  "Epic",
+                  "Thriller"
+                ]
+              },
+              "pages": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 1,
+                "example": 1690
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "to-be-read"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier of the created resource.",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "message": {
+                "type": "string",
+                "description": "Confirmation message.",
+                "example": "Resource created successfully."
+              }
+            }
+          }
+        },
+        {
+          "id": "update-book",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/books/{bookId}",
+          "identifierParam": "bookId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "authorId"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "title": {
+                "type": "string",
+                "example": "The Lusty Argonian Maid"
+              },
+              "authorId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "1a3e4567-e89b-12d3-a456-426614174000"
+              },
+              "seriesId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "2b3e4567-e89b-12d3-a456-426614174000"
+              },
+              "genres": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Fantasy",
+                  "Epic",
+                  "Thriller"
+                ]
+              },
+              "pages": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 1,
+                "example": 1690
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "to-be-read"
+                ]
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-30T12:00:00Z"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "authorId"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The Lusty Argonian Maid"
+                    },
+                    "authorId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "1a3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "seriesId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "2b3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Fantasy",
+                        "Epic",
+                        "Thriller"
+                      ]
+                    },
+                    "pages": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "example": 1690
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "read",
+                        "to-be-read"
+                      ]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-30T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "replace-book",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/books/{bookId}",
+          "identifierParam": "bookId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "authorId"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "title": {
+                "type": "string",
+                "example": "The Lusty Argonian Maid"
+              },
+              "authorId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "1a3e4567-e89b-12d3-a456-426614174000"
+              },
+              "seriesId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "2b3e4567-e89b-12d3-a456-426614174000"
+              },
+              "genres": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Fantasy",
+                  "Epic",
+                  "Thriller"
+                ]
+              },
+              "pages": {
+                "type": "integer",
+                "format": "int32",
+                "minimum": 1,
+                "example": 1690
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "to-be-read"
+                ]
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-30T12:00:00Z"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "authorId"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The Lusty Argonian Maid"
+                    },
+                    "authorId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "1a3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "seriesId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "2b3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Fantasy",
+                        "Epic",
+                        "Thriller"
+                      ]
+                    },
+                    "pages": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "example": 1690
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "read",
+                        "to-be-read"
+                      ]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-30T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "delete-book",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/books/{bookId}",
+          "identifierParam": "bookId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "authorId"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "The Lusty Argonian Maid"
+                    },
+                    "authorId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "1a3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "seriesId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "2b3e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "genres": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "example": [
+                        "Fantasy",
+                        "Epic",
+                        "Thriller"
+                      ]
+                    },
+                    "pages": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "example": 1690
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "read",
+                        "to-be-read"
+                      ]
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-30T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "example": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

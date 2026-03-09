@@ -1,0 +1,208 @@
+{
+  "api": {
+    "title": "Sample API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "getAllTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Unique identifier for the task"
+                },
+                "title": {
+                  "type": "string",
+                  "description": "Task title"
+                },
+                "description": {
+                  "type": "string",
+                  "description": "Task description"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "in_progress",
+                    "completed"
+                  ],
+                  "description": "Current status of the task"
+                },
+                "assigneeId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "ID of the user assigned to this task"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "When the task was created"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "getAllUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "email",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Unique identifier for the user"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "User's email address"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "User's full name"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the user was created"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of users"
+              }
+            }
+          }
+        },
+        {
+          "id": "getUserById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "email",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the user"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address"
+              },
+              "name": {
+                "type": "string",
+                "description": "User's full name"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the user was created"
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "name"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address"
+              },
+              "name": {
+                "type": "string",
+                "description": "User's full name"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "email",
+              "name"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the user"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address"
+              },
+              "name": {
+                "type": "string",
+                "description": "User's full name"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the user was created"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

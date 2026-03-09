@@ -1,0 +1,863 @@
+{
+  "api": {
+    "title": "DADMS 2.0 - Project Service API",
+    "version": "2.0.0-alpha.2"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "service",
+              "timestamp",
+              "port"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy"
+                ],
+                "example": "healthy"
+              },
+              "service": {
+                "type": "string",
+                "example": "user-project-service"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              },
+              "port": {
+                "type": "integer",
+                "example": 3001
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "GET:/api/projects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/projects",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "timestamp"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "projects",
+                  "total",
+                  "page",
+                  "limit"
+                ],
+                "properties": {
+                  "projects": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "name",
+                        "description",
+                        "owner_id",
+                        "status",
+                        "knowledge_domain",
+                        "settings",
+                        "created_at",
+                        "updated_at"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "Unique project identifier",
+                          "example": "550e8400-e29b-41d4-a716-446655440000"
+                        },
+                        "name": {
+                          "type": "string",
+                          "maxLength": 255,
+                          "description": "Project name/title",
+                          "example": "UAV Decision Analysis"
+                        },
+                        "description": {
+                          "type": "string",
+                          "maxLength": 1000,
+                          "description": "Project description",
+                          "example": "Analysis of UAV procurement options for defense applications"
+                        },
+                        "owner_id": {
+                          "type": "string",
+                          "format": "uuid",
+                          "description": "Project owner user ID",
+                          "example": "0d6838ad-ae0e-4637-96cd-3c3271854da4"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "completed"
+                          ],
+                          "description": "Current project status",
+                          "example": "active"
+                        },
+                        "knowledge_domain": {
+                          "type": "string",
+                          "maxLength": 100,
+                          "description": "Knowledge domain for the project",
+                          "example": "defense_analysis"
+                        },
+                        "settings": {
+                          "type": "object",
+                          "required": [
+                            "default_llm",
+                            "personas",
+                            "tools_enabled"
+                          ],
+                          "properties": {
+                            "default_llm": {
+                              "type": "string",
+                              "description": "Default LLM provider for the project",
+                              "example": "openai/gpt-4"
+                            },
+                            "personas": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "Available agent personas for the project",
+                              "example": [
+                                "analyst",
+                                "subject_matter_expert"
+                              ]
+                            },
+                            "tools_enabled": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              },
+                              "description": "Enabled tools for the project",
+                              "example": [
+                                "rag_search",
+                                "web_search"
+                              ]
+                            }
+                          }
+                        },
+                        "decision_context": {
+                          "type": "string",
+                          "maxLength": 2000,
+                          "nullable": true,
+                          "description": "Rich decision context and background information",
+                          "example": "Analysis required for Q2 procurement decision with $50M budget"
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Project creation timestamp",
+                          "example": "2025-01-15T10:30:00Z"
+                        },
+                        "updated_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "Last update timestamp",
+                          "example": "2025-01-15T14:22:15Z"
+                        }
+                      }
+                    },
+                    "description": "Array of projects"
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Total number of projects",
+                    "example": 25
+                  },
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Current page number",
+                    "example": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 50,
+                    "description": "Number of projects per page",
+                    "example": 10
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/projects/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/projects/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "timestamp"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "owner_id",
+                  "status",
+                  "knowledge_domain",
+                  "settings",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique project identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Project name/title",
+                    "example": "UAV Decision Analysis"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "Project description",
+                    "example": "Analysis of UAV procurement options for defense applications"
+                  },
+                  "owner_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Project owner user ID",
+                    "example": "0d6838ad-ae0e-4637-96cd-3c3271854da4"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "completed"
+                    ],
+                    "description": "Current project status",
+                    "example": "active"
+                  },
+                  "knowledge_domain": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Knowledge domain for the project",
+                    "example": "defense_analysis"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "required": [
+                      "default_llm",
+                      "personas",
+                      "tools_enabled"
+                    ],
+                    "properties": {
+                      "default_llm": {
+                        "type": "string",
+                        "description": "Default LLM provider for the project",
+                        "example": "openai/gpt-4"
+                      },
+                      "personas": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Available agent personas for the project",
+                        "example": [
+                          "analyst",
+                          "subject_matter_expert"
+                        ]
+                      },
+                      "tools_enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Enabled tools for the project",
+                        "example": [
+                          "rag_search",
+                          "web_search"
+                        ]
+                      }
+                    }
+                  },
+                  "decision_context": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "nullable": true,
+                    "description": "Rich decision context and background information",
+                    "example": "Analysis required for Q2 procurement decision with $50M budget"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Project creation timestamp",
+                    "example": "2025-01-15T10:30:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last update timestamp",
+                    "example": "2025-01-15T14:22:15Z"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/projects",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/projects",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "description",
+              "knowledge_domain"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Project name",
+                "example": "UAV Decision Analysis"
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000,
+                "description": "Project description",
+                "example": "Analysis of UAV procurement options for defense applications"
+              },
+              "knowledge_domain": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Knowledge domain",
+                "example": "defense_analysis"
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "default_llm": {
+                    "type": "string",
+                    "description": "Default LLM provider",
+                    "example": "openai/gpt-4"
+                  },
+                  "personas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Agent personas",
+                    "example": [
+                      "analyst"
+                    ]
+                  },
+                  "tools_enabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Enabled tools",
+                    "example": [
+                      "rag_search"
+                    ]
+                  }
+                }
+              },
+              "decision_context": {
+                "type": "string",
+                "maxLength": 2000,
+                "description": "Decision context and background",
+                "example": "Analysis required for Q2 procurement decision with $50M budget"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "message",
+              "timestamp"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "owner_id",
+                  "status",
+                  "knowledge_domain",
+                  "settings",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique project identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Project name/title",
+                    "example": "UAV Decision Analysis"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "Project description",
+                    "example": "Analysis of UAV procurement options for defense applications"
+                  },
+                  "owner_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Project owner user ID",
+                    "example": "0d6838ad-ae0e-4637-96cd-3c3271854da4"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "completed"
+                    ],
+                    "description": "Current project status",
+                    "example": "active"
+                  },
+                  "knowledge_domain": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Knowledge domain for the project",
+                    "example": "defense_analysis"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "required": [
+                      "default_llm",
+                      "personas",
+                      "tools_enabled"
+                    ],
+                    "properties": {
+                      "default_llm": {
+                        "type": "string",
+                        "description": "Default LLM provider for the project",
+                        "example": "openai/gpt-4"
+                      },
+                      "personas": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Available agent personas for the project",
+                        "example": [
+                          "analyst",
+                          "subject_matter_expert"
+                        ]
+                      },
+                      "tools_enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Enabled tools for the project",
+                        "example": [
+                          "rag_search",
+                          "web_search"
+                        ]
+                      }
+                    }
+                  },
+                  "decision_context": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "nullable": true,
+                    "description": "Rich decision context and background information",
+                    "example": "Analysis required for Q2 procurement decision with $50M budget"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Project creation timestamp",
+                    "example": "2025-01-15T10:30:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last update timestamp",
+                    "example": "2025-01-15T14:22:15Z"
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Project created successfully"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/projects/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/projects/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Project name",
+                "example": "Updated UAV Analysis"
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000,
+                "description": "Project description",
+                "example": "Updated analysis scope"
+              },
+              "knowledge_domain": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Knowledge domain",
+                "example": "defense_analysis"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "completed"
+                ],
+                "description": "Project status",
+                "example": "completed"
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "default_llm": {
+                    "type": "string",
+                    "description": "Default LLM provider",
+                    "example": "openai/gpt-4"
+                  },
+                  "personas": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Agent personas",
+                    "example": [
+                      "analyst"
+                    ]
+                  },
+                  "tools_enabled": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Enabled tools",
+                    "example": [
+                      "rag_search"
+                    ]
+                  }
+                }
+              },
+              "decision_context": {
+                "type": "string",
+                "maxLength": 2000,
+                "description": "Decision context",
+                "example": "Updated context information"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "data",
+              "message",
+              "timestamp"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "owner_id",
+                  "status",
+                  "knowledge_domain",
+                  "settings",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique project identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "name": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "description": "Project name/title",
+                    "example": "UAV Decision Analysis"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "description": "Project description",
+                    "example": "Analysis of UAV procurement options for defense applications"
+                  },
+                  "owner_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Project owner user ID",
+                    "example": "0d6838ad-ae0e-4637-96cd-3c3271854da4"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "completed"
+                    ],
+                    "description": "Current project status",
+                    "example": "active"
+                  },
+                  "knowledge_domain": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Knowledge domain for the project",
+                    "example": "defense_analysis"
+                  },
+                  "settings": {
+                    "type": "object",
+                    "required": [
+                      "default_llm",
+                      "personas",
+                      "tools_enabled"
+                    ],
+                    "properties": {
+                      "default_llm": {
+                        "type": "string",
+                        "description": "Default LLM provider for the project",
+                        "example": "openai/gpt-4"
+                      },
+                      "personas": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Available agent personas for the project",
+                        "example": [
+                          "analyst",
+                          "subject_matter_expert"
+                        ]
+                      },
+                      "tools_enabled": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Enabled tools for the project",
+                        "example": [
+                          "rag_search",
+                          "web_search"
+                        ]
+                      }
+                    }
+                  },
+                  "decision_context": {
+                    "type": "string",
+                    "maxLength": 2000,
+                    "nullable": true,
+                    "description": "Rich decision context and background information",
+                    "example": "Analysis required for Q2 procurement decision with $50M budget"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Project creation timestamp",
+                    "example": "2025-01-15T10:30:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last update timestamp",
+                    "example": "2025-01-15T14:22:15Z"
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Project updated successfully"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/projects/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/projects/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message",
+              "timestamp"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Project deleted successfully"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service Info",
+      "key": "service-info",
+      "operations": [
+        {
+          "id": "GET:/api",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "service",
+              "version",
+              "endpoints",
+              "timestamp"
+            ],
+            "properties": {
+              "service": {
+                "type": "string",
+                "example": "DADMS User & Project Service"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "endpoints": {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "type": "string",
+                    "example": "/api/projects"
+                  },
+                  "health": {
+                    "type": "string",
+                    "example": "/health"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-01-15T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

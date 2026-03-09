@@ -1,0 +1,540 @@
+openapi: 3.0.3
+info:
+  title: Role Management Internal API
+  description: 角色切換系統內部 API 規範
+  version: 1.0.0
+  contact:
+    name: Voice Assistant Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/internal/api
+    description: 開發環境
+  - url: https://api.voice-assistant.internal/internal/api
+    description: 生產環境
+
+paths:
+  /roles:
+    post:
+      summary: 註冊新角色
+      tags:
+        - Role Management
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleCreateRequest'
+      responses:
+        '201':
+          description: 角色建立成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleCreateResponse'
+        '400':
+          description: 驗證失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: 角色數量達到上限
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      summary: 獲取角色列表
+      tags:
+        - Role Management
+      security:
+        - SessionAuth: []
+      responses:
+        '200':
+          description: 成功獲取角色列表
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleListResponse'
+
+  /roles/{role_id}:
+    get:
+      summary: 獲取特定角色
+      tags:
+        - Role Management
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: role_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功獲取角色
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponse'
+        '404':
+          description: 角色不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /role-state/switch:
+    post:
+      summary: 切換角色
+      tags:
+        - Role State
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleSwitchRequest'
+      responses:
+        '200':
+          description: 角色切換成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleSwitchResponse'
+        '400':
+          description: 無效的角色切換
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /role-state/{session_id}:
+    get:
+      summary: 獲取當前角色狀態
+      tags:
+        - Role State
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功獲取角色狀態
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleStateResponse'
+
+  /role-state/{session_id}/history:
+    get:
+      summary: 獲取角色切換歷史
+      tags:
+        - Role State
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        '200':
+          description: 成功獲取切換歷史
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleHistoryResponse'
+
+  /intent/recognize:
+    post:
+      summary: 識別用戶意圖
+      tags:
+        - Intent Recognition
+      security:
+        - SessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentRequest'
+      responses:
+        '200':
+          description: 意圖識別成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentResponse'
+        '500':
+          description: 意圖識別失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ui/role-state/{session_id}:
+    get:
+      summary: 獲取 UI 所需的完整狀態
+      tags:
+        - UI State
+      security:
+        - SessionAuth: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 成功獲取 UI 狀態
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UIStateResponse'
+
+components:
+  securitySchemes:
+    SessionAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: "Bearer {session_token}"
+
+  schemas:
+    RoleType:
+      type: string
+      enum:
+        - interviewer
+        - assistant
+        - coach
+        - custom
+
+    IntentType:
+      type: string
+      enum:
+        - role_switch
+        - role_query
+        - role_list
+        - unknown
+
+    RoleCreateRequest:
+      type: object
+      required:
+        - id
+        - name
+        - role_type
+        - system_prompt
+        - tone_style
+      properties:
+        id:
+          type: string
+          description: 角色唯一識別碼
+        name:
+          type: string
+          description: 角色顯示名稱
+        role_type:
+          $ref: '#/components/schemas/RoleType'
+        system_prompt:
+          type: string
+          description: LLM 系統提示詞
+        tone_style:
+          type: string
+          description: 語氣風格描述
+        description:
+          type: string
+          description: 角色描述
+        example_responses:
+          type: array
+          items:
+            type: string
+          description: 範例回應
+
+    RoleCreateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Role'
+
+    RoleListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/RoleSummary'
+            total:
+              type: integer
+
+    RoleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Role'
+
+    Role:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role_type:
+          $ref: '#/components/schemas/RoleType'
+        system_prompt:
+          type: string
+        tone_style:
+          type: string
+        description:
+          type: string
+        example_responses:
+          type: array
+          items:
+            type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RoleSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role_type:
+          $ref: '#/components/schemas/RoleType'
+        tone_style:
+          type: string
+        description:
+          type: string
+        is_active:
+          type: boolean
+
+    RoleSwitchRequest:
+      type: object
+      required:
+        - session_id
+        - target_role_id
+        - reason
+      properties:
+        session_id:
+          type: string
+        target_role_id:
+          type: string
+        reason:
+          type: string
+          enum:
+            - user_voice_command
+            - ui_selection
+            - system_trigger
+            - api_call
+
+    RoleSwitchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+            current_role_id:
+              type: string
+            previous_role_id:
+              type: string
+            switch_time:
+              type: string
+              format: date-time
+            confirmation_message:
+              type: string
+
+    RoleStateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+            current_role:
+              $ref: '#/components/schemas/RoleSummary'
+            last_updated:
+              type: string
+              format: date-time
+            transition_count:
+              type: integer
+
+    RoleHistoryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            session_id:
+              type: string
+            history:
+              type: array
+              items:
+                $ref: '#/components/schemas/RoleTransition'
+            total:
+              type: integer
+            limit:
+              type: integer
+
+    RoleTransition:
+      type: object
+      properties:
+        from_role:
+          type: string
+          nullable: true
+        to_role:
+          type: string
+        reason:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    IntentRequest:
+      type: object
+      required:
+        - text
+        - session_id
+      properties:
+        text:
+          type: string
+          description: 原始輸入文字
+        session_id:
+          type: string
+          description: 會話 ID
+
+    IntentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Intent'
+
+    Intent:
+      type: object
+      properties:
+        intent_type:
+          $ref: '#/components/schemas/IntentType'
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        target_role:
+          type: string
+          nullable: true
+        original_text:
+          type: string
+        processing_time_ms:
+          type: integer
+
+    UIStateResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            current_role:
+              $ref: '#/components/schemas/RoleSummary'
+            available_roles:
+              type: array
+              items:
+                $ref: '#/components/schemas/RoleSummary'
+            last_switch_time:
+              type: string
+              format: date-time
+              nullable: true
+            total_switches:
+              type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            type:
+              type: string
+            message:
+              type: string
+            timestamp:
+              type: string
+              format: date-time
+            field:
+              type: string
+              nullable: true
+            role_id:
+              type: string
+              nullable: true
+            original_text:
+              type: string
+              nullable: true
+
+tags:
+  - name: Role Management
+    description: 角色管理相關操作
+  - name: Role State
+    description: 角色狀態管理
+  - name: Intent Recognition
+    description: 意圖識別
+  - name: UI State
+    description: UI 狀態同步

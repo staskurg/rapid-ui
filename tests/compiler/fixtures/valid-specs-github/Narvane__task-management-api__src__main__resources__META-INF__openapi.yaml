@@ -1,0 +1,301 @@
+openapi: 3.0.3
+info:
+  title: Task Management API
+  version: 1.0.0
+  description: API for user and task operations
+
+security:
+  - basicAuth: []
+
+paths:
+  /tasks/{id}/toggle-status:
+    get:
+      summary: Toggle task status
+      description: Toggles the task status between TODO and COMPLETED.
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task status toggled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToggledTaskResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+
+  /tasks/completed:
+    get:
+      summary: List completed tasks
+      description: Returns a paginated list of completed tasks.
+      tags:
+        - Task
+      parameters:
+        - name: page
+          in: query
+          required: false
+          description: Page number
+          example: 0
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          description: Page size
+          example: 10
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Completed tasks returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPageResponse'
+        '204':
+          description: No completed tasks found
+
+  /tasks:
+    get:
+      summary: List all tasks
+      description: Returns a paginated list of all tasks.
+      tags:
+        - Task
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          required: false
+          example: 0
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          description: Page size
+          required: false
+          example: 10
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Tasks returned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskPageResponse'
+        '204':
+          description: No tasks found
+
+    post:
+      summary: Create a new task
+      description: Creates a new task with the given information.
+      tags:
+        - Task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid request payload (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+
+  /tasks/{id}:
+    put:
+      summary: Update an existing task
+      description: Updates the task with the specified ID.
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Invalid request payload (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+
+    delete:
+      summary: Delete a task
+      description: Deletes the task with the specified ID.
+      tags:
+        - Task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task ID
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeletedTaskResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskNotFoundErrorResponse'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+
+  schemas:
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          example: Check and respond to emails
+          maxLength: 255
+        description:
+          type: string
+          example: Review incoming emails, prioritize messages, and reply or forward them as needed to ensure communication flows smoothly.
+          maxLength: 500
+        status:
+          type: string
+          enum: [ TODO, COMPLETED ]
+
+    UpdateTaskRequest:
+      type: object
+      required:
+        - title
+        - status
+      properties:
+        title:
+          type: string
+          example: Check and respond to emails
+          maxLength: 255
+        description:
+          type: string
+          example: Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control.
+          maxLength: 500
+        status:
+          type: string
+          enum: [ TODO, COMPLETED ]
+
+    ToggledTaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        status:
+          type: string
+          enum: [ TODO, COMPLETED ]
+
+    DeletedTaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: Check and respond to emails
+
+    TaskResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+          example: Check and respond to emails
+        description:
+          type: string
+          example: Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control.
+        status:
+          type: string
+          enum: [ TODO, COMPLETED ]
+
+    TaskPageResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Validation error
+        details:
+          type: array
+          items:
+            type: string
+          example: [ "title: must not be blank", "status: must not be null" ]
+
+    TaskNotFoundErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Task with id 1 was not found
+        details:
+          type: array
+          items:
+            type: string
+          example: []

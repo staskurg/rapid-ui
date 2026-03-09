@@ -1,0 +1,206 @@
+{
+  "api": {
+    "title": "FarmStall API",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Reviews",
+      "key": "reviews",
+      "operations": [
+        {
+          "id": "GET:/reviews",
+          "method": "GET",
+          "kind": "list",
+          "path": "/reviews",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "rating": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                },
+                "message": {
+                  "type": "string",
+                  "example": "An awesome time for the whole family."
+                },
+                "uuid": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F\\-]{36}$",
+                  "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+                },
+                "userId": {
+                  "type": "string",
+                  "pattern": "^[0-9a-fA-F\\-]{36}$",
+                  "nullable": true,
+                  "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/reviews/{reviewId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/reviews/{reviewId}",
+          "identifierParam": "reviewId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "An awesome time for the whole family."
+              },
+              "rating": {
+                "type": "integer",
+                "example": 5,
+                "minimum": 1,
+                "maximum": 5
+              },
+              "userId": {
+                "minLength": 36,
+                "maxLength": 36,
+                "pattern": "^[a-zA-Z0-9-]+$",
+                "nullable": true,
+                "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+              },
+              "uuid": {
+                "minLength": 36,
+                "maxLength": 36,
+                "pattern": "^[a-zA-Z0-9-]+$",
+                "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/reviews",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reviews",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "An awesome time for the whole family."
+              },
+              "rating": {
+                "type": "integer",
+                "example": 5,
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "An awesome time for the whole family."
+              },
+              "rating": {
+                "type": "integer",
+                "example": 5,
+                "minimum": 1,
+                "maximum": 5
+              },
+              "userId": {
+                "type": "string",
+                "nullable": true,
+                "pattern": "^[0-9a-fA-F\\-]{36}$",
+                "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+              },
+              "uuid": {
+                "type": "string",
+                "pattern": "^[0-9a-fA-F\\-]{36}$",
+                "example": "3b5b1707-b82c-4b1d-9078-157053902525"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tokens",
+      "key": "tokens",
+      "operations": [
+        {
+          "id": "POST:/tokens",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tokens",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "ponelat"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "POST:/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "ponelat"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              },
+              "fullName": {
+                "type": "string",
+                "example": "Josh Ponelat"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "ponelat"
+              },
+              "uuid": {
+                "type": "string",
+                "example": "f7f680a8-d111-421f-b6b3-493ebf905078"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,672 @@
+openapi: 3.1.0
+
+info:
+  title: Portfolio Professionnel - API Specification
+  description: |
+    Spécification OpenAPI pour l'API du portfolio professionnel d'Esdras GBEDOZIN.
+
+    **Architecture** : Jamstack (Astro SSG) + Edge Functions (Vercel Serverless)
+
+    **Scope API** :
+    - Formulaire de contact (soumission, validation, anti-spam)
+    - Endpoints de monitoring/health (optionnels pour CI/CD)
+
+    **Pas d'authentification utilisateur** : Le portfolio est public.
+    L'admin gère le contenu via Git (pas via API).
+
+    **Content API** : Pas d'API REST pour le contenu (Projets, Certifications, Compétences).
+    Le contenu est généré statiquement au build depuis Markdown/MDX.
+  version: 1.0.0
+  contact:
+    name: Esdras GBEDOZIN
+    email: ogbedozin@gmail.com
+  license:
+    name: Propriétaire
+    url: https://esdrasgbedozin.dev/license
+
+servers:
+  - url: https://esdrasgbedozin.dev/api
+    description: Production (Vercel)
+  - url: https://preview-{branch}.esdrasgbedozin.dev/api
+    description: Preview Deployments (Vercel)
+    variables:
+      branch:
+        default: develop
+        description: Nom de la branche Git
+  - url: http://localhost:4321/api
+    description: Développement local
+
+tags:
+  - name: Contact
+    description: Endpoints du formulaire de contact
+  - name: Health
+    description: Endpoints de monitoring et health checks
+
+# ============================================================================
+# SECURITY SCHEMES
+# ============================================================================
+# Note : Pas d'authentification utilisateur pour le formulaire de contact.
+# La protection se fait via Cloudflare Turnstile (CAPTCHA) côté client.
+# ============================================================================
+
+components:
+  # ==========================================================================
+  # SCHEMAS - Objets de Données (basés sur Dictionnaire de la Bible)
+  # ==========================================================================
+
+  schemas:
+    # ------------------------------------------------------------------------
+    # DOMAINE : PROJET
+    # ------------------------------------------------------------------------
+
+    Project:
+      type: object
+      description: |
+        Réalisation technique concrète démontrant des compétences professionnelles.
+        **Source** : Fichiers Markdown/MDX dans `content/projects/`
+        **Accès** : Pas d'API REST. Contenu généré statiquement au build.
+      required:
+        - slug
+        - title
+        - description
+        - technologies
+        - category
+        - publishedAt
+        - visibility
+      properties:
+        slug:
+          type: string
+          description: Identifiant unique du projet (sans extension .fr/.en)
+          example: portfolio-professionnel
+        title:
+          type: string
+          description: Titre du projet
+          example: 'Portfolio Professionnel'
+          minLength: 3
+          maxLength: 100
+        description:
+          type: string
+          description: Description courte du projet
+          example: 'Portfolio moderne en Jamstack pour présenter mes réalisations'
+          minLength: 10
+          maxLength: 500
+        content:
+          type: string
+          description: Contenu complet du projet (Markdown/MDX)
+          example: "## Contexte\n\nCe projet est né de..."
+        technologies:
+          type: array
+          description: Stack technique utilisée
+          items:
+            type: string
+          example: ['Astro', 'React', 'TypeScript', 'Tailwind CSS']
+          minItems: 1
+          maxItems: 15
+        category:
+          type: string
+          description: Catégorie fonctionnelle du projet
+          enum:
+            - web-app
+            - mobile-app
+            - api-backend
+            - library-tool
+            - devops-infrastructure
+            - data-ai
+            - other
+          example: web-app
+        publishedAt:
+          type: string
+          format: date
+          description: Date de publication du projet
+          example: '2026-01-15'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Dernière modification (optionnel)
+          example: '2026-01-17T14:30:00Z'
+        visibility:
+          type: string
+          description: Visibilité du projet (contrôle d'accès)
+          enum:
+            - public
+            - private
+            - on-demand
+          default: public
+          example: public
+        featured:
+          type: boolean
+          description: Projet mis en avant sur la page d'accueil
+          default: false
+          example: true
+        demoUrl:
+          type: string
+          format: uri
+          description: URL de la démo live (optionnel)
+          example: 'https://demo.esdrasgbedozin.dev'
+        repositoryUrl:
+          type: string
+          format: uri
+          description: URL du repository GitHub (optionnel)
+          example: 'https://github.com/username/project'
+        screenshots:
+          type: array
+          description: Captures d'écran du projet (optionnel)
+          items:
+            type: string
+            format: uri
+          example: ['https://esdrasgbedozin.dev/images/projects/portfolio-1.jpg']
+        metrics:
+          type: object
+          description: Métriques techniques (optionnel)
+          properties:
+            lighthouseScore:
+              type: integer
+              minimum: 0
+              maximum: 100
+              example: 98
+            linesOfCode:
+              type: integer
+              example: 15000
+            contributors:
+              type: integer
+              example: 3
+
+    # ------------------------------------------------------------------------
+    # DOMAINE : CERTIFICATION
+    # ------------------------------------------------------------------------
+
+    Certification:
+      type: object
+      description: |
+        Attestation officielle validant une compétence ou expertise spécifique.
+        **Source** : Fichiers Markdown dans `content/certifications/`
+        **Accès** : Pas d'API REST. Contenu généré statiquement au build.
+      required:
+        - slug
+        - name
+        - issuer
+        - obtainedAt
+      properties:
+        slug:
+          type: string
+          description: Identifiant unique de la certification
+          example: aws-solutions-architect-associate
+        name:
+          type: string
+          description: Nom complet de la certification
+          example: 'AWS Certified Solutions Architect – Associate'
+          minLength: 5
+          maxLength: 150
+        issuer:
+          type: string
+          description: Organisme émetteur
+          example: 'Amazon Web Services (AWS)'
+          minLength: 2
+          maxLength: 100
+        obtainedAt:
+          type: string
+          format: date
+          description: Date d'obtention
+          example: '2025-06-15'
+        expiresAt:
+          type: string
+          format: date
+          description: Date d'expiration (optionnel)
+          example: '2028-06-15'
+        credentialId:
+          type: string
+          description: Identifiant unique de la certification (optionnel)
+          example: 'AWS-123456-ABCDEF'
+        verificationUrl:
+          type: string
+          format: uri
+          description: URL de vérification de la certification (optionnel)
+          example: 'https://www.credly.com/badges/123456'
+        badgeUrl:
+          type: string
+          format: uri
+          description: URL du badge numérique (optionnel)
+          example: 'https://esdrasgbedozin.dev/badges/aws-saa.png'
+        score:
+          type: integer
+          description: Score obtenu (optionnel)
+          minimum: 0
+          maximum: 1000
+          example: 850
+        level:
+          type: string
+          description: Niveau de la certification (optionnel)
+          enum:
+            - foundational
+            - associate
+            - professional
+            - expert
+          example: associate
+
+    # ------------------------------------------------------------------------
+    # DOMAINE : COMPÉTENCE
+    # ------------------------------------------------------------------------
+
+    Skill:
+      type: object
+      description: |
+        Capacité technique maîtrisée et mise en œuvre professionnellement.
+        **Source** : Fichiers JSON dans `content/skills/`
+        **Accès** : Pas d'API REST. Contenu généré statiquement au build.
+      required:
+        - name
+        - category
+        - level
+      properties:
+        name:
+          type: string
+          description: Nom de la compétence
+          example: 'TypeScript'
+          minLength: 2
+          maxLength: 50
+        category:
+          type: string
+          description: Catégorie de la compétence
+          enum:
+            - programming-language
+            - framework-library
+            - tool-platform
+            - methodology
+            - soft-skill
+          example: programming-language
+        level:
+          type: string
+          description: Niveau de maîtrise
+          enum:
+            - beginner
+            - intermediate
+            - advanced
+            - expert
+          example: advanced
+        yearsOfExperience:
+          type: integer
+          description: Années d'expérience avec cette compétence (optionnel)
+          minimum: 0
+          maximum: 50
+          example: 5
+        projects:
+          type: array
+          description: Projets utilisant cette compétence (références)
+          items:
+            type: string
+          example: ['portfolio-professionnel', 'api-ecommerce']
+
+    # ------------------------------------------------------------------------
+    # DOMAINE : CONTACT (API VIVANTE)
+    # ------------------------------------------------------------------------
+
+    ContactFormRequest:
+      type: object
+      description: Données soumises via le formulaire de contact
+      required:
+        - name
+        - email
+        - message
+        - turnstileToken
+      properties:
+        name:
+          type: string
+          description: Nom complet du visiteur
+          example: 'Jean Dupont'
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          description: Email du visiteur
+          example: 'jean.dupont@example.com'
+        company:
+          type: string
+          description: Entreprise du visiteur (optionnel)
+          example: 'Acme Corp'
+          maxLength: 100
+        phone:
+          type: string
+          description: Téléphone du visiteur (optionnel)
+          pattern: '^(\+33|0)[1-9](\d{8})$'
+          example: '+33612345678'
+        subject:
+          type: string
+          description: Objet du message (optionnel)
+          example: 'Demande de collaboration'
+          maxLength: 150
+        message:
+          type: string
+          description: Message du visiteur
+          example: "Bonjour, je souhaite discuter d'une opportunité..."
+          minLength: 10
+          maxLength: 2000
+        turnstileToken:
+          type: string
+          description: Token de validation Cloudflare Turnstile (anti-spam)
+          example: '0.AQAAAAAAAAA...'
+      example:
+        name: 'Jean Dupont'
+        email: 'jean.dupont@example.com'
+        company: 'Acme Corp'
+        subject: 'Demande de collaboration'
+        message: 'Bonjour, je souhaite échanger avec vous sur un projet web...'
+        turnstileToken: '0.AQAAAAAAAAA...'
+
+    ContactFormResponse:
+      type: object
+      description: Réponse de succès après soumission du formulaire
+      required:
+        - success
+        - messageId
+      properties:
+        success:
+          type: boolean
+          description: Indicateur de succès
+          example: true
+        messageId:
+          type: string
+          description: Identifiant unique du message envoyé
+          format: uuid
+          example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        message:
+          type: string
+          description: Message de confirmation
+          example: 'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.'
+
+    # ------------------------------------------------------------------------
+    # DOMAINE : ERREURS (RFC 7807 - Problem Details)
+    # ------------------------------------------------------------------------
+
+    ProblemDetails:
+      type: object
+      description: |
+        Réponse d'erreur standardisée selon RFC 7807.
+        Voir : https://datatracker.ietf.org/doc/html/rfc7807
+      required:
+        - type
+        - title
+        - status
+        - detail
+        - instance
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI identifiant le type d'erreur
+          example: 'https://esdrasgbedozin.dev/errors/validation-error'
+        title:
+          type: string
+          description: Résumé court lisible par l'humain
+          example: 'Validation Error'
+        status:
+          type: integer
+          description: Code HTTP de l'erreur
+          example: 400
+        detail:
+          type: string
+          description: Explication détaillée de l'erreur
+          example: "The 'email' field must be a valid email address."
+        instance:
+          type: string
+          description: URI de la ressource concernée
+          example: '/api/contact'
+        invalidFields:
+          type: array
+          description: Liste des champs invalides (pour erreurs de validation)
+          items:
+            type: string
+          example: ['email', 'message']
+        retryAfter:
+          type: integer
+          description: Nombre de secondes avant de réessayer (pour rate limiting)
+          example: 3600
+      example:
+        type: 'https://esdrasgbedozin.dev/errors/validation-error'
+        title: 'Validation Error'
+        status: 400
+        detail: 'Invalid input data'
+        instance: '/api/contact'
+        invalidFields: ['email', 'name']
+
+    # ------------------------------------------------------------------------
+    # DOMAINE : HEALTH & MONITORING
+    # ------------------------------------------------------------------------
+
+    HealthCheckResponse:
+      type: object
+      description: Réponse du health check endpoint
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          description: État global du service
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+          example: healthy
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp du check
+          example: '2026-01-17T14:30:00Z'
+        version:
+          type: string
+          description: Version du déploiement
+          example: '1.0.0'
+        checks:
+          type: object
+          description: Détails des checks individuels
+          properties:
+            emailService:
+              type: string
+              enum: [healthy, unhealthy]
+              example: healthy
+            turnstile:
+              type: string
+              enum: [healthy, unhealthy]
+              example: healthy
+
+  # ==========================================================================
+  # RESPONSES - Réponses Réutilisables
+  # ==========================================================================
+
+  responses:
+    BadRequest:
+      description: Requête invalide (validation échouée)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: 'https://esdrasgbedozin.dev/errors/validation-error'
+            title: 'Validation Error'
+            status: 400
+            detail: 'Invalid input data'
+            instance: '/api/contact'
+            invalidFields: ['email']
+
+    Forbidden:
+      description: Accès refusé (CAPTCHA invalide ou rate limit)
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            captchaInvalid:
+              summary: CAPTCHA invalide
+              value:
+                type: 'https://esdrasgbedozin.dev/errors/captcha-invalid'
+                title: 'Captcha Validation Failed'
+                status: 403
+                detail: 'The captcha challenge was not completed successfully.'
+                instance: '/api/contact'
+            rateLimit:
+              summary: Rate limit dépassé
+              value:
+                type: 'https://esdrasgbedozin.dev/errors/rate-limit'
+                title: 'Rate Limit Exceeded'
+                status: 429
+                detail: 'Too many requests. Please try again later.'
+                instance: '/api/contact'
+                retryAfter: 3600
+
+    InternalServerError:
+      description: Erreur interne du serveur
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: 'https://esdrasgbedozin.dev/errors/internal-error'
+            title: 'Internal Server Error'
+            status: 500
+            detail: 'An unexpected error occurred.'
+            instance: '/api/contact'
+
+# ============================================================================
+# PATHS - Endpoints API
+# ============================================================================
+
+paths:
+  # ==========================================================================
+  # MODULE : CONTACT
+  # ==========================================================================
+
+  /contact:
+    post:
+      tags:
+        - Contact
+      summary: Soumettre le formulaire de contact
+      description: |
+        Envoie un message de contact depuis le portfolio.
+
+        **Protections** :
+        - Rate limiting : Système progressif à 3 tiers
+          - Tier 1: 10 req/heure (IP standard)
+          - Tier 2: 3 req/heure après 1er blocage (24h)
+          - Tier 3: Blocage permanent après 3 violations
+          - Whitelist: Score Turnstile >0.7 bypass
+        - Anti-spam : Cloudflare Turnstile obligatoire
+        - Validation : Zod schema côté serveur
+
+        **Workflow** :
+        1. Client valide le CAPTCHA Turnstile
+        2. Client soumet le formulaire avec le token
+        3. Edge Function vérifie le token Turnstile
+        4. Edge Function valide les données (Zod)
+        5. Edge Function envoie l'email (Resend/SendGrid)
+        6. Edge Function retourne la confirmation
+      operationId: submitContactForm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactFormRequest'
+      responses:
+        '200':
+          description: Message envoyé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContactFormResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '429':
+          description: Trop de requêtes (rate limit)
+          headers:
+            Retry-After:
+              description: Nombre de secondes avant de réessayer
+              schema:
+                type: integer
+              example: 3600
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================================================
+  # MODULE : HEALTH & MONITORING
+  # ==========================================================================
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: |
+        Vérifie l'état de santé de l'API et de ses dépendances.
+
+        **Usage** :
+        - Monitoring (Vercel, Datadog, etc.)
+        - CI/CD (vérification post-déploiement)
+        - Status page publique
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+              example:
+                status: healthy
+                timestamp: '2026-01-17T14:30:00Z'
+                version: '1.0.0'
+                checks:
+                  emailService: healthy
+                  turnstile: healthy
+        '503':
+          description: Service unhealthy ou degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+              example:
+                status: degraded
+                timestamp: '2026-01-17T14:30:00Z'
+                version: '1.0.0'
+                checks:
+                  emailService: unhealthy
+                  turnstile: healthy
+
+# ============================================================================
+# NOTES IMPORTANTES
+# ============================================================================
+#
+# 1. CONTENU STATIQUE (Projets, Certifications, Compétences) :
+#    - Pas d'API REST pour le contenu
+#    - Contenu généré au build depuis Markdown/MDX
+#    - Schémas définis ici pour documentation uniquement
+#
+# 2. AUTHENTIFICATION :
+#    - Pas d'authentification utilisateur (portfolio public)
+#    - Admin gère le contenu via Git (pas via API)
+#    - Protection formulaire : Turnstile + Rate Limiting
+#
+# 3. RATE LIMITING :
+#    - /contact : 5 requêtes/heure par IP
+#    - /health : Illimité
+#
+# 4. ERREURS :
+#    - Format RFC 7807 (Problem Details)
+#    - Content-Type: application/problem+json
+#
+# 5. MOCKING :
+#    - Commande : `npx @stoplight/prism-cli mock openapi.yaml`
+#    - Port : 4010 par défaut
+#    - URL mock : http://localhost:4010/api/*
+#
+# 6. VALIDATION CONTRAT :
+#    - Tool : Dredd ou Postman Collection
+#    - CI : Ajouter validation dans GitHub Actions
+#
+# ============================================================================

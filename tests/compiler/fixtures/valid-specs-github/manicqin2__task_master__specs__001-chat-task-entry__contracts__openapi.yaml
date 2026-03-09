@@ -1,0 +1,309 @@
+openapi: 3.1.0
+info:
+  title: TaskMaster - Chat-Based Task Entry API
+  version: 1.0.0
+  description: |
+    REST API for chat-based task entry with async LLM enrichment.
+    Supports creating tasks, retrieving task lists, and real-time status updates via WebSocket.
+  contact:
+    name: TaskMaster API Support
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Local development server
+  - url: http://backend:8000/api/v1
+    description: Docker container backend
+
+tags:
+  - name: tasks
+    description: Task creation and retrieval operations
+
+paths:
+  /tasks:
+    get:
+      summary: List all open tasks
+      description: |
+        Retrieves all tasks with status = "open" in reverse chronological order (newest first).
+        Supports all enrichment statuses (pending, processing, completed, failed).
+      operationId: listTasks
+      tags:
+        - tasks
+      responses:
+        '200':
+          description: Successful response with task list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - tasks
+                  - count
+                properties:
+                  tasks:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+                  count:
+                    type: integer
+                    description: Total number of tasks returned
+                    example: 15
+              examples:
+                withTasks:
+                  summary: Response with multiple tasks
+                  value:
+                    tasks:
+                      - id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                        user_input: "call mom"
+                        enriched_text: "Call Mom to discuss weekend plans"
+                        status: "open"
+                        enrichment_status: "completed"
+                        created_at: "2025-11-04T10:30:00Z"
+                        updated_at: "2025-11-04T10:30:03Z"
+                        error_message: null
+                      - id: "b2c3d4e5-f6a7-8901-2345-67890abcdef1"
+                        user_input: "fix bug in login screan"
+                        enriched_text: null
+                        status: "open"
+                        enrichment_status: "processing"
+                        created_at: "2025-11-04T10:29:55Z"
+                        updated_at: "2025-11-04T10:29:56Z"
+                        error_message: null
+                    count: 2
+                empty:
+                  summary: Empty task list
+                  value:
+                    tasks: []
+                    count: 0
+
+    post:
+      summary: Create a new task
+      description: |
+        Creates a task from user chat input and schedules async LLM enrichment.
+        Returns immediately with task ID and "pending" enrichment status.
+        Frontend should poll GET /tasks to detect enrichment completion.
+      operationId: createTask
+      tags:
+        - tasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskCreate'
+            examples:
+              simple:
+                summary: Simple task creation
+                value:
+                  user_input: "call mom"
+              withTypos:
+                summary: Task with spelling errors
+                value:
+                  user_input: "fix bug in login screan"
+              abbreviated:
+                summary: Task with abbreviations
+                value:
+                  user_input: "dentist appt tmrw 3pm"
+      responses:
+        '201':
+          description: Task created successfully, enrichment scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                created:
+                  summary: Newly created task
+                  value:
+                    id: "c3d4e5f6-a7b8-9012-3456-7890abcdef12"
+                    user_input: "call mom"
+                    enriched_text: null
+                    status: "open"
+                    enrichment_status: "pending"
+                    created_at: "2025-11-04T10:32:00Z"
+                    updated_at: "2025-11-04T10:32:00Z"
+                    error_message: null
+        '400':
+          description: Invalid request (empty or too long input)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                emptyInput:
+                  summary: Empty user input
+                  value:
+                    error: "Validation error"
+                    detail: "user_input must not be empty"
+                    status_code: 400
+                tooLong:
+                  summary: Input exceeds max length
+                  value:
+                    error: "Validation error"
+                    detail: "user_input must be 1-1000 characters"
+                    status_code: 400
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tasks/{task_id}:
+    get:
+      summary: Get task by ID
+      description: |
+        Retrieves a single task by its unique identifier.
+        Frontend polls this endpoint (or GET /tasks) while enrichment is in progress.
+      operationId: getTask
+      tags:
+        - tasks
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique task identifier
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+      responses:
+        '200':
+          description: Successful response with task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+              examples:
+                completed:
+                  summary: Completed enrichment
+                  value:
+                    id: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    user_input: "call mom"
+                    enriched_text: "Call Mom to discuss weekend plans"
+                    status: "open"
+                    enrichment_status: "completed"
+                    created_at: "2025-11-04T10:30:00Z"
+                    updated_at: "2025-11-04T10:30:03Z"
+                    error_message: null
+                failed:
+                  summary: Failed enrichment
+                  value:
+                    id: "d4e5f6a7-b8c9-0123-4567-890abcdef123"
+                    user_input: "asdfghjkl"
+                    enriched_text: null
+                    status: "open"
+                    enrichment_status: "failed"
+                    created_at: "2025-11-04T10:31:00Z"
+                    updated_at: "2025-11-04T10:31:05Z"
+                    error_message: "Ollama API timeout after 5s"
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Task ID doesn't exist
+                  value:
+                    error: "Not found"
+                    detail: "Task with id 'invalid-id' not found"
+                    status_code: 404
+
+components:
+  schemas:
+    Task:
+      type: object
+      required:
+        - id
+        - user_input
+        - status
+        - enrichment_status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique task identifier (auto-generated)
+          example: "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+        user_input:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Original user message from chat (trimmed)
+          example: "call mom"
+        enriched_text:
+          type: string
+          nullable: true
+          maxLength: 2000
+          description: LLM-improved version (null during enrichment)
+          example: "Call Mom to discuss weekend plans"
+        status:
+          type: string
+          enum:
+            - open
+          description: Task completion status (always "open" for this feature)
+          example: "open"
+        enrichment_status:
+          type: string
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          description: LLM enrichment processing state
+          example: "completed"
+        created_at:
+          type: string
+          format: date-time
+          description: Task creation timestamp (UTC, ISO8601)
+          example: "2025-11-04T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Last modification timestamp (UTC, ISO8601)
+          example: "2025-11-04T10:30:03Z"
+        error_message:
+          type: string
+          nullable: true
+          maxLength: 500
+          description: Error details if enrichment fails
+          example: "Ollama API timeout after 5s"
+
+    TaskCreate:
+      type: object
+      required:
+        - user_input
+      properties:
+        user_input:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: User message from chat interface
+          example: "call mom"
+
+    Error:
+      type: object
+      required:
+        - error
+        - detail
+        - status_code
+      properties:
+        error:
+          type: string
+          description: High-level error category
+          example: "Validation error"
+        detail:
+          type: string
+          description: Specific error message for debugging
+          example: "user_input must not be empty"
+        status_code:
+          type: integer
+          description: HTTP status code
+          example: 400
+
+  securitySchemes: {}
+  # No authentication for this feature (single-user local deployment)
+
+security: []

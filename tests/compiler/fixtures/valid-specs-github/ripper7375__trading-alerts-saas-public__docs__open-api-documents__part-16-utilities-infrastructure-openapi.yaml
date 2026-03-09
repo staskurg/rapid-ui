@@ -1,0 +1,1628 @@
+openapi: 3.0.3
+info:
+  title: Trading Alerts SaaS - Utilities & Infrastructure (Part 16)
+  version: 2.0.0
+  description: |
+    # Part 16: Utilities & Infrastructure
+
+    This document describes the internal utilities, services, and infrastructure components that power the Trading Alerts SaaS platform. While Part 16 does not expose public API endpoints directly, it provides essential services used by all other parts.
+
+    ## Database Schema (57-Column Flat Structure)
+
+    The platform uses a migrated flat database structure with 57 columns, replacing the old 14-column JSON structure. Key entities include:
+    - **User**: Authentication, profile, preferences, tier information
+    - **Alert**: Trading alerts with conditions and notifications
+    - **Watchlist/WatchlistItem**: User watchlists and items
+    - **Subscription**: User subscription and billing information
+    - **Affiliate**: Affiliate system with codes and commissions
+    - **Session/LoginHistory**: Security and session tracking
+
+    ## Service Categories
+
+    ### 1. Authentication Services
+    - NextAuth.js integration with multiple providers
+    - Session management and tracking
+    - Two-factor authentication (TOTP)
+    - Permission-based access control
+
+    ### 2. Tier System
+    - 4-tier subscription model (Free, Basic, Pro, Enterprise)
+    - Symbol and timeframe access control
+    - Feature gating and limits
+
+    ### 3. Email Services
+    - Transactional email delivery (SendGrid/SMTP)
+    - Template-based emails using React Email
+    - Subscription lifecycle notifications
+    - Affiliate communications
+
+    ### 4. Caching & Performance
+    - Redis-based caching layer
+    - Rate limiting implementation
+    - API response caching
+    - Session storage
+
+    ### 5. Validation Layer
+    - Zod schema validation
+    - Input sanitization
+    - Type-safe request/response handling
+
+    ### 6. Error Handling
+    - Centralized error management
+    - Structured error responses
+    - Error logging and monitoring
+
+    ### 7. Background Jobs
+    - Subscription expiration checks
+    - Alert monitoring
+    - Monthly commission distribution
+    - Code expiration processing
+
+    ### 8. WebSocket Services
+    - Real-time price updates
+    - Alert notifications
+    - MT5 data streaming
+
+    ### 9. Security Services
+    - CSRF protection
+    - Device detection
+    - Fraud detection
+    - Geo-location services
+
+    ### 10. Infrastructure
+    - Docker containerization
+    - CI/CD pipelines
+    - Health monitoring
+    - Deployment scripts
+
+  contact:
+    name: Trading Alerts API Support
+    email: support@tradingalerts.example.com
+  license:
+    name: Proprietary
+    url: https://tradingalerts.example.com/license
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://staging.tradingalerts.example.com
+    description: Staging server
+  - url: https://tradingalerts.example.com
+    description: Production server
+
+tags:
+  - name: Authentication
+    description: Authentication and session management utilities
+  - name: Tier System
+    description: Subscription tier validation and access control
+  - name: Email Services
+    description: Transactional email delivery services
+  - name: Caching
+    description: Redis caching and performance utilities
+  - name: Validation
+    description: Input validation schemas and utilities
+  - name: Error Handling
+    description: Centralized error handling services
+  - name: Background Jobs
+    description: Scheduled tasks and cron jobs
+  - name: WebSocket
+    description: Real-time communication services
+  - name: Security
+    description: Security and fraud prevention services
+  - name: Infrastructure
+    description: Deployment and monitoring infrastructure
+
+paths:
+  /internal/health:
+    get:
+      summary: System Health Check
+      description: |
+        Internal health check endpoint used by infrastructure monitoring.
+        Checks database, Redis, and external service connectivity.
+      tags:
+        - Infrastructure
+      responses:
+        '200':
+          description: All systems operational
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+        '503':
+          description: Service degraded or unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+
+  /internal/metrics:
+    get:
+      summary: System Metrics
+      description: |
+        Internal metrics endpoint for monitoring dashboards.
+        Returns performance metrics, error rates, and resource usage.
+      tags:
+        - Infrastructure
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemMetrics'
+
+components:
+  schemas:
+    # ============================================
+    # AUTHENTICATION SCHEMAS
+    # ============================================
+    AuthSession:
+      type: object
+      description: User session information
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Session ID
+        userId:
+          type: string
+          format: uuid
+          description: Associated user ID
+        email:
+          type: string
+          format: email
+          description: User email
+        name:
+          type: string
+          nullable: true
+          description: User display name
+        role:
+          type: string
+          enum: [USER, ADMIN, AFFILIATE]
+          description: User role
+        tier:
+          type: string
+          enum: [FREE, BASIC, PRO, ENTERPRISE]
+          description: Subscription tier
+        twoFactorEnabled:
+          type: boolean
+          description: Whether 2FA is enabled
+        expiresAt:
+          type: string
+          format: date-time
+          description: Session expiration time
+      required:
+        - id
+        - userId
+        - email
+        - role
+        - tier
+        - expiresAt
+
+    SessionTrackingInfo:
+      type: object
+      description: Session tracking metadata
+      properties:
+        sessionId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        ipAddress:
+          type: string
+        userAgent:
+          type: string
+        deviceType:
+          type: string
+          enum: [desktop, mobile, tablet, unknown]
+        browser:
+          type: string
+        os:
+          type: string
+        country:
+          type: string
+        city:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        lastActiveAt:
+          type: string
+          format: date-time
+        isActive:
+          type: boolean
+
+    TwoFactorSetup:
+      type: object
+      description: 2FA setup information
+      properties:
+        secret:
+          type: string
+          description: TOTP secret (base32 encoded)
+        qrCodeUrl:
+          type: string
+          format: uri
+          description: QR code URL for authenticator apps
+        backupCodes:
+          type: array
+          items:
+            type: string
+          description: One-time backup codes
+          minItems: 8
+          maxItems: 10
+
+    # ============================================
+    # TIER SYSTEM SCHEMAS
+    # ============================================
+    TierDefinition:
+      type: object
+      description: Subscription tier definition
+      properties:
+        id:
+          type: string
+          enum: [FREE, BASIC, PRO, ENTERPRISE]
+        name:
+          type: string
+          example: "Professional"
+        monthlyPrice:
+          type: number
+          format: float
+          example: 29.99
+        yearlyPrice:
+          type: number
+          format: float
+          example: 299.99
+        maxAlerts:
+          type: integer
+          example: 50
+        maxWatchlistItems:
+          type: integer
+          example: 100
+        allowedSymbols:
+          type: array
+          items:
+            type: string
+          description: Allowed trading symbols
+        allowedTimeframes:
+          type: array
+          items:
+            type: string
+            enum: [M1, M5, M15, M30, H1, H4, D1, W1, MN1]
+        features:
+          type: array
+          items:
+            type: string
+          example:
+            - email_alerts
+            - push_notifications
+            - api_access
+            - priority_support
+
+    TierValidationResult:
+      type: object
+      description: Result of tier access validation
+      properties:
+        allowed:
+          type: boolean
+          description: Whether access is allowed
+        reason:
+          type: string
+          nullable: true
+          description: Reason for denial if not allowed
+        requiredTier:
+          type: string
+          enum: [FREE, BASIC, PRO, ENTERPRISE]
+          nullable: true
+          description: Minimum tier required for access
+        currentLimits:
+          type: object
+          properties:
+            alertsUsed:
+              type: integer
+            alertsMax:
+              type: integer
+            watchlistItemsUsed:
+              type: integer
+            watchlistItemsMax:
+              type: integer
+
+    # ============================================
+    # EMAIL SERVICE SCHEMAS
+    # ============================================
+    EmailTemplate:
+      type: object
+      description: Email template definition
+      properties:
+        id:
+          type: string
+          enum:
+            - welcome
+            - email_verification
+            - password_reset
+            - alert_triggered
+            - subscription_confirmation
+            - subscription_expired
+            - payment_confirmation
+            - payment_failure
+            - renewal_reminder
+            - affiliate_welcome
+            - affiliate_code_distributed
+            - affiliate_code_used
+            - affiliate_payment_processed
+            - affiliate_monthly_report
+        subject:
+          type: string
+          description: Email subject line
+        previewText:
+          type: string
+          description: Email preview text
+        requiredVariables:
+          type: array
+          items:
+            type: string
+          description: Required template variables
+
+    EmailSendRequest:
+      type: object
+      description: Email sending request
+      properties:
+        to:
+          type: string
+          format: email
+        template:
+          type: string
+          description: Template ID to use
+        variables:
+          type: object
+          additionalProperties: true
+          description: Template variables
+        scheduledFor:
+          type: string
+          format: date-time
+          nullable: true
+          description: Scheduled send time
+      required:
+        - to
+        - template
+        - variables
+
+    EmailDeliveryStatus:
+      type: object
+      description: Email delivery status
+      properties:
+        messageId:
+          type: string
+        status:
+          type: string
+          enum: [queued, sent, delivered, bounced, failed]
+        sentAt:
+          type: string
+          format: date-time
+          nullable: true
+        deliveredAt:
+          type: string
+          format: date-time
+          nullable: true
+        error:
+          type: string
+          nullable: true
+
+    # ============================================
+    # CACHING SCHEMAS
+    # ============================================
+    CacheConfiguration:
+      type: object
+      description: Redis cache configuration
+      properties:
+        host:
+          type: string
+          example: localhost
+        port:
+          type: integer
+          example: 6379
+        db:
+          type: integer
+          example: 0
+        keyPrefix:
+          type: string
+          example: "trading-alerts:"
+        ttl:
+          type: object
+          properties:
+            session:
+              type: integer
+              description: Session TTL in seconds
+              example: 86400
+            apiResponse:
+              type: integer
+              description: API response cache TTL
+              example: 300
+            rateLimit:
+              type: integer
+              description: Rate limit window TTL
+              example: 60
+            tierConfig:
+              type: integer
+              description: Tier configuration cache TTL
+              example: 3600
+
+    CacheEntry:
+      type: object
+      description: Cache entry structure
+      properties:
+        key:
+          type: string
+        value:
+          type: object
+          additionalProperties: true
+        ttl:
+          type: integer
+          description: Time to live in seconds
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    RateLimitConfig:
+      type: object
+      description: Rate limiting configuration
+      properties:
+        windowMs:
+          type: integer
+          description: Time window in milliseconds
+          example: 60000
+        maxRequests:
+          type: integer
+          description: Maximum requests per window
+          example: 100
+        keyGenerator:
+          type: string
+          enum: [ip, userId, apiKey]
+          description: How to identify rate limit subjects
+        skipSuccessfulRequests:
+          type: boolean
+          default: false
+        skipFailedRequests:
+          type: boolean
+          default: false
+        tierOverrides:
+          type: object
+          properties:
+            FREE:
+              type: integer
+              example: 50
+            BASIC:
+              type: integer
+              example: 100
+            PRO:
+              type: integer
+              example: 500
+            ENTERPRISE:
+              type: integer
+              example: 2000
+
+    # ============================================
+    # VALIDATION SCHEMAS
+    # ============================================
+    ValidationSchema:
+      type: object
+      description: Zod validation schema definition
+      properties:
+        name:
+          type: string
+          example: createAlertSchema
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationField'
+
+    ValidationField:
+      type: object
+      description: Field validation definition
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+          enum: [string, number, boolean, array, object, enum, date]
+        required:
+          type: boolean
+        constraints:
+          type: object
+          properties:
+            min:
+              type: number
+              nullable: true
+            max:
+              type: number
+              nullable: true
+            pattern:
+              type: string
+              nullable: true
+            enum:
+              type: array
+              items:
+                type: string
+              nullable: true
+
+    ValidationError:
+      type: object
+      description: Validation error response
+      properties:
+        field:
+          type: string
+          description: Field that failed validation
+        message:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Error code for programmatic handling
+          example: "invalid_type"
+
+    # Available Validation Schemas
+    AuthValidationSchemas:
+      type: object
+      description: Authentication validation schemas
+      properties:
+        loginSchema:
+          type: object
+          properties:
+            email:
+              type: string
+              description: "string, email format, required"
+            password:
+              type: string
+              description: "string, min 8 chars, required"
+        registerSchema:
+          type: object
+          properties:
+            email:
+              type: string
+              description: "string, email format, required"
+            password:
+              type: string
+              description: "string, min 8 chars, uppercase, lowercase, number required"
+            name:
+              type: string
+              description: "string, optional, max 100 chars"
+        resetPasswordSchema:
+          type: object
+          properties:
+            token:
+              type: string
+              description: "string, required"
+            newPassword:
+              type: string
+              description: "string, min 8 chars, required"
+
+    AlertValidationSchemas:
+      type: object
+      description: Alert validation schemas
+      properties:
+        createAlertSchema:
+          type: object
+          properties:
+            symbol:
+              type: string
+              description: "string, required, must be valid symbol"
+            timeframe:
+              type: string
+              description: "enum: M1, M5, M15, M30, H1, H4, D1, W1, MN1"
+            conditionType:
+              type: string
+              description: "enum: PRICE_ABOVE, PRICE_BELOW, PRICE_CROSS, INDICATOR"
+            targetValue:
+              type: number
+              description: "number, required for price alerts"
+            name:
+              type: string
+              description: "string, optional, max 100 chars"
+            indicatorType:
+              type: string
+              description: "string, required for indicator alerts"
+            indicatorParams:
+              type: object
+              description: "object, required for indicator alerts"
+        updateAlertSchema:
+          type: object
+          properties:
+            isActive:
+              type: boolean
+              description: "boolean, optional"
+            name:
+              type: string
+              description: "string, optional"
+            targetValue:
+              type: number
+              description: "number, optional"
+
+    WatchlistValidationSchemas:
+      type: object
+      description: Watchlist validation schemas
+      properties:
+        createItemSchema:
+          type: object
+          properties:
+            symbol:
+              type: string
+              description: "string, required, must be valid symbol"
+            timeframe:
+              type: string
+              description: "enum: M1, M5, M15, M30, H1, H4, D1, W1, MN1"
+            watchlistId:
+              type: string
+              description: "uuid, optional (uses default if not provided)"
+        updateItemSchema:
+          type: object
+          properties:
+            order:
+              type: integer
+              description: "integer, optional, for reordering"
+        reorderSchema:
+          type: object
+          properties:
+            items:
+              type: array
+              description: "array of {id, order} objects"
+
+    UserValidationSchemas:
+      type: object
+      description: User profile validation schemas
+      properties:
+        updateProfileSchema:
+          type: object
+          properties:
+            name:
+              type: string
+              description: "string, optional, max 100 chars"
+            email:
+              type: string
+              description: "string, email format, optional"
+            avatarUrl:
+              type: string
+              description: "string, url format, optional"
+        updatePreferencesSchema:
+          type: object
+          properties:
+            theme:
+              type: string
+              description: "enum: light, dark, system"
+            language:
+              type: string
+              description: "enum: en, es, pt, zh"
+            timezone:
+              type: string
+              description: "string, valid timezone"
+            emailNotifications:
+              type: boolean
+              description: "boolean"
+            pushNotifications:
+              type: boolean
+              description: "boolean"
+            alertSound:
+              type: string
+              description: "enum: none, default, custom"
+
+    # ============================================
+    # ERROR HANDLING SCHEMAS
+    # ============================================
+    ApiError:
+      type: object
+      description: Structured API error response
+      properties:
+        error:
+          type: string
+          description: Error type/code
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          nullable: true
+        requestId:
+          type: string
+          description: Request ID for tracking
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - error
+        - message
+
+    ErrorCategory:
+      type: object
+      description: Error categories and HTTP status mapping
+      properties:
+        categories:
+          type: object
+          properties:
+            AUTHENTICATION:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 401
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - UNAUTHORIZED
+                    - INVALID_CREDENTIALS
+                    - SESSION_EXPIRED
+                    - 2FA_REQUIRED
+            AUTHORIZATION:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 403
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - FORBIDDEN
+                    - INSUFFICIENT_TIER
+                    - LIMIT_EXCEEDED
+                    - FEATURE_NOT_AVAILABLE
+            VALIDATION:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 400
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - VALIDATION_ERROR
+                    - INVALID_INPUT
+                    - MISSING_REQUIRED_FIELD
+            NOT_FOUND:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 404
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - RESOURCE_NOT_FOUND
+                    - USER_NOT_FOUND
+                    - ALERT_NOT_FOUND
+            RATE_LIMIT:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 429
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - RATE_LIMIT_EXCEEDED
+                    - TOO_MANY_REQUESTS
+            SERVER:
+              type: object
+              properties:
+                httpStatus:
+                  type: integer
+                  example: 500
+                codes:
+                  type: array
+                  items:
+                    type: string
+                  example:
+                    - INTERNAL_ERROR
+                    - DATABASE_ERROR
+                    - EXTERNAL_SERVICE_ERROR
+
+    ErrorLog:
+      type: object
+      description: Error log entry structure
+      properties:
+        id:
+          type: string
+          format: uuid
+        timestamp:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [debug, info, warn, error, fatal]
+        errorCode:
+          type: string
+        message:
+          type: string
+        stackTrace:
+          type: string
+          nullable: true
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        requestId:
+          type: string
+        path:
+          type: string
+        method:
+          type: string
+          enum: [GET, POST, PUT, PATCH, DELETE]
+        userAgent:
+          type: string
+          nullable: true
+        ipAddress:
+          type: string
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+          nullable: true
+
+    # ============================================
+    # BACKGROUND JOBS SCHEMAS
+    # ============================================
+    CronJobDefinition:
+      type: object
+      description: Cron job definition
+      properties:
+        name:
+          type: string
+          example: check-expiring-subscriptions
+        schedule:
+          type: string
+          description: Cron expression
+          example: "0 0 * * *"
+        description:
+          type: string
+        enabled:
+          type: boolean
+        lastRun:
+          type: string
+          format: date-time
+          nullable: true
+        nextRun:
+          type: string
+          format: date-time
+        timeout:
+          type: integer
+          description: Timeout in seconds
+          example: 300
+
+    CronJobExecution:
+      type: object
+      description: Cron job execution record
+      properties:
+        id:
+          type: string
+          format: uuid
+        jobName:
+          type: string
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [running, completed, failed, timeout]
+        itemsProcessed:
+          type: integer
+        errors:
+          type: integer
+        logs:
+          type: array
+          items:
+            type: string
+
+    AvailableCronJobs:
+      type: object
+      description: Available cron jobs in the system
+      properties:
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              file:
+                type: string
+              schedule:
+                type: string
+              description:
+                type: string
+          example:
+            - name: check-expiring-subscriptions
+              file: lib/cron/check-expiring-subscriptions.ts
+              schedule: "0 8 * * *"
+              description: Send reminders for subscriptions expiring in 7, 3, 1 days
+            - name: downgrade-expired-subscriptions
+              file: lib/cron/downgrade-expired-subscriptions.ts
+              schedule: "0 0 * * *"
+              description: Downgrade expired subscriptions to FREE tier
+            - name: monthly-distribution
+              file: lib/cron/monthly-distribution.ts
+              schedule: "0 0 1 * *"
+              description: Process monthly affiliate commission distributions
+            - name: distribute-codes
+              file: app/api/cron/distribute-codes/route.ts
+              schedule: "0 0 1 * *"
+              description: Distribute new affiliate codes monthly
+            - name: expire-codes
+              file: app/api/cron/expire-codes/route.ts
+              schedule: "0 0 * * *"
+              description: Expire old unused affiliate codes
+            - name: process-pending-disbursements
+              file: app/api/cron/process-pending-disbursements/route.ts
+              schedule: "0 */4 * * *"
+              description: Process pending affiliate disbursements
+            - name: send-monthly-reports
+              file: app/api/cron/send-monthly-reports/route.ts
+              schedule: "0 9 1 * *"
+              description: Send monthly performance reports to affiliates
+            - name: daily-maintenance
+              file: app/api/cron/daily-maintenance/route.ts
+              schedule: "0 3 * * *"
+              description: Daily database cleanup and optimization
+            - name: sync-riseworks-accounts
+              file: app/api/cron/sync-riseworks-accounts/route.ts
+              schedule: "0 */6 * * *"
+              description: Sync affiliate payout accounts with Rise
+
+    BackgroundJob:
+      type: object
+      description: Background job definition
+      properties:
+        name:
+          type: string
+        file:
+          type: string
+        type:
+          type: string
+          enum: [continuous, scheduled, on-demand]
+        description:
+          type: string
+      example:
+        - name: alert-checker
+          file: lib/jobs/alert-checker.ts
+          type: continuous
+          description: Continuously monitors price conditions for triggered alerts
+        - name: queue
+          file: lib/jobs/queue.ts
+          type: continuous
+          description: Background job queue processor
+
+    # ============================================
+    # WEBSOCKET SCHEMAS
+    # ============================================
+    WebSocketMessage:
+      type: object
+      description: WebSocket message structure
+      properties:
+        type:
+          type: string
+          enum:
+            - price_update
+            - alert_triggered
+            - candle_update
+            - connection_status
+            - error
+            - heartbeat
+        payload:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+          format: date-time
+
+    PriceUpdate:
+      type: object
+      description: Real-time price update message
+      properties:
+        symbol:
+          type: string
+          example: "EURUSD"
+        bid:
+          type: number
+          format: float
+          example: 1.08521
+        ask:
+          type: number
+          format: float
+          example: 1.08523
+        spread:
+          type: number
+          format: float
+          example: 0.00002
+        timestamp:
+          type: string
+          format: date-time
+
+    CandleUpdate:
+      type: object
+      description: Candle data update message
+      properties:
+        symbol:
+          type: string
+        timeframe:
+          type: string
+          enum: [M1, M5, M15, M30, H1, H4, D1, W1, MN1]
+        open:
+          type: number
+          format: float
+        high:
+          type: number
+          format: float
+        low:
+          type: number
+          format: float
+        close:
+          type: number
+          format: float
+        volume:
+          type: number
+          format: float
+        time:
+          type: string
+          format: date-time
+        isClosed:
+          type: boolean
+
+    AlertTriggeredEvent:
+      type: object
+      description: Alert triggered notification
+      properties:
+        alertId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        symbol:
+          type: string
+        condition:
+          type: string
+        targetValue:
+          type: number
+        currentValue:
+          type: number
+        triggeredAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+
+    WebSocketConfig:
+      type: object
+      description: WebSocket server configuration
+      properties:
+        pingInterval:
+          type: integer
+          description: Ping interval in milliseconds
+          example: 30000
+        pongTimeout:
+          type: integer
+          description: Pong timeout in milliseconds
+          example: 10000
+        maxPayloadSize:
+          type: integer
+          description: Maximum payload size in bytes
+          example: 65536
+        reconnectAttempts:
+          type: integer
+          example: 5
+        reconnectDelay:
+          type: integer
+          description: Base reconnect delay in milliseconds
+          example: 1000
+
+    # ============================================
+    # SECURITY SCHEMAS
+    # ============================================
+    DeviceInfo:
+      type: object
+      description: Detected device information
+      properties:
+        type:
+          type: string
+          enum: [desktop, mobile, tablet, unknown]
+        browser:
+          type: string
+          example: "Chrome 120"
+        os:
+          type: string
+          example: "Windows 11"
+        isMobile:
+          type: boolean
+        isBot:
+          type: boolean
+        userAgent:
+          type: string
+
+    GeoLocation:
+      type: object
+      description: Geo-location information
+      properties:
+        ip:
+          type: string
+        country:
+          type: string
+          example: "US"
+        countryName:
+          type: string
+          example: "United States"
+        region:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          nullable: true
+        currency:
+          type: string
+          nullable: true
+          example: "USD"
+        isVpn:
+          type: boolean
+        isProxy:
+          type: boolean
+        isTor:
+          type: boolean
+
+    FraudSignal:
+      type: object
+      description: Fraud detection signal
+      properties:
+        type:
+          type: string
+          enum:
+            - velocity_exceeded
+            - geo_mismatch
+            - device_mismatch
+            - payment_pattern
+            - affiliate_abuse
+            - multiple_accounts
+        severity:
+          type: string
+          enum: [low, medium, high, critical]
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+        details:
+          type: string
+        detectedAt:
+          type: string
+          format: date-time
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+        metadata:
+          type: object
+          additionalProperties: true
+
+    CSRFToken:
+      type: object
+      description: CSRF token structure
+      properties:
+        token:
+          type: string
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    # ============================================
+    # INFRASTRUCTURE SCHEMAS
+    # ============================================
+    HealthCheckResponse:
+      type: object
+      description: System health check response
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+          example: "2.0.0"
+        services:
+          type: object
+          properties:
+            database:
+              $ref: '#/components/schemas/ServiceHealth'
+            redis:
+              $ref: '#/components/schemas/ServiceHealth'
+            email:
+              $ref: '#/components/schemas/ServiceHealth'
+            mt5Api:
+              $ref: '#/components/schemas/ServiceHealth'
+            stripe:
+              $ref: '#/components/schemas/ServiceHealth'
+
+    ServiceHealth:
+      type: object
+      description: Individual service health status
+      properties:
+        status:
+          type: string
+          enum: [up, down, degraded]
+        latency:
+          type: integer
+          description: Response time in milliseconds
+        lastChecked:
+          type: string
+          format: date-time
+        error:
+          type: string
+          nullable: true
+
+    SystemMetrics:
+      type: object
+      description: System performance metrics
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: integer
+          description: Uptime in seconds
+        memory:
+          type: object
+          properties:
+            used:
+              type: integer
+              description: Used memory in bytes
+            total:
+              type: integer
+              description: Total memory in bytes
+            percentage:
+              type: number
+              format: float
+        cpu:
+          type: object
+          properties:
+            usage:
+              type: number
+              format: float
+              description: CPU usage percentage
+        requests:
+          type: object
+          properties:
+            total:
+              type: integer
+            perSecond:
+              type: number
+              format: float
+            averageLatency:
+              type: integer
+              description: Average latency in milliseconds
+            errorRate:
+              type: number
+              format: float
+        cache:
+          type: object
+          properties:
+            hitRate:
+              type: number
+              format: float
+            keys:
+              type: integer
+            memoryUsed:
+              type: integer
+        activeConnections:
+          type: object
+          properties:
+            database:
+              type: integer
+            redis:
+              type: integer
+            websocket:
+              type: integer
+
+    DockerConfig:
+      type: object
+      description: Docker deployment configuration
+      properties:
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              image:
+                type: string
+              ports:
+                type: array
+                items:
+                  type: string
+              environment:
+                type: array
+                items:
+                  type: string
+              volumes:
+                type: array
+                items:
+                  type: string
+          example:
+            - name: nextjs-app
+              image: trading-alerts/nextjs:latest
+              ports: ["3000:3000"]
+              environment: ["NODE_ENV=production"]
+            - name: postgresql
+              image: postgres:15
+              ports: ["5432:5432"]
+              volumes: ["postgres-data:/var/lib/postgresql/data"]
+            - name: redis
+              image: redis:7-alpine
+              ports: ["6379:6379"]
+              volumes: ["redis-data:/data"]
+
+    CICDWorkflow:
+      type: object
+      description: CI/CD workflow definition
+      properties:
+        name:
+          type: string
+        trigger:
+          type: string
+        jobs:
+          type: array
+          items:
+            type: string
+      example:
+        - name: tests
+          trigger: "push, pull_request"
+          jobs: ["lint", "type-check", "unit-tests", "integration-tests"]
+        - name: deploy
+          trigger: "push to main"
+          jobs: ["build", "push-docker", "deploy-production"]
+        - name: security-checks
+          trigger: "push, schedule"
+          jobs: ["dependency-audit", "sast", "secrets-scan"]
+
+    # ============================================
+    # UTILITY FUNCTION SCHEMAS
+    # ============================================
+    FormatterFunctions:
+      type: object
+      description: Available data formatting functions
+      properties:
+        functions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              signature:
+                type: string
+              description:
+                type: string
+          example:
+            - name: formatCurrency
+              signature: "formatCurrency(amount: number, currency?: string): string"
+              description: "Format number as currency with symbol"
+            - name: formatDate
+              signature: "formatDate(date: Date | string, format?: string): string"
+              description: "Format date using specified format string"
+            - name: formatNumber
+              signature: "formatNumber(value: number, decimals?: number): string"
+              description: "Format number with thousand separators"
+            - name: formatPercentage
+              signature: "formatPercentage(value: number, decimals?: number): string"
+              description: "Format decimal as percentage"
+            - name: formatPrice
+              signature: "formatPrice(price: number, symbol: string): string"
+              description: "Format price with appropriate decimal places for symbol"
+            - name: formatTimeAgo
+              signature: "formatTimeAgo(date: Date | string): string"
+              description: "Format date as relative time (e.g., '5 minutes ago')"
+            - name: truncateString
+              signature: "truncateString(text: string, maxLength: number): string"
+              description: "Truncate string with ellipsis"
+
+    HelperFunctions:
+      type: object
+      description: Available helper utility functions
+      properties:
+        functions:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              signature:
+                type: string
+              description:
+                type: string
+          example:
+            - name: generateId
+              signature: "generateId(prefix?: string): string"
+              description: "Generate unique ID with optional prefix"
+            - name: sleep
+              signature: "sleep(ms: number): Promise<void>"
+              description: "Async delay function"
+            - name: retry
+              signature: "retry<T>(fn: () => Promise<T>, attempts?: number, delay?: number): Promise<T>"
+              description: "Retry async function with exponential backoff"
+            - name: debounce
+              signature: "debounce<T>(fn: T, delay: number): T"
+              description: "Debounce function calls"
+            - name: throttle
+              signature: "throttle<T>(fn: T, interval: number): T"
+              description: "Throttle function calls"
+            - name: chunk
+              signature: "chunk<T>(array: T[], size: number): T[][]"
+              description: "Split array into chunks"
+            - name: pick
+              signature: "pick<T>(obj: T, keys: (keyof T)[]): Partial<T>"
+              description: "Pick specific keys from object"
+            - name: omit
+              signature: "omit<T>(obj: T, keys: (keyof T)[]): Partial<T>"
+              description: "Omit specific keys from object"
+
+    ConstantDefinitions:
+      type: object
+      description: Application constants
+      properties:
+        SUPPORTED_SYMBOLS:
+          type: array
+          items:
+            type: string
+          example: ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "BTCUSD"]
+        SUPPORTED_TIMEFRAMES:
+          type: array
+          items:
+            type: string
+          example: ["M1", "M5", "M15", "M30", "H1", "H4", "D1", "W1", "MN1"]
+        TIER_LIMITS:
+          type: object
+          properties:
+            FREE:
+              type: object
+              properties:
+                maxAlerts:
+                  type: integer
+                  example: 3
+                maxWatchlistItems:
+                  type: integer
+                  example: 10
+            BASIC:
+              type: object
+              properties:
+                maxAlerts:
+                  type: integer
+                  example: 15
+                maxWatchlistItems:
+                  type: integer
+                  example: 50
+            PRO:
+              type: object
+              properties:
+                maxAlerts:
+                  type: integer
+                  example: 50
+                maxWatchlistItems:
+                  type: integer
+                  example: 100
+            ENTERPRISE:
+              type: object
+              properties:
+                maxAlerts:
+                  type: integer
+                  example: -1
+                maxWatchlistItems:
+                  type: integer
+                  example: -1
+        ERROR_MESSAGES:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            UNAUTHORIZED: "You must be logged in to access this resource"
+            FORBIDDEN: "You do not have permission to access this resource"
+            NOT_FOUND: "The requested resource was not found"
+            RATE_LIMITED: "Too many requests. Please try again later"
+            TIER_UPGRADE_REQUIRED: "This feature requires a higher subscription tier"
+
+    # ============================================
+    # TYPE DEFINITIONS SCHEMA
+    # ============================================
+    TypeDefinitions:
+      type: object
+      description: Available TypeScript type definition files
+      properties:
+        files:
+          type: array
+          items:
+            type: object
+            properties:
+              file:
+                type: string
+              exports:
+                type: array
+                items:
+                  type: string
+              description:
+                type: string
+          example:
+            - file: types/alert.ts
+              exports: ["Alert", "AlertCondition", "AlertStatus", "CreateAlertInput"]
+              description: "Alert entity types"
+            - file: types/api.ts
+              exports: ["ApiResponse", "PaginatedResponse", "ErrorResponse"]
+              description: "API response wrapper types"
+            - file: types/tier.ts
+              exports: ["Tier", "TierLimits", "TierFeatures", "SymbolAccess"]
+              description: "Subscription tier types"
+            - file: types/user.ts
+              exports: ["User", "UserProfile", "UserPreferences", "UpdateProfileInput"]
+              description: "User entity types"
+            - file: types/watchlist.ts
+              exports: ["Watchlist", "WatchlistItem", "CreateWatchlistItemInput"]
+              description: "Watchlist entity types"
+            - file: types/indicator.ts
+              exports: ["Indicator", "IndicatorType", "IndicatorParams", "IndicatorResult"]
+              description: "Technical indicator types"
+            - file: types/disbursement.ts
+              exports: ["Disbursement", "DisbursementBatch", "PayoutRequest"]
+              description: "Affiliate disbursement types"
+            - file: types/dlocal.ts
+              exports: ["DLocalPayment", "DLocalWebhook", "PaymentMethod"]
+              description: "DLocal payment integration types"
+            - file: types/payment.ts
+              exports: ["Payment", "PaymentStatus", "PaymentMethod"]
+              description: "General payment types"
+            - file: types/prisma-stubs.d.ts
+              exports: ["User", "Alert", "Watchlist", "Subscription", "Affiliate"]
+              description: "Prisma model type stubs (57-column flat structure)"
+
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: NextAuth.js session cookie
+
+    csrfToken:
+      type: apiKey
+      in: header
+      name: x-csrf-token
+      description: CSRF protection token
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API key for server-to-server communication
+
+security:
+  - sessionAuth: []
+    csrfToken: []

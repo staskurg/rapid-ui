@@ -1,0 +1,273 @@
+{
+  "api": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Deme_mockup_configure",
+      "key": "dememockupconfigure",
+      "operations": [
+        {
+          "id": "mockup_configure_deme_mockup_configure_post",
+          "method": "POST",
+          "kind": "create",
+          "path": "/deme_mockup_configure",
+          "requestSchema": {
+            "properties": {
+              "mockup_periodicity": {
+                "type": "integer",
+                "title": "Mockup Periodicity",
+                "description": "number of GET/detection cycles",
+                "example": 10
+              },
+              "attacks_configuration": {
+                "items": {
+                  "properties": {
+                    "instance": {
+                      "type": "string",
+                      "title": "Instance",
+                      "description": "The network instance name",
+                      "example": "Test_Instance"
+                    },
+                    "attack_configuration": {
+                      "items": {
+                        "properties": {
+                          "feature": {
+                            "type": "string",
+                            "title": "Feature",
+                            "description": "The type of network feature",
+                            "example": "NTP"
+                          },
+                          "attack_simulation": {
+                            "type": "boolean",
+                            "title": "Attack Simulation",
+                            "description": "A boolean indicating the attack simulation",
+                            "example": true
+                          }
+                        },
+                        "type": "object",
+                        "required": [
+                          "feature",
+                          "attack_simulation"
+                        ],
+                        "title": "AttackSimulationConfiguration"
+                      },
+                      "type": "array",
+                      "title": "Attack Configuration",
+                      "description": "List of AttackSimulationConfiguration objects (feature name and related attack simulation info)",
+                      "example": "[{\"feature\": \"NTP\",\"attack_simulation\": True},{\"feature\": \"DNS\",\"attack_simulation\": False},{\"feature\": \"PFCP\",\"attack_simulation\": False}]}]"
+                    }
+                  },
+                  "type": "object",
+                  "required": [
+                    "instance",
+                    "attack_configuration"
+                  ],
+                  "title": "AttackConfiguration"
+                },
+                "type": "array",
+                "title": "Attacks Configuration",
+                "description": "List of AttackConfiguration objects (instance name and related features)",
+                "example": "[{\"instance\": \"Test_Instance\",\"attack_configuration\": [{\"feature\": \"NTP\",\"attack_simulation\":\"True\"},{\"feature\": \"DNS\",\"attack_simulation\": \"False\"},{\"feature\": \"PFCP\",\"attack_simulation\": \"False\"}]}]"
+              }
+            },
+            "type": "object",
+            "required": [
+              "mockup_periodicity",
+              "attacks_configuration"
+            ],
+            "title": "MockupConfiguration"
+          },
+          "responseSchema": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "title": "Value",
+                "default": "done"
+              }
+            },
+            "type": "object",
+            "title": "DoneResponse"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Detection",
+      "key": "detection",
+      "operations": [
+        {
+          "id": "mockup_detection_detection_get",
+          "method": "GET",
+          "kind": "list",
+          "path": "/detection",
+          "responseSchema": {
+            "items": {
+              "properties": {
+                "instance": {
+                  "type": "string",
+                  "title": "Instance",
+                  "description": "The instance name",
+                  "example": "Test_Instance"
+                },
+                "detection": {
+                  "items": {
+                    "properties": {
+                      "attack": {
+                        "type": "string",
+                        "title": "Attack",
+                        "description": "The type of attack",
+                        "example": "NTP"
+                      },
+                      "accuracy": {
+                        "type": "number",
+                        "title": "Accuracy",
+                        "description": "The accuracy of the prediction of the attack",
+                        "example": 0.5
+                      }
+                    },
+                    "type": "object",
+                    "required": [
+                      "attack",
+                      "accuracy"
+                    ],
+                    "title": "Attack"
+                  },
+                  "type": "array",
+                  "title": "Detection",
+                  "description": "List of Attack objects (attacks and related accuracies)",
+                  "example": "[{\"attack\":\"NTP\",\"accuracy\":0.5}]"
+                }
+              },
+              "type": "object",
+              "required": [
+                "instance",
+                "detection"
+              ],
+              "title": "Detection"
+            },
+            "type": "array",
+            "title": "Response Mockup Detection Detection Get"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Estimate",
+      "key": "estimate",
+      "operations": [
+        {
+          "id": "mockup_estimate_estimate_post",
+          "method": "POST",
+          "kind": "create",
+          "path": "/estimate",
+          "requestSchema": {
+            "items": {
+              "properties": {
+                "timestamp": {
+                  "type": "string",
+                  "title": "Timestamp",
+                  "description": "The timestamp in Unix epoch format",
+                  "example": "1713303373"
+                },
+                "instances": {
+                  "items": {
+                    "properties": {
+                      "instance": {
+                        "type": "string",
+                        "title": "Instance",
+                        "description": "The instance name",
+                        "example": "Test_Instance"
+                      },
+                      "features": {
+                        "items": {
+                          "properties": {
+                            "feature": {
+                              "type": "string",
+                              "title": "Feature",
+                              "description": "The type of network feature",
+                              "example": "NTP"
+                            },
+                            "value": {
+                              "type": "number",
+                              "title": "Value",
+                              "description": "The value associated to a network feature at a specific instant",
+                              "example": 141
+                            }
+                          },
+                          "type": "object",
+                          "required": [
+                            "feature",
+                            "value"
+                          ],
+                          "title": "Feature"
+                        },
+                        "type": "array",
+                        "title": "Features",
+                        "description": "List of Feature objects (network features and related values)",
+                        "example": "[{\"feature\": \"NTP\",\"value\": 141.0},{\"feature\": \"DNS\",\"value\": 125.0},{\"feature\": \"PFCP\",\"value\": 138.0}]}]"
+                      }
+                    },
+                    "type": "object",
+                    "required": [
+                      "instance",
+                      "features"
+                    ],
+                    "title": "Instance"
+                  },
+                  "type": "array",
+                  "title": "Instances",
+                  "description": "List of Instance objects (instances name and related features).",
+                  "example": "[{\"instance\": \"Test_Instance\",\"features\": [{\"feature\": \"NTP\",\"value\": 141.0},{\"feature\": \"DNS\",\"value\": 125.0},{\"feature\": \"PFCP\",\"value\": 138.0}]}]"
+                }
+              },
+              "type": "object",
+              "required": [
+                "timestamp",
+                "instances"
+              ],
+              "title": "Estimate"
+            },
+            "type": "array",
+            "title": "Estimate"
+          },
+          "responseSchema": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "title": "Value",
+                "default": "done"
+              }
+            },
+            "type": "object",
+            "title": "DoneResponse"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Is_ok",
+      "key": "isok",
+      "operations": [
+        {
+          "id": "is_deme_mockup_ok_is_ok_get",
+          "method": "GET",
+          "kind": "list",
+          "path": "/is_ok",
+          "responseSchema": {
+            "properties": {
+              "message": {
+                "type": "string",
+                "title": "Message",
+                "default": "ok"
+              }
+            },
+            "type": "object",
+            "title": "IsOK"
+          }
+        }
+      ]
+    }
+  ]
+}

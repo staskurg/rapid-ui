@@ -1,0 +1,344 @@
+{
+  "api": {
+    "title": "Instagram Analytics API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics",
+      "key": "analytics",
+      "operations": [
+        {
+          "id": "POST:/api/v1/analytics/analyze-profile",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/analytics/analyze-profile",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "description": "Instagram username (without @)",
+                "example": "example_user"
+              },
+              "analysis_depth": {
+                "type": "string",
+                "enum": [
+                  "basic",
+                  "standard",
+                  "comprehensive"
+                ],
+                "default": "standard",
+                "description": "Depth of analysis to perform"
+              },
+              "include_recent_posts": {
+                "type": "boolean",
+                "default": true,
+                "description": "Include analysis of recent posts"
+              },
+              "max_posts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50,
+                "default": 10,
+                "description": "Maximum number of recent posts to analyze"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "description": "Instagram username"
+              },
+              "profile_metrics": {
+                "type": "object",
+                "properties": {
+                  "followers_count": {
+                    "type": "integer",
+                    "description": "Number of followers"
+                  },
+                  "following_count": {
+                    "type": "integer",
+                    "description": "Number of following"
+                  },
+                  "posts_count": {
+                    "type": "integer",
+                    "description": "Total number of posts"
+                  },
+                  "engagement_rate": {
+                    "type": "number",
+                    "description": "Average engagement rate"
+                  }
+                }
+              },
+              "content_analysis": {
+                "type": "object",
+                "properties": {
+                  "posting_frequency": {
+                    "type": "number",
+                    "description": "Posts per week"
+                  },
+                  "content_categories": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "category": {
+                          "type": "string"
+                        },
+                        "percentage": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "best_performing_content": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "post_id": {
+                          "type": "string"
+                        },
+                        "engagement_score": {
+                          "type": "number"
+                        },
+                        "content_type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "growth_insights": {
+                "type": "object",
+                "properties": {
+                  "growth_rate": {
+                    "type": "number",
+                    "description": "Monthly growth rate"
+                  },
+                  "predicted_followers": {
+                    "type": "integer",
+                    "description": "Predicted followers in 30 days"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Analysis timestamp"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/api/v1/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "services": {
+                "type": "object",
+                "properties": {
+                  "ai_vision": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy",
+                      "unavailable"
+                    ]
+                  },
+                  "database": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy",
+                      "unavailable"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reels",
+      "key": "reels",
+      "operations": [
+        {
+          "id": "POST:/api/v1/reels/analyze",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/reels/analyze",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Instagram reel URL",
+                "example": "https://www.instagram.com/reel/ABC123/"
+              },
+              "analysis_options": {
+                "type": "object",
+                "properties": {
+                  "include_ai_vision": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include AI vision analysis"
+                  },
+                  "include_sentiment": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Include sentiment analysis"
+                  },
+                  "include_engagement_prediction": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Include engagement prediction"
+                  },
+                  "language": {
+                    "type": "string",
+                    "default": "en",
+                    "description": "Analysis language",
+                    "example": "en"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reel_id": {
+                "type": "string",
+                "description": "Unique reel identifier",
+                "example": "ABC123"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Original reel URL"
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "Reel title/caption"
+                  },
+                  "duration": {
+                    "type": "number",
+                    "description": "Reel duration in seconds"
+                  },
+                  "upload_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Upload timestamp"
+                  },
+                  "view_count": {
+                    "type": "integer",
+                    "description": "Number of views"
+                  },
+                  "like_count": {
+                    "type": "integer",
+                    "description": "Number of likes"
+                  },
+                  "comment_count": {
+                    "type": "integer",
+                    "description": "Number of comments"
+                  }
+                }
+              },
+              "ai_insights": {
+                "type": "object",
+                "properties": {
+                  "summary": {
+                    "type": "string",
+                    "description": "AI-generated summary"
+                  },
+                  "visual_elements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Detected visual elements"
+                  },
+                  "sentiment_score": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1,
+                    "description": "Sentiment score (-1 to 1)"
+                  },
+                  "confidence_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Analysis confidence (0 to 1)"
+                  }
+                }
+              },
+              "engagement_metrics": {
+                "type": "object",
+                "properties": {
+                  "engagement_rate": {
+                    "type": "number",
+                    "description": "Calculated engagement rate"
+                  },
+                  "engagement_score": {
+                    "type": "number",
+                    "description": "Overall engagement score"
+                  },
+                  "predicted_reach": {
+                    "type": "integer",
+                    "description": "Predicted reach based on current metrics"
+                  }
+                }
+              },
+              "processing_time": {
+                "type": "number",
+                "description": "Analysis processing time in seconds"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Analysis timestamp"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

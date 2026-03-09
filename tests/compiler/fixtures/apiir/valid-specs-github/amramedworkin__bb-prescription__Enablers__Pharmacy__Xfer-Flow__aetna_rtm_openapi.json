@@ -1,0 +1,413 @@
+{
+  "api": {
+    "title": "Aetna Retail-to-Mail (R2M) API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Eligibility",
+      "key": "eligibility",
+      "operations": [
+        {
+          "id": "checkEligibility",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/retail-to-mail/eligibility",
+          "requestSchema": {
+            "type": "object",
+            "description": "The request body to check if a prescription is eligible for mail transfer.",
+            "required": [
+              "memberId",
+              "cardholderId",
+              "patientId",
+              "prescription",
+              "prescriber",
+              "pharmacy"
+            ],
+            "properties": {
+              "memberId": {
+                "type": "string",
+                "description": "Aetna member identifier.",
+                "example": "A123456789"
+              },
+              "cardholderId": {
+                "type": "string",
+                "description": "Aetna cardholder identifier.",
+                "example": "C00001234"
+              },
+              "patientId": {
+                "type": "string",
+                "description": "Aetna patient identifier.",
+                "example": "P00005678"
+              },
+              "prescription": {
+                "type": "object",
+                "description": "Details of the prescription to be checked for eligibility.",
+                "required": [
+                  "rxNumber"
+                ],
+                "properties": {
+                  "rxNumber": {
+                    "type": "string",
+                    "description": "The retail prescription number (Rx#).",
+                    "example": "8901234"
+                  },
+                  "lookupKey": {
+                    "type": "string",
+                    "description": "Alternative key when rxNumber is not available."
+                  },
+                  "ndcId": {
+                    "type": "string",
+                    "description": "National Drug Code identifier.",
+                    "example": "00093-7424-56"
+                  },
+                  "daysSupplyRemaining": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of days supply left on the current fill."
+                  },
+                  "remainingRefills": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of refills remaining on the prescription."
+                  }
+                }
+              },
+              "prescriber": {
+                "type": "object",
+                "description": "Details of the prescribing physician.",
+                "required": [
+                  "spiId"
+                ],
+                "properties": {
+                  "spiId": {
+                    "type": "string",
+                    "description": "SureScripts Provider Identifier.",
+                    "example": "SPI12345"
+                  },
+                  "npiId": {
+                    "type": "string",
+                    "description": "National Provider Identifier.",
+                    "example": "1234567890"
+                  },
+                  "dea": {
+                    "type": "string",
+                    "description": "Drug Enforcement Administration number, required for controlled substances.",
+                    "example": "AB1234567"
+                  }
+                }
+              },
+              "pharmacy": {
+                "type": "object",
+                "description": "Details of the originating retail pharmacy.",
+                "required": [
+                  "ncpdpId"
+                ],
+                "properties": {
+                  "ncpdpId": {
+                    "type": "string",
+                    "description": "NCPDP ID of the pharmacy (also known as NABP ID).",
+                    "example": "1234567"
+                  },
+                  "npiId": {
+                    "type": "string",
+                    "description": "National Provider Identifier of the pharmacy.",
+                    "example": "1760456789"
+                  }
+                }
+              },
+              "clientContext": {
+                "type": "object",
+                "description": "Optional context about the client application making the request.",
+                "properties": {
+                  "locale": {
+                    "type": "string",
+                    "example": "en-US"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "example": "web"
+                  },
+                  "appVersion": {
+                    "type": "string",
+                    "example": "3.1.2"
+                  },
+                  "deviceId": {
+                    "type": "string",
+                    "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "The result of an eligibility check.",
+            "required": [
+              "eligible",
+              "reasonCode",
+              "reasonText"
+            ],
+            "properties": {
+              "eligible": {
+                "type": "boolean",
+                "description": "The outcome of the eligibility check."
+              },
+              "reasonCode": {
+                "type": "string",
+                "description": "Canonical eligibility reason code.",
+                "example": "EL01"
+              },
+              "reasonText": {
+                "type": "string",
+                "description": "Human-readable eligibility explanation.",
+                "example": "Eligible for direct mail transfer"
+              },
+              "transferRecommended": {
+                "type": "boolean",
+                "description": "If true, the recommended next step is to call the /transfer endpoint."
+              },
+              "cvsCorrelationId": {
+                "type": "string",
+                "description": "Correlation ID from the downstream CVS service.",
+                "example": "abcd-1234"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status",
+      "key": "status",
+      "operations": [
+        {
+          "id": "getTransferStatus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/retail-to-mail/status/{transactionId}",
+          "identifierParam": "transactionId",
+          "responseSchema": {
+            "type": "object",
+            "description": "The current status of a transfer transaction.",
+            "required": [
+              "state",
+              "updatedAt"
+            ],
+            "properties": {
+              "state": {
+                "type": "string",
+                "description": "The current state of the transfer.",
+                "enum": [
+                  "ELIGIBLE",
+                  "SUBMITTED",
+                  "INACTIVATED",
+                  "FULFILLMENT",
+                  "FAILED"
+                ]
+              },
+              "orderId": {
+                "type": "string",
+                "nullable": true,
+                "description": "The mail order ID, available once fulfillment begins.",
+                "example": "MO123456789"
+              },
+              "etaDays": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Updated estimated time of arrival in days.",
+                "example": 4
+              },
+              "reasonCode": {
+                "type": "string",
+                "nullable": true,
+                "description": "A code indicating the reason for the current state, especially FAILED."
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of the last status update in UTC.",
+                "example": "2025-10-15T14:10:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transfer",
+      "key": "transfer",
+      "operations": [
+        {
+          "id": "submitTransfer",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/retail-to-mail/transfer",
+          "requestSchema": {
+            "type": "object",
+            "description": "The request body to submit a prescription for mail transfer.",
+            "required": [
+              "transactionId",
+              "memberId",
+              "cardholderId",
+              "patientId",
+              "prescription",
+              "prescriber",
+              "pharmacy"
+            ],
+            "properties": {
+              "transactionId": {
+                "type": "string",
+                "description": "Client-generated idempotency key, unique per transfer attempt.",
+                "example": "T2025-10-15-0001"
+              },
+              "memberId": {
+                "type": "string",
+                "description": "Aetna member identifier.",
+                "example": "A123456789"
+              },
+              "cardholderId": {
+                "type": "string",
+                "description": "Aetna cardholder identifier.",
+                "example": "C00001234"
+              },
+              "patientId": {
+                "type": "string",
+                "description": "Aetna patient identifier.",
+                "example": "P00005678"
+              },
+              "prescription": {
+                "type": "object",
+                "description": "Details of the prescription to be transferred.",
+                "required": [
+                  "rxNumber"
+                ],
+                "properties": {
+                  "rxNumber": {
+                    "type": "string",
+                    "description": "The retail prescription number (Rx#).",
+                    "example": "8901234"
+                  },
+                  "ndcId": {
+                    "type": "string",
+                    "description": "National Drug Code identifier.",
+                    "example": "00093-7424-56"
+                  },
+                  "daysSupply": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "The days supply to be filled by mail order.",
+                    "example": 90
+                  }
+                }
+              },
+              "prescriber": {
+                "type": "object",
+                "description": "Details of the prescribing physician.",
+                "required": [
+                  "spiId"
+                ],
+                "properties": {
+                  "spiId": {
+                    "type": "string",
+                    "description": "SureScripts Provider Identifier.",
+                    "example": "SPI12345"
+                  },
+                  "npiId": {
+                    "type": "string",
+                    "description": "National Provider Identifier.",
+                    "example": "1234567890"
+                  },
+                  "dea": {
+                    "type": "string",
+                    "description": "Drug Enforcement Administration number, required for controlled substances.",
+                    "example": "AB1234567"
+                  }
+                }
+              },
+              "pharmacy": {
+                "type": "object",
+                "description": "Details of the originating retail pharmacy.",
+                "required": [
+                  "ncpdpId"
+                ],
+                "properties": {
+                  "ncpdpId": {
+                    "type": "string",
+                    "description": "NCPDP ID of the pharmacy (also known as NABP ID).",
+                    "example": "1234567"
+                  },
+                  "npiId": {
+                    "type": "string",
+                    "description": "National Provider Identifier of the pharmacy.",
+                    "example": "1760456789"
+                  }
+                }
+              },
+              "clientContext": {
+                "type": "object",
+                "description": "Optional context about the client application making the request.",
+                "properties": {
+                  "locale": {
+                    "type": "string",
+                    "example": "en-US"
+                  },
+                  "channel": {
+                    "type": "string",
+                    "example": "web"
+                  },
+                  "appVersion": {
+                    "type": "string",
+                    "example": "3.1.2"
+                  },
+                  "deviceId": {
+                    "type": "string",
+                    "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "The result of a transfer submission.",
+            "required": [
+              "statusCode",
+              "statusDescription"
+            ],
+            "properties": {
+              "statusCode": {
+                "type": "string",
+                "description": "Downstream response status code from CVS.",
+                "example": "0000"
+              },
+              "statusDescription": {
+                "type": "string",
+                "description": "Downstream response status description.",
+                "example": "Success"
+              },
+              "orderId": {
+                "type": "string",
+                "nullable": true,
+                "description": "The mail order ID, if generated synchronously.",
+                "example": "MO123456789"
+              },
+              "etaDays": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Estimated time of arrival in days.",
+                "example": 5
+              },
+              "cvsCorrelationId": {
+                "type": "string",
+                "nullable": true,
+                "description": "Correlation ID from the downstream CVS service.",
+                "example": "abcd-1234"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

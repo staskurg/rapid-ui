@@ -1,0 +1,196 @@
+{
+  "api": {
+    "title": "RAG Backend API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "post_chat",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The user's question.",
+                "example": "What is ROS 2?"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "example": "ROS 2 is a flexible framework for writing robot software."
+              },
+              "citations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "doc_id": {
+                      "type": "string"
+                    },
+                    "section_id": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "post_chat_selection",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat/selection",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query",
+              "selected_text"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The user's question.",
+                "example": "What does this paragraph mean?"
+              },
+              "selected_text": {
+                "type": "string",
+                "description": "The text selected by the user, used as the sole context.",
+                "example": "ROS 2 is a flexible framework for writing robot software."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "example": "The paragraph describes ROS 2 as a flexible framework."
+              },
+              "citations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "doc_id": {
+                      "type": "string"
+                    },
+                    "section_id": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "get_health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "OK"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ingest",
+      "key": "ingest",
+      "operations": [
+        {
+          "id": "post_ingest",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ingest",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "documents"
+            ],
+            "properties": {
+              "documents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "doc_id",
+                    "title",
+                    "url",
+                    "content"
+                  ],
+                  "properties": {
+                    "doc_id": {
+                      "type": "string",
+                      "description": "Stable, unique identifier for the document."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Title of the chapter/section."
+                    },
+                    "url": {
+                      "type": "string",
+                      "description": "URL to the document."
+                    },
+                    "content": {
+                      "type": "string",
+                      "description": "Full text content of the document."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Ingestion process started."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

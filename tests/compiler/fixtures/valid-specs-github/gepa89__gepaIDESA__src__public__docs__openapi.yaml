@@ -1,0 +1,1349 @@
+openapi: 3.0.3
+info:
+  title: Laravel
+  description: ''
+  version: 1.0.0
+servers:
+  -
+    url: 'http://localhost'
+paths:
+  /api/auth/register:
+    post:
+      summary: 'Register a new user and generate an access token.'
+      operationId: registerANewUserAndGenerateAnAccessToken
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The expected response format. Example: v1'
+          schema:
+            type: string
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  access_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  token_type: Bearer
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  token_type:
+                    type: string
+                    example: Bearer
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed.'
+                  errors:
+                    email:
+                      - 'The email has already been taken.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed.'
+                  errors:
+                    type: object
+                    properties:
+                      email:
+                        type: array
+                        example:
+                          - 'The email has already been taken.'
+                        items:
+                          type: string
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred during registration.'
+                  error: 'Optional debug error message (if app.debug=true).'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred during registration.'
+                  error:
+                    type: string
+                    example: 'Optional debug error message (if app.debug=true).'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'The name of the user.'
+                  example: 'John Doe'
+                  nullable: false
+                email:
+                  type: string
+                  description: 'The email of the user.'
+                  example: johndoe@example.com
+                  nullable: false
+                password:
+                  type: string
+                  description: 'The password of the user (must be at least 6 characters).'
+                  example: password123
+                  nullable: false
+                password_confirmation:
+                  type: string
+                  description: 'The password confirmation.'
+                  example: password123
+                  nullable: false
+              required:
+                - name
+                - email
+                - password
+                - password_confirmation
+      security: []
+  /api/auth/login:
+    post:
+      summary: 'Log in and generate an access token.'
+      operationId: logInAndGenerateAnAccessToken
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The expected response format. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  access_token: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  token_type: Bearer
+                properties:
+                  access_token:
+                    type: string
+                    example: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...
+                  token_type:
+                    type: string
+                    example: Bearer
+        401:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid credentials.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid credentials.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred during login.'
+                  error: 'Optional debug error message (if app.debug=true).'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred during login.'
+                  error:
+                    type: string
+                    example: 'Optional debug error message (if app.debug=true).'
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  description: 'The email of the user.'
+                  example: johndoe@example.com
+                  nullable: false
+                password:
+                  type: string
+                  description: 'The password of the user.'
+                  example: password123
+                  nullable: false
+              required:
+                - email
+                - password
+      security: []
+  /api/authors:
+    get:
+      summary: 'Get a paginated, filtered, and sorted list of authors.'
+      operationId: getAPaginatedFilteredAndSortedListOfAuthors
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      name: 'Author Name'
+                      email: author@example.com
+                      birthdate: '1980-01-01'
+                      nationality: American
+                  links:
+                    first: 'http://example.com/api/v1/authors?page=1'
+                    last: 'http://example.com/api/v1/authors?page=10'
+                    prev: null
+                    next: 'http://example.com/api/v1/authors?page=2'
+                  meta:
+                    current_page: 1
+                    last_page: 10
+                    per_page: 10
+                    total: 100
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        name: 'Author Name'
+                        email: author@example.com
+                        birthdate: '1980-01-01'
+                        nationality: American
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        name:
+                          type: string
+                          example: 'Author Name'
+                        email:
+                          type: string
+                          example: author@example.com
+                        birthdate:
+                          type: string
+                          example: '1980-01-01'
+                        nationality:
+                          type: string
+                          example: American
+                  links:
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        example: 'http://example.com/api/v1/authors?page=1'
+                      last:
+                        type: string
+                        example: 'http://example.com/api/v1/authors?page=10'
+                      prev:
+                        type: string
+                        example: null
+                      next:
+                        type: string
+                        example: 'http://example.com/api/v1/authors?page=2'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      last_page:
+                        type: integer
+                        example: 10
+                      per_page:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 100
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid pagination or sorting parameters.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid pagination or sorting parameters.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while fetching authors.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while fetching authors.'
+      tags:
+        - Authors
+      security: []
+    post:
+      summary: 'Create a new author.'
+      operationId: createANewAuthor
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'John Doe'
+                  birthdate: '1980-01-01'
+                  nationality: American
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'John Doe'
+                  birthdate:
+                    type: string
+                    example: '1980-01-01'
+                  nationality:
+                    type: string
+                    example: American
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed.'
+                  errors:
+                    name:
+                      - 'The name field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed.'
+                  errors:
+                    type: object
+                    properties:
+                      name:
+                        type: array
+                        example:
+                          - 'The name field is required.'
+                        items:
+                          type: string
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while creating the author.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while creating the author.'
+      tags:
+        - Authors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'The name of the author.'
+                  example: 'John Doe'
+                  nullable: false
+                birthdate:
+                  type: date
+                  description: 'The birthdate of the author.'
+                  example: '1980-01-01'
+                  nullable: false
+                nationality:
+                  type: string
+                  description: 'The nationality of the author.'
+                  example: American
+                  nullable: false
+              required:
+                - name
+                - birthdate
+                - nationality
+      security: []
+    parameters:
+      -
+        in: path
+        name: per_page
+        description: 'Optional parameter. Optional. Number of authors per page. Defaults to 10.'
+        required: true
+        schema:
+          type: integer
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: 20
+      -
+        in: path
+        name: name
+        description: 'Optional parameter. Optional. Filter by author name.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: John
+      -
+        in: path
+        name: email
+        description: 'Optional parameter. Optional. Filter by author email.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: john@example.com
+      -
+        in: path
+        name: order_by
+        description: 'Optional parameter. Optional. Field to sort by. Defaults to "id".'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: name
+      -
+        in: path
+        name: order_dir
+        description: 'Optional parameter. Optional. Sorting direction (asc or desc). Defaults to "asc".'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: desc
+  '/api/authors/{id}':
+    get:
+      summary: 'Get details of a specific author.'
+      operationId: getDetailsOfASpecificAuthor
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'Author Name'
+                  birthdate: '1980-01-01'
+                  nationality: American
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'Author Name'
+                  birthdate:
+                    type: string
+                    example: '1980-01-01'
+                  nationality:
+                    type: string
+                    example: American
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid ID. The ID must be a numeric value.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid ID. The ID must be a numeric value.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Author not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Author not found.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while fetching the author.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while fetching the author.'
+      tags:
+        - Authors
+      security: []
+    put:
+      summary: 'Update an existing author.'
+      operationId: updateAnExistingAuthor
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  name: 'Jane Doe'
+                  birthdate: '1990-01-01'
+                  nationality: British
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  name:
+                    type: string
+                    example: 'Jane Doe'
+                  birthdate:
+                    type: string
+                    example: '1990-01-01'
+                  nationality:
+                    type: string
+                    example: British
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Author not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Author not found.'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed.'
+                  errors:
+                    name:
+                      - 'The name field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed.'
+                  errors:
+                    type: object
+                    properties:
+                      name:
+                        type: array
+                        example:
+                          - 'The name field is required.'
+                        items:
+                          type: string
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while updating the author.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while updating the author.'
+      tags:
+        - Authors
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: 'Optional The updated name of the author.'
+                  example: 'Jane Doe'
+                  nullable: false
+                birthdate:
+                  type: date
+                  description: 'Optional The updated birthdate of the author.'
+                  example: '1990-01-01'
+                  nullable: false
+                nationality:
+                  type: string
+                  description: 'Optional The updated nationality of the author.'
+                  example: British
+                  nullable: false
+      security: []
+    delete:
+      summary: 'Delete an author.'
+      operationId: deleteAnAuthor
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Author deleted successfully.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Author deleted successfully.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Author not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Author not found.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while deleting the author.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while deleting the author.'
+      tags:
+        - Authors
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'Author ID.'
+        example: 1
+        required: true
+        schema:
+          type: integer
+  /api/books:
+    get:
+      summary: 'Get a paginated, filtered, and sorted list of books.'
+      operationId: getAPaginatedFilteredAndSortedListOfBooks
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  data:
+                    -
+                      id: 1
+                      title: 'Book Title'
+                      isbn: 123-4567890123
+                      published_date: '2022-01-01'
+                      author:
+                        id: 1
+                        name: 'Author Name'
+                  links:
+                    first: 'http://example.com/api/v1/books?page=1'
+                    last: 'http://example.com/api/v1/books?page=10'
+                    prev: null
+                    next: 'http://example.com/api/v1/books?page=2'
+                  meta:
+                    current_page: 1
+                    last_page: 10
+                    per_page: 10
+                    total: 100
+                properties:
+                  data:
+                    type: array
+                    example:
+                      -
+                        id: 1
+                        title: 'Book Title'
+                        isbn: 123-4567890123
+                        published_date: '2022-01-01'
+                        author:
+                          id: 1
+                          name: 'Author Name'
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                          example: 1
+                        title:
+                          type: string
+                          example: 'Book Title'
+                        isbn:
+                          type: string
+                          example: 123-4567890123
+                        published_date:
+                          type: string
+                          example: '2022-01-01'
+                        author:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                              example: 1
+                            name:
+                              type: string
+                              example: 'Author Name'
+                  links:
+                    type: object
+                    properties:
+                      first:
+                        type: string
+                        example: 'http://example.com/api/v1/books?page=1'
+                      last:
+                        type: string
+                        example: 'http://example.com/api/v1/books?page=10'
+                      prev:
+                        type: string
+                        example: null
+                      next:
+                        type: string
+                        example: 'http://example.com/api/v1/books?page=2'
+                  meta:
+                    type: object
+                    properties:
+                      current_page:
+                        type: integer
+                        example: 1
+                      last_page:
+                        type: integer
+                        example: 10
+                      per_page:
+                        type: integer
+                        example: 10
+                      total:
+                        type: integer
+                        example: 100
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid pagination or sorting parameters.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid pagination or sorting parameters.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while fetching books.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while fetching books.'
+      tags:
+        - Books
+      security: []
+    post:
+      summary: 'Create a new book.'
+      operationId: createANewBook
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  title: 'My Book'
+                  isbn: 123-4567890123
+                  published_date: '2022-01-01'
+                  author_id: 1
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: 'My Book'
+                  isbn:
+                    type: string
+                    example: 123-4567890123
+                  published_date:
+                    type: string
+                    example: '2022-01-01'
+                  author_id:
+                    type: integer
+                    example: 1
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed.'
+                  errors:
+                    title:
+                      - 'The title field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed.'
+                  errors:
+                    type: object
+                    properties:
+                      title:
+                        type: array
+                        example:
+                          - 'The title field is required.'
+                        items:
+                          type: string
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while creating the book.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while creating the book.'
+      tags:
+        - Books
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'The title of the book.'
+                  example: 'My Book'
+                  nullable: false
+                isbn:
+                  type: string
+                  description: 'The ISBN of the book.'
+                  example: 123-4567890123
+                  nullable: false
+                published_date:
+                  type: date
+                  description: 'The publication date of the book.'
+                  example: '2022-01-01'
+                  nullable: false
+                author_id:
+                  type: integer
+                  description: 'The ID of the author.'
+                  example: 1
+                  nullable: false
+              required:
+                - title
+                - isbn
+                - published_date
+                - author_id
+      security: []
+    parameters:
+      -
+        in: path
+        name: per_page
+        description: 'Optional parameter. Optional. Number of books per page. Defaults to 10.'
+        required: true
+        schema:
+          type: integer
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: 20
+      -
+        in: path
+        name: title
+        description: 'Optional parameter. Optional. Filter by book title.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: 'Harry Potter'
+      -
+        in: path
+        name: isbn
+        description: 'Optional parameter. Optional. Filter by book ISBN.'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: 123-4567890123
+      -
+        in: path
+        name: order_by
+        description: 'Optional parameter. Optional. Field to sort by. Defaults to "id".'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: title
+      -
+        in: path
+        name: order_dir
+        description: 'Optional parameter. Optional. Sorting direction (asc or desc). Defaults to "asc".'
+        required: true
+        schema:
+          type: string
+        examples:
+          omitted:
+            summary: 'When the value is omitted'
+            value: ''
+          present:
+            summary: 'When the value is present'
+            value: desc
+  '/api/books/{id}':
+    get:
+      summary: 'Get details of a specific book.'
+      operationId: getDetailsOfASpecificBook
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  title: 'Book Title'
+                  isbn: 123-4567890123
+                  published_date: '2022-01-01'
+                  author:
+                    id: 1
+                    name: 'Author Name'
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: 'Book Title'
+                  isbn:
+                    type: string
+                    example: 123-4567890123
+                  published_date:
+                    type: string
+                    example: '2022-01-01'
+                  author:
+                    type: object
+                    properties:
+                      id:
+                        type: integer
+                        example: 1
+                      name:
+                        type: string
+                        example: 'Author Name'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid ID. The ID must be a numeric value.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid ID. The ID must be a numeric value.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book not found.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while fetching the book.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while fetching the book.'
+      tags:
+        - Books
+      security: []
+    put:
+      summary: 'Update an existing book.'
+      operationId: updateAnExistingBook
+      description: ''
+      parameters:
+        -
+          in: header
+          name: Accept-Version
+          description: ''
+          example: 'string required The version of the API to use. Example: v1'
+          schema:
+            type: string
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  id: 1
+                  title: 'Updated Book Title'
+                  isbn: 123-4567890123
+                  published_date: '2022-01-01'
+                  author_id: 1
+                properties:
+                  id:
+                    type: integer
+                    example: 1
+                  title:
+                    type: string
+                    example: 'Updated Book Title'
+                  isbn:
+                    type: string
+                    example: 123-4567890123
+                  published_date:
+                    type: string
+                    example: '2022-01-01'
+                  author_id:
+                    type: integer
+                    example: 1
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book not found.'
+        422:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Validation failed.'
+                  errors:
+                    title:
+                      - 'The title field is required.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Validation failed.'
+                  errors:
+                    type: object
+                    properties:
+                      title:
+                        type: array
+                        example:
+                          - 'The title field is required.'
+                        items:
+                          type: string
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while updating the book.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while updating the book.'
+      tags:
+        - Books
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  description: 'Optional The title of the book.'
+                  example: 'Updated Book Title'
+                  nullable: false
+                isbn:
+                  type: string
+                  description: 'Optional The ISBN of the book.'
+                  example: 123-4567890123
+                  nullable: false
+                published_date:
+                  type: date
+                  description: 'Optional The publication date of the book.'
+                  example: '2022-01-01'
+                  nullable: false
+                author_id:
+                  type: integer
+                  description: 'Optional The ID of the author.'
+                  example: 1
+                  nullable: false
+      security: []
+    delete:
+      summary: 'Delete a book.'
+      operationId: deleteABook
+      description: ''
+      parameters: []
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book deleted successfully.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book deleted successfully.'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Invalid ID. The ID must be numeric.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Invalid ID. The ID must be numeric.'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'Book not found.'
+                properties:
+                  message:
+                    type: string
+                    example: 'Book not found.'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  message: 'An error occurred while deleting the book.'
+                properties:
+                  message:
+                    type: string
+                    example: 'An error occurred while deleting the book.'
+      tags:
+        - Books
+      security: []
+    parameters:
+      -
+        in: path
+        name: id
+        description: 'Book ID.'
+        example: 9
+        required: true
+        schema:
+          type: integer
+tags:
+  -
+    name: Authentication
+    description: ''
+  -
+    name: Authors
+    description: ''
+  -
+    name: Books
+    description: ''
+components:
+  securitySchemes:
+    default:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: ''
+security:
+  -
+    default: []

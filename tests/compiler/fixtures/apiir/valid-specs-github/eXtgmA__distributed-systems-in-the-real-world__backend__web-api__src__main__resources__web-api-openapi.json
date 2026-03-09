@@ -1,0 +1,230 @@
+{
+  "api": {
+    "title": "Web API Bridge",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Ticketing",
+      "key": "ticketing",
+      "operations": [
+        {
+          "id": "listOrganizerEvents",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/organizers/{address}/events",
+          "identifierParam": "address",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "eventId",
+                "name",
+                "eventDate",
+                "ticketPriceWei",
+                "ticketsRemaining",
+                "ticketsSold",
+                "organizer",
+                "proceedsWei",
+                "active"
+              ],
+              "properties": {
+                "eventId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "eventDate": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "ticketPriceWei": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "ticketsRemaining": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "ticketsSold": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "organizer": {
+                  "type": "string"
+                },
+                "proceedsWei": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "active": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "listOrganizerTicketSales",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/organizers/{address}/sales",
+          "identifierParam": "address",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "eventId",
+                "eventName",
+                "eventDate",
+                "totalSold",
+                "owners"
+              ],
+              "properties": {
+                "eventId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "eventName": {
+                  "type": "string"
+                },
+                "eventDate": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "totalSold": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "owners": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "ownerAddress",
+                      "ticketIds"
+                    ],
+                    "properties": {
+                      "ownerAddress": {
+                        "type": "string"
+                      },
+                      "ticketIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "format": "int64"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createEvent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/events",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "eventDate",
+              "ticketPriceWei",
+              "maxTickets"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Event name"
+              },
+              "eventDate": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Event date as UNIX epoch seconds"
+              },
+              "ticketPriceWei": {
+                "type": "string",
+                "pattern": "^[0-9]+$",
+                "description": "Ticket price in wei"
+              },
+              "maxTickets": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1,
+                "description": "Maximum number of tickets"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "eventId",
+              "transactionHash"
+            ],
+            "properties": {
+              "eventId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "transactionHash": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "verifyTicket",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/tickets/verify",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "walletAddress",
+              "ticketId"
+            ],
+            "properties": {
+              "walletAddress": {
+                "type": "string"
+              },
+              "ticketId": {
+                "type": "integer",
+                "format": "int64",
+                "minimum": 1
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "ticketId",
+              "walletAddress",
+              "valid"
+            ],
+            "properties": {
+              "ticketId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "walletAddress": {
+                "type": "string"
+              },
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

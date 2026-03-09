@@ -1,0 +1,653 @@
+{
+  "api": {
+    "title": "Paper Fidelity Workflow API (Design Contract)",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Paper-fidelity",
+      "key": "paper-fidelity",
+      "operations": [
+        {
+          "id": "discoverCapacity",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/capacity",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "backend",
+              "trace_source",
+              "criterion"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "backend": {
+                "type": "string",
+                "enum": [
+                  "sarathi"
+                ]
+              },
+              "trace_source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "path"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "vidur_processed_lengths_csv",
+                      "trace_csv",
+                      "legacy_workload_dir"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 4096
+                  },
+                  "num_requests": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Optional cap when sampling/shuffling a length distribution."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "Seed for deterministic sampling/shuffle when applicable."
+                  }
+                }
+              },
+              "criterion": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "metric",
+                  "quantile",
+                  "threshold_s"
+                ],
+                "properties": {
+                  "metric": {
+                    "type": "string",
+                    "enum": [
+                      "request_scheduling_delay"
+                    ]
+                  },
+                  "quantile": {
+                    "type": "number",
+                    "enum": [
+                      0.99
+                    ]
+                  },
+                  "threshold_s": {
+                    "type": "number",
+                    "minimum": 0,
+                    "default": 5
+                  }
+                }
+              },
+              "search": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "min_qps": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_qps": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "max_iters": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "operating_point_fraction": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 0.85
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "capacity_qps",
+              "qps_85",
+              "capacity_json",
+              "run_meta_json"
+            ],
+            "properties": {
+              "capacity_qps": {
+                "type": "number",
+                "minimum": 0
+              },
+              "qps_85": {
+                "type": "number",
+                "minimum": 0
+              },
+              "capacity_json": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "run_meta_json": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          }
+        },
+        {
+          "id": "repro",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/repro",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "workload"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "workload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "static",
+                      "dynamic"
+                    ]
+                  },
+                  "qps": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Required for dynamic workloads (Poisson arrivals)."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "Seed for arrival generation (dynamic)."
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "trace",
+              "sim",
+              "capacity",
+              "real",
+              "score"
+            ],
+            "properties": {
+              "trace": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "trace_csv",
+                  "trace_meta_json"
+                ],
+                "properties": {
+                  "trace_csv": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "trace_meta_json": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  }
+                }
+              },
+              "sim": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "run_dir",
+                  "request_metrics_csv",
+                  "run_meta_json"
+                ],
+                "properties": {
+                  "run_dir": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "request_metrics_csv": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "run_meta_json": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  }
+                }
+              },
+              "capacity": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "capacity_qps",
+                  "qps_85",
+                  "capacity_json",
+                  "run_meta_json"
+                ],
+                "properties": {
+                  "capacity_qps": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "qps_85": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "capacity_json": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "run_meta_json": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  }
+                }
+              },
+              "real": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "run_dir",
+                  "request_metrics_csv",
+                  "run_meta_json"
+                ],
+                "properties": {
+                  "run_dir": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "request_metrics_csv": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "run_meta_json": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  }
+                }
+              },
+              "score": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "report_dir",
+                  "summary_md"
+                ],
+                "properties": {
+                  "report_dir": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "summary_md": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "runReal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/runs/real",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "trace_csv",
+              "backend",
+              "model_ref"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "trace_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "backend": {
+                "type": "string",
+                "enum": [
+                  "sarathi"
+                ]
+              },
+              "model_ref": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "run_dir",
+              "request_metrics_csv",
+              "run_meta_json"
+            ],
+            "properties": {
+              "run_dir": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "request_metrics_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "run_meta_json": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          }
+        },
+        {
+          "id": "runSim",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/runs/sim",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "trace_csv",
+              "profiling_root",
+              "model_key"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "trace_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "profiling_root": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "model_key": {
+                "type": "string",
+                "description": "Vidur model key used by wrappers/configs."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "run_dir",
+              "request_metrics_csv",
+              "run_meta_json"
+            ],
+            "properties": {
+              "run_dir": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "request_metrics_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "run_meta_json": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          }
+        },
+        {
+          "id": "score",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/score",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "sim_request_metrics_csv",
+              "real_request_metrics_csv"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "sim_request_metrics_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "real_request_metrics_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "percentiles": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "default": [
+                  0.5,
+                  0.95
+                ]
+              },
+              "thresholds": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "pass_pct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "default": 0.05
+                  },
+                  "warn_pct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "default": 0.09
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "report_dir",
+              "summary_md"
+            ],
+            "properties": {
+              "report_dir": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "summary_md": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTrace",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/paper-fidelity/traces",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "workload",
+              "trace_source"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Stable identifier for a scenario (used in output paths and reports)."
+              },
+              "workload": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "mode"
+                ],
+                "properties": {
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "static",
+                      "dynamic"
+                    ]
+                  },
+                  "qps": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Required for dynamic workloads (Poisson arrivals)."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "Seed for arrival generation (dynamic)."
+                  }
+                }
+              },
+              "trace_source": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "path"
+                ],
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "vidur_processed_lengths_csv",
+                      "trace_csv",
+                      "legacy_workload_dir"
+                    ]
+                  },
+                  "path": {
+                    "type": "string",
+                    "description": "Absolute filesystem path on the host running the workflow.",
+                    "pattern": "^/"
+                  },
+                  "max_tokens": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 4096
+                  },
+                  "num_requests": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Optional cap when sampling/shuffling a length distribution."
+                  },
+                  "seed": {
+                    "type": "integer",
+                    "description": "Seed for deterministic sampling/shuffle when applicable."
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "trace_csv",
+              "trace_meta_json"
+            ],
+            "properties": {
+              "trace_csv": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              },
+              "trace_meta_json": {
+                "type": "string",
+                "description": "Absolute filesystem path on the host running the workflow.",
+                "pattern": "^/"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

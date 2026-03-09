@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Tika - Create Ticket API
+  description: API contract for creating a new ticket in the BACKLOG column
+  version: 1.0.0
+  contact:
+    name: Tika Development Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://tika.vercel.app/api
+    description: Production server
+
+paths:
+  /tickets:
+    post:
+      summary: Create a new ticket
+      description: |
+        Creates a new ticket in the BACKLOG column. The ticket is automatically placed at the top of the column with a calculated position value.
+
+        **System Behavior:**
+        - status is automatically set to "BACKLOG"
+        - position is calculated as min(existing BACKLOG positions) - 1024
+        - startedAt and completedAt are set to null
+        - createdAt and updatedAt are set to current timestamp
+      operationId: createTicket
+      tags:
+        - Tickets
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketInput'
+            examples:
+              minimal:
+                summary: Minimal ticket (title only)
+                value:
+                  title: "API 설계 문서 작성"
+              complete:
+                summary: Complete ticket with all fields
+                value:
+                  title: "API 설계 문서 작성"
+                  description: "REST API 엔드포인트와 요청/응답 형식을 정의한다"
+                  priority: "HIGH"
+                  plannedStartDate: "2026-02-10"
+                  dueDate: "2026-02-15"
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+              example:
+                id: 1
+                title: "API 설계 문서 작성"
+                description: "REST API 엔드포인트와 요청/응답 형식을 정의한다"
+                status: "BACKLOG"
+                priority: "HIGH"
+                position: -1024
+                plannedStartDate: "2026-02-10"
+                dueDate: "2026-02-15"
+                startedAt: null
+                completedAt: null
+                createdAt: "2026-02-13T09:00:00.000Z"
+                updatedAt: "2026-02-13T09:00:00.000Z"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyTitle:
+                  summary: Empty title
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "제목을 입력해주세요"
+                titleTooLong:
+                  summary: Title exceeds 200 characters
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "제목은 200자 이내로 입력해주세요"
+                descriptionTooLong:
+                  summary: Description exceeds 1000 characters
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "설명은 1000자 이내로 입력해주세요"
+                invalidPriority:
+                  summary: Invalid priority value
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "우선순위는 LOW, MEDIUM, HIGH 중 선택해주세요"
+                pastDueDate:
+                  summary: Due date in the past
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "종료예정일은 오늘 이후 날짜를 선택해주세요"
+                whitespaceTitle:
+                  summary: Title with only whitespace
+                  value:
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "제목을 입력해주세요"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: "INTERNAL_ERROR"
+                  message: "서버 내부 오류가 발생했습니다"
+
+components:
+  schemas:
+    CreateTicketInput:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Ticket title (must not be empty or whitespace-only)
+          example: "API 설계 문서 작성"
+        description:
+          type: string
+          maxLength: 1000
+          description: Detailed description (optional)
+          example: "REST API 엔드포인트와 요청/응답 형식을 정의한다"
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+          default: MEDIUM
+          description: Priority level (defaults to MEDIUM if not provided)
+          example: "HIGH"
+        plannedStartDate:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Planned start date in YYYY-MM-DD format (optional)
+          example: "2026-02-10"
+        dueDate:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Due date in YYYY-MM-DD format (must be today or later, optional)
+          example: "2026-02-15"
+
+    Ticket:
+      type: object
+      required:
+        - id
+        - title
+        - description
+        - status
+        - priority
+        - position
+        - plannedStartDate
+        - dueDate
+        - startedAt
+        - completedAt
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: integer
+          description: Unique ticket identifier (auto-generated)
+          example: 1
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Ticket title
+          example: "API 설계 문서 작성"
+        description:
+          type: string
+          nullable: true
+          maxLength: 1000
+          description: Detailed description
+          example: "REST API 엔드포인트와 요청/응답 형식을 정의한다"
+        status:
+          type: string
+          enum:
+            - BACKLOG
+            - TODO
+            - IN_PROGRESS
+            - DONE
+          description: Current status (always BACKLOG for newly created tickets)
+          example: "BACKLOG"
+        priority:
+          type: string
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+          description: Priority level
+          example: "HIGH"
+        position:
+          type: integer
+          description: Sort order within the column (negative values place at top)
+          example: -1024
+        plannedStartDate:
+          type: string
+          format: date
+          nullable: true
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Planned start date in YYYY-MM-DD format
+          example: "2026-02-10"
+        dueDate:
+          type: string
+          format: date
+          nullable: true
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Due date in YYYY-MM-DD format
+          example: "2026-02-15"
+        startedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when ticket was moved to TODO (always null for new tickets)
+          example: null
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp when ticket was moved to DONE (always null for new tickets)
+          example: null
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601)
+          example: "2026-02-13T09:00:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp (ISO 8601)
+          example: "2026-02-13T09:00:00.000Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - TICKET_NOT_FOUND
+                - INTERNAL_ERROR
+              description: Error code for programmatic handling
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: Human-readable error message in Korean
+              example: "제목을 입력해주세요"
+
+tags:
+  - name: Tickets
+    description: Ticket management operations

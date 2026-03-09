@@ -1,0 +1,556 @@
+{
+  "api": {
+    "title": "",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Filesystem",
+      "key": "filesystem",
+      "operations": [
+        {
+          "id": "Filesystem_Upload",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/upload",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "file": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "size": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "body": {
+                    "type": "string",
+                    "format": "bytes"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Greeter",
+      "key": "greeter",
+      "operations": [
+        {
+          "id": "Greeter_SayHello",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/helloworld/{name}",
+          "identifierParam": "name",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "description": "The response message containing the greetings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Im",
+      "key": "im",
+      "operations": [
+        {
+          "id": "Im_ConnectIm",
+          "method": "GET",
+          "kind": "list",
+          "path": "/im/v1/connect",
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "Im_Upload",
+          "method": "POST",
+          "kind": "create",
+          "path": "/im/v1/upload",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "chunk": {
+                "type": "string",
+                "format": "bytes"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Message",
+      "key": "message",
+      "operations": [
+        {
+          "id": "Message_ListOfflineMessage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/im/v1/message/list_offline",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "lastMessageId": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "key": "user",
+      "operations": [
+        {
+          "id": "User_CreateUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/create",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "User_DeleteUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/delete",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "User_AddFriend",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/friend/add",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "phone": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "friend": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "nickname": {
+                    "type": "string"
+                  },
+                  "avatar": {
+                    "type": "string"
+                  },
+                  "memo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_ListFriend",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/friend/list",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "friends": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "userId": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "avatar": {
+                      "type": "string"
+                    },
+                    "memo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_GetUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/get",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "nickname": {
+                "type": "string"
+              },
+              "avatar": {
+                "type": "string"
+              },
+              "memo": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "User_CreateGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/group/create",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "name": {
+                "type": "string"
+              },
+              "icon": {
+                "type": "string"
+              },
+              "memo": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "type": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "memo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_JoinGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/group/join",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "type": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "memo": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_ListGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/group/list",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "groups": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "type": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": "string"
+                    },
+                    "memo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_ListUserByGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/group/list_user",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "groupId": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int64"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "nickname": {
+                      "type": "string"
+                    },
+                    "avatar": {
+                      "type": "string"
+                    },
+                    "memo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_ListUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/list",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "User_LoginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "expiredTime": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "nickname": {
+                "type": "string"
+              },
+              "avatar": {
+                "type": "string"
+              },
+              "memo": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "User_UpdateUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/user/v1/update",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    }
+  ]
+}

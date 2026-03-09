@@ -1,0 +1,295 @@
+openapi: 3.0.3
+info:
+  title: Oxinion Marketing Exchange SDK API
+  version: 0.0.1
+  description: |
+    Unified API specification for the Oxinion Marketing Exchange SDK.
+    This specification serves as the single source of truth for both
+    JavaScript and Python SDK implementations.
+  contact:
+    name: Oxinion
+    url: https://github.com/oxinion/omx-sdk
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: '{baseUrl}'
+    description: OMX API server (configured via environment or SDK initialization)
+    variables:
+      baseUrl:
+        default: https://blhilidnsybhfdmwqsrx.supabase.co/functions/v1
+        description: Base URL for the OMX API
+
+paths:
+  # Core API endpoints
+  /auth:
+    post:
+      tags: [Core]
+      summary: Authenticate client
+      operationId: authenticate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthRequest"
+      responses:
+        "200":
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  # Geotrigger endpoints
+  /geotriggers:
+    get:
+      tags: [Geotrigger]
+      summary: List geotriggers
+      operationId: listGeotriggers
+      responses:
+        "200":
+          description: List of geotriggers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Geotrigger"
+    post:
+      tags: [Geotrigger]
+      summary: Create geotrigger
+      operationId: createGeotrigger
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGeotriggerRequest"
+      responses:
+        "201":
+          description: Geotrigger created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Geotrigger"
+
+  # Email endpoints
+  /email/send:
+    post:
+      tags: [Email]
+      summary: Send email
+      operationId: sendEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendEmailRequest"
+      responses:
+        "200":
+          description: Email sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EmailResponse"
+
+  # Webhook endpoints
+  /webhooks:
+    get:
+      tags: [Webhook]
+      summary: List webhooks
+      operationId: listWebhooks
+      responses:
+        "200":
+          description: List of webhooks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Webhook"
+    post:
+      tags: [Webhook]
+      summary: Create webhook
+      operationId: createWebhook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateWebhookRequest"
+      responses:
+        "201":
+          description: Webhook created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Webhook"
+
+components:
+  schemas:
+    # Core schemas
+    AuthRequest:
+      type: object
+      required: [apiKey, secretKey]
+      properties:
+        apiKey:
+          type: string
+          description: API key for authentication
+        secretKey:
+          type: string
+          description: Secret key for authentication
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          description: Access token for API requests
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+
+    # Geotrigger schemas
+    Geotrigger:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+        name:
+          type: string
+          description: Geotrigger name
+        latitude:
+          type: number
+          format: double
+          description: Latitude coordinate
+        longitude:
+          type: number
+          format: double
+          description: Longitude coordinate
+        radius:
+          type: number
+          format: double
+          description: Trigger radius in meters
+        active:
+          type: boolean
+          description: Whether the geotrigger is active
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateGeotriggerRequest:
+      type: object
+      required: [name, latitude, longitude, radius]
+      properties:
+        name:
+          type: string
+          description: Geotrigger name
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        radius:
+          type: number
+          format: double
+          minimum: 1
+          description: Trigger radius in meters
+
+    # Email schemas
+    SendEmailRequest:
+      type: object
+      required: [to, subject, content]
+      properties:
+        to:
+          type: array
+          items:
+            type: string
+            format: email
+          description: Recipient email addresses
+        subject:
+          type: string
+          description: Email subject
+        content:
+          type: string
+          description: Email content (HTML or plain text)
+        templateId:
+          type: string
+          description: Optional template ID
+
+    EmailResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Unique message identifier
+        status:
+          type: string
+          enum: [sent, queued, failed]
+          description: Send status
+
+    # Webhook schemas
+    Webhook:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier
+        url:
+          type: string
+          format: uri
+          description: Webhook URL
+        events:
+          type: array
+          items:
+            type: string
+          description: Event types to subscribe to
+        active:
+          type: boolean
+          description: Whether the webhook is active
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateWebhookRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Webhook URL
+        events:
+          type: array
+          items:
+            type: string
+          description: Event types to subscribe to
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Core
+    description: Core authentication and client operations
+  - name: Geotrigger
+    description: Geolocation-based trigger management
+  - name: Email
+    description: Email sending and template management
+  - name: Webhook
+    description: Webhook management and event subscriptions

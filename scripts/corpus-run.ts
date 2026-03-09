@@ -3,8 +3,13 @@
  * Phase 4 corpus run: run RUS-v1 check on OpenAPI specs.
  * parse → validateSubset → resolveRefs → buildApiIR per spec.
  *
- * Usage: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]
- *   or:  npm run corpus:run -- --api-guru   (shorthand for specs/api_guru)
+ * Usage: npm run corpus:run -- --repo REPO [--recurse]
+ *   or:  npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]
+ *
+ * --repo REPO: api-guru | github (uses scripts/corpus-data/specs/{api_guru|github})
+ *   api-guru: flat specs from specs/api_guru, output raw-api-guru-{timestamp}.json
+ *   github: recursive specs from specs/github, output raw-github-{timestamp}.json
+ *
  * Output: scripts/corpus-data/reports/raw-{NAME}-{timestamp}.json
  */
 
@@ -186,6 +191,19 @@ function runSpec(
   }
 }
 
+const REPO_CONFIG: Record<string, { specsDir: string; outputName: string; recurse: boolean }> = {
+  "api-guru": {
+    specsDir: "scripts/corpus-data/specs/api_guru",
+    outputName: "api-guru",
+    recurse: false,
+  },
+  github: {
+    specsDir: "scripts/corpus-data/specs/github",
+    outputName: "github",
+    recurse: true,
+  },
+};
+
 function main(): number {
   const args = process.argv.slice(2);
   let specsDirArg: string | null = null;
@@ -193,7 +211,17 @@ function main(): number {
   let recurse = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--api-guru") {
+    if (args[i] === "--repo" && args[i + 1]) {
+      const repo = args[++i];
+      const config = REPO_CONFIG[repo];
+      if (!config) {
+        console.error(`Unknown repo: ${repo}. Use api-guru or github.`);
+        return 1;
+      }
+      specsDirArg = config.specsDir;
+      outputName = config.outputName;
+      recurse = config.recurse;
+    } else if (args[i] === "--api-guru") {
       specsDirArg = "scripts/corpus-data/specs/api_guru";
       outputName = "api-guru";
     } else if (args[i] === "--specs-dir" && args[i + 1]) {
@@ -206,9 +234,11 @@ function main(): number {
   }
 
   if (specsDirArg == null || outputName == null || outputName === "") {
-    console.error("Usage: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]");
-    console.error("   or: npm run corpus:run -- --api-guru");
-    console.error("Example: npm run corpus:run -- --api-guru");
+    console.error("Usage: npm run corpus:run -- --repo REPO [--recurse]");
+    console.error("   or: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]");
+    console.error("  REPO: api-guru | github");
+    console.error("Example: npm run corpus:run -- --repo api-guru");
+    console.error("Example: npm run corpus:run -- --repo github");
     console.error("Example: npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic");
     return 1;
   }

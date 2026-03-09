@@ -1,0 +1,151 @@
+{
+  "api": {
+    "title": "Notion to Confluence Migrator",
+    "version": "1.0"
+  },
+  "resources": [
+    {
+      "name": "Migrate",
+      "key": "migrate",
+      "operations": [
+        {
+          "id": "POST:/api/migrate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/migrate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "notionToken",
+              "confluenceBaseUri",
+              "confluenceUsername",
+              "confluenceToken",
+              "confluenceSpace"
+            ],
+            "properties": {
+              "notionToken": {
+                "type": "string"
+              },
+              "confluenceBaseUri": {
+                "type": "string"
+              },
+              "confluenceUsername": {
+                "type": "string"
+              },
+              "confluenceToken": {
+                "type": "string"
+              },
+              "confluenceSpace": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "taskId"
+            ],
+            "properties": {
+              "taskId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pages",
+      "key": "pages",
+      "operations": [
+        {
+          "id": "GET:/api/pages",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/pages",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "pages"
+            ],
+            "properties": {
+              "pages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "parentId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status",
+      "key": "status",
+      "operations": [
+        {
+          "id": "GET:/api/status",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/status",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "completed",
+              "tasks",
+              "errors"
+            ],
+            "properties": {
+              "status": {
+                "type": "number"
+              },
+              "completed": {
+                "type": "number"
+              },
+              "tasks": {
+                "type": "number"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "index",
+                    "error"
+                  ],
+                  "properties": {
+                    "index": {
+                      "type": "number"
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

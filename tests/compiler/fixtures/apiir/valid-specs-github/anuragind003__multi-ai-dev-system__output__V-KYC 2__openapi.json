@@ -1,0 +1,165 @@
+{
+  "api": {
+    "title": "FastAPI Monolith API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "get_health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Items",
+      "key": "items",
+      "operations": [
+        {
+          "id": "get_items",
+          "method": "GET",
+          "kind": "list",
+          "path": "/items/",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "readOnly": true,
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "example": "My Awesome Item"
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true,
+                  "example": "This is a description of the item."
+                },
+                "price": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 29.99
+                }
+              },
+              "required": [
+                "name",
+                "price"
+              ]
+            }
+          }
+        },
+        {
+          "id": "get_item",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/items/{item_id}",
+          "identifierParam": "item_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "readOnly": true,
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "My Awesome Item"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true,
+                "example": "This is a description of the item."
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 29.99
+              }
+            },
+            "required": [
+              "name",
+              "price"
+            ]
+          }
+        },
+        {
+          "id": "create_item",
+          "method": "POST",
+          "kind": "create",
+          "path": "/items/",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "New Item"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true,
+                "example": "Description for the new item."
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 19.99
+              }
+            },
+            "required": [
+              "name",
+              "price"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "readOnly": true,
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "My Awesome Item"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true,
+                "example": "This is a description of the item."
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 29.99
+              }
+            },
+            "required": [
+              "name",
+              "price"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

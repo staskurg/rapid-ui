@@ -1,0 +1,962 @@
+{
+  "api": {
+    "title": "University Library Management System API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "books",
+      "key": "books",
+      "operations": [
+        {
+          "id": "GET:/books",
+          "method": "GET",
+          "kind": "list",
+          "path": "/books",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "author",
+                    "isbn",
+                    "publisher",
+                    "pageCount",
+                    "stock"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Kitap benzersiz kimliği",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Kitap başlığı",
+                      "example": "Clean Code"
+                    },
+                    "author": {
+                      "type": "string",
+                      "description": "Kitap yazarı",
+                      "example": "Robert C. Martin"
+                    },
+                    "isbn": {
+                      "type": "string",
+                      "pattern": "^978-\\d{10}$",
+                      "description": "ISBN-13 formatında kitap kodu",
+                      "example": "978-0132350884"
+                    },
+                    "publisher": {
+                      "type": "string",
+                      "description": "Yayınevi",
+                      "example": "Prentice Hall"
+                    },
+                    "pageCount": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Sayfa sayısı",
+                      "example": 464
+                    },
+                    "stock": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Stok adedi",
+                      "example": 5
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "required": [
+                  "page",
+                  "size",
+                  "total",
+                  "totalPages"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Mevcut sayfa numarası",
+                    "example": 1
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "description": "Sayfa başına kayıt sayısı",
+                    "example": 10
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Toplam kayıt sayısı",
+                    "example": 25
+                  },
+                  "totalPages": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Toplam sayfa sayısı",
+                    "example": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/books/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "author",
+              "isbn",
+              "publisher",
+              "pageCount",
+              "stock"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "title": {
+                "type": "string",
+                "description": "Kitap başlığı",
+                "example": "Clean Code"
+              },
+              "author": {
+                "type": "string",
+                "description": "Kitap yazarı",
+                "example": "Robert C. Martin"
+              },
+              "isbn": {
+                "type": "string",
+                "pattern": "^978-\\d{10}$",
+                "description": "ISBN-13 formatında kitap kodu",
+                "example": "978-0132350884"
+              },
+              "publisher": {
+                "type": "string",
+                "description": "Yayınevi",
+                "example": "Prentice Hall"
+              },
+              "pageCount": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sayfa sayısı",
+                "example": 464
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Stok adedi",
+                "example": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/books",
+          "method": "POST",
+          "kind": "create",
+          "path": "/books",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "author",
+              "isbn",
+              "publisher",
+              "pageCount",
+              "stock"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Kitap başlığı"
+              },
+              "author": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Kitap yazarı"
+              },
+              "isbn": {
+                "type": "string",
+                "pattern": "^978-\\d{10}$",
+                "description": "ISBN-13 formatında kitap kodu"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Yayınevi"
+              },
+              "pageCount": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sayfa sayısı"
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Stok adedi"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "author",
+              "isbn",
+              "publisher",
+              "pageCount",
+              "stock"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "title": {
+                "type": "string",
+                "description": "Kitap başlığı",
+                "example": "Clean Code"
+              },
+              "author": {
+                "type": "string",
+                "description": "Kitap yazarı",
+                "example": "Robert C. Martin"
+              },
+              "isbn": {
+                "type": "string",
+                "pattern": "^978-\\d{10}$",
+                "description": "ISBN-13 formatında kitap kodu",
+                "example": "978-0132350884"
+              },
+              "publisher": {
+                "type": "string",
+                "description": "Yayınevi",
+                "example": "Prentice Hall"
+              },
+              "pageCount": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sayfa sayısı",
+                "example": 464
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Stok adedi",
+                "example": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/books/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "author",
+              "isbn",
+              "publisher",
+              "pageCount",
+              "stock"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Kitap başlığı"
+              },
+              "author": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Kitap yazarı"
+              },
+              "isbn": {
+                "type": "string",
+                "pattern": "^978-\\d{10}$",
+                "description": "ISBN-13 formatında kitap kodu"
+              },
+              "publisher": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Yayınevi"
+              },
+              "pageCount": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sayfa sayısı"
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Stok adedi"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "title",
+              "author",
+              "isbn",
+              "publisher",
+              "pageCount",
+              "stock"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "title": {
+                "type": "string",
+                "description": "Kitap başlığı",
+                "example": "Clean Code"
+              },
+              "author": {
+                "type": "string",
+                "description": "Kitap yazarı",
+                "example": "Robert C. Martin"
+              },
+              "isbn": {
+                "type": "string",
+                "pattern": "^978-\\d{10}$",
+                "description": "ISBN-13 formatında kitap kodu",
+                "example": "978-0132350884"
+              },
+              "publisher": {
+                "type": "string",
+                "description": "Yayınevi",
+                "example": "Prentice Hall"
+              },
+              "pageCount": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Sayfa sayısı",
+                "example": 464
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Stok adedi",
+                "example": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/books/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Kitap başarıyla silindi"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "loans",
+      "key": "loans",
+      "operations": [
+        {
+          "id": "GET:/loans",
+          "method": "GET",
+          "kind": "list",
+          "path": "/loans",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "studentId",
+                "bookId",
+                "loanDate",
+                "status"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Ödünç kayıt benzersiz kimliği",
+                  "example": "550e8400-e29b-41d4-a716-446655440002"
+                },
+                "studentId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Öğrenci ID'si",
+                  "example": "550e8400-e29b-41d4-a716-446655440001"
+                },
+                "bookId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Kitap ID'si",
+                  "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "loanDate": {
+                  "type": "string",
+                  "format": "date",
+                  "description": "Ödünç alma tarihi",
+                  "example": "2024-01-15"
+                },
+                "returnDate": {
+                  "type": "string",
+                  "format": "date",
+                  "nullable": true,
+                  "description": "İade tarihi",
+                  "example": "2024-02-15"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "ongoing",
+                    "returned",
+                    "late"
+                  ],
+                  "description": "Ödünç durumu",
+                  "example": "ongoing"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/loans/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/loans/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "studentId",
+              "bookId",
+              "loanDate",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Ödünç kayıt benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "studentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "bookId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "loanDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Ödünç alma tarihi",
+                "example": "2024-01-15"
+              },
+              "returnDate": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "description": "İade tarihi",
+                "example": "2024-02-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ongoing",
+                  "returned",
+                  "late"
+                ],
+                "description": "Ödünç durumu",
+                "example": "ongoing"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/loans",
+          "method": "POST",
+          "kind": "create",
+          "path": "/loans",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "studentId",
+              "bookId",
+              "loanDate"
+            ],
+            "properties": {
+              "studentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci ID'si"
+              },
+              "bookId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap ID'si"
+              },
+              "loanDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Ödünç alma tarihi"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "studentId",
+              "bookId",
+              "loanDate",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Ödünç kayıt benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "studentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "bookId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "loanDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Ödünç alma tarihi",
+                "example": "2024-01-15"
+              },
+              "returnDate": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "description": "İade tarihi",
+                "example": "2024-02-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ongoing",
+                  "returned",
+                  "late"
+                ],
+                "description": "Ödünç durumu",
+                "example": "ongoing"
+              }
+            }
+          }
+        },
+        {
+          "id": "PATCH:/loans/{id}/return",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/loans/{id}/return",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "returnDate": {
+                "type": "string",
+                "format": "date",
+                "description": "İade tarihi (belirtilmezse bugünün tarihi kullanılır)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "studentId",
+              "bookId",
+              "loanDate",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Ödünç kayıt benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "studentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "bookId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Kitap ID'si",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "loanDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Ödünç alma tarihi",
+                "example": "2024-01-15"
+              },
+              "returnDate": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "description": "İade tarihi",
+                "example": "2024-02-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ongoing",
+                  "returned",
+                  "late"
+                ],
+                "description": "Ödünç durumu",
+                "example": "ongoing"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "students",
+      "key": "students",
+      "operations": [
+        {
+          "id": "GET:/students",
+          "method": "GET",
+          "kind": "list",
+          "path": "/students",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "studentNumber",
+                "email",
+                "isActive"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Öğrenci benzersiz kimliği",
+                  "example": "550e8400-e29b-41d4-a716-446655440001"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Öğrenci adı soyadı",
+                  "example": "Ahmet Yılmaz"
+                },
+                "studentNumber": {
+                  "type": "string",
+                  "description": "Öğrenci numarası",
+                  "example": "20210001"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "E-posta adresi",
+                  "example": "ahmet.yilmaz@university.edu.tr"
+                },
+                "isActive": {
+                  "type": "boolean",
+                  "description": "Öğrenci aktif durumu",
+                  "example": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/students/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/students/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "studentNumber",
+              "email",
+              "isActive"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "name": {
+                "type": "string",
+                "description": "Öğrenci adı soyadı",
+                "example": "Ahmet Yılmaz"
+              },
+              "studentNumber": {
+                "type": "string",
+                "description": "Öğrenci numarası",
+                "example": "20210001"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "E-posta adresi",
+                "example": "ahmet.yilmaz@university.edu.tr"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Öğrenci aktif durumu",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/students",
+          "method": "POST",
+          "kind": "create",
+          "path": "/students",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "studentNumber",
+              "email",
+              "isActive"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Öğrenci adı soyadı"
+              },
+              "studentNumber": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20,
+                "description": "Öğrenci numarası"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255,
+                "description": "E-posta adresi"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Öğrenci aktif durumu",
+                "default": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "studentNumber",
+              "email",
+              "isActive"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "name": {
+                "type": "string",
+                "description": "Öğrenci adı soyadı",
+                "example": "Ahmet Yılmaz"
+              },
+              "studentNumber": {
+                "type": "string",
+                "description": "Öğrenci numarası",
+                "example": "20210001"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "E-posta adresi",
+                "example": "ahmet.yilmaz@university.edu.tr"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Öğrenci aktif durumu",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/students/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/students/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "studentNumber",
+              "email",
+              "isActive"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Öğrenci adı soyadı"
+              },
+              "studentNumber": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 20,
+                "description": "Öğrenci numarası"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255,
+                "description": "E-posta adresi"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Öğrenci aktif durumu"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "studentNumber",
+              "email",
+              "isActive"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Öğrenci benzersiz kimliği",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "name": {
+                "type": "string",
+                "description": "Öğrenci adı soyadı",
+                "example": "Ahmet Yılmaz"
+              },
+              "studentNumber": {
+                "type": "string",
+                "description": "Öğrenci numarası",
+                "example": "20210001"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "E-posta adresi",
+                "example": "ahmet.yilmaz@university.edu.tr"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Öğrenci aktif durumu",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/students/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/students/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Öğrenci başarıyla silindi"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,507 @@
+{
+  "api": {
+    "title": "OSSA CLI Enhancements API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "context",
+      "key": "context",
+      "operations": [
+        {
+          "id": "analyzeContext",
+          "method": "POST",
+          "kind": "create",
+          "path": "/context/analyze",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName",
+              "codebasePath"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "codebasePath": {
+                "type": "string"
+              },
+              "extractPatterns": {
+                "type": "boolean",
+                "default": true
+              },
+              "extractExamples": {
+                "type": "boolean",
+                "default": true
+              },
+              "outputPath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "patternsExtracted": {
+                "type": "integer"
+              },
+              "examplesExtracted": {
+                "type": "integer"
+              },
+              "contextFiles": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "enhancement",
+      "key": "enhancement",
+      "operations": [
+        {
+          "id": "enhanceAgent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/enhance/agent",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "capabilities": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "New capabilities to add"
+              },
+              "promptsFromCodebase": {
+                "type": "boolean",
+                "description": "Generate prompts from codebase"
+              },
+              "tools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "New tools to add"
+              },
+              "knowledgeFromIssues": {
+                "type": "boolean",
+                "description": "Extract knowledge from GitLab issues"
+              },
+              "examplesFromMRs": {
+                "type": "boolean",
+                "description": "Extract examples from merge requests"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "agentName": {
+                "type": "string"
+              },
+              "enhancements": {
+                "type": "object",
+                "properties": {
+                  "capabilitiesAdded": {
+                    "type": "integer"
+                  },
+                  "promptsImproved": {
+                    "type": "integer"
+                  },
+                  "toolsAdded": {
+                    "type": "integer"
+                  },
+                  "knowledgeEnriched": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "enhancePrompts",
+          "method": "POST",
+          "kind": "create",
+          "path": "/enhance/prompts",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "fromCodebase": {
+                "type": "boolean"
+              },
+              "fromGitLabIssues": {
+                "type": "boolean"
+              },
+              "fromSuccessfulRuns": {
+                "type": "boolean"
+              },
+              "codebasePath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "promptsUpdated": {
+                "type": "integer"
+              },
+              "examplesGenerated": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "examples",
+      "key": "examples",
+      "operations": [
+        {
+          "id": "generateExamples",
+          "method": "POST",
+          "kind": "create",
+          "path": "/examples/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "sourcePath": {
+                "type": "string"
+              },
+              "gitlabIssues": {
+                "type": "boolean"
+              },
+              "gitlabMRs": {
+                "type": "boolean"
+              },
+              "outputPath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "examplesGenerated": {
+                "type": "integer"
+              },
+              "examples": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "path": {
+                      "type": "string"
+                    },
+                    "validated": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "knowledge",
+      "key": "knowledge",
+      "operations": [
+        {
+          "id": "generateKnowledgeBase",
+          "method": "POST",
+          "kind": "create",
+          "path": "/knowledge/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName",
+              "sourcePath"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string",
+                "description": "Name of the agent",
+                "example": "code-quality-reviewer"
+              },
+              "sourcePath": {
+                "type": "string",
+                "description": "Path to source codebase",
+                "example": "~/Sites/blueflyio/compliance-engine"
+              },
+              "patterns": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Pattern types to extract",
+                "example": [
+                  "typescript",
+                  "react",
+                  "drupal"
+                ]
+              },
+              "outputPath": {
+                "type": "string",
+                "description": "Output directory path",
+                "example": "packages/@ossa/code-quality-reviewer/knowledge/"
+              },
+              "syncBrain": {
+                "type": "boolean",
+                "description": "Sync with agent-brain/Qdrant",
+                "default": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "knowledgeBase": {
+                "type": "object",
+                "properties": {
+                  "patterns": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "examples": {
+                    "type": "integer"
+                  },
+                  "contextFiles": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "outputPath": {
+                "type": "string"
+              },
+              "brainSync": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "syncKnowledgeBase",
+          "method": "POST",
+          "kind": "create",
+          "path": "/knowledge/sync",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName",
+              "collectionName"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "collectionName": {
+                "type": "string",
+                "example": "code-quality-patterns"
+              },
+              "knowledgePath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "vectorsIndexed": {
+                "type": "integer"
+              },
+              "collectionName": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "learning",
+      "key": "learning",
+      "operations": [
+        {
+          "id": "recordFeedback",
+          "method": "POST",
+          "kind": "create",
+          "path": "/learn/feedback",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName",
+              "feedback"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "feedback": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "task": {
+                    "type": "string"
+                  },
+                  "result": {
+                    "type": "string"
+                  },
+                  "improvements": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "updatePrompts": {
+                "type": "boolean",
+                "default": true
+              },
+              "updateExamples": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "promptsUpdated": {
+                "type": "integer"
+              },
+              "examplesUpdated": {
+                "type": "integer"
+              },
+              "improvements": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "extractPatterns",
+          "method": "POST",
+          "kind": "create",
+          "path": "/learn/patterns",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "agentName"
+            ],
+            "properties": {
+              "agentName": {
+                "type": "string"
+              },
+              "fromLogs": {
+                "type": "boolean"
+              },
+              "fromMetrics": {
+                "type": "boolean"
+              },
+              "logPath": {
+                "type": "string"
+              },
+              "metricsPath": {
+                "type": "string"
+              },
+              "outputPath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "patternsExtracted": {
+                "type": "integer"
+              },
+              "patterns": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pattern": {
+                      "type": "string"
+                    },
+                    "successRate": {
+                      "type": "number"
+                    },
+                    "examples": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,585 @@
+openapi: 3.0.3
+info:
+  title: Job Posting Collector API
+  description: |
+    Local Flask backend API for the Job Posting Collector Chrome Extension.
+    This API receives scraped LinkedIn job posting data and saves it to a Notion database.
+    
+    **Architecture**: Chrome Extension (client) → Flask API (localhost:5000) → Notion API (external)
+    
+    **Authentication**: None (local-only single-user application)
+  version: 1.0.0
+  contact:
+    name: Job Search Assistant
+    
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+    
+tags:
+  - name: Job Postings
+    description: Operations for saving job postings to Notion
+
+paths:
+  /api/job-postings/check:
+    get:
+      tags:
+        - Job Postings
+      summary: Check if a job posting already exists in Notion
+      description: |
+        Checks if a job posting with the given URL already exists in the Notion database.
+        Used by the Chrome Extension on popup load to configure button states.
+        
+        **Flow**:
+        1. Extension loads popup
+        2. Extension sends GET request with posting_url
+        3. Backend queries Notion for matching URL
+        4. Backend returns existence status with page details if found
+        5. Extension configures "Open on Notion" and "Save/Update" buttons
+        
+      operationId: checkJobPosting
+      parameters:
+        - name: posting_url
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uri
+          description: LinkedIn job posting URL to check
+          example: "https://www.linkedin.com/jobs/view/1234567890"
+          
+      responses:
+        '200':
+          description: Check completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobExistsResponse'
+              examples:
+                exists:
+                  summary: Job already exists in Notion
+                  value:
+                    exists: true
+                    page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    page_url: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+                notExists:
+                  summary: Job does not exist in Notion
+                  value:
+                    exists: false
+                    
+        '400':
+          description: Invalid request - missing or invalid posting_url
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingUrl:
+                  summary: Missing posting_url parameter
+                  value:
+                    error: "posting_url query parameter is required"
+                    
+        '500':
+          description: Internal Server Error - Notion API query failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Notion query error
+                  value:
+                    error: "Failed to check job existence"
+                    details: "An unexpected error occurred. Check server logs."
+
+  /api/job-postings:
+    post:
+      tags:
+        - Job Postings
+      summary: Save a LinkedIn job posting to Notion
+      description: |
+        Receives job posting data scraped from a LinkedIn page by the Chrome Extension,
+        validates the payload, and creates a new entry or updates an existing entry in the 
+        Notion "Job Applications" database.
+        
+        **Create Flow** (when page_id is not provided):
+        1. Extension scrapes LinkedIn page
+        2. Extension sends POST request with job data
+        3. Backend validates required fields
+        4. Backend creates new Notion page
+        5. Backend returns success with Notion page URL
+        
+        **Update Flow** (when page_id is provided):
+        1. Extension scrapes LinkedIn page  
+        2. Extension sends POST request with job data and page_id
+        3. Backend validates required fields
+        4. Backend updates existing Notion page
+        5. Backend returns success with Notion page URL
+        
+      operationId: createJobPosting
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobPostingRequest'
+            examples:
+              seniorEngineer:
+                summary: Senior Engineer Position (minimal)
+                value:
+                  position: "Senior Software Engineer"
+                  company: "Acme Corporation"
+                  posting_url: "https://www.linkedin.com/jobs/view/1234567890"
+                  origin: "LinkedIn"
+              techLeadComplete:
+                summary: Tech Lead Position (with optional fields)
+                value:
+                  position: "Technical Lead - Cloud Infrastructure"
+                  company: "Tech Innovations Inc."
+                  posting_url: "https://www.linkedin.com/jobs/view/9876543210"
+                  origin: "LinkedIn"
+                  match: "high"
+                  work_arrangement: "remote"
+                  demand: "201-500"
+                  budget: 180000
+                  job_description: "We are seeking an experienced Technical Lead to drive our cloud infrastructure initiatives..."
+                  city: "Austin"
+                  country: "United States"
+                  
+      responses:
+        '200':
+          description: Job posting successfully updated in Notion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPostingResponse'
+              examples:
+                updated:
+                  summary: Successful update
+                  value:
+                    message: "Job posting updated successfully"
+                    notion_page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    notion_page_url: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+                    job_data:
+                      position: "Senior Software Engineer"
+                      company: "Acme Corporation"
+                      posting_url: "https://www.linkedin.com/jobs/view/1234567890"
+                      origin: "LinkedIn"
+                      page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                      
+        '201':
+          description: Job posting successfully created in Notion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobPostingResponse'
+              examples:
+                success:
+                  summary: Successful creation
+                  value:
+                    message: "Job posting saved successfully"
+                    notion_page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    notion_page_url: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+                    job_data:
+                      position: "Senior Software Engineer"
+                      company: "Acme Corporation"
+                      posting_url: "https://www.linkedin.com/jobs/view/1234567890"
+                      origin: "LinkedIn"
+                      
+        '400':
+          description: Invalid request - missing required fields or validation errors
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingPosition:
+                  summary: Missing position field
+                  value:
+                    error: "Position is required"
+                    field: "position"
+                    received: null
+                missingCompany:
+                  summary: Missing company field
+                  value:
+                    error: "Company is required"
+                    field: "company"
+                    received: null
+                invalidUrl:
+                  summary: Invalid LinkedIn URL
+                  value:
+                    error: "Invalid LinkedIn URL"
+                    field: "posting_url"
+                    received: "https://example.com/job"
+                invalidMatch:
+                  summary: Invalid match value
+                  value:
+                    error: "Match must be one of: low, medium, high"
+                    field: "match"
+                    received: "very-high"
+                invalidWorkArrangement:
+                  summary: Invalid work arrangement
+                  value:
+                    error: "Work arrangement must be one of: remote, hybrid, on-site"
+                    field: "work_arrangement"
+                    received: "flexible"
+                cityTooLong:
+                  summary: City exceeds max length
+                  value:
+                    error: "City must not exceed 200 characters"
+                    field: "city"
+                countryTooLong:
+                  summary: Country exceeds max length
+                  value:
+                    error: "Country must not exceed 200 characters"
+                    field: "country"
+                emptyPosition:
+                  summary: Empty position after trimming
+                  value:
+                    error: "Position cannot be empty"
+                    field: "position"
+                    received: "   "
+                    
+        '404':
+          description: Not Found - Notion page or database not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                pageNotFound:
+                  summary: Page ID not found (when updating)
+                  value:
+                    error: "Notion page not found"
+                    page_id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    details: "The specified page_id does not exist or is not accessible"
+                databaseNotFound:
+                  summary: Database ID not found
+                  value:
+                    error: "Notion database not found"
+                    database_id: "abc123xyz789"
+                    details: "Check NOTION_DATABASE_ID environment variable"
+                    
+        '409':
+          description: Conflict - Job posting already exists in Notion database (only when creating without page_id)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DuplicateErrorResponse'
+              examples:
+                duplicate:
+                  summary: Duplicate job posting
+                  value:
+                    error: "Job posting already saved"
+                    duplicate_field: "posting_url"
+                    existing_page_id: "x9y8z7w6-v5u4-3210-zyxw-vu9876543210"
+                    existing_page_url: "https://www.notion.so/x9y8z7w6v5u43210zyxwvu9876543210"
+                    
+        '401':
+          description: Unauthorized - Notion API authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidApiKey:
+                  summary: Invalid Notion API key
+                  value:
+                    error: "Notion authentication failed"
+                    details: "Invalid API key or insufficient permissions"
+                    
+        '429':
+          description: Too Many Requests - Notion API rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitErrorResponse'
+              examples:
+                rateLimit:
+                  summary: Rate limit exceeded
+                  value:
+                    error: "Rate limit exceeded"
+                    retry_after: 60
+                    details: "Notion API rate limit reached. Please wait before retrying."
+                    
+        '500':
+          description: Internal Server Error - Unexpected backend error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  summary: Generic server error
+                  value:
+                    error: "Internal server error"
+                    details: "An unexpected error occurred. Check server logs."
+                    
+        '504':
+          description: Gateway Timeout - Notion API request timed out
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                timeout:
+                  summary: Notion API timeout
+                  value:
+                    error: "Notion API timeout"
+                    details: "Request to Notion API exceeded timeout limit"
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the Flask backend and validates Notion API connectivity.
+        Useful for debugging and verifying the backend is running correctly.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Backend is healthy and Notion API is accessible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: All systems operational
+                  value:
+                    status: "healthy"
+                    notion_connected: true
+                    database_validated: true
+        '500':
+          description: Backend or Notion API issues detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                notionError:
+                  summary: Notion API connection failed
+                  value:
+                    status: "unhealthy"
+                    notion_connected: false
+                    database_validated: false
+                    error: "Failed to connect to Notion API"
+
+components:
+  schemas:
+    JobPostingRequest:
+      type: object
+      required:
+        - position
+        - company
+        - posting_url
+        - origin
+      properties:
+        page_id:
+          type: string
+          format: uuid
+          description: Notion page ID for updating existing job posting (optional, omit when creating new)
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        position:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Job title/position name extracted from LinkedIn
+          example: "Senior Software Engineer"
+        company:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Company/employer name extracted from LinkedIn
+          example: "Acme Corporation"
+        posting_url:
+          type: string
+          format: uri
+          pattern: '^https://www\.linkedin\.com/jobs/(view|collections)/.+$'
+          description: Full URL of the LinkedIn job posting page
+          example: "https://www.linkedin.com/jobs/view/1234567890"
+        origin:
+          type: string
+          enum:
+            - LinkedIn
+          description: Source platform (always "LinkedIn" for this feature)
+          example: "LinkedIn"
+        match:
+          type: string
+          enum:
+            - low
+            - medium
+            - high
+          description: User's assessment of job fit (optional)
+          example: "high"
+        work_arrangement:
+          type: string
+          enum:
+            - remote
+            - hybrid
+            - on-site
+          description: Work location arrangement (optional)
+          example: "remote"
+        demand:
+          type: string
+          enum:
+            - "0-50"
+            - "51-200"
+            - "201-500"
+            - "500+"
+          description: Company size/demand level (optional)
+          example: "201-500"
+        budget:
+          type: number
+          minimum: 0
+          description: Salary budget/expectation (optional)
+          example: 150000
+        job_description:
+          type: string
+          maxLength: 50000
+          description: Full job description text (optional)
+          example: "We are looking for a Senior Software Engineer to join our team..."
+        city:
+          type: string
+          maxLength: 200
+          description: City extracted from location information (optional)
+          example: "San Francisco"
+        country:
+          type: string
+          maxLength: 200
+          description: Country extracted from location information (optional)
+          example: "United States"
+          
+    JobPostingResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Success message
+          example: "Job posting saved successfully"
+        notion_page_id:
+          type: string
+          format: uuid
+          description: Notion page ID of the created entry
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        notion_page_url:
+          type: string
+          format: uri
+          description: Direct URL to the Notion page
+          example: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+        job_data:
+          type: object
+          description: Echo of the saved job posting data
+          properties:
+            position:
+              type: string
+              example: "Senior Software Engineer"
+            company:
+              type: string
+              example: "Acme Corporation"
+            posting_url:
+              type: string
+              example: "https://www.linkedin.com/jobs/view/1234567890"
+            origin:
+              type: string
+              example: "LinkedIn"
+              
+    JobExistsResponse:
+      type: object
+      properties:
+        exists:
+          type: boolean
+          description: Whether the job posting exists in Notion
+          example: true
+        page_id:
+          type: string
+          format: uuid
+          description: Notion page ID of existing job (only present when exists is true)
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        page_url:
+          type: string
+          format: uri
+          description: Direct URL to the Notion page (only present when exists is true)
+          example: "https://www.notion.so/a1b2c3d4e5f67890abcdef1234567890"
+              
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Position is required"
+        field:
+          type: string
+          description: Field that caused the error (if applicable)
+          example: "position"
+        received:
+          description: Value received that caused the error
+          nullable: true
+          example: null
+        details:
+          type: string
+          description: Additional error details
+          example: "Check the request payload and try again"
+          
+    DuplicateErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Job posting already saved"
+        duplicate_field:
+          type: string
+          description: Field that caused the duplicate detection
+          example: "posting_url"
+        existing_page_id:
+          type: string
+          format: uuid
+          description: Notion page ID of the existing entry
+          example: "x9y8z7w6-v5u4-3210-zyxw-vu9876543210"
+        existing_page_url:
+          type: string
+          format: uri
+          description: Direct URL to the existing Notion page
+          example: "https://www.notion.so/x9y8z7w6v5u43210zyxwvu9876543210"
+          
+    RateLimitErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Rate limit exceeded"
+        retry_after:
+          type: integer
+          description: Seconds to wait before retrying
+          example: 60
+        details:
+          type: string
+          description: Additional information
+          example: "Notion API rate limit reached. Please wait before retrying."
+          
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - unhealthy
+          description: Overall backend health status
+          example: "healthy"
+        notion_connected:
+          type: boolean
+          description: Whether Notion API is accessible
+          example: true
+        database_validated:
+          type: boolean
+          description: Whether the Notion database schema is valid
+          example: true
+        error:
+          type: string
+          description: Error message if unhealthy
+          example: "Failed to connect to Notion API"

@@ -1,0 +1,578 @@
+{
+  "api": {
+    "title": "Mesa de Ayuda API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Autenticación",
+      "key": "autenticacin",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "usuario@empresa.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "miPassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "username": {
+                "type": "string",
+                "example": "usuario@empresa.com"
+              },
+              "rol": {
+                "type": "string",
+                "enum": [
+                  "USUARIO",
+                  "OPERADOR"
+                ],
+                "example": "USUARIO"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password",
+              "nombre"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "nuevo@empresa.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "miPassword123"
+              },
+              "nombre": {
+                "type": "string",
+                "example": "Juan Pérez"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "username": {
+                "type": "string",
+                "example": "usuario@empresa.com"
+              },
+              "rol": {
+                "type": "string",
+                "enum": [
+                  "USUARIO",
+                  "OPERADOR"
+                ],
+                "example": "USUARIO"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Solicitudes",
+      "key": "solicitudes",
+      "operations": [
+        {
+          "id": "GET:/solicitudes",
+          "method": "GET",
+          "kind": "list",
+          "path": "/solicitudes",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "titulo": {
+                  "type": "string",
+                  "example": "Error en sistema de facturación"
+                },
+                "descripcion": {
+                  "type": "string",
+                  "example": "No puedo generar facturas desde ayer"
+                },
+                "estado": {
+                  "type": "string",
+                  "enum": [
+                    "PENDIENTE",
+                    "EN_PROCESO",
+                    "RESUELTO",
+                    "CERRADO"
+                  ],
+                  "example": "PENDIENTE"
+                },
+                "prioridad": {
+                  "type": "string",
+                  "enum": [
+                    "BAJA",
+                    "MEDIA",
+                    "ALTA",
+                    "CRITICA"
+                  ],
+                  "example": "ALTA"
+                },
+                "fechaCreacion": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2026-03-01T10:30:00"
+                },
+                "fechaActualizacion": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "usuarioCreador": {
+                  "type": "string",
+                  "example": "juan.perez"
+                },
+                "operadorAsignado": {
+                  "type": "string",
+                  "example": "soporte1"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/solicitudes/filtrar",
+          "method": "GET",
+          "kind": "list",
+          "path": "/solicitudes/filtrar",
+          "queryParamCount": 7,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "titulo": {
+                      "type": "string",
+                      "example": "Error en sistema de facturación"
+                    },
+                    "descripcion": {
+                      "type": "string",
+                      "example": "No puedo generar facturas desde ayer"
+                    },
+                    "estado": {
+                      "type": "string",
+                      "enum": [
+                        "PENDIENTE",
+                        "EN_PROCESO",
+                        "RESUELTO",
+                        "CERRADO"
+                      ],
+                      "example": "PENDIENTE"
+                    },
+                    "prioridad": {
+                      "type": "string",
+                      "enum": [
+                        "BAJA",
+                        "MEDIA",
+                        "ALTA",
+                        "CRITICA"
+                      ],
+                      "example": "ALTA"
+                    },
+                    "fechaCreacion": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-03-01T10:30:00"
+                    },
+                    "fechaActualizacion": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "usuarioCreador": {
+                      "type": "string",
+                      "example": "juan.perez"
+                    },
+                    "operadorAsignado": {
+                      "type": "string",
+                      "example": "soporte1"
+                    }
+                  }
+                }
+              },
+              "totalElements": {
+                "type": "integer",
+                "example": 50
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 5
+              },
+              "size": {
+                "type": "integer",
+                "example": 10
+              },
+              "number": {
+                "type": "integer",
+                "example": 0
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/solicitudes/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/solicitudes/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ],
+                "example": "PENDIENTE"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              },
+              "fechaCreacion": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-01T10:30:00"
+              },
+              "fechaActualizacion": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usuarioCreador": {
+                "type": "string",
+                "example": "juan.perez"
+              },
+              "operadorAsignado": {
+                "type": "string",
+                "example": "soporte1"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/solicitudes",
+          "method": "POST",
+          "kind": "create",
+          "path": "/solicitudes",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "titulo",
+              "prioridad"
+            ],
+            "properties": {
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ],
+                "example": "PENDIENTE"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              },
+              "fechaCreacion": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-01T10:30:00"
+              },
+              "fechaActualizacion": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usuarioCreador": {
+                "type": "string",
+                "example": "juan.perez"
+              },
+              "operadorAsignado": {
+                "type": "string",
+                "example": "soporte1"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/solicitudes/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/solicitudes/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "titulo",
+              "prioridad"
+            ],
+            "properties": {
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ],
+                "example": "PENDIENTE"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              },
+              "fechaCreacion": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-01T10:30:00"
+              },
+              "fechaActualizacion": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usuarioCreador": {
+                "type": "string",
+                "example": "juan.perez"
+              },
+              "operadorAsignado": {
+                "type": "string",
+                "example": "soporte1"
+              }
+            }
+          }
+        },
+        {
+          "id": "PATCH:/solicitudes/{id}/cambiar-estado",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/solicitudes/{id}/cambiar-estado",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "estado"
+            ],
+            "properties": {
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ],
+                "example": "EN_PROCESO"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "titulo": {
+                "type": "string",
+                "example": "Error en sistema de facturación"
+              },
+              "descripcion": {
+                "type": "string",
+                "example": "No puedo generar facturas desde ayer"
+              },
+              "estado": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ],
+                "example": "PENDIENTE"
+              },
+              "prioridad": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ],
+                "example": "ALTA"
+              },
+              "fechaCreacion": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-01T10:30:00"
+              },
+              "fechaActualizacion": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usuarioCreador": {
+                "type": "string",
+                "example": "juan.perez"
+              },
+              "operadorAsignado": {
+                "type": "string",
+                "example": "soporte1"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

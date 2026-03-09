@@ -1,0 +1,461 @@
+openapi: 3.0.0
+info:
+  title: Human Design Chart Generator API
+  description: Backend API for generating Human Design charts from birth data
+  version: 1.0.0
+  contact:
+    name: NOIO Project Team
+    email: dev@noio.de
+  license:
+    name: MIT
+
+servers:
+  - url: https://api.chart-generator.de
+    description: Production API (Railway)
+  - url: http://localhost:5000
+    description: Local development (FastAPI server)
+
+tags:
+  - name: Chart Generation
+    description: HD chart calculation and display data
+  - name: Email Capture
+    description: Business Reading interest lead capture
+
+paths:
+  /api/hd-chart:
+    post:
+      summary: Generate Human Design chart
+      operationId: generateChart
+      tags:
+        - Chart Generation
+      description: |
+        Calculate a complete Human Design chart from birth data.
+        Accepts user birth date, time, and location; returns Type, Authority, Profile,
+        Centers, Channels, Gates, Incarnation Cross, and personalized impulse.
+        All response text is in German.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChartRequest'
+            example:
+              firstName: "Marie"
+              birthDate: "23.11.1992"
+              birthTime: "14:30"
+              birthTimeApproximate: false
+              birthPlace: "Berlin, Germany"
+      responses:
+        '200':
+          description: Chart successfully generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChartResponse'
+              example:
+                firstName: "Marie"
+                type:
+                  code: "4"
+                  label: "Projector"
+                  shortDescription: "Du kannst Systeme und Menschen klar sehen..."
+                authority:
+                  code: "emotional"
+                  label: "Emotionale Autorität"
+                  decisionHint: "Lass deine Gefühle zur Ruhe kommen..."
+        '400':
+          description: Validation error in request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidDate:
+                  value:
+                    error: "Ungültiges Datum. Bitte prüfen Sie Tag und Monat."
+                    field: "birthDate"
+                invalidName:
+                  value:
+                    error: "Bitte geben Sie einen gültigen Namen ein (5-50 Zeichen)."
+                    field: "firstName"
+        '500':
+          description: HD API unavailable or calculation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Gerade kann dein Chart nicht berechnet werden. Bitte versuche es später noch einmal."
+      x-codeSamples:
+        - lang: python
+          source: |
+            import httpx
+            async with httpx.AsyncClient() as client:
+              response = await client.post(
+                "http://localhost:5000/api/hd-chart",
+                json={
+                  "firstName": "Marie",
+                  "birthDate": "23.11.1992",
+                  "birthTime": "14:30",
+                  "birthTimeApproximate": False,
+                  "birthPlace": "Berlin, Germany"
+                }
+              )
+              print(response.json())
+        - lang: javascript
+          source: |
+            const response = await fetch('/api/hd-chart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                firstName: 'Marie',
+                birthDate: '23.11.1992',
+                birthTime: '14:30',
+                birthTimeApproximate: false,
+                birthPlace: 'Berlin, Germany'
+              })
+            });
+            const chart = await response.json();
+            console.log(chart);
+
+  /api/email-capture:
+    post:
+      summary: Capture email for Business Reading interest
+      operationId: captureEmail
+      tags:
+        - Email Capture
+      description: |
+        Record email address of visitor interested in Business Reading service.
+        Validates email format and checks for duplicates.
+        Returns success confirmation message in German.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailCaptureRequest'
+            example:
+              email: "marie@example.de"
+      responses:
+        '201':
+          description: Email successfully recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailCaptureResponse'
+              example:
+                success: true
+                message: "Vielen Dank für dein Interesse an einem Business Reading."
+                id: "550e8400-e29b-41d4-a716-446655440000"
+        '400':
+          description: Invalid email format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bitte geben Sie eine gültige E-Mail an."
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Diese E-Mail ist bereits registriert."
+      x-codeSamples:
+        - lang: python
+          source: |
+            import httpx
+            async with httpx.AsyncClient() as client:
+              response = await client.post(
+                "http://localhost:5000/api/email-capture",
+                json={"email": "marie@example.de"}
+              )
+              print(response.status_code, response.json())
+        - lang: javascript
+          source: |
+            const response = await fetch('/api/email-capture', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: 'marie@example.de' })
+            });
+            const result = await response.json();
+            console.log(result);
+
+components:
+  schemas:
+    ChartRequest:
+      type: object
+      required:
+        - firstName
+        - birthDate
+        - birthTime
+        - birthPlace
+        - birthTimeApproximate
+      properties:
+        firstName:
+          type: string
+          minLength: 5
+          maxLength: 50
+          description: User's first name
+          example: "Marie"
+        birthDate:
+          type: string
+          pattern: '^\d{2}\.\d{2}\.\d{4}$'
+          description: Birth date in TT.MM.JJJJ format (e.g., 23.11.1992)
+          example: "23.11.1992"
+        birthTime:
+          type: string
+          pattern: '^\d{2}:\d{2}$'
+          description: Birth time in HH:MM 24-hour format
+          example: "14:30"
+        birthTimeApproximate:
+          type: boolean
+          description: true if birth time is approximate/unknown
+          example: false
+        birthPlace:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Birth location (city, country; no geocoding required)
+          example: "Berlin, Germany"
+
+    ChartResponse:
+      type: object
+      properties:
+        firstName:
+          type: string
+          description: User's first name from request
+        type:
+          $ref: '#/components/schemas/TypeInfo'
+        authority:
+          $ref: '#/components/schemas/AuthorityInfo'
+        profile:
+          $ref: '#/components/schemas/ProfileInfo'
+        centers:
+          type: array
+          description: 9 HD centers (defined/open)
+          items:
+            $ref: '#/components/schemas/Center'
+        channels:
+          type: array
+          description: Active channels connecting centers (~27 total)
+          items:
+            $ref: '#/components/schemas/Channel'
+        gates:
+          $ref: '#/components/schemas/Gates'
+        incarnationCross:
+          $ref: '#/components/schemas/IncarnationCross'
+        shortImpulse:
+          type: string
+          description: Personalized 2-3 sentence impulse message (German)
+
+    TypeInfo:
+      type: object
+      required:
+        - code
+        - label
+        - shortDescription
+      properties:
+        code:
+          type: string
+          enum: ["1", "2", "3", "4", "5"]
+          description: Type code (1=Manifestor, 2=Generator, 3=Generator-Manifestor, 4=Projector, 5=Reflector)
+        label:
+          type: string
+          description: Type label in German
+          example: "Projector"
+        shortDescription:
+          type: string
+          description: 1-2 sentence explanation of type in German
+
+    AuthorityInfo:
+      type: object
+      required:
+        - code
+        - label
+        - decisionHint
+      properties:
+        code:
+          type: string
+          enum: ["sacral", "emotional", "spleen", "self-projected", "other-projected", "no-authority", "lunar"]
+          description: Authority type code
+        label:
+          type: string
+          description: Authority label in German
+        decisionHint:
+          type: string
+          description: Actionable decision-making guidance in German
+
+    ProfileInfo:
+      type: object
+      required:
+        - code
+        - shortDescription
+      properties:
+        code:
+          type: string
+          pattern: '^\d{1,2}/\d{1,2}$'
+          description: Profile code (e.g., 1/3, 4/6)
+        shortDescription:
+          type: string
+          description: Profile meaning and life theme in German
+
+    Center:
+      type: object
+      required:
+        - name
+        - code
+        - defined
+      properties:
+        name:
+          type: string
+          description: Center name in German (e.g., "Kopfzentrum", "Herzenzentrum")
+        code:
+          type: string
+          description: HD notation (e.g., "Head", "Heart", "Throat", "AJ")
+        defined:
+          type: boolean
+          description: true if center is colored/defined, false if open/white
+
+    Channel:
+      type: object
+      required:
+        - code
+      properties:
+        code:
+          type: string
+          pattern: '^\d{1,2}-\d{1,2}$'
+          description: Channel code (gate-to-gate connection, e.g., 1-2)
+
+    Gates:
+      type: object
+      required:
+        - conscious
+        - unconscious
+      properties:
+        conscious:
+          type: array
+          description: Conscious gates (sun/earth)
+          items:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                pattern: '^\d{1,2}$'
+                description: Gate number (1-64)
+        unconscious:
+          type: array
+          description: Unconscious gates (south node/north node)
+          items:
+            type: object
+            required:
+              - code
+            properties:
+              code:
+                type: string
+                pattern: '^\d{1,2}$'
+                description: Gate number (1-64)
+
+    IncarnationCross:
+      type: object
+      required:
+        - code
+        - name
+        - gates
+      properties:
+        code:
+          type: string
+          description: Incarnation cross code (e.g., 1-4, 16-48-2-48)
+        name:
+          type: string
+          description: Cross name or description in German
+        gates:
+          type: array
+          items:
+            type: string
+            pattern: '^\d{1,2}$'
+          description: Gate numbers forming the cross
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: User-friendly error message in German
+        field:
+          type: string
+          description: Optional field name causing validation error
+
+    EmailCaptureRequest:
+      type: object
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Email address for Business Reading interest
+          example: "marie@example.de"
+
+    EmailCaptureResponse:
+      type: object
+      required:
+        - success
+        - message
+        - id
+      properties:
+        success:
+          type: boolean
+          description: Always true on 201 response
+        message:
+          type: string
+          description: Confirmation message in German
+        id:
+          type: string
+          format: uuid
+          description: UUID of created email record
+
+  securitySchemes:
+    # No authentication required for MVP (public API)
+
+security: []
+
+x-api-info:
+  language: Python/FastAPI
+  database: PostgreSQL (Railway)
+  external_apis:
+    - name: HumanDesign.ai API
+      endpoint: https://app.humandesign.ai/api/v1/charts
+      authentication: Bearer token (backend secret)
+  response_language: German
+  testing:
+    unit_tests: pytest (backend/tests/unit/)
+    integration_tests: pytest (backend/tests/integration/)
+    contract_tests: pytest (backend/tests/contract/)
+    test_command: "pytest backend/tests/ -v"
+
+x-infrastructure:
+  backend:
+    platform: Railway
+    runtime: Python 3.11+
+    framework: FastAPI 0.104+
+    port: 5000
+  database:
+    platform: Railway PostgreSQL
+    connection: environment variable (DATABASE_URL)
+    migrations: Alembic
+
+x-deployment:
+  frontend_url: https://chart-generator.vercel.app
+  backend_url: https://api.chart-generator.de
+  environment_variables:
+    - HD_API_KEY (HumanDesign.ai Creator tier API key)
+    - DATABASE_URL (PostgreSQL connection string)
+    - FRONTEND_URL (for CORS)
+

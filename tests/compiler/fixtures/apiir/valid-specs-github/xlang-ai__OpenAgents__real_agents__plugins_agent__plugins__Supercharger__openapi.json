@@ -1,0 +1,207 @@
+{
+  "api": {
+    "title": "Supercharger Plugin",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Chat_with_manual",
+      "key": "chatwithmanual",
+      "operations": [
+        {
+          "id": "chat_with_manual",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat_with_manual",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The semantic query string."
+              },
+              "model": {
+                "type": "string",
+                "description": "The Tesla model.",
+                "enum": [
+                  "Model S",
+                  "Model X",
+                  "Model 3",
+                  "Model Y"
+                ]
+              },
+              "year": {
+                "type": "integer",
+                "description": "The year of the model."
+              },
+              "software_version": {
+                "type": "string",
+                "description": "The software version of the model. Optional."
+              },
+              "language_country": {
+                "type": "string",
+                "description": "The language and country code of the user.",
+                "default": "en_us"
+              }
+            },
+            "required": [
+              "query",
+              "model",
+              "year"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "responses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "Text chunk from the manual."
+                    },
+                    "image_urls": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "description": "URLs to the images of the manual pages."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "responses"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Local_superchargers",
+      "key": "localsuperchargers",
+      "operations": [
+        {
+          "id": "local_superchargers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/local_superchargers",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "location": {
+                "type": "string",
+                "description": "The location string"
+              }
+            },
+            "required": [
+              "location"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "imageUrls": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "URL to the image of the map"
+                }
+              },
+              "superchargers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "A list of superchargers around the location and associated information."
+              }
+            },
+            "required": [
+              "imageUrls",
+              "superchargers"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suggested_superchargers",
+      "key": "suggestedsuperchargers",
+      "operations": [
+        {
+          "id": "suggested_superchargers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/suggested_superchargers",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "origin": {
+                "type": "string",
+                "description": "The origin location string"
+              },
+              "destination": {
+                "type": "string",
+                "description": "The destination location string."
+              },
+              "model": {
+                "type": "string",
+                "description": "The Tesla model.",
+                "enum": [
+                  "MX_2020_LongRange",
+                  "MS_2020_LongRange",
+                  "MS_2020_Performance - Plaid",
+                  "MX_2020_Performance - Plaid",
+                  "M3_2020_Performance",
+                  "M3_2020_StandardRangePlus - Rear Wheel Drive",
+                  "M3_2020_LongRange",
+                  "MY_2020_Performance",
+                  "MY_2020_LongRange"
+                ]
+              },
+              "stopover1": {
+                "type": "string",
+                "description": "An optional stopover point"
+              },
+              "stopover2": {
+                "type": "string",
+                "description": "An optional stopover point"
+              }
+            },
+            "required": [
+              "origin",
+              "destination",
+              "model"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "imageUrls": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "description": "URL to the image of the route map"
+                }
+              },
+              "superchargers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "A list of superchargers along the route and associated information."
+              }
+            },
+            "required": [
+              "imageUrls",
+              "superchargers"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,265 @@
+{
+  "api": {
+    "title": "Duotify Membership API - 會員註冊流程",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "getUserById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "example": "王小明"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "wang@example.com"
+                  },
+                  "isEmailVerified": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "帳號建立時間 (UTC)",
+                    "example": "2025-01-21T10:30:00Z"
+                  },
+                  "lastLoginAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true,
+                    "description": "最後登入時間 (UTC)",
+                    "example": "2025-01-21T14:20:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/users/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "nationalId",
+              "fullName",
+              "email",
+              "password"
+            ],
+            "properties": {
+              "nationalId": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 10,
+                "pattern": "^[A-Z][0-9]{9}$",
+                "description": "台灣身分證字號 (首碼英文字母 + 9 位數字)",
+                "example": "A123456789"
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "使用者真實姓名",
+                "example": "王小明"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "minLength": 5,
+                "maxLength": 255,
+                "description": "使用者 E-Mail 地址",
+                "example": "wang@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 20,
+                "pattern": "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).+$",
+                "description": "密碼 (8-20 碼,須包含英文大寫、小寫及數字)",
+                "example": "Test123456"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "註冊成功,驗證碼已寄送至您的信箱"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "使用者唯一識別碼",
+                    "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "wang@example.com"
+                  },
+                  "isEmailVerified": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verification",
+      "key": "verification",
+      "operations": [
+        {
+          "id": "resendVerificationCode",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/verification/resend",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "userId"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "使用者唯一識別碼",
+                "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "驗證碼已重新發送至您的信箱"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  },
+                  "sentAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "發送時間 (UTC)",
+                    "example": "2025-01-21T10:40:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "verifyEmail",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/verification/verify",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "userId",
+              "code"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "使用者唯一識別碼",
+                "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              },
+              "code": {
+                "type": "string",
+                "minLength": 6,
+                "maxLength": 6,
+                "pattern": "^\\d{6}$",
+                "description": "6 位數驗證碼",
+                "example": "845621"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "驗證成功,您的帳號已完全啟用"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  },
+                  "isEmailVerified": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "verifiedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "驗證成功時間 (UTC)",
+                    "example": "2025-01-21T10:35:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

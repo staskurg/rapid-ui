@@ -1,0 +1,201 @@
+openapi: 3.0.3
+info:
+  title: Golang Microservices Gateway API
+  version: 0.1.0
+  description: REST gateway over gRPC services (auth, user, product, order, payment)
+servers:
+  - url: http://localhost:8080
+paths:
+  /auth/register:
+    post:
+      summary: Register user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                role:
+                  type: string
+              required: [email, password, role]
+      responses:
+        '200':
+          description: Registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              required: [email, password]
+      responses:
+        '200':
+          description: Tokens
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token: { type: string }
+                  refresh_token: { type: string }
+  /auth/validate:
+    get:
+      summary: Validate access token
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Claims
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id: { type: string }
+                  role: { type: string }
+                  valid: { type: boolean }
+  /products:
+    get:
+      summary: List products
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: List
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    post:
+      summary: Create product
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+      responses:
+        '200':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+  /orders:
+    post:
+      summary: Create order
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                user_id: { type: string }
+                items:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/OrderItemCreate'
+              required: [user_id, items]
+      responses:
+        '200':
+          description: Created order + payment id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order: { $ref: '#/components/schemas/Order' }
+                  payment_id: { type: string }
+  /payments/{id}:
+    get:
+      summary: Get payment status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Product:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        price: { type: integer, format: int64 }
+        stock: { type: integer, format: int64 }
+    ProductCreate:
+      type: object
+      properties:
+        name: { type: string }
+        category: { type: string }
+        price: { type: integer, format: int64 }
+        stock: { type: integer, format: int64 }
+      required: [name, category, price, stock]
+    OrderItemCreate:
+      type: object
+      properties:
+        product_id: { type: string }
+        quantity: { type: integer, format: int32 }
+      required: [product_id, quantity]
+    OrderItem:
+      type: object
+      properties:
+        product_id: { type: string }
+        quantity: { type: integer, format: int32 }
+        price: { type: integer, format: int64 }
+    Order:
+      type: object
+      properties:
+        id: { type: string }
+        user_id: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+        subtotal: { type: integer, format: int64 }
+        status: { type: string, enum: [PENDING, PAID, CANCELED] }
+    Payment:
+      type: object
+      properties:
+        id: { type: string }
+        order_id: { type: string }
+        status: { type: string, enum: [PENDING, PAID, FAILED] }
+        amount: { type: integer, format: int64 }

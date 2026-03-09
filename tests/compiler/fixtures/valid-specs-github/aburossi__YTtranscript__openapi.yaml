@@ -1,0 +1,40 @@
+openapi: 3.0.1
+info:
+  title: YouTube Transcript Extractor API
+  description: This API extracts transcripts from YouTube videos.
+  version: 'v1'
+servers:
+  - url: https://y-ttranscript.vercel.app/openapi.yaml
+paths:
+  /transcript:
+    get:
+      summary: Extract transcript from a YouTube video
+      description: Provide a YouTube URL to extract the transcript.
+      parameters:
+        - in: query
+          name: url
+          schema:
+            type: string
+          required: true
+          description: The URL of the YouTube video
+      responses:
+        '200':
+          description: Transcript extraction successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  transcript:
+                    type: string
+                    description: The transcript of the YouTube video
+        '400':
+          description: Bad request
+components:
+  schemas:
+    TranscriptResponse:
+      type: object
+      properties:
+        transcript:
+          type: string
+          description: The transcript of the YouTube video

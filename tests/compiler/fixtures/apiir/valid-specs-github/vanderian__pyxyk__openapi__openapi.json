@@ -1,0 +1,338 @@
+{
+  "api": {
+    "title": "XYK token swap API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "read",
+      "key": "read",
+      "operations": [
+        {
+          "id": "getLiquidity",
+          "method": "GET",
+          "kind": "list",
+          "path": "/liquidity/pools",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "required": [
+                "poolNative",
+                "poolToken",
+                "tokenSymbol"
+              ],
+              "type": "object",
+              "properties": {
+                "tokenSymbol": {
+                  "type": "string",
+                  "example": "USD"
+                },
+                "poolNative": {
+                  "minimum": 0,
+                  "type": "number",
+                  "format": "float",
+                  "example": 100
+                },
+                "poolToken": {
+                  "minimum": 0,
+                  "type": "number",
+                  "format": "float",
+                  "example": 200
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getSwapRate",
+          "method": "GET",
+          "kind": "list",
+          "path": "/swap",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "required": [
+              "amountIn",
+              "amountOut",
+              "createdAt",
+              "tokenIn",
+              "tokenOut"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenIn": {
+                "type": "string",
+                "example": "USD"
+              },
+              "tokenOut": {
+                "type": "string",
+                "example": "EUR"
+              },
+              "amountIn": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "amountOut": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2020-02-27T09:12:33.001Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "getTokenSwaps",
+          "method": "GET",
+          "kind": "list",
+          "path": "/swaps",
+          "queryParamCount": 6,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "amountIn",
+                    "amountOut",
+                    "createdAt",
+                    "tokenIn",
+                    "tokenOut"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "tokenIn": {
+                      "type": "string",
+                      "example": "USD"
+                    },
+                    "tokenOut": {
+                      "type": "string",
+                      "example": "EUR"
+                    },
+                    "amountIn": {
+                      "minimum": 0,
+                      "type": "number",
+                      "format": "float",
+                      "example": 100
+                    },
+                    "amountOut": {
+                      "minimum": 0,
+                      "type": "number",
+                      "format": "float",
+                      "example": 100
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2020-02-27T09:12:33.001Z"
+                    }
+                  }
+                }
+              },
+              "nextPageId": {
+                "type": "string",
+                "example": "c808226c-7af3-4461-bf1c-54d044f607d8"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "write",
+      "key": "write",
+      "operations": [
+        {
+          "id": "addLiquidity",
+          "method": "POST",
+          "kind": "create",
+          "path": "/liquidity/add",
+          "requestSchema": {
+            "required": [
+              "poolNative",
+              "poolToken",
+              "tokenSymbol"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenSymbol": {
+                "type": "string",
+                "example": "USD"
+              },
+              "poolNative": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "poolToken": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 200
+              }
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "poolNative",
+              "poolToken",
+              "tokenSymbol"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenSymbol": {
+                "type": "string",
+                "example": "USD"
+              },
+              "poolNative": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "poolToken": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 200
+              }
+            }
+          }
+        },
+        {
+          "id": "drainLiquidity",
+          "method": "POST",
+          "kind": "create",
+          "path": "/liquidity/drain",
+          "requestSchema": {
+            "required": [
+              "poolNative",
+              "poolToken",
+              "tokenSymbol"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenSymbol": {
+                "type": "string",
+                "example": "USD"
+              },
+              "poolNative": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "poolToken": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 200
+              }
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "poolNative",
+              "poolToken",
+              "tokenSymbol"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenSymbol": {
+                "type": "string",
+                "example": "USD"
+              },
+              "poolNative": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "poolToken": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 200
+              }
+            }
+          }
+        },
+        {
+          "id": "swapTokens",
+          "method": "POST",
+          "kind": "create",
+          "path": "/swap",
+          "requestSchema": {
+            "required": [
+              "amount",
+              "tokenIn",
+              "tokenOut"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenIn": {
+                "type": "string",
+                "example": "USD"
+              },
+              "tokenOut": {
+                "type": "string",
+                "example": "XYK"
+              },
+              "amount": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 10
+              }
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "amountIn",
+              "amountOut",
+              "createdAt",
+              "tokenIn",
+              "tokenOut"
+            ],
+            "type": "object",
+            "properties": {
+              "tokenIn": {
+                "type": "string",
+                "example": "USD"
+              },
+              "tokenOut": {
+                "type": "string",
+                "example": "EUR"
+              },
+              "amountIn": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "amountOut": {
+                "minimum": 0,
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2020-02-27T09:12:33.001Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,184 @@
+openapi: 3.0.0
+info:
+  title: FastAPI Authentication API
+  version: 1.0.0
+  description: API for user authentication (signup, login, token verification) for the Docusaurus book.
+servers:
+  - url: http://localhost:8000/api/auth
+    description: Development server
+
+paths:
+  /signup:
+    post:
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupData'
+      responses:
+        '200':
+          description: User successfully registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+        '400':
+          description: Invalid input or email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /login:
+    post:
+      summary: Authenticate and log in a user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginData'
+      responses:
+        '200':
+          description: User successfully logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccess'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /me:
+    get:
+      summary: Verify JWT token and get user details
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Valid token, returns user information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Invalid or expired token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserPreferences:
+      type: object
+      properties:
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: beginner
+        languages:
+          type: array
+          items:
+            type: string
+          example: ["Python", "JavaScript"]
+        aiExperience:
+          type: string
+          enum: [none, basic, intermediate, advanced]
+          example: basic
+        hardwareKnowledge:
+          type: string
+          enum: [basic, intermediate, advanced]
+          example: intermediate
+      required:
+        - level
+        - languages
+        - aiExperience
+        - hardwareKnowledge
+    User:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        name:
+          type: string
+          example: John Doe
+        preferences:
+          $ref: '#/components/schemas/UserPreferences'
+      required:
+        - userId
+        - email
+        - name
+        - preferences
+    SignupData:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: newuser@example.com
+        password:
+          type: string
+          format: password
+          example: MyStrongP@ssw0rd
+        name:
+          type: string
+          example: Jane Doe
+        preferences:
+          $ref: '#/components/schemas/UserPreferences'
+      required:
+        - email
+        - password
+        - name
+        - preferences
+    LoginData:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: MyStrongP@ssw0rd
+      required:
+        - email
+        - password
+    AuthSuccess:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Login successful
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+        - message
+        - token
+        - user
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Invalid credentials
+      required:
+        - detail

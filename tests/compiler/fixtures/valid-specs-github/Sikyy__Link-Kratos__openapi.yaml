@@ -1,0 +1,189 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: Link API
+    version: 0.0.1
+paths:
+    /api/users:
+        post:
+            tags:
+                - Link
+            description: 注册
+            operationId: Link_Register
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/link.v1.RegisterRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/link.v1.UserReply'
+    /api/users/interceptor:
+        get:
+            tags:
+                - Link
+            description: 拦截流量信息，并返回
+            operationId: Link_Interceptor
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/link.v1.InterceptorReply'
+    /api/users/login:
+        post:
+            tags:
+                - Link
+            description: 登陆
+            operationId: Link_Login
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/link.v1.LoginRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/link.v1.UserReply'
+    /api/users/realtimetraffic:
+        get:
+            tags:
+                - Link
+            description: 获取实时流量信息，并返回
+            operationId: Link_RealTimeTraffic
+            parameters:
+                - name: realtimeTraffic.clientName
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/link.v1.RealTimeTrafficReply'
+    /api/users/statistics:
+        get:
+            tags:
+                - Link
+            description: 统计流量信息，并返回
+            operationId: Link_Statistics
+            parameters:
+                - name: statistics.clientName
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/link.v1.StatisticsReply'
+components:
+    schemas:
+        link.v1.InterceptorReply:
+            type: object
+            properties:
+                interceptor:
+                    $ref: '#/components/schemas/link.v1.InterceptorReply_Interceptor'
+        link.v1.InterceptorReply_Interceptor:
+            type: object
+            properties:
+                date:
+                    type: string
+                clientName:
+                    type: string
+                status:
+                    type: string
+                uploadSize:
+                    type: string
+                downloadSize:
+                    type: string
+                durationMs:
+                    type: string
+                method:
+                    type: string
+        link.v1.LoginRequest:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/link.v1.LoginRequest_User'
+        link.v1.LoginRequest_User:
+            type: object
+            properties:
+                email:
+                    type: string
+                password:
+                    type: string
+        link.v1.RealTimeTrafficReply:
+            type: object
+            properties:
+                realtimeTraffic:
+                    $ref: '#/components/schemas/link.v1.RealTimeTrafficReply_RealTimeTraffic'
+        link.v1.RealTimeTrafficReply_RealTimeTraffic:
+            type: object
+            properties:
+                upflow:
+                    type: string
+                downflow:
+                    type: string
+        link.v1.RegisterRequest:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/link.v1.RegisterRequest_User'
+        link.v1.RegisterRequest_User:
+            type: object
+            properties:
+                username:
+                    type: string
+                email:
+                    type: string
+                password:
+                    type: string
+        link.v1.StatisticsReply:
+            type: object
+            properties:
+                statistics:
+                    $ref: '#/components/schemas/link.v1.StatisticsReply_Statistics'
+        link.v1.StatisticsReply_Statistics:
+            type: object
+            properties:
+                upflow:
+                    type: string
+                downflow:
+                    type: string
+        link.v1.UserReply:
+            type: object
+            properties:
+                user:
+                    $ref: '#/components/schemas/link.v1.UserReply_User'
+        link.v1.UserReply_User:
+            type: object
+            properties:
+                email:
+                    type: string
+                token:
+                    type: string
+                username:
+                    type: string
+                bio:
+                    type: string
+                image:
+                    type: string
+tags:
+    - name: Link

@@ -1,0 +1,144 @@
+{
+  "api": {
+    "title": "FormBridge API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics",
+      "key": "analytics",
+      "operations": [
+        {
+          "id": "getAnalytics",
+          "method": "POST",
+          "kind": "create",
+          "path": "/analytics",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "form_id"
+            ],
+            "properties": {
+              "form_id": {
+                "type": "string",
+                "description": "Filter analytics by this form identifier",
+                "example": "my-portfolio"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "form_id",
+              "total_submissions",
+              "last_7_days"
+            ],
+            "properties": {
+              "form_id": {
+                "type": "string",
+                "description": "The form ID these analytics are for",
+                "example": "my-portfolio"
+              },
+              "total_submissions": {
+                "type": "integer",
+                "description": "Total number of submissions for this form",
+                "example": 42
+              },
+              "last_7_days": {
+                "type": "array",
+                "description": "Daily submission counts for the past 7 days",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Date in YYYY-MM-DD format",
+                      "example": "2025-11-05"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Number of submissions on this date",
+                      "example": 5
+                    }
+                  }
+                }
+              },
+              "latest_id": {
+                "type": "string",
+                "description": "ID of the most recent submission",
+                "example": "my-portfolio#1731800000000"
+              },
+              "last_submission_ts": {
+                "type": "integer",
+                "description": "Unix timestamp (milliseconds) of the most recent submission",
+                "example": 1731800000000
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Forms",
+      "key": "forms",
+      "operations": [
+        {
+          "id": "submitForm",
+          "method": "POST",
+          "kind": "create",
+          "path": "/submit",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "form_id": {
+                "type": "string",
+                "description": "Identifier for the form (defaults to \"default\" if omitted)",
+                "default": "default",
+                "example": "my-portfolio"
+              },
+              "name": {
+                "type": "string",
+                "description": "Name of the form submitter",
+                "example": "John Doe"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email address of the submitter",
+                "example": "john@example.com"
+              },
+              "message": {
+                "type": "string",
+                "description": "Main message content (required)",
+                "example": "I would like to discuss a project opportunity."
+              },
+              "page": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL of the page where the form was submitted",
+                "example": "https://omdeshpande09012005.github.io/"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the submitted form",
+                "example": "my-portfolio#1731800000000"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

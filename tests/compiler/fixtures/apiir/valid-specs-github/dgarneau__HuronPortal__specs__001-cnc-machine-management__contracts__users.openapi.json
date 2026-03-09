@@ -1,0 +1,459 @@
+{
+  "api": {
+    "title": "Users API - Huron Portal",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/users",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "username",
+                    "role",
+                    "isActive",
+                    "createdAt",
+                    "updatedAt",
+                    "_etag"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Identifiant unique de l'utilisateur"
+                    },
+                    "username": {
+                      "type": "string",
+                      "maxLength": 50,
+                      "description": "Nom d'utilisateur (unique)",
+                      "example": "jdupont"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "Admin",
+                        "Contrôleur",
+                        "Utilisateur"
+                      ],
+                      "description": "Rôle de l'utilisateur",
+                      "example": "Contrôleur"
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "description": "Statut actif de l'utilisateur",
+                      "example": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Date de création"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Date de dernière modification"
+                    },
+                    "lastLogin": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Date de dernière connexion (optionnel)"
+                    },
+                    "_etag": {
+                      "type": "string",
+                      "description": "Version de l'entité pour la concurrence optimiste"
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "required": [
+                  "currentPage",
+                  "totalPages",
+                  "totalItems",
+                  "itemsPerPage"
+                ],
+                "properties": {
+                  "currentPage": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "totalPages": {
+                    "type": "integer",
+                    "example": 5
+                  },
+                  "totalItems": {
+                    "type": "integer",
+                    "example": 42
+                  },
+                  "itemsPerPage": {
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "hasNextPage": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "hasPreviousPage": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/users/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "username",
+                  "role",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "_etag"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant unique de l'utilisateur"
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "Nom d'utilisateur (unique)",
+                    "example": "jdupont"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "Admin",
+                      "Contrôleur",
+                      "Utilisateur"
+                    ],
+                    "description": "Rôle de l'utilisateur",
+                    "example": "Contrôleur"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Statut actif de l'utilisateur",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de création"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière modification"
+                  },
+                  "lastLogin": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière connexion (optionnel)"
+                  },
+                  "_etag": {
+                    "type": "string",
+                    "description": "Version de l'entité pour la concurrence optimiste"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password",
+              "role",
+              "isActive"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 50,
+                "pattern": "^[a-z0-9._-]+$",
+                "description": "Nom d'utilisateur (lettres minuscules, chiffres, ., _, -)",
+                "example": "jdupont"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 128,
+                "description": "Mot de passe initial (min 8 caractères)",
+                "example": "MotDePasse123!"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "Admin",
+                  "Contrôleur",
+                  "Utilisateur"
+                ],
+                "description": "Rôle de l'utilisateur",
+                "example": "Contrôleur"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Statut actif de l'utilisateur",
+                "default": true,
+                "example": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "username",
+                  "role",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "_etag"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant unique de l'utilisateur"
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "Nom d'utilisateur (unique)",
+                    "example": "jdupont"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "Admin",
+                      "Contrôleur",
+                      "Utilisateur"
+                    ],
+                    "description": "Rôle de l'utilisateur",
+                    "example": "Contrôleur"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Statut actif de l'utilisateur",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de création"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière modification"
+                  },
+                  "lastLogin": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière connexion (optionnel)"
+                  },
+                  "_etag": {
+                    "type": "string",
+                    "description": "Version de l'entité pour la concurrence optimiste"
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Utilisateur créé avec succès"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/users/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/users/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 50,
+                "pattern": "^[a-z0-9._-]+$",
+                "description": "Nom d'utilisateur (optionnel pour modification)"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "Admin",
+                  "Contrôleur",
+                  "Utilisateur"
+                ],
+                "description": "Rôle de l'utilisateur"
+              },
+              "isActive": {
+                "type": "boolean",
+                "description": "Statut actif de l'utilisateur"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "username",
+                  "role",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "_etag"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Identifiant unique de l'utilisateur"
+                  },
+                  "username": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "description": "Nom d'utilisateur (unique)",
+                    "example": "jdupont"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "Admin",
+                      "Contrôleur",
+                      "Utilisateur"
+                    ],
+                    "description": "Rôle de l'utilisateur",
+                    "example": "Contrôleur"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "Statut actif de l'utilisateur",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de création"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière modification"
+                  },
+                  "lastLogin": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Date de dernière connexion (optionnel)"
+                  },
+                  "_etag": {
+                    "type": "string",
+                    "description": "Version de l'entité pour la concurrence optimiste"
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Utilisateur modifié avec succès"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/users/{id}/password",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/users/{id}/password",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "newPassword"
+            ],
+            "properties": {
+              "newPassword": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 128,
+                "description": "Nouveau mot de passe (min 8 caractères)",
+                "example": "NouveauMdp123!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Mot de passe réinitialisé avec succès"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/users/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/users/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Utilisateur supprimé avec succès"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

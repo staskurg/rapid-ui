@@ -1,0 +1,414 @@
+openapi: 3.0.2
+info:
+  description: prima versione della API lato server
+  title: BeeSafe
+  version: 1.0.0
+servers:
+- url: /
+paths:
+  /reports:
+    get:
+      description: ritorna tutti i reports al quale l'user ha accesso
+      operationId: findReports
+      parameters:
+      - description: l'id relativo all'utente che ha effettuato la richiesta
+        examples:
+          uid example:
+            value: qCou2nf9I8UcEsju9yAMBDu8Ihv2
+        explode: false
+        in: header
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: "il digest è la password dell'utente concatenata ad una stringa\
+          \ segreta comune sia al client che al server. \nDella stringa risultante\
+          \ viene calcolato l'MD5.\nSe il digest inviato dal client e quello calcolato\
+          \ dal server coincidono l'utente è autenticato."
+        examples:
+          md5 example:
+            value: 3af053175c3a17083037727e0ef26a1f
+        explode: false
+        in: header
+        name: digest
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                esempio get all reports:
+                  value:
+                  - longitude: 29.95
+                    description: some text
+                    gravity: 29
+                    latitude: 9.16
+                    phoneNumber: 77
+                    urgency: 15
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 32
+                    kindOfProblem: some text
+                  - longitude: 91.79
+                    description: some text
+                    gravity: 92
+                    latitude: 61.48
+                    phoneNumber: 68
+                    urgency: 28
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 31
+                    kindOfProblem: some text
+              schema:
+                items:
+                  $ref: '#/components/schemas/Report'
+                type: array
+          description: report response
+      x-accepts: application/json
+    post:
+      description: Crea un nuovo report nel database. Sono ammessi duplicati
+      operationId: addReport
+      parameters:
+      - description: l'id relativo all'utente che ha effettuato la richiesta
+        examples:
+          uid example:
+            value: qCou2nf9I8UcEsju9yAMBDu8Ihv2
+        explode: false
+        in: header
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: "il digest è la password dell'utente concatenata ad una stringa\
+          \ segreta comune sia al client che al server. \nDella stringa risultante\
+          \ viene calcolato l'MD5.\nSe il digest inviato dal client e quello calcolato\
+          \ dal server coincidono l'utente è autenticato."
+        examples:
+          md5 example:
+            value: 3af053175c3a17083037727e0ef26a1f
+        explode: false
+        in: header
+        name: digest
+        required: true
+        schema:
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            examples:
+              example post:
+                value:
+                  longitude: "14.0000"
+                  description: Si è divampato un incendio a partire dalla struttura
+                    principale
+                  gravity: "1"
+                  latitude: "14.0000"
+                  phoneNumber: "3105348309"
+                  urgency: "2"
+                  imagePath: /path/to/image.jpg
+                  placeName: Via dei mulini
+                  dateTime: string
+                  id: "1"
+                  kindOfProblem: Violenza
+            schema:
+              $ref: '#/components/schemas/Report'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                report post:
+                  value:
+                    longitude: 81.86
+                    description: some text
+                    gravity: 34
+                    latitude: 39.27
+                    phoneNumber: 69
+                    urgency: 32
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 33
+                    kindOfProblem: some text
+              schema:
+                $ref: '#/components/schemas/Report'
+          description: report response
+      x-contentType: application/json
+      x-accepts: application/json
+  /reports/{kindOfProblem}:
+    get:
+      description: Ritorna tutti i report aventi una specifica  tipologia di problema
+      operationId: findReportByKindOfProblem
+      parameters:
+      - description: "il digest è la password dell'utente concatenata ad una stringa\
+          \ segreta comune sia al client che al server. \nDella stringa risultante\
+          \ viene calcolato l'MD5.\nSe il digest inviato dal client e quello calcolato\
+          \ dal server coincidono l'utente è autenticato."
+        explode: false
+        in: header
+        name: digest
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: l'id relativo all'utente che ha effettuato la richiesta
+        explode: false
+        in: header
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: Tipologia del problema
+        examples:
+          example kindOfProblem:
+            value: |
+              Incendio
+          esempio KindOfProblem1:
+            value: Violenza
+        explode: false
+        in: path
+        name: kindOfProblem
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                esempio filter reports by kindOfProblem:
+                  value:
+                  - longitude: 12.86
+                    description: some text
+                    gravity: 67
+                    latitude: 2.53
+                    phoneNumber: 8
+                    urgency: 0
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 6
+                    kindOfProblem: some text
+                  - longitude: 91.28
+                    description: some text
+                    gravity: 92
+                    latitude: 28.7
+                    phoneNumber: 78
+                    urgency: 57
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 90
+                    kindOfProblem: some text
+              schema:
+                items:
+                  $ref: '#/components/schemas/Report'
+                type: array
+          description: report response
+      x-accepts: application/json
+  /reports/orderby/gravity:
+    get:
+      description: |-
+        ritorna tutti i report a cui l'utente può accedere.
+        I report vengono ordinati per gravità
+      operationId: filterReportsByGravity
+      parameters:
+      - description: "il digest è la password dell'utente concatenata ad una stringa\
+          \ segreta comune sia al client che al server. \nDella stringa risultante\
+          \ viene calcolato l'MD5.\nSe il digest inviato dal client e quello calcolato\
+          \ dal server coincidono l'utente è autenticato."
+        explode: false
+        in: header
+        name: digest
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: l'id relativo all'utente che ha effettuato la richiesta
+        explode: false
+        in: header
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                esempio get all reports order by gravity:
+                  value:
+                  - longitude: 73.42
+                    description: some text
+                    gravity: 5
+                    latitude: 72.59
+                    phoneNumber: 70
+                    urgency: 40
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 59
+                    kindOfProblem: some text
+                  - longitude: 69.91
+                    description: some text
+                    gravity: 73
+                    latitude: 43.93
+                    phoneNumber: 33
+                    urgency: 87
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 40
+                    kindOfProblem: some text
+              schema:
+                items:
+                  $ref: '#/components/schemas/Report'
+                type: array
+          description: report response
+      x-accepts: application/json
+  /reports/orderby/urgency:
+    get:
+      description: |-
+        ritorna tutti i report a cui l'utente può accedere.
+        I report vengono ordinati per gravità
+      operationId: filterReportsByUrgency
+      parameters:
+      - description: "il digest è la password dell'utente concatenata ad una stringa\
+          \ segreta comune sia al client che al server. \nDella stringa risultante\
+          \ viene calcolato l'MD5.\nSe il digest inviato dal client e quello calcolato\
+          \ dal server coincidono l'utente è autenticato."
+        explode: false
+        in: header
+        name: digest
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: l'id relativo all'utente che ha effettuato la richiesta
+        explode: false
+        in: header
+        name: uid
+        required: true
+        schema:
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                esempio get all reports order by urgency:
+                  value:
+                  - longitude: 72.12
+                    description: some text
+                    gravity: 46
+                    latitude: 28.67
+                    phoneNumber: 81
+                    urgency: 56
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 85
+                    kindOfProblem: some text
+                  - longitude: 84.8
+                    description: some text
+                    gravity: 8
+                    latitude: 81.03
+                    phoneNumber: 10
+                    urgency: 1
+                    imagePath: some text
+                    placeName: some text
+                    dateTime: some text
+                    id: 93
+                    kindOfProblem: some text
+              schema:
+                items:
+                  $ref: '#/components/schemas/Report'
+                type: array
+          description: report response
+      x-accepts: application/json
+components:
+  schemas:
+    Report:
+      example:
+        dateTime: dateTime
+        phoneNumber: 3105348309
+        urgency: 2
+        kindOfProblem: Violenza
+        fromUser: fromUser
+        gravity: 1
+        imagePath: /path/to/image.jpg
+        latitude: 14.0000
+        description: Si è divampato un incendio a partire dalla struttura principale
+        id: 1
+        placeName: Via dei mulini
+        longitude: 14.0000
+      properties:
+        longitude:
+          description: longitudine della posizione geografica
+          example: 14.0000
+          format: double
+          type: number
+        description:
+          description: Descrizione dell'emergenza
+          example: Si è divampato un incendio a partire dalla struttura principale
+          type: string
+        gravity:
+          description: La gravità dell'emergenza
+          example: 1
+          type: integer
+        latitude:
+          description: latitudine della posizione geografica
+          example: 14.0000
+          format: double
+          type: number
+        phoneNumber:
+          description: |-
+            Numero telefono di colui che invia il report.
+            Prelevato automaticamente dal telefono
+          example: 3105348309
+          format: int64
+          type: integer
+        urgency:
+          description: Urgenza dell'emergenza
+          example: 2
+          type: integer
+        imagePath:
+          description: percorso all'immagine del report
+          example: /path/to/image.jpg
+          type: string
+        placeName:
+          description: Posto dove è avvenuta l'emergenza
+          example: Via dei mulini
+          type: string
+        dateTime:
+          description: |
+            la data ed ora in cui è stato inviato il report
+          type: string
+        id:
+          description: L'id del report
+          example: 1
+          type: integer
+        kindOfProblem:
+          description: Tipo di emergenza
+          example: Violenza
+          type: string
+        fromUser:
+          description: L'utente che ha inviato il report
+          type: string
+      required:
+      - fromUser
+      - id
+      type: object

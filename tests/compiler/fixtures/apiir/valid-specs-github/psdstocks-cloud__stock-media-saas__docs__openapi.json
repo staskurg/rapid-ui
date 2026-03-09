@@ -1,0 +1,663 @@
+{
+  "api": {
+    "title": "StockMedia Pro API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/api/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "email",
+              "password",
+              "planId"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "john@example.com"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8,
+                "example": "securepassword123"
+              },
+              "planId": {
+                "type": "string",
+                "example": "cmfb62xtq0000w5bnc9qjc1ly"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/api/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "database": {
+                "type": "string",
+                "example": "connected"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/api/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/orders",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "order_123"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "stockSiteId": {
+                      "type": "string"
+                    },
+                    "itemUrl": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "itemType": {
+                      "type": "string",
+                      "enum": [
+                        "PHOTO",
+                        "VIDEO",
+                        "MUSIC",
+                        "ICON",
+                        "VECTOR",
+                        "TEMPLATE"
+                      ]
+                    },
+                    "cost": {
+                      "type": "number",
+                      "example": 0.15
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "COMPLETED",
+                        "FAILED",
+                        "CANCELLED"
+                      ],
+                      "example": "PENDING"
+                    },
+                    "downloadUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "nullable": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "completedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/orders/{orderId}/status",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/orders/{orderId}/status",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "order_123"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "stockSiteId": {
+                    "type": "string"
+                  },
+                  "itemUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "itemType": {
+                    "type": "string",
+                    "enum": [
+                      "PHOTO",
+                      "VIDEO",
+                      "MUSIC",
+                      "ICON",
+                      "VECTOR",
+                      "TEMPLATE"
+                    ]
+                  },
+                  "cost": {
+                    "type": "number",
+                    "example": 0.15
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PROCESSING",
+                      "COMPLETED",
+                      "FAILED",
+                      "CANCELLED"
+                    ],
+                    "example": "PENDING"
+                  },
+                  "downloadUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "stockSiteId",
+              "itemUrl",
+              "itemType",
+              "cost"
+            ],
+            "properties": {
+              "stockSiteId": {
+                "type": "string",
+                "example": "cmfb0owei00049k8ka5mmdm0k"
+              },
+              "itemUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://example.com/item"
+              },
+              "itemType": {
+                "type": "string",
+                "enum": [
+                  "PHOTO",
+                  "VIDEO",
+                  "MUSIC",
+                  "ICON",
+                  "VECTOR",
+                  "TEMPLATE"
+                ],
+                "example": "PHOTO"
+              },
+              "cost": {
+                "type": "number",
+                "example": 0.15
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "order_123"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "stockSiteId": {
+                    "type": "string"
+                  },
+                  "itemUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "itemType": {
+                    "type": "string",
+                    "enum": [
+                      "PHOTO",
+                      "VIDEO",
+                      "MUSIC",
+                      "ICON",
+                      "VECTOR",
+                      "TEMPLATE"
+                    ]
+                  },
+                  "cost": {
+                    "type": "number",
+                    "example": 0.15
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PROCESSING",
+                      "COMPLETED",
+                      "FAILED",
+                      "CANCELLED"
+                    ],
+                    "example": "PENDING"
+                  },
+                  "downloadUrl": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "completedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Points",
+      "key": "points",
+      "operations": [
+        {
+          "id": "GET:/api/points",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/points",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "balance": {
+                "type": "number",
+                "example": 150
+              },
+              "history": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "example": 200
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "SUBSCRIPTION",
+                        "BONUS",
+                        "PURCHASE",
+                        "REFUND"
+                      ],
+                      "example": "SUBSCRIPTION"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Monthly subscription points"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "GET:/api/search",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/search",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Beautiful Landscape"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "thumbnail": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "cost": {
+                      "type": "number",
+                      "example": 0.15
+                    },
+                    "site": {
+                      "type": "string",
+                      "example": "freepik"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stock-sites",
+      "key": "stock-sites",
+      "operations": [
+        {
+          "id": "GET:/api/stock-sites",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/stock-sites",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "stockSites": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "cmfb0owei00049k8ka5mmdm0k"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "freepik"
+                    },
+                    "displayName": {
+                      "type": "string",
+                      "example": "Freepik"
+                    },
+                    "cost": {
+                      "type": "number",
+                      "example": 0.15
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "category": {
+                      "type": "string",
+                      "example": "photos"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stripe",
+      "key": "stripe",
+      "operations": [
+        {
+          "id": "POST:/api/stripe/checkout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/stripe/checkout",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "planId",
+              "successUrl",
+              "cancelUrl"
+            ],
+            "properties": {
+              "planId": {
+                "type": "string"
+              },
+              "successUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "cancelUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "checkoutUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/stripe/portal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/stripe/portal",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "returnUrl"
+            ],
+            "properties": {
+              "returnUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "portalUrl": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscription-plans",
+      "key": "subscription-plans",
+      "operations": [
+        {
+          "id": "GET:/api/subscription-plans",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/subscription-plans",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "plans": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "cmfb62xtq0000w5bnc9qjc1ly"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "starter"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Perfect for individuals and small projects"
+                    },
+                    "price": {
+                      "type": "number",
+                      "example": 9.99
+                    },
+                    "points": {
+                      "type": "integer",
+                      "example": 50
+                    },
+                    "rolloverLimit": {
+                      "type": "integer",
+                      "example": 25
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

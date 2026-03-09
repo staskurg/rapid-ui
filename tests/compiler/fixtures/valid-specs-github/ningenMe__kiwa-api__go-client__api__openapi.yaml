@@ -1,0 +1,204 @@
+openapi: 3.0.0
+info:
+  description: api created by ningenme
+  title: kiwa-api
+  version: 1.0.0
+servers:
+- url: https://kiwa-api.ningenme.net
+paths:
+  /healthcheck:
+    get:
+      operationId: healthcheckGet
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthcheckGetResponse'
+          description: ok
+      tags:
+      - healthcheck
+  /users:
+    post:
+      operationId: usersPost
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UsersPostRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersPostResponse'
+          description: ok
+      tags:
+      - users
+  /users/me:
+    get:
+      operationId: usersGet
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UsersMeGetResponse'
+          description: ok
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnAuthenticated401'
+          description: unauthenticated 401
+      tags:
+      - users
+  /login:
+    post:
+      operationId: loginPost
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginPostRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginPostResponse'
+          description: ok
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnAuthenticated401'
+          description: unauthenticated 401
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnAuthorized403'
+          description: unauthenticated 401
+        "500":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InternalServerError500'
+          description: unauthenticated 401
+      tags:
+      - login
+components:
+  schemas:
+    HealthcheckGetResponse:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: HealthcheckGetResponse
+      type: object
+    UsersPostRequest:
+      example:
+        password: password
+        userId: userId
+      properties:
+        userId:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - userId
+      title: UsersPostResponse
+      type: object
+    UsersPostResponse:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: UsersPostResponse
+      type: object
+    UsersMeGetResponse:
+      example:
+        authority:
+          comproCategory: true
+        userId: userId
+      properties:
+        userId:
+          type: string
+        authority:
+          $ref: '#/components/schemas/UsersMeGetResponse_authority'
+      required:
+      - authority
+      - userId
+      title: UsersMeGetResponse
+      type: object
+    UnAuthenticated401:
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: UnAuthenticated401
+      type: object
+    LoginPostRequest:
+      example:
+        password: password
+        userId: userId
+      properties:
+        userId:
+          type: string
+        password:
+          type: string
+      required:
+      - password
+      - userId
+      title: LoginPostResponse
+      type: object
+    LoginPostResponse:
+      example:
+        message: message
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: LoginPostResponse
+      type: object
+    UnAuthorized403:
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: UnAuthorized403
+      type: object
+    InternalServerError500:
+      properties:
+        message:
+          type: string
+      required:
+      - message
+      title: InternalServerError500
+      type: object
+    UsersMeGetResponse_authority:
+      example:
+        comproCategory: true
+      properties:
+        comproCategory:
+          type: boolean
+      required:
+      - comproCategory
+      type: object

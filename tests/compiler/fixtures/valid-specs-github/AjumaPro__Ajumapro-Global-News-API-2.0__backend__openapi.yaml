@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: Ajumapro News API
+  description: A comprehensive news API service providing access to business, technology, and general news articles
+  version: 1.0.0
+  contact:
+    name: Ajumapro Support
+    email: support@ajumapro.com
+servers:
+  - url: https://ajumapro-news-api.p.rapidapi.com
+    description: Production server
+components:
+  securitySchemes:
+    RapidAPIKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: Your RapidAPI key
+    RapidAPIHost:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Host
+      description: Your RapidAPI host
+  schemas:
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Unique identifier for the article
+        title:
+          type: string
+          description: Title of the article
+        description:
+          type: string
+          description: Brief description of the article
+        category:
+          type: string
+          description: Category of the article (e.g., Business, Technology)
+        source:
+          type: string
+          description: Source of the article
+        imageUrl:
+          type: string
+          description: URL of the article's image
+        date:
+          type: string
+          format: date-time
+          description: Publication date of the article
+    Analytics:
+      type: object
+      properties:
+        totalRequests:
+          type: integer
+          description: Total number of API requests
+        totalArticles:
+          type: integer
+          description: Total number of articles served
+        avgResponseTime:
+          type: integer
+          description: Average response time in milliseconds
+        cacheHitRate:
+          type: integer
+          description: Cache hit rate percentage
+        monthlyUsage:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                description: Month name
+              requests:
+                type: integer
+                description: Number of requests in the month
+security:
+  - RapidAPIKey: []
+    RapidAPIHost: []
+paths:
+  /news:
+    get:
+      summary: Get news articles
+      description: Retrieve news articles with optional filtering and pagination
+      parameters:
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of articles per page
+          schema:
+            type: integer
+            default: 10
+        - name: category
+          in: query
+          description: Filter by category
+          schema:
+            type: string
+        - name: source
+          in: query
+          description: Filter by source
+          schema:
+            type: string
+        - name: q
+          in: query
+          description: Search query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  articles:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Article'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  limit:
+                    type: integer
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /analytics/usage:
+    get:
+      summary: Get usage statistics
+      description: Retrieve API usage statistics
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Analytics'
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error
+  /analytics/performance:
+    get:
+      summary: Get performance metrics
+      description: Retrieve API performance metrics
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  monthlyUsage:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        requests:
+                          type: integer
+                  avgResponseTime:
+                    type: integer
+                  cacheHitRate:
+                    type: integer
+        '429':
+          description: Rate limit exceeded
+        '500':
+          description: Internal server error 

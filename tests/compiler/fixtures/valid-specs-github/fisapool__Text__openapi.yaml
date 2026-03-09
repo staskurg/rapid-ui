@@ -1,0 +1,199 @@
+openapi: 3.0.0
+info:
+  title: AI Paraphraser API
+  description: A high-quality paraphrasing API powered by fine-tuned language models
+  version: 1.0.0
+  x-rapidapi-info:
+    x-rapidapi-version: 1.0.0
+    x-rapidapi-pricing:
+      - name: Free
+        price: 0
+        requests: 100
+        period: month
+      - name: Basic
+        price: 9.99
+        requests: 1000
+        period: month
+      - name: Pro
+        price: 29.99
+        requests: 5000
+        period: month
+      - name: Enterprise
+        price: 99.99
+        requests: 25000
+        period: month
+
+servers:
+  - url: https://ai-paraphraser.p.rapidapi.com
+    description: Production server
+
+components:
+  securitySchemes:
+    X-RapidAPI-Key:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: Your RapidAPI key
+    X-RapidAPI-Host:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Host
+      description: The API host
+
+  schemas:
+    ParaphraseRequest:
+      type: object
+      required:
+        - text
+        - style
+      properties:
+        text:
+          type: string
+          description: The text to paraphrase
+          example: "The quick brown fox jumps over the lazy dog."
+        style:
+          type: string
+          enum: [formal, casual, creative, academic]
+          description: The desired paraphrasing style
+          example: "formal"
+        max_length:
+          type: integer
+          description: Maximum length of the paraphrased text
+          example: 1000
+          default: 500
+
+    ParaphraseResponse:
+      type: object
+      properties:
+        paraphrased_text:
+          type: string
+          description: The paraphrased text
+          example: "A swift russet fox leaps over a lethargic canine."
+        original_length:
+          type: integer
+          description: Length of the original text
+          example: 43
+        new_length:
+          type: integer
+          description: Length of the paraphrased text
+          example: 45
+        style:
+          type: string
+          description: The style used for paraphrasing
+          example: "formal"
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        error_id:
+          type: string
+          description: Unique error identifier
+        timestamp:
+          type: string
+          format: date-time
+          description: When the error occurred
+
+paths:
+  /api/v1/paraphrase:
+    post:
+      summary: Paraphrase text
+      description: Paraphrase the given text in the specified style
+      operationId: paraphraseText
+      tags:
+        - paraphrase
+      security:
+        - X-RapidAPI-Key: []
+        - X-RapidAPI-Host: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParaphraseRequest'
+      responses:
+        '200':
+          description: Successful paraphrasing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParaphraseResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/v1/models:
+    get:
+      summary: Get available models
+      description: Retrieve information about available paraphrasing models
+      operationId: getModels
+      tags:
+        - model
+      security:
+        - X-RapidAPI-Key: []
+        - X-RapidAPI-Host: []
+      responses:
+        '200':
+          description: List of available models
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  models:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Model identifier
+                        name:
+                          type: string
+                          description: Model name
+                        description:
+                          type: string
+                          description: Model description
+                        max_tokens:
+                          type: integer
+                          description: Maximum tokens per request
+                        supported_styles:
+                          type: array
+                          items:
+                            type: string
+                          description: Supported paraphrasing styles
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error' 

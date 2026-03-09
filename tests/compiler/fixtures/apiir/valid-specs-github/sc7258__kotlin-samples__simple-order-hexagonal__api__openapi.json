@@ -1,0 +1,90 @@
+{
+  "api": {
+    "title": "Simple Order API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "getOrderById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "createOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "quantity": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "productId",
+              "quantity"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "getProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

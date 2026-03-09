@@ -1,0 +1,286 @@
+{
+  "api": {
+    "title": "Comments API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Login successful, JWT token issued."
+              },
+              "token": {
+                "type": "string",
+                "description": "The JWT token for authorization"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Comments",
+      "key": "comments",
+      "operations": [
+        {
+          "id": "getAllComments",
+          "method": "GET",
+          "kind": "list",
+          "path": "/comments",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "gameId": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getCommentById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/comments/{id}",
+          "identifierParam": "id",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "gameId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "getCommentsByGame",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/games/{gameId}/comments",
+          "identifierParam": "gameId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "gameId": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createComment",
+          "method": "POST",
+          "kind": "create",
+          "path": "/comments",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "body",
+              "gameId"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Great Game!"
+              },
+              "body": {
+                "type": "string",
+                "example": "I really enjoyed this game, the mechanics are awesome."
+              },
+              "gameId": {
+                "type": "string",
+                "example": "60b8d0f6f8b16f1d8c09f6d9"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "gameId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateComment",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/comments/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "body"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Updated Title"
+              },
+              "body": {
+                "type": "string",
+                "example": "Updated body content."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "gameId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteComment",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/comments/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "gameId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,164 @@
+{
+  "api": {
+    "title": "Laravel",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Account Bank",
+      "key": "account-bank",
+      "operations": [
+        {
+          "id": "criaUmaNovaContaBancria",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/account-banks/store",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "O nome do titular da conta. Exemplo: John Doe",
+                "example": "voluptas"
+              },
+              "balance": {
+                "type": "numeric",
+                "description": "nullable O saldo inicial da conta. Exemplo: 1000.00",
+                "example": "dolores"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": "uuid",
+              "name": "John Doe",
+              "balance": 1000,
+              "created_at": "2024-08-06 19:46:33",
+              "updated_at": "2024-08-06 19:46:33"
+            },
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "balance": {
+                "type": "number",
+                "example": 1000
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2024-08-06 19:46:33"
+              },
+              "updated_at": {
+                "type": "string",
+                "example": "2024-08-06 19:46:33"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Account Bank Transactions",
+      "key": "account-bank-transactions",
+      "operations": [
+        {
+          "id": "realizaUmaTransfernciaDeValoresEntreContas",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/account-banks/transfer",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "sender_id": {
+                "type": "uuid",
+                "description": "O ID da conta de origem. Exemplo: 1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+                "example": "provident"
+              },
+              "recipient_id": {
+                "type": "uuid",
+                "description": "O ID da conta de destino. Exemplo: 6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1",
+                "example": "aperiam"
+              },
+              "amount": {
+                "type": "numeric",
+                "description": "O valor a ser transferido. Exemplo: 1000.00",
+                "example": "placeat"
+              },
+              "scheduled_at": {
+                "type": "date_format:Y-m-d",
+                "description": "nullable A data e hora agendadas para a transação. Exemplo: 2024-08-07",
+                "example": "omnis"
+              }
+            },
+            "required": [
+              "sender_id",
+              "recipient_id",
+              "amount"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": "uuid",
+              "amount": 1000,
+              "sender_id": "1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6",
+              "recipient_id": "6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1",
+              "status": "completed",
+              "scheduled_at": "2024-08-07 00:00:00",
+              "processed_at": "2024-08-07 00:00:00",
+              "created_at": "2024-08-06 00:00:00",
+              "updated_at": "2024-08-06 00:00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "uuid"
+              },
+              "amount": {
+                "type": "number",
+                "example": 1000
+              },
+              "sender_id": {
+                "type": "string",
+                "example": "1a2b3c4d-5e6f-7g8h-9i0j-k1l2m3n4o5p6"
+              },
+              "recipient_id": {
+                "type": "string",
+                "example": "6p5o4n3m-2l1k-j0i9-h8g7-f6e5d4c3b2a1"
+              },
+              "status": {
+                "type": "string",
+                "example": "completed"
+              },
+              "scheduled_at": {
+                "type": "string",
+                "example": "2024-08-07 00:00:00"
+              },
+              "processed_at": {
+                "type": "string",
+                "example": "2024-08-07 00:00:00"
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2024-08-06 00:00:00"
+              },
+              "updated_at": {
+                "type": "string",
+                "example": "2024-08-06 00:00:00"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

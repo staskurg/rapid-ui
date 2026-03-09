@@ -1,0 +1,332 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: support@example.com
+    name: Backend Team
+  description: API để quản lý sản phẩm (CRUD operations)
+  title: Product Management API
+  version: 1.0.0
+servers:
+- description: Development server
+  url: http://localhost:5000
+tags:
+- description: Quản lý sản phẩm
+  name: Products
+paths:
+  /products:
+    get:
+      operationId: get_all_products
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getAllProducts_200_response"
+          description: Lấy danh sách thành công
+      summary: Lấy danh sách tất cả products
+      tags:
+      - Products
+      x-openapi-router-controller: openapi_server.controllers.products_controller
+    post:
+      operationId: create_product
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/createProduct_201_response"
+          description: Tạo product thành công
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Dữ liệu đầu vào không hợp lệ
+      summary: Tạo product mới
+      tags:
+      - Products
+      x-openapi-router-controller: openapi_server.controllers.products_controller
+  /products/{productId}:
+    delete:
+      operationId: delete_product
+      parameters:
+      - description: ID của product cần xóa
+        explode: false
+        in: path
+        name: productId
+        required: true
+        schema:
+          example: 1
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/deleteProduct_200_response"
+          description: Xóa thành công
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Không tìm thấy product
+      summary: Xóa product
+      tags:
+      - Products
+      x-openapi-router-controller: openapi_server.controllers.products_controller
+    get:
+      operationId: get_product_by_id
+      parameters:
+      - description: ID của product cần lấy
+        explode: false
+        in: path
+        name: productId
+        required: true
+        schema:
+          example: 1
+          type: integer
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/getProductById_200_response"
+          description: Lấy thông tin thành công
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Không tìm thấy product
+      summary: Lấy thông tin 1 product theo ID
+      tags:
+      - Products
+      x-openapi-router-controller: openapi_server.controllers.products_controller
+    put:
+      operationId: update_product
+      parameters:
+      - description: ID của product cần cập nhật
+        explode: false
+        in: path
+        name: productId
+        required: true
+        schema:
+          example: 1
+          type: integer
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProductInput"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/updateProduct_200_response"
+          description: Cập nhật thành công
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Không tìm thấy product
+      summary: Cập nhật thông tin product
+      tags:
+      - Products
+      x-openapi-router-controller: openapi_server.controllers.products_controller
+components:
+  schemas:
+    Product:
+      example:
+        price: 1200.5
+        name: Laptop Dell XPS 13
+        id: 1
+        stock: 15
+      properties:
+        id:
+          description: ID tự động của product
+          example: 1
+          title: id
+          type: integer
+        name:
+          description: Tên sản phẩm
+          example: Laptop Dell XPS 13
+          title: name
+          type: string
+        price:
+          description: Giá sản phẩm (USD)
+          example: 1200.5
+          format: float
+          title: price
+          type: number
+        stock:
+          default: 0
+          description: Số lượng tồn kho
+          example: 15
+          title: stock
+          type: integer
+      required:
+      - id
+      - name
+      - price
+      title: Product
+      type: object
+    ProductInput:
+      example:
+        price: 1200.5
+        name: Laptop Dell XPS 13
+        stock: 15
+      properties:
+        name:
+          description: Tên sản phẩm
+          example: Laptop Dell XPS 13
+          title: name
+          type: string
+        price:
+          description: Giá sản phẩm (USD)
+          example: 1200.5
+          format: float
+          title: price
+          type: number
+        stock:
+          description: Số lượng tồn kho
+          example: 15
+          title: stock
+          type: integer
+      required:
+      - name
+      - price
+      title: ProductInput
+      type: object
+    Error:
+      example:
+        success: false
+        message: Product với ID 99 không tồn tại
+      properties:
+        success:
+          example: false
+          title: success
+          type: boolean
+        message:
+          example: Product với ID 99 không tồn tại
+          title: message
+          type: string
+      title: Error
+      type: object
+    getAllProducts_200_response:
+      example:
+        total: 3
+        data:
+        - price: 1200.5
+          name: Laptop Dell XPS 13
+          id: 1
+          stock: 15
+        - price: 1200.5
+          name: Laptop Dell XPS 13
+          id: 1
+          stock: 15
+        success: true
+      properties:
+        success:
+          example: true
+          title: success
+          type: boolean
+        data:
+          items:
+            $ref: "#/components/schemas/Product"
+          title: data
+          type: array
+        total:
+          example: 3
+          title: total
+          type: integer
+      title: getAllProducts_200_response
+      type: object
+    createProduct_201_response:
+      example:
+        data:
+          price: 1200.5
+          name: Laptop Dell XPS 13
+          id: 1
+          stock: 15
+        success: true
+        message: Tạo product thành công
+      properties:
+        success:
+          example: true
+          title: success
+          type: boolean
+        message:
+          example: Tạo product thành công
+          title: message
+          type: string
+        data:
+          $ref: "#/components/schemas/Product"
+      title: createProduct_201_response
+      type: object
+    getProductById_200_response:
+      example:
+        data:
+          price: 1200.5
+          name: Laptop Dell XPS 13
+          id: 1
+          stock: 15
+        success: true
+      properties:
+        success:
+          example: true
+          title: success
+          type: boolean
+        data:
+          $ref: "#/components/schemas/Product"
+      title: getProductById_200_response
+      type: object
+    updateProduct_200_response:
+      example:
+        data:
+          price: 1200.5
+          name: Laptop Dell XPS 13
+          id: 1
+          stock: 15
+        success: true
+        message: Cập nhật product thành công
+      properties:
+        success:
+          example: true
+          title: success
+          type: boolean
+        message:
+          example: Cập nhật product thành công
+          title: message
+          type: string
+        data:
+          $ref: "#/components/schemas/Product"
+      title: updateProduct_200_response
+      type: object
+    deleteProduct_200_response:
+      example:
+        success: true
+        message: Đã xóa product ID 1
+      properties:
+        success:
+          example: true
+          title: success
+          type: boolean
+        message:
+          example: Đã xóa product ID 1
+          title: message
+          type: string
+      title: deleteProduct_200_response
+      type: object

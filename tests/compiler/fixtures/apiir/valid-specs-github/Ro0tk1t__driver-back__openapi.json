@@ -1,0 +1,482 @@
+{
+  "api": {
+    "title": "",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Greeter",
+      "key": "greeter",
+      "operations": [
+        {
+          "id": "Greeter_SayHello",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/helloworld/{name}",
+          "identifierParam": "name",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              }
+            },
+            "description": "The response message containing the greetings"
+          }
+        }
+      ]
+    },
+    {
+      "name": "UserSvc",
+      "key": "usersvc",
+      "operations": [
+        {
+          "id": "UserSvc_ListFiles",
+          "method": "GET",
+          "kind": "list",
+          "path": "/listFiles",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "fileInfos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "string"
+                    },
+                    "time": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_SearchResource",
+          "method": "GET",
+          "kind": "list",
+          "path": "/search",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_Download",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/download/{filename}",
+          "identifierParam": "filename",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "format": "bytes"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_DownloadShare",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/download/share/{id}",
+          "identifierParam": "id",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "string",
+                "format": "bytes"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_GetShare",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/getShare/{id}",
+          "identifierParam": "id",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_CreateDir",
+          "method": "POST",
+          "kind": "create",
+          "path": "/createDir",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "dirname": {
+                "type": "string"
+              },
+              "current": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_CreateShare",
+          "method": "POST",
+          "kind": "create",
+          "path": "/createShare",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "expireTime": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_DeleteFiles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/deleteFiles",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_Login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_MoveFiles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/moveFiles",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "destination": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_Register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_SaveShare",
+          "method": "POST",
+          "kind": "create",
+          "path": "/saveShare",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "sharePath": {
+                "type": "string"
+              },
+              "names": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "shareID": {
+                "type": "string"
+              },
+              "savePath": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_Upload",
+          "method": "POST",
+          "kind": "create",
+          "path": "/upload",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "chunk": {
+                "type": "string"
+              },
+              "chunkIndex": {
+                "type": "integer",
+                "format": "uint32"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "UserSvc_UploadOver",
+          "method": "POST",
+          "kind": "create",
+          "path": "/uploadOver",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "filename": {
+                "type": "string"
+              },
+              "chunk": {
+                "type": "string"
+              },
+              "chunkIndex": {
+                "type": "integer",
+                "format": "uint32"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,161 @@
+openapi: 3.0.1
+info:
+  title: Product API
+  description: Definition of REST-ful API related to products.
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:8080/api'
+tags:
+  - name: Product
+    description: Related to products.
+paths:
+  /products:
+    get:
+      tags:
+        - Product
+      summary: Get the list of products.
+      operationId: productList
+      parameters:
+        - name: page
+          in: query
+          description: Page of result (starts from 1).
+          schema:
+            type: integer
+        - name: size
+          in: query
+          description: The number of records per page.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Products'
+    post:
+      tags:
+        - Product
+      summary: Create a new product.
+      operationId: createProduct
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductExecResult'
+      x-codegen-request-body-name: body
+  '/products/{code}':
+    get:
+      tags:
+        - Product
+      summary: Get one product by code.
+      operationId: productItem
+      parameters:
+        - name: code
+          in: path
+          description: The product code.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+    put:
+      tags:
+        - Product
+      summary: Update an existing product.
+      operationId: updateProduct
+      parameters:
+        - name: code
+          in: path
+          description: The product code.
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductExecResult'
+      x-codegen-request-body-name: body
+    delete:
+      tags:
+        - Product
+      summary: Delete existing product by code.
+      operationId: deleteProduct
+      parameters:
+        - name: code
+          in: path
+          description: The product code.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Mandatory.
+        code:
+          type: string
+          description: Mandatory.
+        name:
+          type: string
+          description: Mandatory.
+        category:
+          type: string
+          description: Mandatory.
+        brand:
+          type: string
+        type:
+          type: string
+        description:
+          type: string
+      description: 'Reusing this model for UPDATE, DELETE as well.'
+    Products:
+      type: array
+      description: List of products.
+      items:
+        $ref: '#/components/schemas/Product'
+    ProductExecResult:
+      required:
+        - success
+      type: object
+      properties:
+        success:
+          type: boolean
+          default: false
+        message:
+          type: string
+          description: Any message.
+        product:
+          $ref: '#/components/schemas/Product'

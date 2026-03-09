@@ -25,70 +25,64 @@ npm run corpus:github-crawl -- --no-crud-filter
 
 Output: `scripts/corpus-data/specs/github/` (group-generic, group-frameworks/*, group-crud, group-vendors, etc.)
 
-### 2. Run validation per group
+### 2. Run validation
 
 ```bash
+# All GitHub specs (recursive from specs/github)
+npm run corpus:run -- --repo github
+
+# Or per group (advanced)
 npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic
 npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-frameworks --output-name github-frameworks --recurse
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-crud --output-name github-crud
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-vendors --output-name github-vendors
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-platforms --output-name github-platforms
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-cloud --output-name github-cloud
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-api-docs --output-name github-api-docs
+# ... etc
 ```
 
-Output: `scripts/corpus-data/reports/raw-github-{group}-{timestamp}.json`
+Output: `scripts/corpus-data/reports/raw-github-{timestamp}.json` (or raw-github-{group}-*.json for per-group)
 
-### 3. Report (optional, per raw file)
+### 3. Report (optional)
 
 ```bash
-# List reports dir to get exact filenames
-ls scripts/corpus-data/reports/
+# Auto-find latest raw-github-*.json
+npm run corpus:report -- --repo github
 
-# Generate markdown report for each
-npm run corpus:report -- scripts/corpus-data/reports/raw-github-generic-{timestamp}.json
-# ... repeat for other groups
+# Or pass explicit path
+npm run corpus:report -- scripts/corpus-data/reports/raw-github-{timestamp}.json
 ```
 
-### 4. Extract valid specs
-
-Reads raw reports and extracts passing specs. Use `--github-only` to exclude APIs.guru batches (only `raw-github-*.json`):
+### 4. Extract valid specs + copy to fixtures
 
 ```bash
-# GitHub-only (recommended when testing the GitHub pipeline)
-npm run corpus:extract-valid -- --github-only --copy-to-fixtures
+# GitHub only → tests/compiler/fixtures/valid-specs-github
+npm run corpus:copy-valid-to-fixtures -- --repo github
 
-# Or include all sources (APIs.guru + GitHub)
-npm run corpus:extract-valid -- --copy-to-fixtures
+# API Guru only → tests/compiler/fixtures/valid-specs-api-guru
+npm run corpus:copy-valid-to-fixtures -- --repo api-guru
 ```
 
-Output: `rapidui-corpus-valid-v1.json`, `rapidui-corpus-valid-v1.txt`, and copies to `tests/compiler/fixtures/valid-specs-api-guru/`
+Output: `rapidui-corpus-valid-v1-{repo}.json`, `rapidui-corpus-valid-v1-{repo}.txt`, and copies to `tests/compiler/fixtures/valid-specs-{repo}/`
 
 ### 5. Generate ApiIR + pattern mining
 
 ```bash
 npm run fixtures:generate-apiir
-npm run corpus:pattern-mining -- --output scripts/corpus-data/reports/pattern-mining-$(date +%Y-%m-%d).md
+npm run corpus:pattern-mining -- --repo github --output scripts/corpus-data/reports/pattern-mining-github-$(date +%Y-%m-%d).md
 ```
 
 ## Quick pipeline test (after `--limit 2` crawl)
 
 ```bash
-# Step 2: Validate all groups
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-frameworks --output-name github-frameworks --recurse
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-crud --output-name github-crud
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-vendors --output-name github-vendors
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-platforms --output-name github-platforms
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-cloud --output-name github-cloud
-npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-api-docs --output-name github-api-docs
+# Step 2: Validate all GitHub specs
+npm run corpus:run -- --repo github
 
-# Step 4: Extract valid (--github-only excludes old APIs.guru batches)
-npm run corpus:extract-valid -- --github-only --copy-to-fixtures
+# Step 3: Report (optional)
+npm run corpus:report -- --repo github
+
+# Step 4: Extract valid + copy to fixtures
+npm run corpus:copy-valid-to-fixtures -- --repo github
 
 # Step 5: ApiIR + pattern mining
 npm run fixtures:generate-apiir
-npm run corpus:pattern-mining -- --output scripts/corpus-data/reports/pattern-mining-test.md
+npm run corpus:pattern-mining -- --repo github --output scripts/corpus-data/reports/pattern-mining-test.md
 ```
 
 If all steps complete without errors, the pipeline is working.

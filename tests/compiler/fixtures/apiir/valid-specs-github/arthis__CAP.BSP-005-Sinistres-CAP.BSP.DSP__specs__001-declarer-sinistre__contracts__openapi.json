@@ -1,0 +1,255 @@
+{
+  "api": {
+    "title": "CAP.BSP.DSP - Déclaration du Sinistre API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Commands",
+      "key": "commands",
+      "operations": [
+        {
+          "id": "declarerSinistre",
+          "method": "POST",
+          "kind": "create",
+          "path": "/declarations",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "identifiantContrat",
+              "typeSinistre",
+              "dateSurvenance"
+            ],
+            "properties": {
+              "identifiantContrat": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Insurance contract identifier (REQUIRED)",
+                "example": "CONTRAT-2026-001"
+              },
+              "typeSinistre": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50,
+                "description": "Claim type code (REQUIRED, validated against reference database)",
+                "example": "ACCIDENT_CORPOREL"
+              },
+              "dateSurvenance": {
+                "type": "string",
+                "format": "date",
+                "description": "Date when insured event occurred (REQUIRED, must be <= today)",
+                "example": "2026-01-20"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "identifiantSinistre": {
+                "type": "string",
+                "pattern": "^SIN-\\d{4}-\\d{6}$",
+                "description": "Auto-generated unique claim identifier",
+                "example": "SIN-2026-000001"
+              },
+              "dateDeclaration": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Server timestamp when claim was declared (UTC)",
+                "example": "2026-01-27T14:30:00.000Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "getLiveness",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health/liveness",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "UP"
+              }
+            }
+          }
+        },
+        {
+          "id": "getReadiness",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health/readiness",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "UP"
+              },
+              "checks": {
+                "type": "object",
+                "properties": {
+                  "eventStoreDb": {
+                    "type": "string",
+                    "example": "UP"
+                  },
+                  "mongoDb": {
+                    "type": "string",
+                    "example": "UP"
+                  },
+                  "rabbitMq": {
+                    "type": "string",
+                    "example": "UP"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Queries",
+      "key": "queries",
+      "operations": [
+        {
+          "id": "listDeclarations",
+          "method": "GET",
+          "kind": "list",
+          "path": "/declarations",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "identifiantSinistre": {
+                      "type": "string",
+                      "pattern": "^SIN-\\d{4}-\\d{6}$",
+                      "example": "SIN-2026-000001"
+                    },
+                    "identifiantContrat": {
+                      "type": "string",
+                      "example": "CONTRAT-2026-001"
+                    },
+                    "typeSinistre": {
+                      "type": "string",
+                      "example": "ACCIDENT_CORPOREL"
+                    },
+                    "typeSinistreLibelle": {
+                      "type": "string",
+                      "description": "Human-readable label for claim type (from reference database)",
+                      "example": "Accident corporel"
+                    },
+                    "dateSurvenance": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2026-01-20"
+                    },
+                    "dateDeclaration": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-01-27T14:30:00.000Z"
+                    },
+                    "statut": {
+                      "type": "string",
+                      "enum": [
+                        "DECLARE",
+                        "VALIDE",
+                        "ANNULE"
+                      ],
+                      "example": "DECLARE"
+                    },
+                    "version": {
+                      "type": "integer",
+                      "description": "Event stream version (for optimistic concurrency)",
+                      "example": 1
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of results matching query (without pagination)",
+                "example": 42
+              },
+              "limit": {
+                "type": "integer",
+                "example": 20
+              },
+              "offset": {
+                "type": "integer",
+                "example": 0
+              }
+            }
+          }
+        },
+        {
+          "id": "getDeclarationById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/declarations/{identifiantSinistre}",
+          "identifierParam": "identifiantSinistre",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "identifiantSinistre": {
+                "type": "string",
+                "pattern": "^SIN-\\d{4}-\\d{6}$",
+                "example": "SIN-2026-000001"
+              },
+              "identifiantContrat": {
+                "type": "string",
+                "example": "CONTRAT-2026-001"
+              },
+              "typeSinistre": {
+                "type": "string",
+                "example": "ACCIDENT_CORPOREL"
+              },
+              "typeSinistreLibelle": {
+                "type": "string",
+                "description": "Human-readable label for claim type (from reference database)",
+                "example": "Accident corporel"
+              },
+              "dateSurvenance": {
+                "type": "string",
+                "format": "date",
+                "example": "2026-01-20"
+              },
+              "dateDeclaration": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-01-27T14:30:00.000Z"
+              },
+              "statut": {
+                "type": "string",
+                "enum": [
+                  "DECLARE",
+                  "VALIDE",
+                  "ANNULE"
+                ],
+                "example": "DECLARE"
+              },
+              "version": {
+                "type": "integer",
+                "description": "Event stream version (for optimistic concurrency)",
+                "example": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

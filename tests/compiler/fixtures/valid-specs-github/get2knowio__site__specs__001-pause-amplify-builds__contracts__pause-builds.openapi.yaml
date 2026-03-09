@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Pause AWS Amplify Build Automation
+  version: "1.0.0"
+  description: >
+    Internal runbook contract describing the inputs/outputs for pausing and resuming
+    automated builds on the production Amplify app.
+servers:
+  - url: https://internal.ops.example.com
+paths:
+  /amplify/pause:
+    post:
+      summary: Pause production builds by routing monitoring to the placeholder branch.
+      operationId: pauseAmplifyBuilds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PauseRequest"
+      responses:
+        "200":
+          description: Pause confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PauseResponse"
+  /amplify/resume:
+    post:
+      summary: Restore production branch monitoring and re-enable deployments.
+      operationId: resumeAmplifyBuilds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResumeRequest"
+      responses:
+        "200":
+          description: Resume confirmed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumeResponse"
+components:
+  schemas:
+    PauseRequest:
+      type: object
+      required:
+        - appId
+        - productionBranch
+        - placeholderBranch
+        - engineer
+        - reason
+      properties:
+        appId:
+          type: string
+          description: AWS Amplify App ID (e.g., d2abc123456).
+        productionBranch:
+          type: string
+          example: main
+        placeholderBranch:
+          type: string
+          example: amplify-paused
+        engineer:
+          type: object
+          required: [name, contact]
+          properties:
+            name:
+              type: string
+            contact:
+              type: string
+        reason:
+          type: string
+          description: Why the freeze is being initiated.
+        notifyChannels:
+          type: array
+          items:
+            type: string
+          description: Slack/email channels to ping.
+    PauseResponse:
+      type: object
+      required:
+        - checklistId
+        - pausedAt
+        - monitoringBranch
+        - verification
+      properties:
+        checklistId:
+          type: string
+        pausedAt:
+          type: string
+          format: date-time
+        monitoringBranch:
+          type: string
+          description: Confirmed monitored branch (should be amplify-paused).
+        verification:
+          type: object
+          properties:
+            buildHistoryUrl:
+              type: string
+            curlEvidenceUrl:
+              type: string
+            playwrightEvidenceUrl:
+              type: string
+    ResumeRequest:
+      type: object
+      required:
+        - appId
+        - targetBranch
+        - engineer
+        - checklistId
+      properties:
+        appId:
+          type: string
+        targetBranch:
+          type: string
+          description: Branch to resume (e.g., main).
+        engineer:
+          type: object
+          required: [name, contact]
+          properties:
+            name:
+              type: string
+            contact:
+              type: string
+        checklistId:
+          type: string
+          description: Verification artifact that approved the resume request.
+    ResumeResponse:
+      type: object
+      required:
+        - resumedAt
+        - monitoringBranch
+        - nextSteps
+      properties:
+        resumedAt:
+          type: string
+          format: date-time
+        monitoringBranch:
+          type: string
+        nextSteps:
+          type: string
+          description: Follow-up actions (e.g., announce in release channel).

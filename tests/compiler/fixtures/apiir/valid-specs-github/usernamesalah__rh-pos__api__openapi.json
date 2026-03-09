@@ -1,0 +1,576 @@
+{
+  "api": {
+    "title": "POS System API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "sku": {
+                      "type": "string"
+                    },
+                    "harga_modal": {
+                      "type": "number",
+                      "format": "float64"
+                    },
+                    "harga_jual": {
+                      "type": "number",
+                      "format": "float64"
+                    },
+                    "stock": {
+                      "type": "integer"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "uint"
+              },
+              "image": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sku": {
+                "type": "string"
+              },
+              "harga_modal": {
+                "type": "number",
+                "format": "float64"
+              },
+              "harga_jual": {
+                "type": "number",
+                "format": "float64"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/products/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/products/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "image": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sku": {
+                "type": "string"
+              },
+              "harga_modal": {
+                "type": "number",
+                "format": "float64"
+              },
+              "harga_jual": {
+                "type": "number",
+                "format": "float64"
+              },
+              "stock": {
+                "type": "integer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "uint"
+              },
+              "image": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sku": {
+                "type": "string"
+              },
+              "harga_modal": {
+                "type": "number",
+                "format": "float64"
+              },
+              "harga_jual": {
+                "type": "number",
+                "format": "float64"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/products/{id}/stock",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/products/{id}/stock",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "stock"
+            ],
+            "properties": {
+              "stock": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "uint"
+              },
+              "image": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sku": {
+                "type": "string"
+              },
+              "harga_modal": {
+                "type": "number",
+                "format": "float64"
+              },
+              "harga_jual": {
+                "type": "number",
+                "format": "float64"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Profile",
+      "key": "profile",
+      "operations": [
+        {
+          "id": "GET:/profile",
+          "method": "GET",
+          "kind": "list",
+          "path": "/profile",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "key": "reports",
+      "operations": [
+        {
+          "id": "GET:/reports",
+          "method": "GET",
+          "kind": "list",
+          "path": "/reports",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "total_revenue": {
+                "type": "number",
+                "format": "float64"
+              },
+              "items_sold": {
+                "type": "integer"
+              },
+              "average_transaction": {
+                "type": "number",
+                "format": "float64"
+              },
+              "details": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "product_id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "product_name": {
+                      "type": "string"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "total_price": {
+                      "type": "number",
+                      "format": "float64"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "key": "transactions",
+      "operations": [
+        {
+          "id": "GET:/transactions",
+          "method": "GET",
+          "kind": "list",
+          "path": "/transactions",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "product_id": {
+                            "type": "integer",
+                            "format": "uint"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "minimum": 1
+                          }
+                        }
+                      }
+                    },
+                    "user": {
+                      "type": "string"
+                    },
+                    "payment_method": {
+                      "type": "string"
+                    },
+                    "discount": {
+                      "type": "number",
+                      "format": "float64"
+                    },
+                    "total_price": {
+                      "type": "number",
+                      "format": "float64"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/transactions/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/transactions/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "uint"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "string"
+              },
+              "payment_method": {
+                "type": "string"
+              },
+              "discount": {
+                "type": "number",
+                "format": "float64"
+              },
+              "total_price": {
+                "type": "number",
+                "format": "float64"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/transactions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/transactions",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "items",
+              "user",
+              "payment_method",
+              "total_price"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "string"
+              },
+              "payment_method": {
+                "type": "string"
+              },
+              "discount": {
+                "type": "number",
+                "format": "float64"
+              },
+              "total_price": {
+                "type": "number",
+                "format": "float64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "uint"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "integer",
+                      "format": "uint"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1
+                    }
+                  }
+                }
+              },
+              "user": {
+                "type": "string"
+              },
+              "payment_method": {
+                "type": "string"
+              },
+              "discount": {
+                "type": "number",
+                "format": "float64"
+              },
+              "total_price": {
+                "type": "number",
+                "format": "float64"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

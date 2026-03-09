@@ -1,0 +1,538 @@
+{
+  "api": {
+    "title": "Footwear Store API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Cart",
+      "key": "cart",
+      "operations": [
+        {
+          "id": "GET:/cart",
+          "method": "GET",
+          "kind": "list",
+          "path": "/cart",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "type": "integer"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "number",
+                "format": "float"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/cart",
+          "method": "POST",
+          "kind": "create",
+          "path": "/cart",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "product_id": {
+                "type": "integer"
+              },
+              "quantity": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "product_id",
+              "quantity"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "type": "integer"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "number",
+                "format": "float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "user_id": {
+                      "type": "integer"
+                    },
+                    "shipping_address": {
+                      "type": "string"
+                    },
+                    "payment_method": {
+                      "type": "string"
+                    },
+                    "total_amount": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "processing",
+                        "shipped",
+                        "delivered",
+                        "cancelled"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "shipping_address",
+                    "payment_method",
+                    "status"
+                  ]
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "shipping_address": {
+                "type": "string"
+              },
+              "payment_method": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "shipping_address",
+              "payment_method"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "user_id": {
+                "type": "integer"
+              },
+              "shipping_address": {
+                "type": "string"
+              },
+              "payment_method": {
+                "type": "string"
+              },
+              "total_amount": {
+                "type": "number",
+                "format": "float"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "shipped",
+                  "delivered",
+                  "cancelled"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "shipping_address",
+              "payment_method",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "stock": {
+                      "type": "integer"
+                    },
+                    "category_id": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "description",
+                    "price",
+                    "category_id"
+                  ]
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "format": "float"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "category_id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "price",
+              "category_id"
+            ]
+          }
+        },
+        {
+          "id": "POST:/products",
+          "method": "POST",
+          "kind": "create",
+          "path": "/products",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "format": "float"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "category_id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "price",
+              "category_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "format": "float"
+              },
+              "stock": {
+                "type": "integer"
+              },
+              "category_id": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "price",
+              "category_id"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/users/profile",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users/profile",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "role"
+            ]
+          }
+        },
+        {
+          "id": "POST:/users/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "role"
+            ]
+          }
+        },
+        {
+          "id": "POST:/users/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "role"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

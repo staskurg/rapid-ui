@@ -1,0 +1,225 @@
+{
+  "api": {
+    "title": "Todo API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "AuthService_Login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refresh_token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "expires_in": {
+                "type": "integer",
+                "example": 3600
+              }
+            }
+          }
+        },
+        {
+          "id": "AuthService_Register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password",
+              "name"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "example": "password123"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "example": "John Doe"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "email": {
+                "type": "string",
+                "example": "user@example.com"
+              },
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "TODOs",
+      "key": "todos",
+      "operations": [
+        {
+          "id": "TODOService_ListTODOs",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/todos",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "todos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Complete project documentation"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Write comprehensive documentation for the TODO API"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed"
+                      ],
+                      "example": "pending"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T10:00:00Z"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T10:00:00Z"
+                    }
+                  }
+                }
+              },
+              "total_count": {
+                "type": "integer",
+                "example": 100
+              },
+              "page": {
+                "type": "integer",
+                "example": 1
+              },
+              "page_size": {
+                "type": "integer",
+                "example": 20
+              }
+            }
+          }
+        },
+        {
+          "id": "TODOService_CreateTODO",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/todos",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "example": "Complete project documentation"
+              },
+              "description": {
+                "type": "string",
+                "example": "Write comprehensive documentation for the TODO API"
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-15T23:59:59Z"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "todo_id": {
+                "type": "string",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "title": {
+                "type": "string",
+                "example": "Complete project documentation"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "example": "pending"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

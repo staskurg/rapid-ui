@@ -1,0 +1,282 @@
+{
+  "api": {
+    "title": "GameBot Versioning and Installer Upgrade Contract",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Installer",
+      "key": "installer",
+      "operations": [
+        {
+          "id": "compareInstallerVersion",
+          "method": "POST",
+          "kind": "create",
+          "path": "/installer/compare",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "installedVersion",
+              "candidateVersion"
+            ],
+            "properties": {
+              "installedVersion": {
+                "type": "object",
+                "required": [
+                  "major",
+                  "minor",
+                  "patch",
+                  "build"
+                ],
+                "properties": {
+                  "major": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "patch": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "build": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "candidateVersion": {
+                "type": "object",
+                "required": [
+                  "major",
+                  "minor",
+                  "patch",
+                  "build"
+                ],
+                "properties": {
+                  "major": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "patch": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "build": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "outcome",
+              "reason"
+            ],
+            "properties": {
+              "outcome": {
+                "type": "string",
+                "enum": [
+                  "downgrade",
+                  "upgrade",
+                  "sameBuild"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "preserveProperties": {
+                "type": "boolean",
+                "description": "True for upgrade outcome unless explicit override is supplied."
+              }
+            }
+          }
+        },
+        {
+          "id": "resolveSameBuildDecision",
+          "method": "POST",
+          "kind": "create",
+          "path": "/installer/same-build/decision",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "mode"
+            ],
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "interactive",
+                  "unattended"
+                ]
+              },
+              "interactiveChoice": {
+                "type": "string",
+                "enum": [
+                  "reinstall",
+                  "cancel"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "action",
+              "mutatesState",
+              "statusCode"
+            ],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "reinstall",
+                  "cancel",
+                  "skip"
+                ]
+              },
+              "mutatesState": {
+                "type": "boolean"
+              },
+              "statusCode": {
+                "type": "integer",
+                "description": "Dedicated same-build status code in unattended skip path."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Versioning",
+      "key": "versioning",
+      "operations": [
+        {
+          "id": "resolveVersion",
+          "method": "POST",
+          "kind": "create",
+          "path": "/versioning/resolve",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "buildContext"
+            ],
+            "properties": {
+              "buildContext": {
+                "type": "string",
+                "enum": [
+                  "ci",
+                  "local"
+                ]
+              },
+              "override": {
+                "type": "object",
+                "properties": {
+                  "major": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "patch": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "releaseLineMarker": {
+                "type": "object",
+                "properties": {
+                  "releaseLineId": {
+                    "type": "string"
+                  },
+                  "sequence": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "ciBuildCounter": {
+                "type": "object",
+                "required": [
+                  "lastBuild"
+                ],
+                "properties": {
+                  "lastBuild": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "version",
+              "source",
+              "persisted"
+            ],
+            "properties": {
+              "version": {
+                "type": "object",
+                "required": [
+                  "major",
+                  "minor",
+                  "patch",
+                  "build"
+                ],
+                "properties": {
+                  "major": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "minor": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "patch": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "build": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "ci",
+                  "local"
+                ]
+              },
+              "persisted": {
+                "type": "boolean",
+                "description": "True only when CI persisted the incremented build counter."
+              },
+              "notes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

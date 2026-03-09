@@ -1,0 +1,721 @@
+openapi: 3.1.0
+info:
+  title: Contact API
+  description: |
+    The Contact API provides endpoints that enable you to retrieve and update Customer Service Management (CSM) contact records.
+    
+    In addition, you can generate new social media profile records when creating a contact.
+    
+    The Contact API requires the Customer Service plugin (com.sn_customerservice) and is provided within the now namespace.
+    
+    **Authentication**: Users need the `csm_ws_integration` role for full API access.
+  version: Zurich
+  contact:
+    name: ServiceNow
+    url: https://docs.servicenow.com
+  x-namespace: now
+
+servers:
+  - url: https://{instance}.servicenow.com/api/now
+    description: ServiceNow instance
+    variables:
+      instance:
+        default: instance
+        description: Your ServiceNow instance name
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: Contact
+    description: Operations for managing Customer Service Management contacts
+
+paths:
+  /contact:
+    get:
+      tags:
+        - Contact
+      summary: Retrieve contacts
+      description: Retrieves a specified set of Customer Service Management (CSM) contacts.
+      operationId: getContacts
+      parameters:
+        - name: sysparm_query
+          in: query
+          description: Encoded query used to filter the result set. Supports order by using ORDERBY and ORDERBYDESC clauses.
+          required: false
+          schema:
+            type: string
+          example: "caller_id=javascript:gs.getUserID()^active=true"
+        - name: sysparm_limit
+          in: query
+          description: Maximum number of records to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 10
+        - name: sysparm_offset
+          in: query
+          description: Starting record index for pagination (do not pass negative numbers)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Successful. The request was successfully processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Contact'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Contact
+      summary: Create a contact
+      description: |
+        Creates a new Customer Service Management (CSM) contact.
+        
+        You can also create a social media profile for the contact by specifying:
+        - social_channel
+        - social_handle
+        - social_handle_url
+        
+        **Warning**: This endpoint does not perform parameter validation. Misspelled or invalid parameters are ignored without warning.
+      operationId: createContact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactCreate'
+      responses:
+        '201':
+          description: New contact record was successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: string
+                    description: Sys_id of the newly created contact record
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /contact/{id}:
+    get:
+      tags:
+        - Contact
+      summary: Retrieve a specific contact
+      description: Retrieves the specified Customer Service Management (CSM) contact.
+      operationId: getContactById
+      parameters:
+        - name: id
+          in: path
+          description: Sys_id of the contact to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful. The request was successfully processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Contact'
+            application/xml:
+              schema:
+                type: object
+                properties:
+                  result:
+                    $ref: '#/components/schemas/Contact'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: |
+            Not found. Could be due to:
+            - Requested contact doesn't exist
+            - User doesn't have access to the contact
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication with ServiceNow credentials. User must have the csm_ws_integration role.
+
+  schemas:
+    Contact:
+      type: object
+      description: Customer Service Management contact record
+      properties:
+        sys_id:
+          type: string
+          description: Unique identifier for the contact record
+        name:
+          type: string
+          maxLength: 151
+          description: Contact full name
+        first_name:
+          type: string
+          maxLength: 50
+          description: Contact first name
+        middle_name:
+          type: string
+          maxLength: 50
+          description: Contact middle name
+        last_name:
+          type: string
+          maxLength: 50
+          description: Contact last name
+        user_name:
+          type: string
+          maxLength: 40
+          description: Contact user ID
+        email:
+          type: string
+          description: Contact email address
+        phone:
+          type: string
+          maxLength: 40
+          description: Contact business phone number
+        mobile_phone:
+          type: string
+          maxLength: 40
+          description: Contact mobile phone number
+        home_phone:
+          type: string
+          maxLength: 40
+          description: Contact home phone number
+        title:
+          type: string
+          maxLength: 60
+          description: Contact business title
+        employee_number:
+          type: string
+          description: Contact employee number
+        company:
+          type: string
+          description: Sys_id of the company record
+        account:
+          type: string
+          description: Sys_id of the account record
+        department:
+          type: string
+          description: Sys_id of the department
+        manager:
+          type: string
+          description: Sys_id of the direct supervisor
+        location:
+          type: string
+          description: Sys_id of the location
+        building:
+          type: string
+          description: Sys_id of the building
+        street:
+          type: string
+          maxLength: 255
+          description: Contact street address
+        city:
+          type: string
+          maxLength: 40
+          description: City in which the contact resides
+        state:
+          type: string
+          maxLength: 40
+          description: State in which the contact resides
+        zip:
+          type: string
+          maxLength: 40
+          description: Contact zip code
+        country:
+          type: string
+          maxLength: 3
+          description: Country code
+        active:
+          type: boolean
+          default: true
+          description: Flag indicating whether the contact is active
+        vip:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact has VIP status
+        locked_out:
+          type: boolean
+          default: false
+          description: Flag indicating if the contact is locked-out
+        web_service_access_only:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact can only access services through the web
+        internal_integration_user:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact is an internal integration user
+        enable_multifactor_authn:
+          type: boolean
+          default: false
+          description: Flag indicating whether multifactor authorization is required
+        geolocation_tracked:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact location is obtained through geotracking
+        notification:
+          type: integer
+          default: 2
+          description: Indicates whether the contact should receive notifications (1=Disabled, 2=Enabled)
+          enum: [1, 2]
+        calendar_integration:
+          type: integer
+          default: 1
+          description: Calendar application that the contact uses (1=Outlook)
+        failed_attempts:
+          type: integer
+          description: Number of failed login attempts
+        latitude:
+          type: number
+          format: float
+          maxLength: 40
+          description: Latitude coordinate of the contact
+        longitude:
+          type: number
+          format: float
+          maxLength: 40
+          description: Longitude coordinate of the contact
+        time_zone:
+          type: string
+          maxLength: 40
+          description: Time zone in which the contact resides
+        date_format:
+          type: string
+          maxLength: 40
+          description: Format in which to display dates
+          enum:
+            - "dd/mm/yyyy"
+            - "dd-mm-yyyy"
+            - "dd.mm.yyyy"
+            - "mm-dd-yyyy"
+            - "yyyy-mm-dd"
+        time_format:
+          type: string
+          maxLength: 40
+          description: Format in which to display time
+          enum:
+            - "hh.mm.ss a"
+            - "hh:mm:ss a"
+            - "HH.mm.ss"
+            - "HH:mm:ss"
+        preferred_language:
+          type: string
+          maxLength: 3
+          description: Country code of the contact primary language
+        gender:
+          type: string
+          maxLength: 40
+          description: Contact gender
+        photo:
+          type: string
+          description: Photo image of the contact
+        introduction:
+          type: string
+          maxLength: 40
+          description: Introduction
+        source:
+          type: string
+          maxLength: 255
+          description: Source of the contact
+        roles:
+          type: string
+          maxLength: 40
+          description: List of user roles associated with the contact
+        cost_center:
+          type: string
+          description: Sys_id of the cost center
+        schedule:
+          type: string
+          description: Sys_id of the work schedule
+        time_sheet_policy:
+          type: string
+          description: Sys_id of the time sheet policy
+        default_perspective:
+          type: string
+          description: Sys_id of the default perspective
+        ldap_server:
+          type: string
+          description: Sys_id of the LDAP server
+        agent_status:
+          type: string
+          maxLength: 40
+          description: Status of the agent
+          enum:
+            - "Off work"
+            - "On break"
+            - "On route"
+            - "On site"
+        on_schedule:
+          type: string
+          maxLength: 40
+          description: Indicates the timeliness of dispatched service personnel
+          enum:
+            - "Ahead"
+            - "behind_less30"
+            - "behind_30to60"
+            - "behind_more60"
+            - "on_time"
+        edu_status:
+          type: string
+          maxLength: 40
+          default: faculty
+          description: Education status of the contact
+        last_login:
+          type: string
+          format: date
+          description: Date on which the contact last logged into the system
+        last_login_time:
+          type: string
+          format: date-time
+          description: Date and time the contact logged in to the system
+        last_login_device:
+          type: string
+          maxLength: 40
+          description: Device the consumer used the last time they logged in
+        last_position_update:
+          type: string
+          format: date-time
+          description: Date and time the last position was updated
+        sys_class_name:
+          type: string
+          maxLength: 80
+          description: Table that contains the contact record
+        sys_created_by:
+          type: string
+          maxLength: 40
+          description: User that originally created the contact record
+        sys_created_on:
+          type: string
+          format: date-time
+          description: Date and time the contact was originally created
+        sys_updated_by:
+          type: string
+          maxLength: 40
+          description: User that last updated the contact information
+        sys_updated_on:
+          type: string
+          format: date-time
+          description: Date and time the contact information was updated
+        sys_mod_count:
+          type: integer
+          description: Number of times that the contact record has been modified
+        sys_domain:
+          type: string
+          description: ServiceNow instance domain of the contact record
+        sys_domain_path:
+          type: string
+          maxLength: 255
+          default: "/"
+          description: Contact record domain path
+        sys_tags:
+          type: string
+          description: System tags
+
+    ContactCreate:
+      type: object
+      description: Contact creation request
+      properties:
+        name:
+          type: string
+          maxLength: 151
+          description: Contact full name
+        first_name:
+          type: string
+          maxLength: 50
+          description: Contact first name
+        middle_name:
+          type: string
+          maxLength: 50
+          description: Contact middle name
+        last_name:
+          type: string
+          maxLength: 50
+          description: Contact last name
+        user_name:
+          type: string
+          maxLength: 40
+          description: Contact user ID
+        email:
+          type: string
+          description: Contact email address
+        phone:
+          type: string
+          maxLength: 40
+          description: Contact business phone number
+        mobile_phone:
+          type: string
+          maxLength: 40
+          description: Contact mobile phone number
+        home_phone:
+          type: string
+          maxLength: 40
+          description: Contact home phone number
+        title:
+          type: string
+          maxLength: 60
+          description: Contact business title
+        employee_number:
+          type: string
+          description: Contact employee number
+        company:
+          type: string
+          description: Sys_id of the company record
+        account:
+          type: string
+          description: Sys_id of the account record
+        department:
+          type: string
+          description: Sys_id of the department
+        manager:
+          type: string
+          description: Sys_id of the direct supervisor
+        location:
+          type: string
+          description: Sys_id of the location
+        building:
+          type: string
+          description: Sys_id of the building
+        street:
+          type: string
+          maxLength: 255
+          description: Contact street address
+        city:
+          type: string
+          maxLength: 40
+          description: City in which the contact resides
+        state:
+          type: string
+          maxLength: 40
+          description: State in which the contact resides
+        zip:
+          type: string
+          maxLength: 40
+          description: Contact zip code
+        country:
+          type: string
+          maxLength: 3
+          description: Country code
+        active:
+          type: boolean
+          default: true
+          description: Flag indicating whether the contact is active
+        vip:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact has VIP status
+        locked_out:
+          type: boolean
+          default: false
+          description: Flag indicating if the contact is locked-out
+        web_service_access_only:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact can only access services through the web
+        internal_integration_user:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact is an internal integration user
+        enable_multifactor_authn:
+          type: boolean
+          default: false
+          description: Flag indicating whether multifactor authorization is required
+        geolocation_tracked:
+          type: boolean
+          default: false
+          description: Flag indicating whether the contact location is obtained through geotracking
+        notification:
+          type: integer
+          default: 2
+          description: Indicates whether the contact should receive notifications (1=Disabled, 2=Enabled)
+          enum: [1, 2]
+        calendar_integration:
+          type: integer
+          default: 1
+          description: Calendar application that the contact uses (1=Outlook)
+        failed_attempts:
+          type: integer
+          description: Number of failed login attempts
+        latitude:
+          type: number
+          format: float
+          description: Latitude coordinate of the contact
+        longitude:
+          type: number
+          format: float
+          description: Longitude coordinate of the contact
+        time_zone:
+          type: string
+          maxLength: 40
+          description: Time zone in which the contact resides
+        date_format:
+          type: string
+          maxLength: 40
+          description: Format in which to display dates
+          enum:
+            - "dd/mm/yyyy"
+            - "dd-mm-yyyy"
+            - "dd.mm.yyyy"
+            - "mm-dd-yyyy"
+            - "yyyy-mm-dd"
+        time_format:
+          type: string
+          maxLength: 40
+          description: Format in which to display time
+          enum:
+            - "hh.mm.ss a"
+            - "hh:mm:ss a"
+            - "HH.mm.ss"
+            - "HH:mm:ss"
+        preferred_language:
+          type: string
+          maxLength: 3
+          description: Country code of the contact primary language
+        gender:
+          type: string
+          maxLength: 40
+          description: Contact gender
+        photo:
+          type: string
+          description: Photo image of the contact
+        introduction:
+          type: string
+          maxLength: 40
+          description: Introduction
+        source:
+          type: string
+          maxLength: 255
+          description: Source of the contact
+        roles:
+          type: string
+          maxLength: 40
+          description: List of user roles associated with the contact
+        cost_center:
+          type: string
+          description: Sys_id of the cost center
+        schedule:
+          type: string
+          description: Sys_id of the work schedule
+        time_sheet_policy:
+          type: string
+          description: Sys_id of the time sheet policy
+        default_perspective:
+          type: string
+          description: Sys_id of the default perspective
+        ldap_server:
+          type: string
+          description: Sys_id of the LDAP server
+        agent_status:
+          type: string
+          maxLength: 40
+          description: Status of the agent
+          enum:
+            - "Off work"
+            - "On break"
+            - "On route"
+            - "On site"
+        on_schedule:
+          type: string
+          maxLength: 40
+          description: Indicates the timeliness of dispatched service personnel
+          enum:
+            - "Ahead"
+            - "behind_less30"
+            - "behind_30to60"
+            - "behind_more60"
+            - "on_time"
+        edu_status:
+          type: string
+          maxLength: 40
+          default: faculty
+          description: Education status of the contact
+        last_login_time:
+          type: string
+          format: date-time
+          description: Date and time the contact logged in to the system
+        last_login_device:
+          type: string
+          maxLength: 40
+          description: Device the consumer used the last time they logged in
+        social_channel:
+          type: string
+          description: Social media channel (Twitter, Facebook, Instagram, etc.)
+        social_handle:
+          type: string
+          description: User handle on the social media channel
+        social_handle_url:
+          type: string
+          description: URL to the contact's social channel profile
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message
+            detail:
+              type: string
+              description: Detailed error information

@@ -1,0 +1,347 @@
+{
+  "api": {
+    "title": "Ticketing Order Service API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/healthz",
+          "method": "GET",
+          "kind": "list",
+          "path": "/healthz",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/readyz",
+          "method": "GET",
+          "kind": "list",
+          "path": "/readyz",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ready"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders/get",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders/get",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "description": "Current runtime returns PascalCase fields from `domain.Order`.\n",
+            "properties": {
+              "OrderID": {
+                "type": "string"
+              },
+              "IdempotencyKey": {
+                "type": "string"
+              },
+              "Status": {
+                "type": "string",
+                "enum": [
+                  "INIT",
+                  "RESERVED",
+                  "PAID",
+                  "TICKETED",
+                  "CANCELLED"
+                ]
+              },
+              "AmountCents": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "CreatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "UpdatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "idempotency_key",
+              "amount_cents"
+            ],
+            "properties": {
+              "idempotency_key": {
+                "type": "string"
+              },
+              "amount_cents": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Current runtime returns PascalCase fields from `domain.Order`.\n",
+            "properties": {
+              "OrderID": {
+                "type": "string"
+              },
+              "IdempotencyKey": {
+                "type": "string"
+              },
+              "Status": {
+                "type": "string",
+                "enum": [
+                  "INIT",
+                  "RESERVED",
+                  "PAID",
+                  "TICKETED",
+                  "CANCELLED"
+                ]
+              },
+              "AmountCents": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "CreatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "UpdatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders/cancel",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders/cancel",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "order_id"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "string"
+              },
+              "partition_key": {
+                "type": "string"
+              },
+              "hold_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Current runtime returns PascalCase fields from `domain.Order`.\n",
+            "properties": {
+              "OrderID": {
+                "type": "string"
+              },
+              "IdempotencyKey": {
+                "type": "string"
+              },
+              "Status": {
+                "type": "string",
+                "enum": [
+                  "INIT",
+                  "RESERVED",
+                  "PAID",
+                  "TICKETED",
+                  "CANCELLED"
+                ]
+              },
+              "AmountCents": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "CreatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "UpdatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders/reserve",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders/reserve",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "order_id"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "string"
+              },
+              "partition_key": {
+                "type": "string",
+                "description": "Optional, default from service config."
+              },
+              "hold_id": {
+                "type": "string",
+                "description": "Optional, default to order_id."
+              },
+              "qty": {
+                "type": "integer",
+                "description": "Optional, default from service config."
+              },
+              "capacity": {
+                "type": "integer",
+                "description": "Optional, default from service config."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Current runtime returns PascalCase fields from `domain.Order`.\n",
+            "properties": {
+              "OrderID": {
+                "type": "string"
+              },
+              "IdempotencyKey": {
+                "type": "string"
+              },
+              "Status": {
+                "type": "string",
+                "enum": [
+                  "INIT",
+                  "RESERVED",
+                  "PAID",
+                  "TICKETED",
+                  "CANCELLED"
+                ]
+              },
+              "AmountCents": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "CreatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "UpdatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "POST:/payments/callback",
+          "method": "POST",
+          "kind": "create",
+          "path": "/payments/callback",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "order_id",
+              "provider_txn_id",
+              "status"
+            ],
+            "properties": {
+              "order_id": {
+                "type": "string"
+              },
+              "provider_txn_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "description": "Only SUCCESS is accepted."
+              },
+              "partition_key": {
+                "type": "string"
+              },
+              "hold_id": {
+                "type": "string"
+              },
+              "signature": {
+                "type": "string",
+                "description": "Optional unless PAYMENT_CALLBACK_SIGN_KEY is configured; HMAC-SHA256 hex of order_id|provider_txn_id|status."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Current runtime returns PascalCase fields from `domain.Order`.\n",
+            "properties": {
+              "OrderID": {
+                "type": "string"
+              },
+              "IdempotencyKey": {
+                "type": "string"
+              },
+              "Status": {
+                "type": "string",
+                "enum": [
+                  "INIT",
+                  "RESERVED",
+                  "PAID",
+                  "TICKETED",
+                  "CANCELLED"
+                ]
+              },
+              "AmountCents": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "CreatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "UpdatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

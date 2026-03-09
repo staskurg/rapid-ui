@@ -1,0 +1,473 @@
+openapi: 3.0.0
+info:
+  title: Instagram Analytics API
+  description: |
+    Advanced Instagram Analytics API powered by AI Vision and Machine Learning.
+    
+    This API provides comprehensive analytics for Instagram content including reels, posts, and profiles.
+    Built with FastAPI and enhanced with AI-powered computer vision capabilities for deep content analysis.
+    
+    ## Features
+    - AI-Powered Content Analysis
+    - Reel Analytics & Insights
+    - Profile Growth Tracking
+    - Real-time Processing
+    - Secure API Authentication
+    
+    ## Authentication
+    This API uses API Key authentication. Include your API key in the `X-API-Key` header.
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/yousse-f/instagram-analytics-api
+    email: yussyjob@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://instagram-analytics-api.yousse-f.dev
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+  
+  schemas:
+    # Request Models
+    ReelAnalysisRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Instagram reel URL
+          example: "https://www.instagram.com/reel/ABC123/"
+        analysis_options:
+          type: object
+          properties:
+            include_ai_vision:
+              type: boolean
+              default: true
+              description: Include AI vision analysis
+            include_sentiment:
+              type: boolean
+              default: true
+              description: Include sentiment analysis
+            include_engagement_prediction:
+              type: boolean
+              default: false
+              description: Include engagement prediction
+            language:
+              type: string
+              default: "en"
+              description: Analysis language
+              example: "en"
+    
+    ProfileAnalysisRequest:
+      type: object
+      required:
+        - username
+      properties:
+        username:
+          type: string
+          description: Instagram username (without @)
+          example: "example_user"
+        analysis_depth:
+          type: string
+          enum: [basic, standard, comprehensive]
+          default: standard
+          description: Depth of analysis to perform
+        include_recent_posts:
+          type: boolean
+          default: true
+          description: Include analysis of recent posts
+        max_posts:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 10
+          description: Maximum number of recent posts to analyze
+    
+    # Response Models
+    ReelAnalysisResponse:
+      type: object
+      properties:
+        reel_id:
+          type: string
+          description: Unique reel identifier
+          example: "ABC123"
+        url:
+          type: string
+          format: uri
+          description: Original reel URL
+        metadata:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Reel title/caption
+            duration:
+              type: number
+              description: Reel duration in seconds
+            upload_date:
+              type: string
+              format: date-time
+              description: Upload timestamp
+            view_count:
+              type: integer
+              description: Number of views
+            like_count:
+              type: integer
+              description: Number of likes
+            comment_count:
+              type: integer
+              description: Number of comments
+        ai_insights:
+          type: object
+          properties:
+            summary:
+              type: string
+              description: AI-generated summary
+            visual_elements:
+              type: array
+              items:
+                type: string
+              description: Detected visual elements
+            sentiment_score:
+              type: number
+              minimum: -1
+              maximum: 1
+              description: Sentiment score (-1 to 1)
+            confidence_score:
+              type: number
+              minimum: 0
+              maximum: 1
+              description: Analysis confidence (0 to 1)
+        engagement_metrics:
+          type: object
+          properties:
+            engagement_rate:
+              type: number
+              description: Calculated engagement rate
+            engagement_score:
+              type: number
+              description: Overall engagement score
+            predicted_reach:
+              type: integer
+              description: Predicted reach based on current metrics
+        processing_time:
+          type: number
+          description: Analysis processing time in seconds
+        timestamp:
+          type: string
+          format: date-time
+          description: Analysis timestamp
+    
+    ProfileAnalysisResponse:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Instagram username
+        profile_metrics:
+          type: object
+          properties:
+            followers_count:
+              type: integer
+              description: Number of followers
+            following_count:
+              type: integer
+              description: Number of following
+            posts_count:
+              type: integer
+              description: Total number of posts
+            engagement_rate:
+              type: number
+              description: Average engagement rate
+        content_analysis:
+          type: object
+          properties:
+            posting_frequency:
+              type: number
+              description: Posts per week
+            content_categories:
+              type: array
+              items:
+                type: object
+                properties:
+                  category:
+                    type: string
+                  percentage:
+                    type: number
+            best_performing_content:
+              type: array
+              items:
+                type: object
+                properties:
+                  post_id:
+                    type: string
+                  engagement_score:
+                    type: number
+                  content_type:
+                    type: string
+        growth_insights:
+          type: object
+          properties:
+            growth_rate:
+              type: number
+              description: Monthly growth rate
+            predicted_followers:
+              type: integer
+              description: Predicted followers in 30 days
+        timestamp:
+          type: string
+          format: date-time
+          description: Analysis timestamp
+    
+    # Error Models
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        detail:
+          type: string
+          description: Detailed error description
+        code:
+          type: string
+          description: Error code
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+    
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        version:
+          type: string
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+        services:
+          type: object
+          properties:
+            ai_vision:
+              type: string
+              enum: [healthy, unhealthy, unavailable]
+            database:
+              type: string
+              enum: [healthy, unhealthy, unavailable]
+
+paths:
+  # Health Check
+  /api/v1/health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Check the health status of the API and its dependencies
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  # Reel Analysis Endpoints
+  /api/v1/reels/analyze:
+    post:
+      tags:
+        - Reels
+      summary: Analyze Instagram Reel
+      description: |
+        Performs comprehensive analysis of an Instagram reel including:
+        - AI-powered visual content analysis
+        - Sentiment analysis of captions and comments
+        - Engagement metrics calculation
+        - Performance predictions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReelAnalysisRequest'
+            examples:
+              basic_analysis:
+                summary: Basic reel analysis
+                value:
+                  url: "https://www.instagram.com/reel/ABC123/"
+                  analysis_options:
+                    include_ai_vision: true
+                    include_sentiment: false
+              comprehensive_analysis:
+                summary: Comprehensive analysis
+                value:
+                  url: "https://www.instagram.com/reel/DEF456/"
+                  analysis_options:
+                    include_ai_vision: true
+                    include_sentiment: true
+                    include_engagement_prediction: true
+                    language: "en"
+      responses:
+        '200':
+          description: Reel analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReelAnalysisResponse'
+              examples:
+                successful_analysis:
+                  summary: Successful analysis result
+                  value:
+                    reel_id: "ABC123"
+                    url: "https://www.instagram.com/reel/ABC123/"
+                    metadata:
+                      title: "Amazing sunset timelapse"
+                      duration: 15.5
+                      view_count: 125000
+                      like_count: 8500
+                      comment_count: 324
+                    ai_insights:
+                      summary: "Beautiful sunset timelapse with vibrant colors"
+                      visual_elements: ["sunset", "timelapse", "nature", "vibrant_colors"]
+                      sentiment_score: 0.8
+                      confidence_score: 0.92
+                    engagement_metrics:
+                      engagement_rate: 6.8
+                      engagement_score: 85.5
+                      predicted_reach: 180000
+                    processing_time: 2.3
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Reel not found or not accessible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  
+  # Profile Analysis Endpoints
+  /api/v1/analytics/analyze-profile:
+    post:
+      tags:
+        - Analytics
+      summary: Analyze Instagram Profile
+      description: |
+        Performs comprehensive analysis of an Instagram profile including:
+        - Profile metrics and statistics
+        - Content analysis and categorization
+        - Growth insights and predictions
+        - Engagement patterns
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileAnalysisRequest'
+            examples:
+              basic_profile:
+                summary: Basic profile analysis
+                value:
+                  username: "example_user"
+                  analysis_depth: "standard"
+              comprehensive_profile:
+                summary: Comprehensive profile analysis
+                value:
+                  username: "influencer_account"
+                  analysis_depth: "comprehensive"
+                  include_recent_posts: true
+                  max_posts: 25
+      responses:
+        '200':
+          description: Profile analysis completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileAnalysisResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - Invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Profile not found or private
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+tags:
+  - name: Health
+    description: Health check and system status endpoints
+  - name: Reels
+    description: Instagram reel analysis and insights
+  - name: Analytics
+    description: Profile and content analytics

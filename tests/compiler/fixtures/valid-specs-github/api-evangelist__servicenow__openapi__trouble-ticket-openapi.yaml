@@ -1,0 +1,576 @@
+openapi: 3.1.0
+info:
+  title: Trouble Ticket Open API
+  description: |
+    The Trouble Ticket Open API provides endpoints to create, update, and retrieve data from the Case [sn_customerservice_case], 
+    Incident [incident], and Service Problem Case [sn_sprb_mgmt_case] tables.
+    
+    Use this API to manage ticket information between external ticketing systems and the ServiceNow AI Platform.
+    
+    This API is a ServiceNow implementation of the TM Forum Trouble Ticket Management API REST specification, 
+    based on TMF621 Trouble Ticket Management API User Guide v5.0.0, September 2024.
+    
+    **Authentication**: The calling user must have the `ticket_integrator` role.
+  version: Zurich
+  contact:
+    name: ServiceNow
+    url: https://docs.servicenow.com
+  x-namespace: sn_ind_tsm_sdwan
+
+servers:
+  - url: https://{instance}.servicenow.com/api/sn_ind_tsm_sdwan/ticket
+    description: ServiceNow instance
+    variables:
+      instance:
+        default: instance
+        description: Your ServiceNow instance name
+
+security:
+  - basicAuth: []
+
+tags:
+  - name: Trouble Ticket
+    description: Operations for managing trouble tickets (Cases, Incidents, and Service Problem Cases)
+
+paths:
+  /troubleTicket:
+    get:
+      tags:
+        - Trouble Ticket
+      summary: Retrieve all trouble tickets
+      description: Retrieves a list of all trouble ticket records from the Case, Incident, and Service Problem Case tables.
+      operationId: getTroubleTickets
+      parameters:
+        - name: fields
+          in: query
+          description: List of fields to return in the response. Invalid fields are ignored.
+          required: false
+          schema:
+            type: string
+          example: "id,name,description,status,severity,ticketType"
+        - name: id
+          in: query
+          description: Filter trouble tickets by sys_id
+          required: false
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of records to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 25
+        - name: offset
+          in: query
+          description: Starting index at which to begin retrieving records
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: severity
+          in: query
+          description: Filter trouble tickets by severity
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter trouble tickets by status
+          required: false
+          schema:
+            type: string
+        - name: ticketType
+          in: query
+          description: Filter trouble tickets by ticket type
+          required: false
+          schema:
+            type: string
+            enum:
+              - Case
+              - Incident
+              - Service Problem Case
+      responses:
+        '200':
+          description: Request successfully processed. Full resource returned in response (no pagination).
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                default: application/json
+            X-Total-Count:
+              description: Total number of records available on the server
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TroubleTicket'
+        '206':
+          description: Partial resource returned in response (with pagination).
+          headers:
+            Content-Range:
+              description: Range of content returned in a paginated call
+              schema:
+                type: string
+              example: "items 3-5"
+            Content-Type:
+              schema:
+                type: string
+                default: application/json
+            Link:
+              description: Links to navigate through query results (first, last, next, previous)
+              schema:
+                type: string
+            X-Total-Count:
+              description: Total number of records available on the server
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TroubleTicket'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      tags:
+        - Trouble Ticket
+      summary: Create a trouble ticket
+      description: Creates a record in the Case, Incident, or Service Problem Case table.
+      operationId: createTroubleTicket
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TroubleTicketCreate'
+      responses:
+        '201':
+          description: Successful. The request was successfully processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TroubleTicket'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /troubleTicket/{id}:
+    get:
+      tags:
+        - Trouble Ticket
+      summary: Retrieve a specific trouble ticket
+      description: Retrieves a specified record from the Case, Incident, or Service Problem Case table.
+      operationId: getTroubleTicketById
+      parameters:
+        - name: id
+          in: path
+          description: Sys_id of the case or incident record to retrieve
+          required: true
+          schema:
+            type: string
+        - name: fields
+          in: query
+          description: List of fields to return in the response. Invalid fields are ignored.
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful. The request was successfully processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TroubleTicket'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Trouble Ticket
+      summary: Update a trouble ticket
+      description: Updates a specified record in the Case, Incident, or Service Problem Case table.
+      operationId: updateTroubleTicket
+      parameters:
+        - name: id
+          in: path
+          description: Sys_id of the case or incident record to update
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TroubleTicketUpdate'
+      responses:
+        '200':
+          description: Successful. The request was successfully processed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TroubleTicket'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Record not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Basic authentication with ServiceNow credentials. User must have the ticket_integrator role.
+
+  schemas:
+    TroubleTicket:
+      type: object
+      properties:
+        '@type':
+          type: string
+          default: TroubleTicket
+          description: This value is always TroubleTicket
+        id:
+          type: string
+          description: The sys_id of the case or incident record
+        href:
+          type: string
+          description: Relative link to the case or incident record
+        creationDate:
+          type: string
+          format: date-time
+          description: The date that the case or incident record was created
+        lastUpdate:
+          type: string
+          format: date-time
+          description: The date the record was last updated
+        name:
+          type: string
+          description: The name of the trouble ticket, typically a short description of the issue
+        description:
+          type: string
+          description: The description of the issue from the ticket
+        severity:
+          type: string
+          description: The severity of the issue described by the trouble ticket
+          example: "2 - High"
+        status:
+          type: string
+          description: The current status of the trouble ticket
+        ticketType:
+          type: string
+          enum:
+            - Case
+            - Incident
+            - Service Problem Case
+          description: The type of ticket
+        channel:
+          $ref: '#/components/schemas/Channel'
+        note:
+          type: array
+          description: A list of all comments on the ticket (excludes work notes)
+          items:
+            $ref: '#/components/schemas/Note'
+        relatedEntity:
+          type: array
+          description: List of impacted assets, products, sold products, configuration items, or services
+          items:
+            $ref: '#/components/schemas/RelatedEntity'
+        relatedParty:
+          type: array
+          description: Details about contacts for the ticket
+          items:
+            $ref: '#/components/schemas/RelatedParty'
+
+    TroubleTicketCreate:
+      type: object
+      required:
+        - description
+        - severity
+        - status
+      properties:
+        name:
+          type: string
+          description: Name of the trouble ticket, typically a short description of the issue
+        description:
+          type: string
+          description: A description of the issue
+        severity:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+          description: |
+            The severity of the issue (must provide choice value only):
+            - 1: Critical
+            - 2: High
+            - 3: Moderate
+            - 4: Low
+            - 5: Planning (Incident only)
+        status:
+          type: string
+          description: The current status of the trouble ticket (can provide choice label or value)
+        ticketType:
+          type: string
+          enum:
+            - Case
+            - Incident
+            - Service Problem Case
+          default: Incident
+          description: The type of ticket to create
+        channel:
+          $ref: '#/components/schemas/ChannelInput'
+        note:
+          type: array
+          description: List of work notes and comments to add to the ticket
+          items:
+            $ref: '#/components/schemas/NoteInput'
+        relatedEntity:
+          type: array
+          description: List of impacted assets, products, sold products, configuration items, or services
+          items:
+            $ref: '#/components/schemas/RelatedEntityInput'
+        relatedParty:
+          type: array
+          description: Details about contacts for the ticket
+          items:
+            $ref: '#/components/schemas/RelatedPartyInput'
+
+    TroubleTicketUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the trouble ticket, typically a short description of the issue
+        description:
+          type: string
+          description: Description of the issue
+        severity:
+          type: string
+          enum:
+            - "1"
+            - "2"
+            - "3"
+            - "4"
+            - "5"
+          description: |
+            The severity of the issue (must provide choice value only):
+            - 1: Critical
+            - 2: High
+            - 3: Moderate
+            - 4: Low
+            - 5: Planning (Incident only)
+        status:
+          type: string
+          description: The current status of the trouble ticket (can provide choice label or value)
+        channel:
+          $ref: '#/components/schemas/ChannelInput'
+        note:
+          type: array
+          description: List of work notes and comments to add to the ticket
+          items:
+            $ref: '#/components/schemas/NoteInput'
+        relatedEntity:
+          type: array
+          description: List of impacted assets, products, sold products, configuration items, or services
+          items:
+            $ref: '#/components/schemas/RelatedEntityInput'
+        relatedParty:
+          type: array
+          description: Details about contacts for the ticket
+          items:
+            $ref: '#/components/schemas/RelatedPartyInput'
+
+    Channel:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the contact method
+
+    ChannelInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the contact method (can provide choice label or value, e.g., 'Virtual Agent' or 'virtual_agent')
+
+    Note:
+      type: object
+      properties:
+        '@type':
+          type: string
+          default: comments
+          description: The type of note (always 'comments' in responses)
+        text:
+          type: string
+          description: The comment text
+        date:
+          type: string
+          format: date-time
+          description: The date the comment was created
+        author:
+          type: string
+          description: The name of the user who wrote the comment
+
+    NoteInput:
+      type: object
+      required:
+        - text
+        - '@type'
+      properties:
+        text:
+          type: string
+          description: Note text
+        '@type':
+          type: string
+          enum:
+            - comments
+            - work_notes
+          description: Type of note (determines whether recorded in Work notes or Additional comments field)
+
+    RelatedEntity:
+      type: object
+      properties:
+        '@type':
+          type: string
+          default: relatedEntity
+          description: This value is always relatedEntity
+        id:
+          type: string
+          description: Sys_id of the impacted item or service
+        href:
+          type: string
+          description: Returns an empty string
+        name:
+          type: string
+          description: Name of the impacted item or service
+        role:
+          type: string
+          description: Description of the impacted item or service
+        '@referredType':
+          type: string
+          enum:
+            - asset
+            - product
+            - product_inventory
+            - cmdb_ci
+            - cmdb_ci_service
+          description: Type of item or service
+
+    RelatedEntityInput:
+      type: object
+      required:
+        - id
+        - '@referredType'
+      properties:
+        id:
+          type: string
+          description: Sys_id of the impacted item or service
+        '@referredType':
+          type: string
+          enum:
+            - asset
+            - product
+            - product_inventory
+            - cmdb_ci
+            - cmdb_ci_service
+          description: Type of item or service
+
+    RelatedParty:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Sys_id of the related party
+        name:
+          type: string
+          description: Name of the related party
+        '@referredType':
+          type: string
+          enum:
+            - assigned_to
+            - assignment_group
+            - customer
+            - customer_contact
+          description: |
+            Type of related party:
+            - assigned_to: User assigned to work on the ticket
+            - assignment_group: Group assigned to work on the ticket
+            - customer: Company or account for the ticket
+            - customer_contact: Caller or contact for the ticket
+
+    RelatedPartyInput:
+      type: object
+      required:
+        - id
+        - '@referredType'
+      properties:
+        id:
+          type: string
+          description: Sys_id of the related party
+        '@referredType':
+          type: string
+          enum:
+            - customer
+            - customer_contact
+          description: |
+            Type of related party:
+            - customer: Company or account for the ticket
+            - customer_contact: Caller or contact for the ticket
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message
+            detail:
+              type: string
+              description: Detailed error information

@@ -1,0 +1,610 @@
+{
+  "api": {
+    "title": "Books REST API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "loginUserHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The email address of the user",
+                "example": "johndoe@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "The password of the user"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "access_token",
+              "refresh_token",
+              "token_type",
+              "expires_in"
+            ],
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "The access token used for accessing protected resources"
+              },
+              "refresh_token": {
+                "type": "string",
+                "description": "The refresh token used to obtain new access token"
+              },
+              "token_type": {
+                "type": "string",
+                "description": "The type of token issued",
+                "example": "Bearer"
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "The lifetime in seconds of the access token",
+                "example": 3600
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUserHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/registration",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "first_name",
+              "last_name",
+              "email",
+              "password"
+            ],
+            "properties": {
+              "first_name": {
+                "type": "string",
+                "description": "The first name of the user",
+                "example": "John"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "The last name of the user",
+                "example": "Doe"
+              },
+              "email": {
+                "type": "string",
+                "description": "The email address of the user",
+                "example": "johndoe@example.com",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "description": "The password of the user"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "first_name",
+              "last_name",
+              "email",
+              "created_at",
+              "email_verified"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the user",
+                "example": "40e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "first_name": {
+                "type": "string",
+                "description": "The first name of the user",
+                "example": "John"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "The last name of the user",
+                "example": "Doe"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The email of the user",
+                "example": "johndoe@example.com"
+              },
+              "email_verified": {
+                "type": "boolean",
+                "description": "Returns true if user email is verified or false if otherwise",
+                "example": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the user was created"
+              }
+            }
+          }
+        },
+        {
+          "id": "resendCodeHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/resend-code",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The email address to which the new verification code should be sent",
+                "example": "johndoe@example.com"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "A new verification code has been sent to your email"
+              }
+            }
+          }
+        },
+        {
+          "id": "verifyEmailHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/verify-email",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "verification_code"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The email address to be verified",
+                "example": "johndoe@example.com"
+              },
+              "verification_code": {
+                "type": "string",
+                "description": "The 6-digit verification code received by the email",
+                "pattern": "^\\d{6}$",
+                "example": "129065"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Email verified successfully. Your account is now active."
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshTokenHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/token/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refresh_token"
+            ],
+            "properties": {
+              "refresh_token": {
+                "type": "string",
+                "description": "The refresh token obtained during initial login or previous refresh"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "access_token",
+              "refresh_token",
+              "token_type",
+              "expires_in"
+            ],
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "The access token used for accessing protected resources"
+              },
+              "refresh_token": {
+                "type": "string",
+                "description": "The refresh token used to obtain new access token"
+              },
+              "token_type": {
+                "type": "string",
+                "description": "The type of token issued",
+                "example": "Bearer"
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "The lifetime in seconds of the access token",
+                "example": 3600
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "key": "books",
+      "operations": [
+        {
+          "id": "listBookHandler",
+          "method": "GET",
+          "kind": "list",
+          "path": "/books",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "metadata",
+              "items"
+            ],
+            "properties": {
+              "metadata": {
+                "type": "object",
+                "required": [
+                  "current_page",
+                  "first_page",
+                  "last_page",
+                  "total_items",
+                  "page_size"
+                ],
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "description": "The current page number",
+                    "example": 1
+                  },
+                  "first_page": {
+                    "type": "integer",
+                    "description": "The first page",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "description": "The last page",
+                    "example": 12
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "The number of items per page",
+                    "example": 10
+                  },
+                  "total_items": {
+                    "type": "integer",
+                    "description": "The total number of items across all pages",
+                    "minimum": 0,
+                    "example": 45
+                  }
+                }
+              },
+              "items": {
+                "type": "array",
+                "description": "A list of book",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "user_id",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "The unique identifier for the book",
+                      "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the book",
+                      "example": "REST api design"
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "The unique identifier for the book owner",
+                      "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "The timestamp when the book was created"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "The timestamp when the book was updated"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getBookHandler",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "user_id",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the book",
+                "example": "REST api design"
+              },
+              "user_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book owner",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was created"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was updated"
+              }
+            }
+          }
+        },
+        {
+          "id": "createBookHandler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/books",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the book",
+                "example": "REST api design"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "user_id",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the book",
+                "example": "REST api design"
+              },
+              "user_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book owner",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was created"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was updated"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateBookHandler",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the book",
+                "example": "REST api design"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "user_id",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "name": {
+                "type": "string",
+                "description": "The name of the book",
+                "example": "REST api design"
+              },
+              "user_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the book owner",
+                "example": "50e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was created"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the book was updated"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteBookHandler",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Book deleted successfully"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UserManagement",
+      "key": "usermanagement",
+      "operations": [
+        {
+          "id": "getUserHandler",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "first_name",
+              "last_name",
+              "email",
+              "created_at",
+              "email_verified"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "The unique identifier for the user",
+                "example": "40e6215d-b5c6-4896-987c-f30f3678f608"
+              },
+              "first_name": {
+                "type": "string",
+                "description": "The first name of the user",
+                "example": "John"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "The last name of the user",
+                "example": "Doe"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "The email of the user",
+                "example": "johndoe@example.com"
+              },
+              "email_verified": {
+                "type": "boolean",
+                "description": "Returns true if user email is verified or false if otherwise",
+                "example": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the user was created"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

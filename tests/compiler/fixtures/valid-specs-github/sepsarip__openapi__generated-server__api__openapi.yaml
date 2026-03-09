@@ -1,0 +1,352 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: example@gmail.com
+    name: sep sarip
+    url: https://www.example.com
+  description: Open api for todolist api
+  license:
+    name: APACHE 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0
+  termsOfService: https://www.help.com
+  title: Todo List
+  version: "1"
+externalDocs:
+  description: Youtube Sep Sarip
+  url: https://www.youtube.com/@sepsariphidayattuloh
+servers:
+- description: Todolist Restful API servers
+  url: "https://{Environment}.example.com/api/v1"
+  variables:
+    Environment:
+      default: dev
+      description: Server Environment
+      enum:
+      - dev
+      - qa
+      - prod
+paths:
+  /todolist:
+    get:
+      description: Get all active todolit by default
+      operationId: todolistGET
+      parameters:
+      - description: Is include done todolist
+        explode: true
+        in: query
+        name: include_done
+        required: false
+        schema:
+          default: false
+          nullable: true
+          type: boolean
+        style: form
+      - description: Filter todolist by name
+        examples:
+          java:
+            description: example name java
+            value: java
+          php:
+            description: example name php
+            value: php
+        explode: true
+        in: query
+        name: name
+        required: false
+        schema:
+          maxLength: 100
+          minLength: 1
+          nullable: true
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                success:
+                  description: example success get all todolist
+                  value:
+                  - id: "1"
+                    name: java
+                    priority: 1
+                    tags:
+                    - backend
+                    - spring
+                  - id: "2"
+                    name: php
+                    priority: 2
+                    tags:
+                    - backend
+                    - laravel
+              schema:
+                $ref: "#/components/schemas/ArrayTodolist"
+          description: success get all todolist
+      security:
+      - TodolistAuth: []
+      summary: Get all todolist
+      tags:
+      - Todolist
+      x-eov-operation-handler: controllers/TodolistController
+    post:
+      description: Create new todolist to db
+      operationId: todolistPOST
+      requestBody:
+        content:
+          application/json:
+            examples:
+              java:
+                description: example create todolist java
+                value:
+                  name: java
+                  priority: 1
+                  tags:
+                  - backend
+                  - spring
+              php:
+                description: example create todolist php
+                value:
+                  name: php
+                  priority: 2
+                  tags:
+                  - backend
+                  - laravel
+            schema:
+              $ref: "#/components/schemas/CreateOrUpdateTodolist"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                java:
+                  description: success create java todolist
+                  value:
+                    id: "1"
+                    name: java
+                    priority: 1
+                    tags:
+                    - backend
+                    - spring
+                php:
+                  description: success create php todolist
+                  value:
+                    id: "2"
+                    name: php
+                    priority: 2
+                    tags:
+                    - backend
+                    - laravel
+              schema:
+                $ref: "#/components/schemas/Todolist"
+          description: success create todolist
+      security:
+      - TodolistAuth: []
+      summary: Create new todolist
+      tags:
+      - Todolist
+      x-eov-operation-handler: controllers/TodolistController
+  /todolist/{todolistId}:
+    delete:
+      description: Delete existing todolist by todolist id
+      operationId: todolistTodolistIdDELETE
+      parameters:
+      - description: todolist id for update
+        examples:
+          java:
+            description: sample todolist id for java
+            value: "1"
+          php:
+            description: sample todolist id for php
+            value: "2"
+        explode: false
+        in: path
+        name: todolistId
+        required: true
+        schema:
+          maxLength: 100
+          minLength: 1
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                success:
+                  description: success delete todolist
+                  value:
+                    success: true
+              schema:
+                $ref: "#/components/schemas/_todolist__todolistId__delete_200_response"
+          description: success delete todolist
+        "404":
+          content:
+            application/json:
+              examples:
+                failed:
+                  description: failed delete todolist
+                  value:
+                    success: false
+              schema:
+                $ref: "#/components/schemas/_todolist__todolistId__delete_200_response"
+          description: failed delete not found todolist
+      security:
+      - TodolistAuth: []
+      summary: Delete existing todolist by id
+      tags:
+      - Todolist
+      x-eov-operation-handler: controllers/TodolistController
+    put:
+      description: Update existing todolist by todolist id
+      operationId: todolistTodolistIdPUT
+      parameters:
+      - description: todolist id for update
+        examples:
+          java:
+            description: sample todolist id for java
+            value: "1"
+          php:
+            description: sample todolist id for php
+            value: "2"
+        explode: false
+        in: path
+        name: todolistId
+        required: true
+        schema:
+          maxLength: 100
+          minLength: 1
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            examples:
+              java:
+                description: example create todolist java
+                value:
+                  name: java
+                  priority: 1
+                  tags:
+                  - backend
+                  - spring
+              php:
+                description: example create todolist php
+                value:
+                  name: php
+                  priority: 2
+                  tags:
+                  - backend
+                  - laravel
+            schema:
+              $ref: "#/components/schemas/CreateOrUpdateTodolist"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              examples:
+                java:
+                  description: success update java todolist
+                  value:
+                    id: "1"
+                    name: java
+                    priority: 1
+                    tags:
+                    - backend
+                    - spring
+                php:
+                  description: success update php todolist
+                  value:
+                    id: "2"
+                    name: php
+                    priority: 2
+                    tags:
+                    - backend
+                    - laravel
+              schema:
+                $ref: "#/components/schemas/Todolist"
+          description: success update todolist
+      security:
+      - TodolistAuth: []
+      summary: Update existing todolist
+      tags:
+      - Todolist
+      x-eov-operation-handler: controllers/TodolistController
+components:
+  parameters:
+    TodolistId:
+      description: todolist id for update
+      examples:
+        java:
+          description: sample todolist id for java
+          value: "1"
+        php:
+          description: sample todolist id for php
+          value: "2"
+      explode: false
+      in: path
+      name: todolistId
+      required: true
+      schema:
+        maxLength: 100
+        minLength: 1
+        type: string
+      style: simple
+  schemas:
+    Todolist:
+      example:
+        name: name
+        id: id
+        priority: 0.8008281904610115
+        tags:
+        - tags
+        - tags
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        priority:
+          format: int32
+          type: number
+        tags:
+          items:
+            type: string
+          type: array
+      type: object
+    CreateOrUpdateTodolist:
+      example:
+        name: name
+        priority: 0.8008281904610115
+        tags:
+        - tags
+        - tags
+      properties:
+        name:
+          type: string
+        priority:
+          format: int32
+          type: number
+        tags:
+          items:
+            type: string
+          type: array
+      type: object
+    ArrayTodolist:
+      items:
+        $ref: "#/components/schemas/Todolist"
+      type: array
+    _todolist__todolistId__delete_200_response:
+      example:
+        success: true
+      properties:
+        success:
+          type: boolean
+      type: object
+  securitySchemes:
+    TodolistAuth:
+      description: Authentication for todolist RESTFul API
+      in: header
+      name: X-API-KEY
+      type: apiKey

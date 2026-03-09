@@ -1,0 +1,99 @@
+openapi: 3.0.0
+info:
+  title: arXiv Machine-Readable Paper API
+  version: 1.0.0
+  description: An API for retrieving machine-readable versions of arXiv papers in text or markdown format.
+
+servers:
+  - url: https://arxivgpt.p.rapidapi.com
+
+paths:
+  /papers/text:
+    get:
+      summary: Retrieve a text version of an arXiv paper
+      parameters:
+        - name: paper_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The arXiv ID of the paper
+          example: "2408.01800"
+      security:
+        - RapidAPI: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+  /papers/markdown:
+    get:
+      summary: Retrieve a markdown version of an arXiv paper
+      parameters:
+        - name: paper_id
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The arXiv ID of the paper
+          example: "2408.01800"
+      security:
+        - RapidAPI: []
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          $ref: '#/components/responses/ErrorResponse'
+
+components:
+  securitySchemes:
+    RapidAPI:
+      type: apiKey
+      in: header
+      name: x-rapidapi-key
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    SuccessResponse:
+      type: object
+      properties:
+        paper_id:
+          type: string
+        content:
+          type: string
+        total_pages:
+          type: integer
+        returned_pages:
+          type: integer
+        format:
+          type: string
+          enum: [text, markdown]
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+  responses:
+    ErrorResponse:
+      description: Error response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

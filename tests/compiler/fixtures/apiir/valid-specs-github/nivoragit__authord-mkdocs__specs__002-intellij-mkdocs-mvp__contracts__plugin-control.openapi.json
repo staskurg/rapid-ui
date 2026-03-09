@@ -1,0 +1,276 @@
+{
+  "api": {
+    "title": "IntelliJ MkDocs Plugin Shell Control Contract",
+    "version": "0.2.0"
+  },
+  "resources": [
+    {
+      "name": "Plugin-shell",
+      "key": "plugin-shell",
+      "operations": [
+        {
+          "id": "getPluginShellReadiness",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/plugin-shell/readiness",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "pluginLoaded",
+              "toolWindowRegistered",
+              "startActionRegistered",
+              "runIdeReady"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "pluginLoaded": {
+                "type": "boolean"
+              },
+              "toolWindowRegistered": {
+                "type": "boolean"
+              },
+              "startActionRegistered": {
+                "type": "boolean"
+              },
+              "runIdeReady": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "performStartPreviewAction",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/plugin-shell/actions/start-preview/perform",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "projectPath",
+              "triggerSource"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "projectPath": {
+                "type": "string"
+              },
+              "triggerSource": {
+                "type": "string",
+                "enum": [
+                  "ACTION",
+                  "TOOL_WINDOW"
+                ]
+              },
+              "startupOutput": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "invoked",
+              "delegated"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "invoked": {
+                "type": "boolean"
+              },
+              "delegated": {
+                "type": "boolean"
+              },
+              "handoffResult": {
+                "type": "object",
+                "required": [
+                  "projectId",
+                  "started",
+                  "alreadyRunning",
+                  "baseUrlDetected"
+                ],
+                "properties": {
+                  "projectId": {
+                    "type": "string"
+                  },
+                  "started": {
+                    "type": "boolean"
+                  },
+                  "alreadyRunning": {
+                    "type": "boolean"
+                  },
+                  "baseUrlDetected": {
+                    "type": "boolean"
+                  },
+                  "previewUrl": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "failureReason": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateStartPreviewAction",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/plugin-shell/actions/start-preview/update",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "projectId"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "projectPath": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "visible",
+              "enabled"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "enabled": {
+                "type": "boolean"
+              },
+              "disabledReason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "handoffRuntimeFromPluginShell",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/plugin-shell/runtime/handoff",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "projectPath",
+              "triggerSource"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "projectPath": {
+                "type": "string"
+              },
+              "triggerSource": {
+                "type": "string",
+                "enum": [
+                  "ACTION",
+                  "TOOL_WINDOW"
+                ]
+              },
+              "startupOutput": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "started",
+              "alreadyRunning",
+              "baseUrlDetected"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "started": {
+                "type": "boolean"
+              },
+              "alreadyRunning": {
+                "type": "boolean"
+              },
+              "baseUrlDetected": {
+                "type": "boolean"
+              },
+              "previewUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "failureReason": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "createToolWindowShell",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/plugin-shell/tool-window/create",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "projectId"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "refresh": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "contentCreated",
+              "visible"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "contentCreated": {
+                "type": "boolean"
+              },
+              "visible": {
+                "type": "boolean"
+              },
+              "statusMessage": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

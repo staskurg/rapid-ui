@@ -1,0 +1,164 @@
+openapi: 3.0.0
+info:
+  title: RAG Backend API
+  version: 1.0.0
+  description: API for the Physical AI & Humanoid Robotics Textbook RAG Chatbot.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: get_health
+      responses:
+        '200':
+          description: Health check successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: OK
+
+  /chat:
+    post:
+      summary: Ask a question to the RAG chatbot (full corpus)
+      operationId: post_chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+              properties:
+                query:
+                  type: string
+                  description: The user's question.
+                  example: "What is ROS 2?"
+      responses:
+        '200':
+          description: Successful response from the chatbot
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    example: "ROS 2 is a flexible framework for writing robot software."
+                  citations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        doc_id:
+                          type: string
+                        section_id:
+                          type: string
+                        url:
+                          type: string
+                        text:
+                          type: string
+
+  /chat/selection:
+    post:
+      summary: Ask a question to the RAG chatbot (restricted to selected text)
+      operationId: post_chat_selection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - query
+                - selected_text
+              properties:
+                query:
+                  type: string
+                  description: The user's question.
+                  example: "What does this paragraph mean?"
+                selected_text:
+                  type: string
+                  description: The text selected by the user, used as the sole context.
+                  example: "ROS 2 is a flexible framework for writing robot software."
+      responses:
+        '200':
+          description: Successful response from the chatbot based on selected text
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    example: "The paragraph describes ROS 2 as a flexible framework."
+                  citations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        doc_id:
+                          type: string
+                        section_id:
+                          type: string
+                        url:
+                          type: string
+                        text:
+                          type: string
+
+  /ingest:
+    post:
+      summary: Ingest documents for indexing (admin/dev only)
+      operationId: post_ingest
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - documents
+              properties:
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    required:
+                      - doc_id
+                      - title
+                      - url
+                      - content
+                    properties:
+                      doc_id:
+                        type: string
+                        description: Stable, unique identifier for the document.
+                      title:
+                        type: string
+                        description: Title of the chapter/section.
+                      url:
+                        type: string
+                        description: URL to the document.
+                      content:
+                        type: string
+                        description: Full text content of the document.
+      responses:
+        '200':
+          description: Document ingestion initiated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Ingestion process started."
+        '401':
+          description: Unauthorized access

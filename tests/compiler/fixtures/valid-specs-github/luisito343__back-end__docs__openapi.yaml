@@ -1,0 +1,292 @@
+openapi: 3.0.3
+info:
+  title: Administrador de Productos API
+  version: 0.1.0
+  description: |
+    Documentación base de la API de productos.
+    Esta especificación está en etapa inicial y se actualizará junto con el proyecto.
+
+servers:
+  - url: http://localhost:3000
+    description: Local
+
+tags:
+  - name: Health
+  - name: Products
+
+paths:
+  /api/:
+    get:
+      tags: [Health]
+      summary: Health check
+      responses:
+        '200':
+          description: Servicio activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+
+  /api/products:
+    get:
+      tags: [Products]
+      summary: Listar productos
+      parameters:
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [name, nombre, price, precio, available, disponibilidad, createdAt]
+          description: Campo por el cual ordenar.
+        - in: query
+          name: order
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: DESC
+          description: Orden ascendente o descendente.
+        - in: query
+          name: minPrice
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: maxPrice
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: precioMin
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: precioMax
+          schema:
+            type: number
+            format: float
+        - in: query
+          name: name
+          schema:
+            type: string
+        - in: query
+          name: nombre
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags: [Products]
+      summary: Crear producto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '400':
+          description: Validación fallida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/products/{id}:
+    get:
+      tags: [Products]
+      summary: Obtener producto por id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags: [Products]
+      summary: Actualizar producto
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags: [Products]
+      summary: Eliminar producto
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Producto eliminado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Product deleted successfully
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: Teclado mecánico
+        price:
+          type: number
+          format: float
+          example: 79.99
+        available:
+          type: boolean
+          example: true
+      required: [id, name, price, available]
+
+    CreateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        available:
+          type: boolean
+          default: true
+      required: [name, price]
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: float
+        available:
+          type: boolean
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Product not found

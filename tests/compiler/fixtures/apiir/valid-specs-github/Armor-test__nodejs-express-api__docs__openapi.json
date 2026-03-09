@@ -1,0 +1,492 @@
+{
+  "api": {
+    "title": "Customer Service API",
+    "version": "2.5.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics V2",
+      "key": "analytics-v2",
+      "operations": [
+        {
+          "id": "getDashboardAnalytics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v2/analytics/dashboard",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "totalRevenue": {
+                "type": "number"
+              },
+              "totalOrders": {
+                "type": "integer"
+              },
+              "totalUsers": {
+                "type": "integer"
+              },
+              "conversionRate": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "expiresIn": {
+                "type": "integer"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "user",
+                      "admin",
+                      "vendor"
+                    ]
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "createOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "items",
+              "shippingAddress"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "shippingAddress": {
+                "type": "object",
+                "properties": {
+                  "street": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "zipCode": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered",
+                  "cancelled"
+                ]
+              },
+              "totalAmount": {
+                "type": "number"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "processPayment",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/payments",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "orderId",
+              "paymentMethod",
+              "amount"
+            ],
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "paymentMethod": {
+                "type": "string",
+                "enum": [
+                  "card",
+                  "paypal",
+                  "bank_transfer"
+                ]
+              },
+              "amount": {
+                "type": "number"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "transactionId": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "getAllProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/products",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "number"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "inventory": {
+                      "type": "integer"
+                    },
+                    "images": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "getAllUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/users",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "firstName": {
+                      "type": "string"
+                    },
+                    "lastName": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "admin",
+                        "vendor"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getUserById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/users/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "vendor"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/users",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password",
+              "firstName",
+              "lastName"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "firstName": {
+                "type": "string"
+              },
+              "lastName": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "user",
+                  "admin",
+                  "vendor"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

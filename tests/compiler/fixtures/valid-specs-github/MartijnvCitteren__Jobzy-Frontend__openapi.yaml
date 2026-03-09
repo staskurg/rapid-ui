@@ -1,0 +1,426 @@
+openapi: 3.0.3
+info:
+  title: Jobly Jobs API
+  description: |
+    API for creating job vacancy content using AI-powered generation.
+
+    The API provides two main endpoints:
+    1. Create company information and receive a token for subsequent requests
+    2. Generate vacancy text based on job information and company context
+  version: 1.0.0
+  contact:
+    name: Jobly Jobs Support
+
+servers:
+  - url: http://localhost:8090/api/v1
+    description: Local development server
+
+tags:
+  - name: Job Creation
+    description: Endpoints for creating company information and generating job vacancies
+
+paths:
+  /create-company-info:
+    post:
+      tags:
+        - Job Creation
+      summary: Create company information
+      description: |
+        Submits company information including company name, website, country, and an optional example vacancy URL.
+        Returns a token that must be used in subsequent vacancy creation requests.
+      operationId: createCompanyInfo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyInfoRequestDto'
+            examples:
+              dutchCompany:
+                summary: Dutch company example
+                value:
+                  companyName: "Tech Innovators BV"
+                  companyWebsite: "www.techinnovators.nl"
+                  country: "THE_NETHERLANDS"
+                  exampleVacancyUrl: "www.techinnovators.nl/careers/senior-developer"
+              belgianCompany:
+                summary: Belgian company without example vacancy
+                value:
+                  companyName: "Brussels Software"
+                  companyWebsite: "www.brusselssoftware.be"
+                  country: "BELGIUM"
+      responses:
+        '201':
+          description: Company information created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyInfoResponseToken'
+              example:
+                token: "550e8400-e29b-41d4-a716-446655440000"
+        '400':
+          description: Invalid request body or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+              example:
+                message: "Validation failed"
+                details: "website address should look like 'www.example.com'"
+
+  /create-vacancy:
+    post:
+      tags:
+        - Job Creation
+      summary: Create vacancy text
+      description: |
+        Generates AI-powered vacancy text based on job information and company context.
+        Requires a valid requestId (token) obtained from the /create-company-info endpoint.
+      operationId: createVacancyText
+      parameters:
+        - name: requestId
+          in: header
+          required: true
+          description: Token received from the create-company-info endpoint
+          schema:
+            type: string
+            format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInfoRequestDto'
+            examples:
+              seniorDeveloper:
+                summary: Senior Developer vacancy
+                value:
+                  jobTitle: "Senior Full Stack Developer"
+                  seniorityLevel: "SENIOR"
+                  jobSummary: "We are looking for an experienced Full Stack Developer to join our innovative team working on cutting-edge cloud solutions."
+                  tasks: "Design and develop scalable web applications, mentor junior developers, participate in architecture decisions, conduct code reviews."
+                  skills: "Java, Spring Boot, React, TypeScript, AWS, Docker, Kubernetes, microservices architecture, CI/CD pipelines."
+                  teamDescription: "Join our agile team of 8 passionate developers working on innovative cloud-based SaaS products used by thousands of customers."
+                  writingStyle:
+                    writingStyle: "BUSINESS_CASUAL"
+                    language: "ENGLISH"
+                  benefits:
+                    salaryPeriod: "YEARLY"
+                    minSalary: 65000.00
+                    maxSalary: 85000.00
+                    extraPerks: "Flexible working hours, remote work options, yearly training budget, company laptop and phone"
+                  contactInfo:
+                    name: "Sarah Johnson"
+                    mail: "sarah.johnson@example.com"
+                    phoneNumber: "+31 20 123 4567"
+              juniorIntern:
+                summary: Junior Intern vacancy
+                value:
+                  jobTitle: "Software Development Intern"
+                  seniorityLevel: "INTERN"
+                  jobSummary: "Looking for an enthusiastic computer science student to join our development team for a 6-month internship position."
+                  tasks: "Assist in developing new features, write unit tests, participate in daily standups, learn from senior developers."
+                  skills: "Basic knowledge of Java or Python, understanding of OOP principles, Git version control, eagerness to learn."
+                  teamDescription: "Our supportive team environment encourages learning and growth with mentorship from experienced developers."
+                  writingStyle:
+                    writingStyle: "CASUAL"
+                    language: "DUTCH"
+                  benefits:
+                    salaryPeriod: "MONTHLY"
+                    minSalary: 500.00
+                    maxSalary: 750.00
+                    extraPerks: "Travel allowance, free lunch, learning opportunities"
+                  contactInfo:
+                    name: "Mark de Vries"
+                    mail: "m.devries@example.nl"
+                    phoneNumber: "+31612345678"
+      responses:
+        '201':
+          description: Vacancy text generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GeneratedVacancyDto'
+              example:
+                summary: "Join our team as a Senior Full Stack Developer"
+                companyDescription: "Tech Innovators BV is a leading software company specializing in cloud-based solutions..."
+                teamDescription: "Work alongside a talented team of 8 developers in an agile environment..."
+                dayToDayDescription: "Your day will involve designing scalable applications, mentoring team members..."
+                jobDescription: "As a Senior Full Stack Developer, you'll be responsible for building and maintaining..."
+                jobUniqueSellingPoints: "Work on cutting-edge technology, influence architectural decisions..."
+                requirements: "5+ years of Java development, strong React skills, experience with AWS..."
+                offer: "Competitive salary between €65,000 and €85,000, flexible hours, remote work..."
+                contactInformation: "Interested? Contact Sarah Johnson at sarah.johnson@example.com or +31 20 123 4567"
+        '400':
+          description: Invalid request body or validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+              example:
+                message: "Validation failed"
+                details: "Job Title must be between 2 and 75 characters"
+        '404':
+          description: Request ID not found or expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorDto'
+              example:
+                message: "Request ID not found"
+                details: "The provided requestId does not exist or has expired"
+
+components:
+  schemas:
+    CompanyInfoRequestDto:
+      type: object
+      required:
+        - companyWebsite
+        - country
+      properties:
+        companyName:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Name of the company
+          example: "Tech Innovators BV"
+        companyWebsite:
+          type: string
+          minLength: 1
+          maxLength: 50
+          pattern: '^www\..+\..+$'
+          description: Company website URL in format 'www.example.com'
+          example: "www.techinnovators.nl"
+        country:
+          $ref: '#/components/schemas/Country'
+        exampleVacancyUrl:
+          type: string
+          maxLength: 100
+          pattern: '^www\..+\..+$'
+          description: Optional URL to an example vacancy from the company's website
+          example: "www.techinnovators.nl/careers/senior-developer"
+
+    CompanyInfoResponseToken:
+      type: object
+      properties:
+        token:
+          type: string
+          format: uuid
+          description: Unique token to be used for creating vacancies
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    JobInfoRequestDto:
+      type: object
+      required:
+        - seniorityLevel
+        - writingStyle
+      properties:
+        jobTitle:
+          type: string
+          minLength: 2
+          maxLength: 75
+          description: Title of the job position
+          example: "Senior Full Stack Developer"
+        seniorityLevel:
+          $ref: '#/components/schemas/SeniorityLevel'
+        jobSummary:
+          type: string
+          minLength: 20
+          maxLength: 300
+          description: Brief summary of the job position
+          example: "We are looking for an experienced Full Stack Developer to join our innovative team."
+        tasks:
+          type: string
+          minLength: 10
+          maxLength: 300
+          description: Main tasks and responsibilities
+          example: "Design and develop scalable web applications, mentor junior developers, participate in architecture decisions."
+        skills:
+          type: string
+          minLength: 10
+          maxLength: 300
+          description: Required skills and qualifications
+          example: "Java, Spring Boot, React, TypeScript, AWS, Docker, Kubernetes, microservices architecture."
+        teamDescription:
+          type: string
+          minLength: 10
+          maxLength: 300
+          description: Description of the team the candidate will join
+          example: "Join our agile team of 8 passionate developers working on innovative cloud-based products."
+        writingStyle:
+          $ref: '#/components/schemas/WritingStyleRequestDto'
+        benefits:
+          $ref: '#/components/schemas/BenefitsRequestDto'
+        contactInfo:
+          $ref: '#/components/schemas/ContactInfoVacancyRequestDto'
+
+    WritingStyleRequestDto:
+      type: object
+      required:
+        - writingStyle
+        - language
+      properties:
+        writingStyle:
+          $ref: '#/components/schemas/WritingStyle'
+        language:
+          $ref: '#/components/schemas/Language'
+
+    BenefitsRequestDto:
+      type: object
+      required:
+        - salaryPeriod
+      properties:
+        salaryPeriod:
+          $ref: '#/components/schemas/SalaryPeriod'
+        minSalary:
+          type: number
+          format: decimal
+          minimum: 0.0
+          multipleOf: 0.01
+          description: Minimum salary offered (between 0.00 and 999999.99)
+          example: 65000.00
+        maxSalary:
+          type: number
+          format: decimal
+          multipleOf: 0.01
+          description: Maximum salary offered (between 0.00 and 999999.99)
+          example: 85000.00
+        extraPerks:
+          type: string
+          minLength: 10
+          maxLength: 100
+          description: Additional perks and benefits
+          example: "Flexible working hours, remote work options, yearly training budget"
+
+    ContactInfoVacancyRequestDto:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 25
+          description: Name of the contact person
+          example: "Sarah Johnson"
+        mail:
+          type: string
+          maxLength: 50
+          format: email
+          description: Email address of the contact person
+          example: "sarah.johnson@example.com"
+        phoneNumber:
+          type: string
+          maxLength: 15
+          pattern: '^[0-9\-\+ ]+$'
+          description: Phone number (at least 10 characters, only numbers, '-', '+' or spaces)
+          example: "+31 20 123 4567"
+
+    GeneratedVacancyDto:
+      type: object
+      properties:
+        summary:
+          type: string
+          description: Generated summary of the vacancy
+          example: "Join our team as a Senior Full Stack Developer"
+        companyDescription:
+          type: string
+          description: AI-generated description of the company
+          example: "Tech Innovators BV is a leading software company specializing in cloud-based solutions..."
+        teamDescription:
+          type: string
+          description: Generated description of the team
+          example: "Work alongside a talented team of 8 developers in an agile environment..."
+        dayToDayDescription:
+          type: string
+          description: Description of typical day-to-day activities
+          example: "Your day will involve designing scalable applications, mentoring team members..."
+        jobDescription:
+          type: string
+          description: Comprehensive job description
+          example: "As a Senior Full Stack Developer, you'll be responsible for building and maintaining..."
+        jobUniqueSellingPoints:
+          type: string
+          description: Unique aspects that make this job attractive
+          example: "Work on cutting-edge technology, influence architectural decisions..."
+        requirements:
+          type: string
+          description: Formatted list of requirements
+          example: "5+ years of Java development, strong React skills, experience with AWS..."
+        offer:
+          type: string
+          description: What the company offers to the candidate
+          example: "Competitive salary between €65,000 and €85,000, flexible hours, remote work..."
+        contactInformation:
+          type: string
+          description: Formatted contact information
+          example: "Interested? Contact Sarah Johnson at sarah.johnson@example.com or +31 20 123 4567"
+
+    ErrorDto:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Validation failed"
+        details:
+          type: string
+          description: Detailed error information
+          example: "Job Title must be between 2 and 75 characters"
+
+    Country:
+      type: string
+      enum:
+        - THE_NETHERLANDS
+        - BELGIUM
+        - GERMANY
+      description: Country where the company is located
+      example: THE_NETHERLANDS
+
+    SeniorityLevel:
+      type: string
+      enum:
+        - INTERN
+        - JUNIOR
+        - MEDIOR
+        - SENIOR
+      description: Seniority level of the position
+      example: SENIOR
+
+    WritingStyle:
+      type: string
+      enum:
+        - FORMAL
+        - BUSINESS_CASUAL
+        - CASUAL
+        - CREATIVE
+        - TECHNICAL
+      description: |
+        Writing style for the vacancy text:
+        - FORMAL: Professional and precise language
+        - BUSINESS_CASUAL: Relaxed but professional and approachable
+        - CASUAL: Informal, conversational and friendly
+        - CREATIVE: Expressive, imaginative and engaging
+        - TECHNICAL: Clear, precise and technical with domain-specific terminology
+      example: BUSINESS_CASUAL
+
+    Language:
+      type: string
+      enum:
+        - DUTCH
+        - ENGLISH
+        - FLEMISH
+        - FRENCH
+        - GERMAN
+      description: Language for the generated vacancy text
+      example: ENGLISH
+
+    SalaryPeriod:
+      type: string
+      enum:
+        - YEARLY
+        - MONTHLY
+        - WEEKLY
+        - DAILY
+        - HOURLY
+      description: Period for salary calculation
+      example: YEARLY
+

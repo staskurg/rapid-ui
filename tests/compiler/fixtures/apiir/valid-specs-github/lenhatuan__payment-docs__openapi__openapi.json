@@ -1,0 +1,436 @@
+{
+  "api": {
+    "title": "Bizzi Payment OpenAPI",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/token",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/token",
+          "requestSchema": {
+            "required": [
+              "clientId",
+              "clientSecret"
+            ],
+            "type": "object",
+            "properties": {
+              "clientId": {
+                "type": "string"
+              },
+              "clientSecret": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "clientId": "4d00f37a-2f50-4c08-af00-cb97fa6a309e",
+              "clientSecret": "0804d9e4be435940e1b63cb024d149a7"
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string"
+                  },
+                  "expiredAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            },
+            "example": {
+              "statusCode": 200,
+              "data": {
+                "value": {
+                  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudElkIjoiOGZiZTJkYjEtOTRiNC00YjRhLWJlMmUtMjUwMWFmOWIwZjkxIiwibWVyY2hhbnRDbGllbnRJZCI6IjE1OWNiNjUwLWJhMmEtNGYxYi04YjJlLTUwMjYzODlmODNlOCIsImlhdCI6MTcxMzgzNzMyMiwiZXhwIjoxNzEzODQwOTIyfQ.TGVHDEYdv-twwf2uYVBiPMcsEBf8uvTPKh7c-3388CA",
+                  "expiredAt": "2019-08-24T14:15:22Z"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Banks",
+      "key": "banks",
+      "operations": [
+        {
+          "id": "GET:/banks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/banks",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "properties": {
+                    "bin": {
+                      "type": "string",
+                      "description": "Bank Identification Number"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Tên ngân hàng"
+                    },
+                    "shortName": {
+                      "type": "string"
+                    },
+                    "swiftCode": {
+                      "type": "string"
+                    },
+                    "logo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "example": {
+              "statusCode": 200,
+              "data": [
+                {
+                  "bin": "970426",
+                  "name": "Ngân hàng Thương mại Cổ phần Hàng Hải Việt Nam (Maritime Bank)",
+                  "shortName": "MSB",
+                  "swiftCode": "MCOBVNVX",
+                  "logo": "https://cdn.bizzi.services/banks/MSB.png"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payment order batches",
+      "key": "payment-order-batches",
+      "operations": [
+        {
+          "id": "GET:/payment-order-batches/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/payment-order-batches/{id}",
+          "identifierParam": "id",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "paymentOrders": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "transactionId": {
+                          "type": "string",
+                          "description": "Mã giao dịch trên Bizzi"
+                        },
+                        "refId": {
+                          "type": "string",
+                          "description": "Mã giao dịch do đối tác truyền qua"
+                        },
+                        "amount": {
+                          "type": "number",
+                          "description": "Số tiền chi"
+                        },
+                        "accountName": {
+                          "type": "string",
+                          "description": "Tên người thụ hưởng"
+                        },
+                        "accountNumber": {
+                          "type": "string",
+                          "description": "Số tài khoản thụ hưởng"
+                        },
+                        "bankCode": {
+                          "type": "string",
+                          "description": "Mã ngân hàng thụ hưởng"
+                        },
+                        "branchCode": {
+                          "type": "string"
+                        },
+                        "channel": {
+                          "type": "string",
+                          "description": "Loại giao dịch: INTERNAL, CITAD, NAPAS, AUTO"
+                        },
+                        "remark": {
+                          "type": "string",
+                          "description": "Nội dung lệnh chi"
+                        },
+                        "status": {
+                          "type": "string",
+                          "format": "enum",
+                          "enum": [
+                            "SUCCESS, FAILED, PENDING, TIMEOUT"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/payment-order-batches",
+          "method": "POST",
+          "kind": "create",
+          "path": "/payment-order-batches",
+          "requestSchema": {
+            "required": [
+              "sofId"
+            ],
+            "type": "object",
+            "properties": {
+              "sofId": {
+                "type": "string",
+                "description": "Id nguồn tiền"
+              },
+              "paymentOrders": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "refId",
+                    "amount",
+                    "accountNumber",
+                    "channel"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "refId": {
+                      "type": "string",
+                      "description": "Mã giao dịch do client truyền qua"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "description": "Số tiền chi"
+                    },
+                    "accountName": {
+                      "type": "string",
+                      "description": "Tên người thụ hưởng"
+                    },
+                    "accountNumber": {
+                      "type": "string",
+                      "description": "Số tài khoản thụ hưởng"
+                    },
+                    "bankCode": {
+                      "type": "string",
+                      "description": "Mã ngân hàng thụ hưởng"
+                    },
+                    "branchCode": {
+                      "type": "string"
+                    },
+                    "channel": {
+                      "type": "string",
+                      "description": "Loại giao dịch",
+                      "enum": [
+                        "AUTO",
+                        "INTERNAL",
+                        "CITAD",
+                        "NAPAS"
+                      ]
+                    },
+                    "remark": {
+                      "type": "string",
+                      "description": "Nội dung lệnh chi"
+                    }
+                  }
+                }
+              }
+            },
+            "example": {
+              "sofId": "683cfaea-90a3-4e93-b305-da16a90e519a",
+              "paymentOrders": [
+                {
+                  "refId": "b24dd1d5-b6c4-4806-8a55-e7a35c9a2298",
+                  "amount": 600000000,
+                  "accountName": "NGUYEN VAN TEST",
+                  "accountNumber": "0129837294",
+                  "bankCode": "OCB",
+                  "channel": "AUTO",
+                  "remark": "chuyen tien thanh toan"
+                }
+              ]
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "paymentOrderBatchId": {
+                    "type": "string",
+                    "description": "Id lệnh chi do Bizzi sinh ra"
+                  }
+                }
+              }
+            },
+            "example": {
+              "statusCode": 200,
+              "data": {
+                "paymentOrderBatchId": "504474d9-8a87-47d1-86f9-9b552409548d"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Source of funds",
+      "key": "source-of-funds",
+      "operations": [
+        {
+          "id": "GET:/sof/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/sof/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "balance": {
+                    "type": "number",
+                    "description": "Số dư tài khoản"
+                  },
+                  "bin": {
+                    "type": "string"
+                  },
+                  "bankAccountNumber": {
+                    "type": "string"
+                  },
+                  "bankAccountName": {
+                    "type": "string"
+                  },
+                  "branchCode": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "bankNostro": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "example": {
+              "statusCode": 200,
+              "data": {
+                "balance": 9999999999,
+                "bin": "970426",
+                "bankAccountNumber": "11001011234215",
+                "bankAccountName": "0000000000000620872",
+                "type": "account",
+                "bankNostro": "11001011234215"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/sofs",
+          "method": "POST",
+          "kind": "create",
+          "path": "/sofs",
+          "requestSchema": {
+            "required": [
+              "bin",
+              "bankAccountNumber",
+              "bankAccountName"
+            ],
+            "properties": {
+              "bin": {
+                "type": "string"
+              },
+              "bankAccountNumber": {
+                "type": "string"
+              },
+              "bankAccountName": {
+                "type": "string"
+              },
+              "branchCode": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "default": "ACCOUNT"
+              },
+              "bankNostro": {
+                "type": "string"
+              }
+            },
+            "example": {
+              "bin": "970426",
+              "bankAccountNumber": "11001011234215",
+              "bankAccountName": "0000000000000620872",
+              "type": "account",
+              "bankNostro": "11001011234215"
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "statusCode": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "sofId": {
+                    "type": "string",
+                    "description": "Id nguồn tiền"
+                  }
+                }
+              }
+            },
+            "example": {
+              "statusCode": 200,
+              "data": {
+                "sofId": "504474d9-8a87-47d1-86f9-9b552409548d"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

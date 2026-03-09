@@ -1,0 +1,208 @@
+{
+  "api": {
+    "title": "SSELFIE GPT Actions API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Files",
+      "key": "files",
+      "operations": [
+        {
+          "id": "file_stat",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/gpt-actions/file_stat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "filePath"
+            ],
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the file or directory (relative to project root)",
+                "example": "package.json"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "filePath",
+              "isFile",
+              "isDirectory",
+              "size",
+              "modifiedAt",
+              "createdAt",
+              "readable"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "filePath": {
+                "type": "string",
+                "description": "Relative path to the file or directory",
+                "example": "package.json"
+              },
+              "isFile": {
+                "type": "boolean",
+                "description": "Whether the path is a file"
+              },
+              "isDirectory": {
+                "type": "boolean",
+                "description": "Whether the path is a directory"
+              },
+              "size": {
+                "type": "integer",
+                "description": "Size in bytes (for files)",
+                "example": 1234
+              },
+              "modifiedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last modification time (ISO 8601)",
+                "example": "2026-01-07T12:00:00.000Z"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Creation time (ISO 8601)",
+                "example": "2026-01-07T12:00:00.000Z"
+              },
+              "readable": {
+                "type": "boolean",
+                "description": "Whether the file can be read (size <= 200 KB)"
+              }
+            }
+          }
+        },
+        {
+          "id": "list_files",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/gpt-actions/list_files",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "directoryPath": {
+                "type": "string",
+                "description": "Path to the directory to list (relative to project root). Defaults to \".\" (project root)",
+                "default": ".",
+                "example": "app/components"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "directoryPath",
+              "files",
+              "count"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "directoryPath": {
+                "type": "string",
+                "description": "Relative path to the directory that was listed",
+                "example": "app/components"
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "type",
+                    "path"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "File or directory name",
+                      "example": "my-component.tsx"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "file",
+                        "directory"
+                      ],
+                      "description": "Whether this is a file or directory"
+                    },
+                    "path": {
+                      "type": "string",
+                      "description": "Relative path to this file/directory",
+                      "example": "app/components/my-component.tsx"
+                    }
+                  }
+                },
+                "description": "Array of files and directories in the requested directory"
+              },
+              "count": {
+                "type": "integer",
+                "description": "Number of files/directories returned",
+                "example": 15
+              }
+            }
+          }
+        },
+        {
+          "id": "read_file",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/gpt-actions/read_file",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "filePath"
+            ],
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the file to read (relative to project root)",
+                "example": "app/components/my-component.tsx"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "filePath",
+              "content",
+              "size"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "filePath": {
+                "type": "string",
+                "description": "Relative path to the file that was read",
+                "example": "app/components/my-component.tsx"
+              },
+              "content": {
+                "type": "string",
+                "description": "File contents as UTF-8 text"
+              },
+              "size": {
+                "type": "integer",
+                "description": "File size in bytes",
+                "example": 1234
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

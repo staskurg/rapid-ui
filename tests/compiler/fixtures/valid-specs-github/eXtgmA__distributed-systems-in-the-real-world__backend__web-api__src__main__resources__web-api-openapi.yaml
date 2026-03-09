@@ -1,0 +1,265 @@
+openapi: 3.0.3
+info:
+  title: Web API Bridge
+  version: 0.1.0
+  description: |
+    Reactive bridge between the Angular organiser client and the blockchain ticketing API.
+servers:
+  - url: http://localhost:8082
+    description: Local development instance
+paths:
+  /api/events:
+    post:
+      summary: Create a new event
+      operationId: createEvent
+      tags:
+        - Ticketing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateEventRequest'
+      responses:
+        '201':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventCreationResponse'
+        '400':
+          description: Invalid payload
+  /api/organizers/{address}/events:
+    get:
+      summary: List organizer events
+      description: Returns events for the authenticated organiser wallet.
+      operationId: listOrganizerEvents
+      tags:
+        - Ticketing
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Wallet address of the organiser
+        - name: nonce
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Nonce issued for the organiser and purpose `list_events`
+        - name: signature
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Signed message `list_events:{nonce}`
+      responses:
+        '200':
+          description: Event snapshot
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/EventResponse'
+        '404':
+          description: Organizer not registered or signature invalid
+  /api/organizers/{address}/sales:
+    get:
+      summary: Aggregated organizer ticket sales
+      description: Returns ticket sales grouped by event for the authenticated organiser wallet.
+      operationId: listOrganizerTicketSales
+      tags:
+        - Ticketing
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Wallet address of the organiser
+        - name: nonce
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Nonce issued for the organiser and purpose `list_sales`
+        - name: signature
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Signed message `list_sales:{nonce}`
+      responses:
+        '200':
+          description: Aggregated ticket sale entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TicketSalesResponse'
+        '404':
+          description: Organizer not registered or signature invalid
+  /api/tickets/verify:
+    post:
+      summary: Verify ticket ownership
+      operationId: verifyTicket
+      tags:
+        - Ticketing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyTicketRequest'
+      responses:
+        '200':
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyTicketResponse'
+        '400':
+          description: Invalid payload
+components:
+  schemas:
+    CreateEventRequest:
+      type: object
+      required:
+        - name
+        - eventDate
+        - ticketPriceWei
+        - maxTickets
+      properties:
+        name:
+          type: string
+          description: Event name
+        eventDate:
+          type: integer
+          format: int64
+          description: Event date as UNIX epoch seconds
+        ticketPriceWei:
+          type: string
+          pattern: '^[0-9]+$'
+          description: Ticket price in wei
+        maxTickets:
+          type: integer
+          format: int64
+          minimum: 1
+          description: Maximum number of tickets
+    EventCreationResponse:
+      type: object
+      required:
+        - eventId
+        - transactionHash
+      properties:
+        eventId:
+          type: integer
+          format: int64
+        transactionHash:
+          type: string
+    EventResponse:
+      type: object
+      required:
+        - eventId
+        - name
+        - eventDate
+        - ticketPriceWei
+        - ticketsRemaining
+        - ticketsSold
+        - organizer
+        - proceedsWei
+        - active
+      properties:
+        eventId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        eventDate:
+          type: integer
+          format: int64
+        ticketPriceWei:
+          type: string
+          pattern: '^[0-9]+$'
+        ticketsRemaining:
+          type: integer
+          format: int64
+        ticketsSold:
+          type: integer
+          format: int64
+        organizer:
+          type: string
+        proceedsWei:
+          type: string
+          pattern: '^[0-9]+$'
+        active:
+          type: boolean
+    TicketSalesResponse:
+      type: object
+      required:
+        - eventId
+        - eventName
+        - eventDate
+        - totalSold
+        - owners
+      properties:
+        eventId:
+          type: integer
+          format: int64
+        eventName:
+          type: string
+        eventDate:
+          type: integer
+          format: int64
+        totalSold:
+          type: integer
+          format: int64
+        owners:
+          type: array
+          items:
+            $ref: '#/components/schemas/SoldTicketOwnerResponse'
+    SoldTicketOwnerResponse:
+      type: object
+      required:
+        - ownerAddress
+        - ticketIds
+      properties:
+        ownerAddress:
+          type: string
+        ticketIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+    VerifyTicketRequest:
+      type: object
+      required:
+        - walletAddress
+        - ticketId
+      properties:
+        walletAddress:
+          type: string
+        ticketId:
+          type: integer
+          format: int64
+          minimum: 1
+    VerifyTicketResponse:
+      type: object
+      required:
+        - ticketId
+        - walletAddress
+        - valid
+      properties:
+        ticketId:
+          type: integer
+          format: int64
+        walletAddress:
+          type: string
+        valid:
+          type: boolean

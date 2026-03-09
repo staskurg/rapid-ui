@@ -1,0 +1,258 @@
+openapi: 3.0.0
+info:
+  title: Caramelized Jokes API
+  description: |
+    API REST pour gérer et consulter des blagues Carambar.
+    
+    Cette API permet de :
+    - Consulter toutes les blagues
+    - Récupérer une blague spécifique par son ID
+    - Obtenir une blague aléatoire
+    - Ajouter de nouvelles blagues
+    
+    Développée dans le cadre d'un test technique.
+  version: 1.0.0
+  contact:
+    name: Sabine Laurent
+    email: sabinelaurent.dev@gmail.com
+    url: https://github.com/SabineLaurent
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v0
+    description: Serveur de développement local
+  - url: https://caramelized-jokes-api.onrender.com/api/v0
+    description: Serveur de production (Render)
+
+tags:
+  - name: Jokes
+    description: Opérations sur les blagues
+
+paths:
+  /jokes:
+    get:
+      tags:
+        - Jokes
+      summary: Récupérer toutes les blagues
+      description: Retourne la liste complète de toutes les blagues disponibles dans la base de données.
+      operationId: getAllJokes
+      responses:
+        '200':
+          description: Liste des blagues récupérée avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Joke'
+              example:
+                - id: 1
+                  question: "Quelle est la femelle du hamster?"
+                  answer: "L'Amsterdam."
+                  created_at: "2026-01-21T10:00:00.000Z"
+                  updated_at: null
+                - id: 2
+                  question: "Que dit un oignon quand il se cogne?"
+                  answer: "Aïe."
+                  created_at: "2026-01-21T10:00:00.000Z"
+                  updated_at: null
+        '404':
+          description: Aucune blague trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "No joke found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "An internal error occurred while trying to retrieve jokes"
+
+    post:
+      tags:
+        - Jokes
+      summary: Créer une nouvelle blague
+      description: Ajoute une nouvelle blague dans la base de données. Les champs question et answer sont obligatoires.
+      operationId: createJoke
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+                - answer
+              properties:
+                question:
+                  type: string
+                  description: L'énoncé de la blague
+                  example: "Pourquoi les plongeurs plongent-ils toujours en arrière?"
+                answer:
+                  type: string
+                  description: La réponse à la blague
+                  example: "Parce que sinon ils tombent dans le bateau."
+      responses:
+        '201':
+          description: Blague créée avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Joke'
+              example:
+                id: 14
+                question: "Pourquoi les plongeurs plongent-ils toujours en arrière?"
+                answer: "Parce que sinon ils tombent dans le bateau."
+                created_at: "2026-01-21T14:30:00.000Z"
+                updated_at: null
+        '400':
+          description: Données invalides (question ou réponse manquante)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "The joke must have both a question and an answer"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "An internal error occurred while creating a joke"
+
+  /jokes/{id}:
+    get:
+      tags:
+        - Jokes
+      summary: Récupérer une blague par son ID
+      description: Retourne les détails d'une blague spécifique identifiée par son ID unique.
+      operationId: getJokeById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Identifiant unique de la blague
+          schema:
+            type: integer
+            minimum: 1
+          example: 5
+      responses:
+        '200':
+          description: Blague trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Joke'
+              example:
+                id: 5
+                question: "Quel est le sport le plus fruité?"
+                answer: "La boxe, parce que tu te prends des pêches dans la poire et tu tombes dans les pommes."
+                created_at: "2026-01-21T10:00:00.000Z"
+                updated_at: null
+        '404':
+          description: Blague non trouvée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "No joke found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "An internal error occurred while trying to retrieve a joke"
+
+  /jokes/random:
+    get:
+      tags:
+        - Jokes
+      summary: Récupérer une blague aléatoire
+      description: Retourne une blague choisie aléatoirement parmi toutes les blagues disponibles.
+      operationId: getRandomJoke
+      responses:
+        '200':
+          description: Blague aléatoire récupérée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Joke'
+              example:
+                id: 7
+                question: "Quel est le comble pour un marin?"
+                answer: "Avoir le nez qui coule."
+                created_at: "2026-01-21T10:00:00.000Z"
+                updated_at: null
+        '404':
+          description: Aucune blague disponible
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "No joke found"
+        '500':
+          description: Erreur interne du serveur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                message: "An internal error occurred while trying to retrieve a joke"
+
+components:
+  schemas:
+    Joke:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identifiant unique de la blague (auto-incrémenté)
+          example: 1
+        question:
+          type: string
+          description: L'énoncé de la blague
+          example: "Quelle est la femelle du hamster?"
+        answer:
+          type: string
+          description: La réponse à la blague
+          example: "L'Amsterdam."
+        created_at:
+          type: string
+          format: date-time
+          description: Date et heure de création de la blague
+          example: "2026-01-21T10:00:00.000Z"
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Date et heure de dernière modification de la blague
+          example: null
+      required:
+        - id
+        - question
+        - answer
+        - created_at
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message d'erreur descriptif
+          example: "An error occurred"
+      required:
+        - message
+        

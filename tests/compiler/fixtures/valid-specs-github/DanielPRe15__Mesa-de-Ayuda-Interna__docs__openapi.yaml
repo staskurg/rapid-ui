@@ -1,0 +1,389 @@
+openapi: "3.0.0"
+info:
+  title: Mesa de Ayuda API
+  version: 1.0.0
+  description: |
+    API REST para el sistema de Mesa de Ayuda Interna.
+    Permite gestionar solicitudes de soporte técnico y autenticación de usuarios.
+  contact:
+    name: Equipo Mesa de Ayuda
+
+servers:
+  - url: https://tu-app.azurewebsites.net/api
+    description: Producción (Azure)
+  - url: http://localhost:8080/api
+    description: Desarrollo local
+
+tags:
+  - name: Autenticación
+    description: Endpoints de login y registro
+  - name: Solicitudes
+    description: Gestión de solicitudes de soporte
+
+paths:
+  # ==================== AUTENTICACIÓN ====================
+  /auth/login:
+    post:
+      summary: Iniciar sesión
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales inválidas
+
+  /auth/register:
+    post:
+      summary: Registrar nuevo usuario
+      tags:
+        - Autenticación
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Registro exitoso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Datos inválidos o usuario ya existe
+
+  # ==================== SOLICITUDES ====================
+  /solicitudes:
+    get:
+      summary: Listar todas las solicitudes
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de solicitudes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Solicitud'
+        '401':
+          description: No autorizado
+        '403':
+          description: Acceso denegado
+
+    post:
+      summary: Crear nueva solicitud
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitudInput'
+      responses:
+        '201':
+          description: Solicitud creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '400':
+          description: Datos inválidos
+        '401':
+          description: No autorizado
+
+  /solicitudes/filtrar:
+    get:
+      summary: Filtrar solicitudes con paginación
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: titulo
+          in: query
+          schema:
+            type: string
+          description: Filtrar por título
+        - name: estado
+          in: query
+          schema:
+            type: string
+            enum: [PENDIENTE, EN_PROCESO, RESUELTO, CERRADO]
+          description: Filtrar por estado
+        - name: prioridad
+          in: query
+          schema:
+            type: string
+            enum: [BAJA, MEDIA, ALTA, CRITICA]
+          description: Filtrar por prioridad
+        - name: fechaInicio
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Fecha inicio (YYYY-MM-DD)
+        - name: fechaFin
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Fecha fin (YYYY-MM-DD)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 0
+          description: Número de página
+        - name: size
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Tamaño de página
+      responses:
+        '200':
+          description: Solicitudes filtradas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageSolicitud'
+
+  /solicitudes/{id}:
+    get:
+      summary: Obtener detalle de solicitud
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la solicitud
+      responses:
+        '200':
+          description: Solicitud encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '404':
+          description: Solicitud no encontrada
+
+    put:
+      summary: Editar solicitud
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SolicitudInput'
+      responses:
+        '200':
+          description: Solicitud actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '404':
+          description: Solicitud no encontrada
+
+  /solicitudes/{id}/cambiar-estado:
+    patch:
+      summary: Cambiar estado de solicitud (solo Operador)
+      tags:
+        - Solicitudes
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CambiarEstadoRequest'
+      responses:
+        '200':
+          description: Estado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Solicitud'
+        '403':
+          description: Solo operadores pueden cambiar estado
+        '404':
+          description: Solicitud no encontrada
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido en /auth/login
+
+  schemas:
+    # ===== Autenticación =====
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          example: "usuario@empresa.com"
+        password:
+          type: string
+          format: password
+          example: "miPassword123"
+
+    RegisterRequest:
+      type: object
+      required:
+        - username
+        - password
+        - nombre
+      properties:
+        username:
+          type: string
+          example: "nuevo@empresa.com"
+        password:
+          type: string
+          format: password
+          example: "miPassword123"
+        nombre:
+          type: string
+          example: "Juan Pérez"
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        username:
+          type: string
+          example: "usuario@empresa.com"
+        rol:
+          type: string
+          enum: [USUARIO, OPERADOR]
+          example: "USUARIO"
+
+    # ===== Solicitudes =====
+    Solicitud:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        titulo:
+          type: string
+          example: "Error en sistema de facturación"
+        descripcion:
+          type: string
+          example: "No puedo generar facturas desde ayer"
+        estado:
+          type: string
+          enum: [PENDIENTE, EN_PROCESO, RESUELTO, CERRADO]
+          example: "PENDIENTE"
+        prioridad:
+          type: string
+          enum: [BAJA, MEDIA, ALTA, CRITICA]
+          example: "ALTA"
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: "2026-03-01T10:30:00"
+        fechaActualizacion:
+          type: string
+          format: date-time
+        usuarioCreador:
+          type: string
+          example: "juan.perez"
+        operadorAsignado:
+          type: string
+          example: "soporte1"
+
+    SolicitudInput:
+      type: object
+      required:
+        - titulo
+        - prioridad
+      properties:
+        titulo:
+          type: string
+          example: "Error en sistema de facturación"
+        descripcion:
+          type: string
+          example: "No puedo generar facturas desde ayer"
+        prioridad:
+          type: string
+          enum: [BAJA, MEDIA, ALTA, CRITICA]
+          example: "ALTA"
+
+    CambiarEstadoRequest:
+      type: object
+      required:
+        - estado
+      properties:
+        estado:
+          type: string
+          enum: [PENDIENTE, EN_PROCESO, RESUELTO, CERRADO]
+          example: "EN_PROCESO"
+
+    PageSolicitud:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Solicitud'
+        totalElements:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 5
+        size:
+          type: integer
+          example: 10
+        number:
+          type: integer
+          example: 0

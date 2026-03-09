@@ -1,0 +1,757 @@
+openapi: 3.0.3
+info:
+  title: Innoventity Platform API
+  description: |
+    Open innovation platform API enabling research-based innovation originators  
+    to discover and collaborate with commercialization partners.
+    
+    **Phase 0 Scope**: Registration, Authentication, View Single Innovation
+  version: 1.0.0-phase0
+  contact:
+    name: Platform Support
+    email: support@innoventity.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://localhost:5001/api
+    description: Local development server
+  - url: https://innoventity-dev.azurewebsites.net/api
+    description: Development environment (Azure App Service)
+  - url: https://innoventity.azurewebsites.net/api
+    description: Production environment (Azure App Service)
+
+tags:
+  - name: Authentication
+    description: User registration, activation, and JWT-based authentication
+  - name: Innovations
+    description: Innovation discovery and management
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register new actor account
+      description: |
+        Creates a new actor account with PendingActivation status. 
+        Sends activation email with token (R1.1).
+        
+        **Business Rule**: Email must be unique per ActorType (R1.3)
+      operationId: registerActor
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterActorRequest'
+            examples:
+              ideaGenerator:
+                summary: Idea Generator registration
+                value:
+                  email: "maria.silva@university.edu"
+                  fullName: "Dr. Maria Silva"
+                  contactAddress: "University Research Park, Building 3"
+                  actorType: "IdeaGenerator"
+                  password: "SecurePass123!"
+              rdOrganization:
+                summary: R&D Organization registration
+                value:
+                  email: "contact@rdcorp.com"
+                  fullName: "R&D Corp Ltd"
+                  contactAddress: "123 Innovation Drive, Tech City"
+                  actorType: "RD"
+                  password: "SecurePass123!"
+      responses:
+        '201':
+          description: Account created successfully, activation required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterActorResponse'
+              example:
+                actorId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                email: "maria.silva@university.edu"
+                fullName: "Dr. Maria Silva"
+                actorType: "IdeaGenerator"
+                accountStatus: "PendingActivation"
+                activationRequired: true
+                message: "Registration successful. Please check your email to activate your account."
+        '400':
+          description: Validation error or business rule violation
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblemDetails'
+              examples:
+                emailExists:
+                  summary: Email already registered (R1.3)
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                    title: "Validation Error"
+                    status: 400
+                    detail: "Email 'maria.silva@university.edu' is already registered for ActorType 'IdeaGenerator'"
+                    instance: "/api/auth/register"
+                    errors:
+                      Email:
+                        - "Email must be unique per ActorType"
+                passwordWeak:
+                  summary: Password complexity requirement (R8.4)
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                    title: "Validation Error"
+                    status: 400
+                    detail: "Password does not meet complexity requirements"
+                    instance: "/api/auth/register"
+                    errors:
+                      Password:
+                        - "Password must be at least 8 characters"
+                        - "Password must contain uppercase, lowercase, number, and special character"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/activate:
+    post:
+      tags:
+        - Authentication
+      summary: Activate actor account
+      description: |
+        Activates account using token from registration email (R1.1).
+        Changes AccountStatus from PendingActivation to Active.
+      operationId: activateAccount
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivateAccountRequest'
+            example:
+              activationToken: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+      responses:
+        '200':
+          description: Account activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivateAccountResponse'
+              example:
+                message: "Account activated successfully. You can now log in."
+                accountStatus: "Active"
+        '400':
+          description: Invalid or expired activation token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalidToken:
+                  summary: Invalid activation token
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                    title: "Invalid Activation Token"
+                    status: 400
+                    detail: "The activation token is invalid or has expired"
+                    instance: "/api/auth/activate"
+                alreadyActivated:
+                  summary: Account already activated
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+                    title: "Account Already Activated"
+                    status: 400
+                    detail: "This account is already activated"
+                    instance: "/api/auth/activate"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate and obtain JWT tokens
+      description: |
+        Authenticates actor using email, actor type, and password (R1.2).
+        Returns access token (1 hour) and refresh token (7 days).
+        
+        **Note**: Email uniqueness is per ActorType, so actorType is required.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: "maria.silva@university.edu"
+              actorType: "IdeaGenerator"
+              password: "SecurePass123!"
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                refreshToken: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+                expiresIn: 3600
+                tokenType: "Bearer"
+                actor:
+                  actorId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  email: "maria.silva@university.edu"
+                  fullName: "Dr. Maria Silva"
+                  actorType: "IdeaGenerator"
+        '401':
+          description: Authentication failed
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              examples:
+                invalidCredentials:
+                  summary: Invalid email or password
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.2"
+                    title: "Authentication Failed"
+                    status: 401
+                    detail: "Invalid email, actor type, or password"
+                    instance: "/api/auth/login"
+                notActivated:
+                  summary: Account not activated (R1.1)
+                  value:
+                    type: "https://tools.ietf.org/html/rfc7231#section-6.5.2"
+                    title: "Account Not Activated"
+                    status: 401
+                    detail: "Please activate your account using the link sent to your email"
+                    instance: "/api/auth/login"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/refresh-token:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh access token
+      description: |
+        Obtains new access token using valid refresh token.
+        Refresh tokens expire after 7 days of inactivity.
+      operationId: refreshToken
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+            example:
+              refreshToken: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshTokenResponse'
+              example:
+                accessToken: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                expiresIn: 3600
+                tokenType: "Bearer"
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.2"
+                title: "Invalid Refresh Token"
+                status: 401
+                detail: "The refresh token is invalid or has expired"
+                instance: "/api/auth/refresh-token"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /innovations/{id}:
+    get:
+      tags:
+        - Innovations
+      summary: Get innovation by ID
+      description: |
+        Retrieves innovation details for Phase 0 view.
+        Requires authentication but no ownership check (public discovery).
+        
+        **Phase 0 Scope**: Displays idea summary only (title, product type, research background,  
+        research category, IPR status, author info). Full details in Phase 1.
+      operationId: getInnovationById
+      parameters:
+        - name: id
+          in: path
+          description: Innovation unique identifier
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+      responses:
+        '200':
+          description: Innovation found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InnovationPhase0Response'
+              example:
+                innovationId: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+                title: "Eco-Friendly Packaging from Agricultural Waste"
+                status: "AwaitingBids"
+                createdAt: "2026-01-15T10:30:00Z"
+                submittedAt: "2026-01-16T14:20:00Z"
+                owner:
+                  actorId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  fullName: "Dr. Maria Silva"
+                  actorType: "IdeaGenerator"
+                ideaSummary:
+                  title: "Biodegradable Packaging from Rice Husks"
+                  productType: "Sustainable packaging material"
+                  researchBackground: "Based on 3 years of materials science research at University lab..."
+                  researchCategory: "Engineering"
+                  hasIPR: true
+                  iprDetails: "Provisional patent filed (Application #2025-123456)"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Innovation not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+              example:
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.4"
+                title: "Innovation Not Found"
+                status: 404
+                detail: "Innovation with ID '7c9e6679-7425-40de-944b-e07fc1f90ae7' was not found"
+                instance: "/api/innovations/7c9e6679-7425-40de-944b-e07fc1f90ae7"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/login
+
+  schemas:
+    # ===== Authentication Schemas =====
+    RegisterActorRequest:
+      type: object
+      required:
+        - email
+        - fullName
+        - contactAddress
+        - actorType
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          description: Actor's email address (unique per ActorType per R1.3)
+          example: "maria.silva@university.edu"
+        fullName:
+          type: string
+          minLength: 2
+          maxLength: 200
+          description: Actor's full name or organization name
+          example: "Dr. Maria Silva"
+        contactAddress:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: Physical contact address
+          example: "University Research Park, Building 3"
+        actorType:
+          $ref: '#/components/schemas/ActorType'
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 100
+          description: Password meeting complexity requirements (R8.4)
+          example: "SecurePass123!"
+
+    RegisterActorResponse:
+      type: object
+      required:
+        - actorId
+        - email
+        - fullName
+        - actorType
+        - accountStatus
+        - activationRequired
+        - message
+      properties:
+        actorId:
+          type: string
+          format: uuid
+          description: Unique identifier for the created actor
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        actorType:
+          $ref: '#/components/schemas/ActorType'
+        accountStatus:
+          $ref: '#/components/schemas/AccountStatus'
+        activationRequired:
+          type: boolean
+          description: Always true for Phase 0 (email activation required)
+          example: true
+        message:
+          type: string
+          example: "Registration successful. Please check your email to activate your account."
+
+    ActivateAccountRequest:
+      type: object
+      required:
+        - activationToken
+      properties:
+        activationToken:
+          type: string
+          format: uuid
+          description: Activation token from registration email
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+
+    ActivateAccountResponse:
+      type: object
+      required:
+        - message
+        - accountStatus
+      properties:
+        message:
+          type: string
+          example: "Account activated successfully. You can now log in."
+        accountStatus:
+          $ref: '#/components/schemas/AccountStatus'
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - actorType
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Actor's registered email
+          example: "maria.silva@university.edu"
+        actorType:
+          $ref: '#/components/schemas/ActorType'
+          description: Required because email uniqueness is per ActorType
+        password:
+          type: string
+          format: password
+          example: "SecurePass123!"
+
+    LoginResponse:
+      type: object
+      required:
+        - accessToken
+        - refreshToken
+        - expiresIn
+        - tokenType
+        - actor
+      properties:
+        accessToken:
+          type: string
+          description: JWT access token (valid for 1 hour)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refreshToken:
+          type: string
+          format: uuid
+          description: Refresh token (valid for 7 days)
+          example: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+        expiresIn:
+          type: integer
+          description: Access token lifetime in seconds
+          example: 3600
+        tokenType:
+          type: string
+          enum: ["Bearer"]
+          example: "Bearer"
+        actor:
+          $ref: '#/components/schemas/ActorInfo'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          format: uuid
+          description: Valid refresh token from previous login
+          example: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+
+    RefreshTokenResponse:
+      type: object
+      required:
+        - accessToken
+        - expiresIn
+        - tokenType
+      properties:
+        accessToken:
+          type: string
+          description: New JWT access token (valid for 1 hour)
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expiresIn:
+          type: integer
+          description: Access token lifetime in seconds
+          example: 3600
+        tokenType:
+          type: string
+          enum: ["Bearer"]
+          example: "Bearer"
+
+    # ===== Innovation Schemas =====
+    InnovationPhase0Response:
+      type: object
+      required:
+        - innovationId
+        - title
+        - status
+        - createdAt
+        - owner
+        - ideaSummary
+      properties:
+        innovationId:
+          type: string
+          format: uuid
+          description: Unique identifier for the innovation
+        title:
+          type: string
+          description: Innovation title (from IdeaSummary.Title)
+          example: "Eco-Friendly Packaging from Agricultural Waste"
+        status:
+          $ref: '#/components/schemas/InnovationStatus'
+        createdAt:
+          type: string
+          format: date-time
+          description: Innovation creation timestamp
+        submittedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When innovation was submitted for bidding (null if Draft)
+        owner:
+          $ref: '#/components/schemas/ActorInfo'
+        ideaSummary:
+          $ref: '#/components/schemas/IdeaSummary'
+
+    IdeaSummary:
+      type: object
+      required:
+        - title
+        - productType
+        - researchBackground
+        - researchCategory
+        - hasIPR
+      properties:
+        title:
+          type: string
+          minLength: 10
+          maxLength: 200
+          description: Innovation title (R2.1 - cannot be "Default Innovation Title")
+          example: "Biodegradable Packaging from Rice Husks"
+        productType:
+          type: string
+          maxLength: 100
+          description: Product or service type resulting from research
+          example: "Sustainable packaging material"
+        researchBackground:
+          type: string
+          minLength: 50
+          maxLength: 2000
+          description: Research basis for the innovation (min 50 chars per R2.1)
+          example: "Based on 3 years of materials science research at University lab..."
+        researchCategory:
+          $ref: '#/components/schemas/ResearchCategory'
+        hasIPR:
+          type: boolean
+          description: Whether innovation has intellectual property rights
+          example: true
+        iprDetails:
+          type: string
+          maxLength: 1000
+          nullable: true
+          description: IPR details if hasIPR is true
+          example: "Provisional patent filed (Application #2025-123456)"
+
+    ActorInfo:
+      type: object
+      required:
+        - actorId
+        - fullName
+        - actorType
+      properties:
+        actorId:
+          type: string
+          format: uuid
+          description: Unique identifier for the actor
+        fullName:
+          type: string
+          description: Actor's full name or organization name
+          example: "Dr. Maria Silva"
+        actorType:
+          $ref: '#/components/schemas/ActorType'
+
+    # ===== Enum Schemas =====
+    ActorType:
+      type: string
+      enum:
+        - IdeaGenerator
+        - RD
+        - Manufacturing
+        - SalesMarketing
+        - Investor
+      description: |
+        Actor type (TPH discriminator):
+        - **IdeaGenerator**: Research-based innovation originator
+        - **RD**: Research & Development organization
+        - **Manufacturing**: Manufacturing partner
+        - **SalesMarketing**: Sales & Marketing partner
+        - **Investor**: Financial investor
+      example: "IdeaGenerator"
+
+    AccountStatus:
+      type: string
+      enum:
+        - PendingActivation
+        - Active
+        - Suspended
+      description: |
+        Actor account status:
+        - **PendingActivation**: Awaiting email activation (R1.1)
+        - **Active**: Account fully activated, can log in
+        - **Suspended**: Account suspended (admin action)
+      example: "Active"
+
+    InnovationStatus:
+      type: string
+      enum:
+        - Draft
+        - AwaitingBids
+        - ReceivingBids
+        - SufficientBids
+        - PartnersSelected
+        - BusinessPlanInProgress
+        - BusinessPlanComplete
+      description: |
+        Innovation lifecycle status (state machine per R2.2):
+        - **Draft**: Being created by owner
+        - **AwaitingBids**: Submitted, waiting for first bid
+        - **ReceivingBids**: At least one bid received
+        - **SufficientBids**: All required actor types have bids (R5.1 - manual check in v1.0)
+        - **PartnersSelected**: Owner accepted bids (R6.1)
+        - **BusinessPlanInProgress**: Collaboration in progress (R7.1)
+        - **BusinessPlanComplete**: Business plan finalized (R7.3)
+      example: "AwaitingBids"
+
+    ResearchCategory:
+      type: string
+      enum:
+        - Management
+        - Engineering
+        - NaturalScience
+      description: |
+        Research category for innovation classification:
+        - **Management**: Business, economics, management research
+        - **Engineering**: Engineering, technology, applied sciences
+        - **NaturalScience**: Pure sciences (physics, chemistry, biology)
+      example: "Engineering"
+
+    # ===== Error Schemas (RFC 7807 Problem Details) =====
+    ProblemDetails:
+      type: object
+      required:
+        - type
+        - title
+        - status
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference identifying the problem type
+          example: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+        title:
+          type: string
+          description: Short, human-readable summary of the problem
+          example: "Validation Error"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
+        detail:
+          type: string
+          description: Human-readable explanation specific to this occurrence
+          example: "The request contains invalid data"
+        instance:
+          type: string
+          format: uri
+          description: URI reference identifying the specific occurrence
+          example: "/api/auth/register"
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              description: Dictionary of field names to validation error messages
+              example:
+                Email:
+                  - "Email must be unique per ActorType"
+                Password:
+                  - "Password must be at least 8 characters"
+                  - "Password must contain uppercase, lowercase, number, and special character"
+
+  responses:
+    Unauthorized:
+      description: Authentication required or token invalid
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.2"
+            title: "Unauthorized"
+            status: 401
+            detail: "Authentication required. Please provide a valid access token."
+            instance: "/api/innovations/7c9e6679-7425-40de-944b-e07fc1f90ae7"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            title: "Internal Server Error"
+            status: 500
+            detail: "An unexpected error occurred. Please try again later."
+            instance: "/api/auth/register"

@@ -1,0 +1,711 @@
+openapi: 3.1.0
+info:
+  title: Grey Multi-Tenant API
+  description: |
+    Grey Multi-Tenant is a multi-tenant operational platform API.
+    
+    ## Authentication
+    This API uses JWT Bearer tokens for authentication. Include the token in the
+    `Authorization` header as `Bearer <token>`.
+    
+    ## Multi-Tenancy
+    Resources are scoped to organizations. The organization context is derived
+    from the authenticated user's JWT token. All resources include an 
+    `organization_id` field to enforce tenant boundaries.
+  version: 1.0.0
+  contact:
+    name: Grey Platform Team
+    email: platform@grey.example.com
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.grey.example.com/v1
+    description: Production server
+
+tags:
+  - name: Auth
+    description: Authentication and token management
+  - name: Users
+    description: User management operations
+  - name: Organizations
+    description: Organization (tenant) management
+  - name: Projects
+    description: Project management within organizations
+
+paths:
+  # ============================================================
+  # AUTH ENDPOINTS
+  # ============================================================
+  /auth/login:
+    post:
+      operationId: login
+      summary: Authenticate user
+      description: Authenticate a user with email and password, returns access and refresh tokens.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      description: Exchange a refresh token for a new access token pair.
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token successfully refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/AuthSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ============================================================
+  # USER ENDPOINTS
+  # ============================================================
+  /users:
+    post:
+      operationId: createUser
+      summary: Create a new user
+      description: Create a new user within the authenticated user's organization.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /users/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get current user
+      description: Retrieve the currently authenticated user's profile.
+      tags:
+        - Users
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ============================================================
+  # ORGANIZATION ENDPOINTS
+  # ============================================================
+  /organizations:
+    post:
+      operationId: createOrganization
+      summary: Create a new organization
+      description: Create a new organization (tenant). The creating user becomes the owner.
+      tags:
+        - Organizations
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrganizationRequest'
+      responses:
+        '201':
+          description: Organization successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /organizations/{id}:
+    get:
+      operationId: getOrganization
+      summary: Get organization by ID
+      description: Retrieve an organization by its ID. User must belong to the organization.
+      tags:
+        - Organizations
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/OrganizationId'
+      responses:
+        '200':
+          description: Organization details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Organization'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ============================================================
+  # PROJECT ENDPOINTS
+  # ============================================================
+  /projects:
+    post:
+      operationId: createProject
+      summary: Create a new project
+      description: Create a new project within the authenticated user's organization.
+      tags:
+        - Projects
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Project successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    get:
+      operationId: listProjects
+      summary: List projects
+      description: List projects within the authenticated user's organization with pagination.
+      tags:
+        - Projects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: List of projects with pagination
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /projects/{id}:
+    get:
+      operationId: getProject
+      summary: Get project by ID
+      description: Retrieve a project by its ID. Project must belong to user's organization.
+      tags:
+        - Projects
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/ProjectId'
+      responses:
+        '200':
+          description: Project details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  # ============================================================
+  # SECURITY SCHEMES
+  # ============================================================
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token
+
+  # ============================================================
+  # PARAMETERS
+  # ============================================================
+  parameters:
+    OrganizationId:
+      name: id
+      in: path
+      required: true
+      description: Organization UUID
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+
+    ProjectId:
+      name: id
+      in: path
+      required: true
+      description: Project UUID
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440001"
+
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+        example: 1
+
+    PageSize:
+      name: page_size
+      in: query
+      required: false
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+        example: 20
+
+  # ============================================================
+  # SCHEMAS
+  # ============================================================
+  schemas:
+    # ----------------------------------------------------------
+    # Core Domain Schemas
+    # ----------------------------------------------------------
+    User:
+      type: object
+      description: A user within the multi-tenant system
+      required:
+        - id
+        - email
+        - name
+        - organization_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: User's unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        name:
+          type: string
+          description: User's display name
+          example: "John Doe"
+        organization_id:
+          type: string
+          format: uuid
+          description: ID of the organization this user belongs to
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was created
+          example: "2026-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the user was last updated
+          example: "2026-01-20T14:45:00Z"
+
+    Organization:
+      type: object
+      description: An organization (tenant) in the system
+      required:
+        - id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Organization's unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          description: Organization display name
+          example: "Acme Corporation"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the organization was created
+          example: "2026-01-01T00:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the organization was last updated
+          example: "2026-01-15T12:00:00Z"
+
+    Project:
+      type: object
+      description: A project within an organization
+      required:
+        - id
+        - organization_id
+        - name
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Project's unique identifier
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        organization_id:
+          type: string
+          format: uuid
+          description: ID of the organization this project belongs to
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          description: Project name
+          example: "Website Redesign"
+        description:
+          type: string
+          nullable: true
+          description: Project description
+          example: "Complete overhaul of the company website"
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the project was created
+          example: "2026-01-10T09:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the project was last updated
+          example: "2026-01-20T16:30:00Z"
+
+    AuthSession:
+      type: object
+      description: Authentication session with tokens
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: JWT access token for API authorization
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          description: Refresh token for obtaining new access tokens
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        expires_in:
+          type: integer
+          description: Number of seconds until the access token expires
+          example: 900
+
+    ErrorResponse:
+      type: object
+      description: Standard error response
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "BadRequest"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Invalid request parameters"
+
+    Pagination:
+      type: object
+      description: Pagination metadata
+      required:
+        - page
+        - page_size
+        - total
+      properties:
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+          example: 1
+        page_size:
+          type: integer
+          description: Number of items per page
+          example: 20
+        total:
+          type: integer
+          description: Total number of items across all pages
+          example: 42
+
+    # ----------------------------------------------------------
+    # Request Schemas
+    # ----------------------------------------------------------
+    LoginRequest:
+      type: object
+      description: Login credentials
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: User's password
+          example: "securePassword123"
+
+    RefreshTokenRequest:
+      type: object
+      description: Refresh token request
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token obtained from login
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    CreateUserRequest:
+      type: object
+      description: Request to create a new user
+      required:
+        - email
+        - name
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: "newuser@example.com"
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User's display name
+          example: "Jane Smith"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          description: User's password
+          example: "securePassword123"
+
+    CreateOrganizationRequest:
+      type: object
+      description: Request to create a new organization
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          description: Organization display name
+          example: "Acme Corporation"
+
+    CreateProjectRequest:
+      type: object
+      description: Request to create a new project
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 255
+          description: Project name
+          example: "Website Redesign"
+        description:
+          type: string
+          maxLength: 2000
+          description: Project description
+          example: "Complete overhaul of the company website"
+
+  # ============================================================
+  # RESPONSES
+  # ============================================================
+  responses:
+    BadRequest:
+      description: Bad request - validation error or missing parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "BadRequest"
+            message: "Invalid request parameters"
+
+    Unauthorized:
+      description: Unauthorized - missing or invalid authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Invalid or expired token"
+
+    Forbidden:
+      description: Forbidden - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Forbidden"
+            message: "Insufficient permissions to access this resource"
+
+    NotFound:
+      description: Not found - resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "NotFound"
+            message: "Resource not found"
+
+    Conflict:
+      description: Conflict - resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Conflict"
+            message: "A resource with this identifier already exists"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "InternalServerError"
+            message: "An unexpected error occurred"

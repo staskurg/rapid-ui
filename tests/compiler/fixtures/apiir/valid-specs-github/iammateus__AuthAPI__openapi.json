@@ -1,0 +1,200 @@
+{
+  "api": {
+    "title": "Auth API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "The application is running (Auth API)"
+              },
+              "mongodb": {
+                "type": "object",
+                "properties": {
+                  "connection": {
+                    "example": "connected"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "key": "user",
+      "operations": [
+        {
+          "id": "showUser",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "6064d43defea9e027af8e4de"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "user@email.com"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Funny Puppy"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "example": "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "authenticateUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "user@email.com"
+              },
+              "password": {
+                "type": "string",
+                "example": "&8mTwX*e"
+              }
+            },
+            "required": [
+              "password",
+              "email"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "User authenticated successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxM2U2YmJkOTdlZTA5YjVjZTNlODAiLCJpYXQiOjE2MTc0NjU1NjR9.lfDS9QwLys_MMHxM8QqYPGO2v2B9bGdJC6O_w_8VJhA"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "example": "user@email.com",
+                "description": "Should be a valid email"
+              },
+              "name": {
+                "type": "string",
+                "example": "Funny Puppy"
+              },
+              "password": {
+                "type": "string",
+                "example": "&8mTwX*e",
+                "description": "Should have at least 8 characters"
+              },
+              "password_confirmation": {
+                "type": "string",
+                "example": "&8mTwX*e",
+                "description": "Should have the same value of the field \"password\""
+              }
+            },
+            "required": [
+              "email",
+              "name",
+              "password",
+              "password_confirmation"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "The user was created successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "user": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "6064d43defea9e027af8e4de"
+                      },
+                      "email": {
+                        "type": "string",
+                        "example": "user@email.com"
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "Funny Puppy"
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "example": "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "example": "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

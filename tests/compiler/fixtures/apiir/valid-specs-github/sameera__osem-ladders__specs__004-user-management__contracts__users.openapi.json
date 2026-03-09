@@ -1,0 +1,442 @@
+{
+  "api": {
+    "title": "User Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "User Management",
+      "key": "user-management",
+      "operations": [
+        {
+          "id": "listUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/admin/users",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "users"
+            ],
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "userId",
+                    "name",
+                    "roles",
+                    "isActive",
+                    "createdAt",
+                    "updatedAt",
+                    "createdBy"
+                  ],
+                  "properties": {
+                    "userId": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "User's email address (immutable)",
+                      "example": "john.doe@example.com"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 255,
+                      "description": "User's full name",
+                      "example": "John Doe"
+                    },
+                    "roles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": [
+                          "manager",
+                          "admin"
+                        ]
+                      },
+                      "description": "Elevated roles assigned to user (empty array = default user access)",
+                      "example": [
+                        "manager"
+                      ]
+                    },
+                    "team": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Team ID user belongs to (null if no team assigned)",
+                      "example": "engineering"
+                    },
+                    "isActive": {
+                      "type": "boolean",
+                      "description": "User activation status (false = deactivated)",
+                      "example": true
+                    },
+                    "createdAt": {
+                      "type": "number",
+                      "description": "Unix milliseconds timestamp of creation",
+                      "example": 1732100000000
+                    },
+                    "updatedAt": {
+                      "type": "number",
+                      "description": "Unix milliseconds timestamp of last update",
+                      "example": 1732100000000
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "Email of admin who created this user",
+                      "example": "admin@example.com"
+                    }
+                  }
+                }
+              },
+              "nextToken": {
+                "type": "string",
+                "description": "Token for fetching next page (null if no more pages)",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "getUser",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/admin/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "user"
+            ],
+            "properties": {
+              "user": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "name",
+                  "roles",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "createdBy"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address (immutable)",
+                    "example": "john.doe@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "User's full name",
+                    "example": "John Doe"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "manager",
+                        "admin"
+                      ]
+                    },
+                    "description": "Elevated roles assigned to user (empty array = default user access)",
+                    "example": [
+                      "manager"
+                    ]
+                  },
+                  "team": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Team ID user belongs to (null if no team assigned)",
+                    "example": "engineering"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "User activation status (false = deactivated)",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of creation",
+                    "example": 1732100000000
+                  },
+                  "updatedAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of last update",
+                    "example": 1732100000000
+                  },
+                  "createdBy": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of admin who created this user",
+                    "example": "admin@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/admin/users",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "name"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 254,
+                "description": "User's email address (will become userId)",
+                "example": "jane.smith@example.com"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "User's full name",
+                "example": "Jane Smith"
+              },
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "manager",
+                    "admin"
+                  ]
+                },
+                "description": "Optional elevated roles (defaults to [] if omitted)",
+                "example": [
+                  "admin"
+                ]
+              },
+              "team": {
+                "type": "string",
+                "description": "Optional team ID to assign user to",
+                "example": "marketing"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "user"
+            ],
+            "properties": {
+              "user": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "name",
+                  "roles",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "createdBy"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address (immutable)",
+                    "example": "john.doe@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "User's full name",
+                    "example": "John Doe"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "manager",
+                        "admin"
+                      ]
+                    },
+                    "description": "Elevated roles assigned to user (empty array = default user access)",
+                    "example": [
+                      "manager"
+                    ]
+                  },
+                  "team": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Team ID user belongs to (null if no team assigned)",
+                    "example": "engineering"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "User activation status (false = deactivated)",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of creation",
+                    "example": 1732100000000
+                  },
+                  "updatedAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of last update",
+                    "example": 1732100000000
+                  },
+                  "createdBy": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of admin who created this user",
+                    "example": "admin@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateUserRoles",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/admin/users/{userId}",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "roles"
+            ],
+            "properties": {
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "manager",
+                    "admin"
+                  ]
+                },
+                "description": "New roles array (can be empty for default user access)",
+                "example": [
+                  "manager",
+                  "admin"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "user"
+            ],
+            "properties": {
+              "user": {
+                "type": "object",
+                "required": [
+                  "userId",
+                  "name",
+                  "roles",
+                  "isActive",
+                  "createdAt",
+                  "updatedAt",
+                  "createdBy"
+                ],
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address (immutable)",
+                    "example": "john.doe@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255,
+                    "description": "User's full name",
+                    "example": "John Doe"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "manager",
+                        "admin"
+                      ]
+                    },
+                    "description": "Elevated roles assigned to user (empty array = default user access)",
+                    "example": [
+                      "manager"
+                    ]
+                  },
+                  "team": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Team ID user belongs to (null if no team assigned)",
+                    "example": "engineering"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "description": "User activation status (false = deactivated)",
+                    "example": true
+                  },
+                  "createdAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of creation",
+                    "example": 1732100000000
+                  },
+                  "updatedAt": {
+                    "type": "number",
+                    "description": "Unix milliseconds timestamp of last update",
+                    "example": 1732100000000
+                  },
+                  "createdBy": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of admin who created this user",
+                    "example": "admin@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "deactivateUser",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/admin/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "userId",
+              "deactivatedAt"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "email"
+              },
+              "deactivatedAt": {
+                "type": "number",
+                "description": "Unix milliseconds timestamp of deactivation"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,595 @@
+{
+  "api": {
+    "title": "",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "AgentRegister",
+      "key": "agentregister",
+      "operations": [
+        {
+          "id": "AgentRegister_Heartbeat",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "integer",
+                "format": "uint32"
+              },
+              "msg": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ComputePowerClient",
+      "key": "computepowerclient",
+      "operations": [
+        {
+          "id": "ComputePowerClient_RunPythonPackage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/compute-power/client/python",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "cid": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "executeResult": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "ComputePowerClient_CancelExecPythonPackage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/compute-power/client/python/cancel",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "pid": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "P2P",
+      "key": "p2p",
+      "operations": [
+        {
+          "id": "P2P_ListListen",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/p2p/ls",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "protocol": {
+                      "type": "string"
+                    },
+                    "listenAddress": {
+                      "type": "string"
+                    },
+                    "targetAddress": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "P2P_CloseListen",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/p2p/close",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "string"
+              },
+              "listenAddress": {
+                "type": "string"
+              },
+              "targetAddress": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "P2P_CreateForward",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/p2p/forward",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "portal": {
+                "type": "string"
+              },
+              "listenAddress": {
+                "type": "string"
+              },
+              "targetAddress": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "P2P_CreateListen",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/p2p/listen",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "protocol": {
+                "type": "string"
+              },
+              "targetAddress": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "key": "user",
+      "operations": [
+        {
+          "id": "User_ListUser",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/user",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "createDate": {
+                      "type": "string"
+                    },
+                    "lastLoginDate": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "User_GetUser",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/user/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "createDate": {
+                "type": "string"
+              },
+              "lastLoginDate": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "User_CreateUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/user",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "User_UpdateUserPassword",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/v1/user/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "oldPassword": {
+                "type": "string"
+              },
+              "newPassword": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        },
+        {
+          "id": "User_DeleteUser",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/v1/user/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "VmDocker",
+      "key": "vmdocker",
+      "operations": [
+        {
+          "id": "VmDocker_ListVm",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/vm/docker",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "image": {
+                      "type": "string"
+                    },
+                    "ports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "ip": {
+                            "type": "string"
+                          },
+                          "privatePort": {
+                            "type": "integer",
+                            "format": "uint32"
+                          },
+                          "publicPort": {
+                            "type": "integer",
+                            "format": "uint32"
+                          },
+                          "type": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "cpuUsage": {
+                      "type": "string"
+                    },
+                    "memoryUsage": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "VmDocker_GetVm",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/vm/docker/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ip": {
+                      "type": "string"
+                    },
+                    "privatePort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "publicPort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "cpuUsage": {
+                "type": "string"
+              },
+              "memoryUsage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "VmDocker_CreateVm",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/vm/docker",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "image": {
+                "type": "string"
+              },
+              "port": {
+                "type": "string"
+              },
+              "command": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "businessId": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ip": {
+                      "type": "string"
+                    },
+                    "privatePort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "publicPort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "cpuUsage": {
+                "type": "string"
+              },
+              "memoryUsage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "VmDocker_StartVm",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/v1/vm/docker/{id}/start",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ip": {
+                      "type": "string"
+                    },
+                    "privatePort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "publicPort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "cpuUsage": {
+                "type": "string"
+              },
+              "memoryUsage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "VmDocker_StopVm",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/v1/vm/docker/{id}/stop",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "image": {
+                "type": "string"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ip": {
+                      "type": "string"
+                    },
+                    "privatePort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "publicPort": {
+                      "type": "integer",
+                      "format": "uint32"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "cpuUsage": {
+                "type": "string"
+              },
+              "memoryUsage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "VmDocker_DeleteVm",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/v1/vm/docker/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {}
+          }
+        }
+      ]
+    }
+  ]
+}

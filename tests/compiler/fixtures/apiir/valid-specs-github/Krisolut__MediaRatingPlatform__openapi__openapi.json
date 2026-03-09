@@ -1,0 +1,332 @@
+{
+  "api": {
+    "title": "RateIt Media Ratings Platform API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/users/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "token"
+            ]
+          }
+        },
+        {
+          "id": "POST:/users/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "username",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              },
+              "displayName": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "username",
+              "createdAt"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media",
+      "key": "media",
+      "operations": [
+        {
+          "id": "GET:/media",
+          "method": "GET",
+          "kind": "list",
+          "path": "/media",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "MOVIE",
+                    "SERIES",
+                    "BOOK",
+                    "ALBUM",
+                    "GAME"
+                  ]
+                },
+                "releaseYear": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "ageRestriction": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "createdByUserId": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "title",
+                "type",
+                "createdByUserId",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        {
+          "id": "POST:/media",
+          "method": "POST",
+          "kind": "create",
+          "path": "/media",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "MOVIE",
+                  "SERIES",
+                  "BOOK",
+                  "ALBUM",
+                  "GAME"
+                ]
+              },
+              "releaseYear": {
+                "type": "integer"
+              },
+              "ageRestriction": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "title",
+              "type"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "MOVIE",
+                  "SERIES",
+                  "BOOK",
+                  "ALBUM",
+                  "GAME"
+                ]
+              },
+              "releaseYear": {
+                "type": "integer",
+                "nullable": true
+              },
+              "ageRestriction": {
+                "type": "integer",
+                "nullable": true
+              },
+              "createdByUserId": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "type",
+              "createdByUserId",
+              "createdAt"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rating",
+      "key": "rating",
+      "operations": [
+        {
+          "id": "GET:/ratings",
+          "method": "GET",
+          "kind": "list",
+          "path": "/ratings",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "mediaId": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                },
+                "stars": {
+                  "type": "integer"
+                },
+                "comment": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "mediaId",
+                "userId",
+                "stars",
+                "createdAt"
+              ]
+            }
+          }
+        },
+        {
+          "id": "POST:/ratings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ratings",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "mediaId": {
+                "type": "string"
+              },
+              "stars": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "comment": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "mediaId",
+              "stars"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "mediaId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "stars": {
+                "type": "integer"
+              },
+              "comment": {
+                "type": "string",
+                "nullable": true
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "mediaId",
+              "userId",
+              "stars",
+              "createdAt"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

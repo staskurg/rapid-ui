@@ -1,0 +1,46 @@
+openapi: 3.0.0
+
+info:
+  title: Premium Al Image Upscaler API
+  version: 1.0.0
+
+servers:
+  - url: https://premium-ai-image-upscaler-api-production.up.railway.app
+    description: Production server
+
+paths:
+  /upscale:
+    get:
+      summary: Upscale and enhance an image
+      description: Takes an image URL and prompt to enhance and upscale the image using AI. Returns a JSON response with the base64-encoded image.
+      parameters:
+        - name: image_url
+          in: query
+          required: true
+          schema:
+            type: string
+          description: URL of the image to process
+          example: "https://storage.googleapis.com/apihub85/0_1.webp"
+        - name: prompt
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Prompt to guide the AI enhancement
+          example: "UHD 4k vogue style"
+      responses:
+        "200":
+          description: Successfully processed image
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                    description: Status of the upscaling process
+                  url:
+                    type: string
+                    example: "https://api-lexica.s3.amazonaws.com/premium-ai-image-upscaler-api/97ed1614-7986-424f-ad9f-5a4335408e0e.png"
+                    description: Direct URL to the enhanced image

@@ -1,0 +1,279 @@
+openapi: 3.0.3
+info:
+  title: Todo API
+  description: |
+    A scalable and well-designed TODO list API application that allows users to manage their TODOs.
+    
+    Features include:
+    - User authentication and registration
+    - TODO management with CRUD operations
+    - Team collaboration features
+    - Real-time updates via WebSocket
+    - Media file upload to AWS S3
+    - Advanced filtering and sorting
+  version: 1.0.0
+  contact:
+    name: TODO API Team
+    url: https://github.com/venslupro/todo-api
+    email: support@todo-api.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: https://api.todo-app.com
+    description: Production server
+
+paths:
+  /v1/auth/register:
+    post:
+      summary: Register a new user
+      description: Create a new user account with email and password
+      operationId: AuthService_Register
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+        '400':
+          description: Invalid input
+        '409':
+          description: User already exists
+
+  /v1/auth/login:
+    post:
+      summary: User login
+      description: Authenticate user with email and password
+      operationId: AuthService_Login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+
+  /v1/todos:
+    get:
+      summary: List TODOs
+      description: Get a paginated list of TODOs with optional filtering and sorting
+      operationId: TODOService_ListTODOs
+      tags:
+        - TODOs
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: page_size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed]
+      responses:
+        '200':
+          description: TODO list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListTODOsResponse'
+
+    post:
+      summary: Create a new TODO
+      description: Create a new TODO item
+      operationId: TODOService_CreateTODO
+      tags:
+        - TODOs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTODORequest'
+      responses:
+        '201':
+          description: TODO created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateTODOResponse'
+        '400':
+          description: Invalid input
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "password123"
+        name:
+          type: string
+          minLength: 2
+          example: "John Doe"
+
+    RegisterResponse:
+      type: object
+      properties:
+        user_id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        email:
+          type: string
+          example: "user@example.com"
+        name:
+          type: string
+          example: "John Doe"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        refresh_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        expires_in:
+          type: integer
+          example: 3600
+
+    CreateTODORequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "Complete project documentation"
+        description:
+          type: string
+          example: "Write comprehensive documentation for the TODO API"
+        due_date:
+          type: string
+          format: date-time
+          example: "2024-01-15T23:59:59Z"
+
+    CreateTODOResponse:
+      type: object
+      properties:
+        todo_id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          example: "Complete project documentation"
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          example: "pending"
+
+    ListTODOsResponse:
+      type: object
+      properties:
+        todos:
+          type: array
+          items:
+            $ref: '#/components/schemas/TODO'
+        total_count:
+          type: integer
+          example: 100
+        page:
+          type: integer
+          example: 1
+        page_size:
+          type: integer
+          example: 20
+
+    TODO:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          example: "Complete project documentation"
+        description:
+          type: string
+          example: "Write comprehensive documentation for the TODO API"
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          example: "pending"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T10:00:00Z"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - BearerAuth: []

@@ -1,0 +1,75 @@
+{
+  "api": {
+    "title": "Lambda Agents API",
+    "version": "1.1.0"
+  },
+  "resources": [
+    {
+      "name": "agents",
+      "key": "agents",
+      "operations": [
+        {
+          "id": "processAgent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/agents",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "request_id",
+              "prompt"
+            ],
+            "properties": {
+              "request_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the request",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "prompt": {
+                "type": "string",
+                "description": "The prompt or question to process",
+                "minLength": 1,
+                "maxLength": 4096,
+                "example": "AWSとは何ですか？"
+              },
+              "model_id": {
+                "type": "string",
+                "description": "Bedrock model ID to use for processing.\nDefault: anthropic.claude-3-sonnet-20240229-v1:0\n",
+                "example": "anthropic.claude-3-sonnet-20240229-v1:0"
+              }
+            },
+            "additionalProperties": false
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "message",
+              "request_id",
+              "timestamp"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Status message",
+                "example": "Message processed successfully via API Gateway"
+              },
+              "request_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Request ID from the request",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp of processing",
+                "example": "2026-02-08T12:34:56.789000"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

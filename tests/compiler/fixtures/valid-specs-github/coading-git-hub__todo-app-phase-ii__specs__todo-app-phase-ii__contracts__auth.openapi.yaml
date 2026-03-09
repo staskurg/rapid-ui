@@ -1,0 +1,260 @@
+openapi: 3.0.3
+info:
+  title: Phase II Todo App - Authentication API
+  description: |
+    Authentication endpoints for user signup and signin with JWT token issuance.
+
+    **Security Model**:
+    - Password hashing via bcrypt (min 10 rounds)
+    - JWT tokens with HS256 algorithm
+    - Token expiry: 7 days (configurable)
+    - httpOnly cookies for token storage (frontend)
+
+    **Base URL**: `https://kiran-ahmed-todo-phase-3.hf.space` (deployment) | `https://api.your-domain.com` (production)
+  version: 1.0.0
+  contact:
+    name: Phase II Todo Team
+    email: support@example.com
+
+servers:
+  - url: https://kiran-ahmed-todo-phase-3.hf.space
+    description: Deployment server
+  - url: https://api-todo-phase-ii.railway.app
+    description: Production server (Railway)
+
+tags:
+  - name: Authentication
+    description: User registration and authentication
+
+paths:
+  /api/auth/signup:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Creates a new user account with email and password.
+
+        **Validation**:
+        - Email must be valid format
+        - Password minimum 8 characters
+        - Email must be unique (returns 409 if exists)
+
+        **Security**:
+        - Password is hashed with bcrypt before storage
+        - Plain password never stored or logged
+      operationId: signupUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignUpRequest'
+            examples:
+              validSignup:
+                summary: Valid signup request
+                value:
+                  email: user@example.com
+                  password: securepassword123
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignUpResponse'
+              examples:
+                success:
+                  value:
+                    message: User created successfully
+                    user:
+                      id: 1
+                      email: user@example.com
+                      created_at: "2026-01-02T10:30:00Z"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidEmail:
+                  value:
+                    error: Invalid email format
+                passwordTooShort:
+                  value:
+                    error: Password must be at least 8 characters
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicateEmail:
+                  value:
+                    error: Email already exists
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  value:
+                    error: Internal server error
+
+  /api/auth/signin:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and issue JWT token
+      description: |
+        Verifies user credentials and returns a JWT token for subsequent API requests.
+
+        **Flow**:
+        1. Backend verifies email and password
+        2. Generates JWT token with user_id in payload
+        3. Returns token (stored in httpOnly cookie by frontend)
+
+        **Token Details**:
+        - Algorithm: HS256
+        - Expiry: 7 days
+        - Payload: { sub: user_id, exp: expiry_timestamp }
+      operationId: signinUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignInRequest'
+            examples:
+              validSignin:
+                summary: Valid signin request
+                value:
+                  email: user@example.com
+                  password: securepassword123
+      responses:
+        '200':
+          description: Authentication successful, JWT token issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignInResponse'
+              examples:
+                success:
+                  value:
+                    token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    user:
+                      id: 1
+                      email: user@example.com
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    error: Invalid email or password
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    UserSignUpRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 255
+          example: user@example.com
+          description: User's email address (unique identifier)
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          example: securepassword123
+          description: Plain text password (will be hashed)
+
+    UserSignUpResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: User created successfully
+        user:
+          $ref: '#/components/schemas/UserRead'
+
+    UserSignInRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: securepassword123
+
+    UserSignInResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNjczMDA2NDAwfQ.signature
+          description: JWT token for authentication (valid for 7 days)
+        user:
+          $ref: '#/components/schemas/UserRead'
+
+    UserRead:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: User's email address
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-02T10:30:00Z"
+          description: Account creation timestamp (ISO 8601)
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Error message describing the problem
+          description: Human-readable error message
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from /api/auth/signin endpoint.
+        Include in Authorization header: `Authorization: Bearer <token>`

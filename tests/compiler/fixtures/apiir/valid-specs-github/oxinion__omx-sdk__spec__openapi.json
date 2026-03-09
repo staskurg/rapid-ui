@@ -1,0 +1,348 @@
+{
+  "api": {
+    "title": "Oxinion Marketing Exchange SDK API",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Core",
+      "key": "core",
+      "operations": [
+        {
+          "id": "authenticate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "apiKey",
+              "secretKey"
+            ],
+            "properties": {
+              "apiKey": {
+                "type": "string",
+                "description": "API key for authentication"
+              },
+              "secretKey": {
+                "type": "string",
+                "description": "Secret key for authentication"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "description": "Access token for API requests"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "Token expiration time in seconds"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email",
+      "key": "email",
+      "operations": [
+        {
+          "id": "sendEmail",
+          "method": "POST",
+          "kind": "create",
+          "path": "/email/send",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "to",
+              "subject",
+              "content"
+            ],
+            "properties": {
+              "to": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "description": "Recipient email addresses"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Email subject"
+              },
+              "content": {
+                "type": "string",
+                "description": "Email content (HTML or plain text)"
+              },
+              "templateId": {
+                "type": "string",
+                "description": "Optional template ID"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "messageId": {
+                "type": "string",
+                "description": "Unique message identifier"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "sent",
+                  "queued",
+                  "failed"
+                ],
+                "description": "Send status"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Geotrigger",
+      "key": "geotrigger",
+      "operations": [
+        {
+          "id": "listGeotriggers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/geotriggers",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Geotrigger name"
+                },
+                "latitude": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Latitude coordinate"
+                },
+                "longitude": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Longitude coordinate"
+                },
+                "radius": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Trigger radius in meters"
+                },
+                "active": {
+                  "type": "boolean",
+                  "description": "Whether the geotrigger is active"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createGeotrigger",
+          "method": "POST",
+          "kind": "create",
+          "path": "/geotriggers",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "latitude",
+              "longitude",
+              "radius"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Geotrigger name"
+              },
+              "latitude": {
+                "type": "number",
+                "format": "double"
+              },
+              "longitude": {
+                "type": "number",
+                "format": "double"
+              },
+              "radius": {
+                "type": "number",
+                "format": "double",
+                "minimum": 1,
+                "description": "Trigger radius in meters"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier"
+              },
+              "name": {
+                "type": "string",
+                "description": "Geotrigger name"
+              },
+              "latitude": {
+                "type": "number",
+                "format": "double",
+                "description": "Latitude coordinate"
+              },
+              "longitude": {
+                "type": "number",
+                "format": "double",
+                "description": "Longitude coordinate"
+              },
+              "radius": {
+                "type": "number",
+                "format": "double",
+                "description": "Trigger radius in meters"
+              },
+              "active": {
+                "type": "boolean",
+                "description": "Whether the geotrigger is active"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook",
+      "key": "webhook",
+      "operations": [
+        {
+          "id": "listWebhooks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/webhooks",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Unique identifier"
+                },
+                "url": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "Webhook URL"
+                },
+                "events": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Event types to subscribe to"
+                },
+                "active": {
+                  "type": "boolean",
+                  "description": "Whether the webhook is active"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createWebhook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhooks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url",
+              "events"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Webhook URL"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Event types to subscribe to"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Webhook URL"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Event types to subscribe to"
+              },
+              "active": {
+                "type": "boolean",
+                "description": "Whether the webhook is active"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,754 @@
+{
+  "api": {
+    "title": "Game Backend API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "guestAuth",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/auth/guest",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "device_id",
+              "device_type"
+            ],
+            "properties": {
+              "device_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "Unique device identifier",
+                "example": "device-abc-123"
+              },
+              "device_type": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android",
+                  "web"
+                ],
+                "example": "ios"
+              },
+              "device_name": {
+                "type": "string",
+                "maxLength": 255,
+                "description": "Human-readable device name",
+                "example": "iPhone 15 Pro"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "example": "usr-abc-123"
+                  },
+                  "player_id": {
+                    "type": "string",
+                    "example": "PLY123456"
+                  },
+                  "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIs..."
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIs..."
+                  },
+                  "is_guest": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/auth/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refresh_token"
+            ],
+            "properties": {
+              "refresh_token": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Refresh token from previous authentication",
+                "example": "eyJhbGciOiJIUzI1NiIs..."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIs..."
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIs..."
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "gacha",
+      "key": "gacha",
+      "operations": [
+        {
+          "id": "getGachaHistory",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/gacha/history",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "history": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "hist-abc-123"
+                        },
+                        "pool_id": {
+                          "type": "string",
+                          "example": "pool-001"
+                        },
+                        "pool_name": {
+                          "type": "string",
+                          "example": "Featured Banner"
+                        },
+                        "item_master_id": {
+                          "type": "string",
+                          "example": "char-001"
+                        },
+                        "item_name": {
+                          "type": "string",
+                          "example": "Hero Character"
+                        },
+                        "rarity": {
+                          "type": "string",
+                          "enum": [
+                            "N",
+                            "R",
+                            "SR",
+                            "SSR",
+                            "UR"
+                          ],
+                          "example": "SSR"
+                        },
+                        "pity_count": {
+                          "type": "integer",
+                          "example": 45
+                        },
+                        "created_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-01-01T12:00:00Z"
+                        }
+                      }
+                    }
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getGachaPools",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/gacha/pools",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "pools": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "pool-001"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Featured Banner"
+                        },
+                        "description": {
+                          "type": "string",
+                          "example": "Limited time banner with rate up"
+                        },
+                        "cost_currency": {
+                          "type": "string",
+                          "enum": [
+                            "free_gem",
+                            "paid_gem",
+                            "gold"
+                          ],
+                          "example": "free_gem"
+                        },
+                        "cost_amount": {
+                          "type": "integer",
+                          "example": 300
+                        },
+                        "is_active": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "start_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "end_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "rates": {
+                          "type": "object",
+                          "properties": {
+                            "ssr": {
+                              "type": "number",
+                              "format": "double",
+                              "example": 0.01
+                            },
+                            "sr": {
+                              "type": "number",
+                              "format": "double",
+                              "example": 0.05
+                            },
+                            "r": {
+                              "type": "number",
+                              "format": "double",
+                              "example": 0.15
+                            },
+                            "n": {
+                              "type": "number",
+                              "format": "double",
+                              "example": 0.79
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getPityCount",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/gacha/pity/{pool_id}",
+          "identifierParam": "pool_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "count": {
+                    "type": "integer",
+                    "example": 45
+                  },
+                  "max_count": {
+                    "type": "integer",
+                    "example": 90
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getGachaPool",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/gacha/pools/{pool_id}",
+          "identifierParam": "pool_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "pool-001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Featured Banner"
+                  },
+                  "description": {
+                    "type": "string",
+                    "example": "Limited time banner with rate up"
+                  },
+                  "cost_currency": {
+                    "type": "string",
+                    "enum": [
+                      "free_gem",
+                      "paid_gem",
+                      "gold"
+                    ],
+                    "example": "free_gem"
+                  },
+                  "cost_amount": {
+                    "type": "integer",
+                    "example": 300
+                  },
+                  "is_active": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "start_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "end_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "rates": {
+                    "type": "object",
+                    "properties": {
+                      "ssr": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.01
+                      },
+                      "sr": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.05
+                      },
+                      "r": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.15
+                      },
+                      "n": {
+                        "type": "number",
+                        "format": "double",
+                        "example": 0.79
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "drawGacha",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/gacha/draw",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "pool_id",
+              "draw_count"
+            ],
+            "properties": {
+              "pool_id": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Target gacha pool ID",
+                "example": "pool-001"
+              },
+              "draw_count": {
+                "type": "integer",
+                "enum": [
+                  1,
+                  10
+                ],
+                "description": "Number of draws (1 for single, 10 for multi)",
+                "example": 10
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "saga_id": {
+                    "type": "string",
+                    "example": "saga-abc-123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "example": "COMPLETED"
+                  },
+                  "results": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "item_master_id": {
+                          "type": "string",
+                          "example": "char-001"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hero Character"
+                        },
+                        "rarity": {
+                          "type": "string",
+                          "enum": [
+                            "N",
+                            "R",
+                            "SR",
+                            "SSR",
+                            "UR"
+                          ],
+                          "example": "SSR"
+                        },
+                        "is_new": {
+                          "type": "boolean",
+                          "example": true
+                        },
+                        "is_pickup": {
+                          "type": "boolean",
+                          "example": true
+                        }
+                      }
+                    }
+                  },
+                  "cost": {
+                    "type": "object",
+                    "properties": {
+                      "currency_type": {
+                        "type": "string",
+                        "enum": [
+                          "free_gem",
+                          "paid_gem",
+                          "gold"
+                        ],
+                        "example": "free_gem"
+                      },
+                      "amount": {
+                        "type": "integer",
+                        "example": 3000
+                      }
+                    }
+                  },
+                  "pity": {
+                    "type": "object",
+                    "properties": {
+                      "count": {
+                        "type": "integer",
+                        "example": 45
+                      },
+                      "max_count": {
+                        "type": "integer",
+                        "example": 90
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "inventory",
+      "key": "inventory",
+      "operations": [
+        {
+          "id": "getInventoryItems",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/inventory/items",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "item-abc-123"
+                        },
+                        "item_master_id": {
+                          "type": "string",
+                          "example": "char-001"
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Hero Character"
+                        },
+                        "item_type": {
+                          "type": "string",
+                          "enum": [
+                            "character",
+                            "weapon",
+                            "material",
+                            "consumable"
+                          ],
+                          "example": "character"
+                        },
+                        "rarity": {
+                          "type": "string",
+                          "enum": [
+                            "N",
+                            "R",
+                            "SR",
+                            "SSR",
+                            "UR"
+                          ],
+                          "example": "SSR"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "obtained_at": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-01-01T12:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getInventoryItem",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/inventory/items/{item_id}",
+          "identifierParam": "item_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "item-abc-123"
+                  },
+                  "item_master_id": {
+                    "type": "string",
+                    "example": "char-001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Hero Character"
+                  },
+                  "item_type": {
+                    "type": "string",
+                    "enum": [
+                      "character",
+                      "weapon",
+                      "material",
+                      "consumable"
+                    ],
+                    "example": "character"
+                  },
+                  "rarity": {
+                    "type": "string",
+                    "enum": [
+                      "N",
+                      "R",
+                      "SR",
+                      "SSR",
+                      "UR"
+                    ],
+                    "example": "SSR"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "obtained_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "getMe",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string",
+                    "example": "usr-abc-123"
+                  },
+                  "player_id": {
+                    "type": "string",
+                    "example": "PLY123456"
+                  },
+                  "nickname": {
+                    "type": "string",
+                    "example": "Player123"
+                  },
+                  "is_guest": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getMyCurrency",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/me/currency",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "free_gem": {
+                    "type": "integer",
+                    "example": 10000
+                  },
+                  "paid_gem": {
+                    "type": "integer",
+                    "example": 0
+                  },
+                  "gold": {
+                    "type": "integer",
+                    "example": 50000
+                  },
+                  "stamina": {
+                    "type": "integer",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

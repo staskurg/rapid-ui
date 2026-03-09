@@ -1,0 +1,490 @@
+openapi: 3.1.0
+info:
+  title: User Service API
+  version: 1.0.0
+  description: |
+    User service for managing users (admin create/list, self/admin read/update, admin delete).
+    Direct service expects auth headers (x-user-id, x-user-role). When called via API Gateway,
+    the gateway validates JWT and injects these headers. Internal endpoints require x-internal-key
+    and are not exposed by the gateway proxy.
+servers:
+  - url: http://localhost:4004
+    description: Direct user-service
+  - url: http://localhost:3000
+    description: API Gateway (prefix /v1/users)
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    userIdHeader:
+      type: apiKey
+      in: header
+      name: x-user-id
+    userRoleHeader:
+      type: apiKey
+      in: header
+      name: x-user-role
+    internalKey:
+      type: apiKey
+      in: header
+      name: x-internal-key
+  schemas:
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: [string, "null"] }
+        role:
+          type: string
+          enum: [admin, customer, driver]
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+        createdAt: { type: [string, "null"], format: date-time }
+        updatedAt: { type: [string, "null"], format: date-time }
+      required: [id, email, fullName, role, status]
+    UserCreateRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: [string, "null"] }
+        role:
+          type: string
+          enum: [admin, customer, driver]
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+      required: [email, fullName, role]
+    UserUpdateRequest:
+      type: object
+      properties:
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: [string, "null"] }
+        role:
+          type: string
+          enum: [admin, customer, driver]
+        status:
+          type: string
+          enum: [ACTIVE, SUSPENDED, DELETED]
+    UserResponse:
+      type: object
+      properties:
+        data: { $ref: "#/components/schemas/User" }
+    UserListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items: { $ref: "#/components/schemas/User" }
+        nextCursor: { type: [string, "null"] }
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code: { type: string }
+            message: { type: string }
+            details:
+              type: array
+              items: {}
+          required: [code, message]
+        traceId: { type: [string, "null"] }
+      required: [error]
+  responses:
+    Error400:
+      description: Bad Request
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            validation:
+              value:
+                error: { code: VALIDATION_ERROR, message: "No fields to update", details: [] }
+    Error401:
+      description: Unauthorized
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            unauthorized:
+              value:
+                error: { code: UNAUTHORIZED, message: "Missing auth headers", details: [] }
+    Error403:
+      description: Forbidden
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            forbidden:
+              value:
+                error: { code: FORBIDDEN, message: "Admin only", details: [] }
+    Error404:
+      description: Not Found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            notFound:
+              value:
+                error: { code: NOT_FOUND, message: "User not found", details: [] }
+    Error409:
+      description: Conflict
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            conflict:
+              value:
+                error: { code: CONFLICT, message: "Resource conflict", details: [] }
+    Error422:
+      description: Unprocessable Entity
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            unprocessable:
+              value:
+                error: { code: VALIDATION_ERROR, message: "Validation failed", details: [] }
+    Error429:
+      description: Too Many Requests
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            rateLimit:
+              value:
+                error: { code: RATE_LIMITED, message: "Too many requests", details: [] }
+    Error500:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+          examples:
+            internal:
+              value:
+                error: { code: INTERNAL, message: "Internal server error", details: [] }
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      description: Returns service health status.
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { type: object, properties: { ok: { type: boolean } } }
+              examples:
+                ok:
+                  value: { ok: true }
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+  /v1/users:
+    post:
+      summary: Create user (admin)
+      description: Creates a new user and emits a user.created event via outbox.
+      security:
+        - bearerAuth: []
+        - userIdHeader: []
+          userRoleHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserCreateRequest" }
+            examples:
+              create:
+                value:
+                  email: "user-1769911798@test.com"
+                  fullName: "User Updated"
+                  phone: "0900000000"
+                  role: "customer"
+                  status: "ACTIVE"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                created:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "ACTIVE"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+    get:
+      summary: List users (admin)
+      description: Lists users with optional filters and cursor pagination.
+      security:
+        - bearerAuth: []
+        - userIdHeader: []
+          userRoleHeader: []
+      parameters:
+        - name: email
+          in: query
+          schema: { type: string, format: email }
+        - name: role
+          in: query
+          schema: { type: string, enum: [admin, customer, driver] }
+        - name: status
+          in: query
+          schema: { type: string, enum: [ACTIVE, SUSPENDED, DELETED] }
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100 }
+        - name: cursor
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserListResponse" }
+              examples:
+                success:
+                  value:
+                    data:
+                      - id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                        email: "user-1769911798@test.com"
+                        fullName: "User Updated"
+                        phone: null
+                        role: "customer"
+                        status: "SUSPENDED"
+                        createdAt: "2026-02-01T02:09:58.471Z"
+                        updatedAt: "2026-02-01T02:09:58.652Z"
+                    nextCursor: "MjAyNi0wMS0zMVQwNDoyMzowOS40MThafGUzMjA1M2NmLWZmNDEtNGZiOS05ZWYzLTE3ZmZkY2NkYTkxYQ=="
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+  /v1/users/{id}:
+    get:
+      summary: Get user by id
+      description: Returns user detail for self or admin.
+      security:
+        - bearerAuth: []
+        - userIdHeader: []
+          userRoleHeader: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                success:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "SUSPENDED"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+    patch:
+      summary: Update user
+      description: Updates user fields. Non-admins cannot change role/status.
+      security:
+        - bearerAuth: []
+        - userIdHeader: []
+          userRoleHeader: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UserUpdateRequest" }
+            examples:
+              update:
+                value:
+                  fullName: "User Updated"
+                  status: "SUSPENDED"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                updated:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "SUSPENDED"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+    delete:
+      summary: Delete user (soft delete)
+      description: Marks user status as DELETED.
+      security:
+        - bearerAuth: []
+        - userIdHeader: []
+          userRoleHeader: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                deleted:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "DELETED"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+  /internal/users/{id}:
+    get:
+      summary: Internal get user by id
+      description: Internal service-to-service lookup by user id.
+      security:
+        - internalKey: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                success:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "SUSPENDED"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }
+  /internal/users/by-email/{email}:
+    get:
+      summary: Internal get user by email
+      description: Internal service-to-service lookup by user email.
+      security:
+        - internalKey: []
+      parameters:
+        - name: email
+          in: path
+          required: true
+          schema: { type: string, format: email }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UserResponse" }
+              examples:
+                success:
+                  value:
+                    data:
+                      id: "f5303d34-e520-4a90-b9e0-eba8d0640797"
+                      email: "user-1769911798@test.com"
+                      fullName: "User Updated"
+                      phone: null
+                      role: "customer"
+                      status: "SUSPENDED"
+                      createdAt: "2026-02-01T02:09:58.471Z"
+                      updatedAt: "2026-02-01T02:09:58.652Z"
+        "400": { $ref: "#/components/responses/Error400" }
+        "401": { $ref: "#/components/responses/Error401" }
+        "403": { $ref: "#/components/responses/Error403" }
+        "404": { $ref: "#/components/responses/Error404" }
+        "409": { $ref: "#/components/responses/Error409" }
+        "422": { $ref: "#/components/responses/Error422" }
+        "429": { $ref: "#/components/responses/Error429" }
+        "500": { $ref: "#/components/responses/Error500" }

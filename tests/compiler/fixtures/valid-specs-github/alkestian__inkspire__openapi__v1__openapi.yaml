@@ -1,0 +1,611 @@
+openapi: 3.0.1
+info:
+  title: Inkspire
+  description: |
+    This app allows for making lists of various types across different media and will eventually have
+    fuzzy searching and rating functionality added to it.
+  version: 0.0.1
+tags:
+  - name: Books
+    description: Track read and to-be-read books
+paths:
+  /books:
+    get:
+      summary: Get all books
+      description: Get all books from the list
+      operationId: get-books
+      tags:
+        - Books
+      parameters:
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/genre"
+        - name: status
+          in: query
+          required: false
+          description: Filter books by reading status.
+          schema:
+            type: string
+            enum: [read, to-be-read]
+            example: read
+        - name: author
+          in: query
+          required: false
+          description: Filter books by author name.
+          schema:
+            type: string
+            example: "Brandon Sanderson"
+        - name: sort
+          in: query
+          required: false
+          description: Sort books by a specific field.
+          schema:
+            type: string
+            enum: [title, author, genre, status]
+            example: title
+      responses:
+        200:
+          description: "200 - Successfully retrieved books."
+          headers:
+            CacheControl:
+              $ref: "#/components/headers/CacheControl"
+            RateLimit:
+              $ref: "#/components/headers/RateLimit"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+    post:
+      summary: Add a book
+      description: Add a specific book
+      operationId: add-book
+      tags:
+        - Books
+      requestBody:
+        description: Create a new book
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewBook"
+      responses:
+        201:
+          description: "201 - Resource created successfully."
+          headers:
+            Location:
+              $ref: "#/components/headers/Location"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreatedResponse"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+  /books/{bookId}:
+    get:
+      summary: Get a specific book
+      description: Get a specific book by passing its bookId and return the book info
+      operationId: get-book
+      tags:
+        - Books
+      parameters:
+        - $ref: "#/components/parameters/bookId"
+      responses:
+        200:
+          description: "200 - Successfully retrieved book."
+          headers:
+            CacheControl:
+              $ref: "#/components/headers/CacheControl"
+            RateLimit:
+              $ref: "#/components/headers/RateLimit"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+    delete:
+      summary: Delete a book
+      description: Delete a specific book by bookId
+      operationId: delete-book
+      tags:
+        - Books
+      parameters:
+        - $ref: "#/components/parameters/bookId"
+      responses:
+        200:
+          description: "200 - Successfully deleted books."
+          headers:
+            CacheControl:
+              $ref: "#/components/headers/CacheControl"
+            RateLimit:
+              $ref: "#/components/headers/RateLimit"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+    put:
+      summary: Replace a book
+      description: Replace an existing book entirely
+      operationId: replace-book
+      tags:
+        - Books
+      parameters:
+        - $ref: "#/components/parameters/bookId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+      responses:
+        200:
+          description: "200 - Successfully updated book."
+          headers:
+            CacheControl:
+              $ref: "#/components/headers/CacheControl"
+            RateLimit:
+              $ref: "#/components/headers/RateLimit"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+    patch:
+      summary: Update a book
+      description: Update fields of an existing book
+      operationId: update-book
+      tags:
+        - Books
+      parameters:
+        - $ref: "#/components/parameters/bookId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Book"
+      responses:
+        200:
+          description: "200 - Successfully updated fields."
+          headers:
+            CacheControl:
+              $ref: "#/components/headers/CacheControl"
+            RateLimit:
+              $ref: "#/components/headers/RateLimit"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Book"
+                  metadata:
+                    $ref: "#/components/schemas/Metadata"
+        400:
+          $ref: "#/components/responses/400"
+        401:
+          $ref: "#/components/responses/401"
+        403:
+          $ref: "#/components/responses/403"
+        404:
+          $ref: "#/components/responses/404"
+components:
+  headers:
+    CacheControl:
+      description: |
+        The CacheControl header communicates directives for caching mechanisms in both requests and responses. 
+        It is used to specify the caching directives in responses to prevent caches from storing sensitive information.
+      schema:
+        type: string
+        description: A comma-separated list of directives as defined in [RFC 9111](https://www.rfc-editor.org/rfc/rfc9111.html).
+      examples:
+        oneHour:
+          value: max-age=3600
+        oneWeekPublic:
+          value: max-age=604800, public
+        noStore:
+          value: no-store
+        noCache:
+          value: no-cache
+        private:
+          value: private
+    Location:
+      description: "URL of the newly created resource."
+      schema:
+        type: string
+        example: "/books/550e8400-e29b-41d4-a716-446655440000"
+    RateLimit:
+      description: |
+        The RateLimit header communicates quota policies. It contains a `limit` to
+        convey the expiring limit, `remaining` to convey the remaining quota units,
+        and `reset` to convey the time window reset time.
+      schema:
+        type: string
+    RetryAfter:
+      description: |
+        The Retry-After header indicates how long the user agent should wait before making a follow-up request. 
+        The value is in seconds and can be an integer or a date in the future. 
+        If the value is an integer, it indicates the number of seconds to wait. 
+        If the value is a date, it indicates the time at which the user agent should make a follow-up request.
+      schema:
+        type: string
+      examples:
+        integer:
+          value: "120"
+          summary: Retry after 120 seconds
+        date:
+          value: "Fri, 31 Dec 2021 23:59:59 GMT"
+          summary: Retry after the specified date
+  parameters:
+    bookId:
+      name: bookId
+      in: path
+      required: true
+      description: The ID of the book.
+      schema:
+        type: string
+        format: uuid
+        example: "550e8400-e29b-41d4-a716-446655440000"
+    genre:
+      name: genre
+      in: query
+      required: false
+      description: Filter books by multiple genres.
+      schema:
+        type: array
+        items:
+          type: string
+        example: ["Fantasy", "Epic"]
+    limit:
+      name: limit
+      in: query
+      required: false
+      description: Limit the number of results returned.
+      schema:
+        type: integer
+        example: 10
+        default: 10
+    offset:
+      name: offset
+      in: query
+      required: false
+      description: Offset the start of the result set.
+      schema:
+        type: integer
+        example: 0
+        default: 0
+  responses:
+    400:
+      description: "400 - Bad Request"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/bad-request"
+            title: "Bad Request"
+            status: 400
+            detail: "The request is invalid or missing required parameters."
+    401:
+      description: "401 - Unauthorized"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/unauthorized"
+            title: "Unauthorized"
+            status: 401
+            detail: "You do not have the necessary permissions."
+    403:
+      description: "403 - Forbidden"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/forbidden"
+            title: "Forbidden"
+            status: 403
+            detail: "Access is forbidden with the provided credentials."
+    404:
+      description: "404 - Not Found"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/not-found"
+            title: "Not Found"
+            status: 404
+            detail: "The requested resource was not found."
+    429:
+      description: "429 - Too Many Requests"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+        RetryAfter:
+          $ref: "#/components/headers/RetryAfter"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/too-many-requests"
+            title: "Too Many Requests"
+            status: 429
+            detail: "You have exceeded the rate limit."
+    500:
+      description: "500 - Internal Server Error"
+      headers:
+        RateLimit:
+          $ref: "#/components/headers/RateLimit"
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+          example:
+            type: "https://example.com/errors/internal-server-error"
+            title: "Internal Server Error"
+            status: 500
+            detail: "An unexpected error occurred."
+  schemas:
+    Author:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "1a3e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Sandon Branderson"
+        birthDate:
+          type: string
+          format: date
+          example: "1975-06-01"
+        nationality:
+          type: string
+          example: "American"
+    Book:
+      type: object
+      required:
+        - id
+        - title
+        - authorId
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          example: "The Lusty Argonian Maid"
+        authorId:
+          type: string
+          format: uuid
+          example: "1a3e4567-e89b-12d3-a456-426614174000"
+        seriesId:
+          type: string
+          format: uuid
+          example: "2b3e4567-e89b-12d3-a456-426614174000"
+        genres:
+          type: array
+          items:
+            type: string
+          example: ["Fantasy", "Epic", "Thriller"]
+        pages:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 1690
+        status:
+          type: string
+          enum: [read, to-be-read]
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-30T12:00:00Z"
+    CreatedResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: "The unique identifier of the created resource."
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          type: string
+          description: "Confirmation message."
+          example: "Resource created successfully."
+    Genre:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "3c3e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Fantasy"
+    Metadata:
+      type: object
+      properties:
+        total:
+          type: integer
+          example: 100
+        limit:
+          type: integer
+          example: 10
+        offset:
+          type: integer
+          example: 0
+    NewBook:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "The Lusty Argonian Maid"
+        authorId:
+          type: string
+          format: uuid
+          example: "1a3e4567-e89b-12d3-a456-426614174000"
+        seriesId:
+          type: string
+          format: uuid
+          example: "2b3e4567-e89b-12d3-a456-426614174000"
+        genres:
+          type: array
+          items:
+            type: string
+          example: ["Fantasy", "Epic", "Thriller"]
+        pages:
+          type: integer
+          format: int32
+          minimum: 1
+          example: 1690
+        status:
+          type: string
+          enum: [read, to-be-read]
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          description: "A URI reference that identifies the problem type."
+        title:
+          type: string
+          description: "A short, human-readable summary of the problem type."
+        detail:
+          type: string
+          description: "A human-readable explanation specific to this occurrence of the problem."
+        instance:
+          type: string
+          description: "A URI reference that identifies the specific occurrence of the problem."
+        status:
+          type: integer
+          description: "The HTTP status code."
+    Review:
+      type: object
+      required:
+        - id
+        - bookId
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "4d3e4567-e89b-12d3-a456-426614174000"
+        bookId:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        rating:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 5
+          example: 5
+        reviewText:
+          type: string
+          example: "An absolute masterpiece!"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-30T12:00:00Z"
+    Series:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "2b3e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Wheel of Time"

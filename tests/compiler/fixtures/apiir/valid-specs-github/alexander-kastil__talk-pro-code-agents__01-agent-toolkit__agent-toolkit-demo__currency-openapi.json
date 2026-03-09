@@ -1,0 +1,91 @@
+{
+  "api": {
+    "title": "Currency Converter API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Currency Conversion",
+      "key": "currency-conversion",
+      "operations": [
+        {
+          "id": "convertCurrency",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/convertTo",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "from",
+              "to",
+              "amount"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Source currency code (ISO 4217 format, e.g., USD, EUR, GBP)",
+                "example": "USD",
+                "minLength": 3,
+                "maxLength": 3
+              },
+              "to": {
+                "type": "string",
+                "description": "Target currency code (ISO 4217 format)",
+                "example": "EUR",
+                "minLength": 3,
+                "maxLength": 3
+              },
+              "amount": {
+                "type": "number",
+                "description": "Amount to convert",
+                "example": 100.5,
+                "minimum": 0
+              },
+              "date": {
+                "type": "string",
+                "description": "Date for historical exchange rates (YYYY-MM-DD format). If not provided, uses current date",
+                "example": "2025-07-25",
+                "format": "date"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string",
+                "description": "Source currency code",
+                "example": "USD"
+              },
+              "to": {
+                "type": "string",
+                "description": "Target currency code",
+                "example": "EUR"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Original amount",
+                "example": 100.5
+              },
+              "convertedAmount": {
+                "type": "number",
+                "description": "Converted amount",
+                "example": 92.46
+              },
+              "rate": {
+                "type": "number",
+                "description": "Exchange rate used",
+                "example": 0.9196
+              },
+              "date": {
+                "type": "string",
+                "description": "Exchange rate date",
+                "example": "2025-07-25"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,400 @@
+openapi: 3.0.1
+info:
+  title: Insezo partner API
+  description: |
+    API endpoints for Insezo partners. (customers,companies and technicians)
+
+      current endpoints
+      - Tasks
+
+
+      Future endpoints
+      - Return (RDA)
+      - Stock
+      - Parts
+      - Products
+
+    # Authentication
+
+    Insezo currently offers one form of authentication:
+      - API Key - You can find this when logged in on app.insezo.com in the menu under "company settings"
+
+    Just add a Authorization header with value "Bearer {{YOUR_KEY}}"
+
+    <SecurityDefinitions />
+  version: "1.0"
+servers:
+  - url: 'https://rest.insezo.com'
+tags:
+  - name: Tasks
+    description: Everything about tasks
+paths:
+  /tasks/{taskNumber}:
+    get:
+      summary: Returns information about the task
+      description: ""
+      tags:
+        - Tasks
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: object
+                    properties:
+                      orderType:
+                        type: integer
+                      lastName:
+                        type: string
+                      country:
+                        type: string
+                      purchaseDate:
+                        type: string
+                      city:
+                        type: string
+                      purchasePlace:
+                        type: string
+                      companyName:
+                        type: string
+                      houseNumber:
+                        type: string
+                      dispatchCode:
+                        type: string
+                      language:
+                        type: string
+                      estMaintenanceCode:
+                        type: string
+                      affiliateBrand:
+                        type: string
+                      relation:
+                        type: string
+                      repairAdvice:
+                        type: string
+                      reference:
+                        type: array
+                        items:
+                          type: string
+                      streetName:
+                        type: string
+                      netcode:
+                        type: string
+                      warranty:
+                        type: integer
+                      id:
+                        type: string
+                      brand:
+                        type: string
+                      email:
+                        type: string
+                      serialNumber:
+                        type: string
+                      failureCode:
+                        type: string
+                      relationEmail:
+                        type: string
+                      mobile:
+                        type: string
+                      productNumber:
+                        type: string
+                      houseNumberAddition:
+                        type: string
+                      zipcode:
+                        type: string
+                      firstName:
+                        type: string
+                      realMaintenanceCode:
+                        type: string
+                      relationName:
+                        type: string
+                      repairCause:
+                        type: string
+                      phone:
+                        type: string
+                      productGroup:
+                        type: string
+                      complaint:
+                        type: string
+                      insertion:
+                        type: string
+                      salutation:
+                        type: integer
+              examples:
+                'production/service':
+                  value:
+                    {
+                      "result": {
+                        "id": "inse21112019-7e9c60",
+                        "orderType": 1,
+                        "salutation": 1,
+                        "firstName": "I.",
+                        "insertion": "",
+                        "lastName": "insezo",
+                        "country": "NL",
+                        "zipcode": "3355pp",
+                        "streetName": "Kattestaart",
+                        "houseNumber": "10",
+                        "houseNumberAddition": "",
+                        "city": "Papendrecht",
+                        "phone": "",
+                        "netcode": "31",
+                        "mobile": "612345678",
+                        "email": "info@insezo.com",
+                        "brand": "Insezo",
+                        "productGroup": "Afzuigkap",
+                        "productNumber": "AF101",
+                        "purchaseDate": "2019-11-01",
+                        "warranty": 2,
+                        "complaint": "",
+                        "serialNumber": "",
+                        "purchasePlace": "",
+                        "language": "NL",
+                        "companyName": "",
+                        "affiliateBrand": "",
+                        "estMaintenanceCode": "",
+                        "realMaintenanceCode": "",
+                        "failureCode": "",
+                        "dispatchCode": "",
+                        "relation": "",
+                        "relationName": "",
+                        "relationEmail": "",
+                        "repairAdvice": "",
+                        "repairCause": "",
+                        "reference": [
+                          ""
+                        ]
+                      }
+                    }
+        '400':
+          description: Bad request
+    put:
+      summary: Updates the task with the supplied data
+      description: ""
+      tags:
+        - Tasks
+      parameters:
+        - name: id
+          required: true
+          in: path
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                salutation:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                language:
+                  type: string
+                firstName:
+                  type: string
+                  maxLength: 35
+                insertion:
+                  type: string
+                  maxLength: 10
+                lastName:
+                  type: string
+                  maxLength: 35
+                country:
+                  type: string
+                  minimum: 2
+                  maximum: 2
+                city:
+                  type: string
+                  maxLength: 40
+                zipcode:
+                  type: string
+                  maxLength: 10
+                streetName:
+                  type: string
+                  maxLength: 60
+                houseNumber:
+                  type: string
+                  maxLength: 10
+                email:
+                  type: string
+                  maxLength: 60
+                mobile:
+                  type: string
+                netcode:
+                  type: string
+                phone:
+                  type: string
+                productNumber:
+                  type: string
+                purchaseDate:
+                  type: string
+                  format: date
+                complaint:
+                  type: string
+                  maxLength: 1500
+                warranty:
+                  type: integer
+                reference:
+                  type: array
+                  items:
+                    type: string
+            examples:
+              'production/service':
+                value: {"salutation": 2,"firstName": "roel","insertion":"","lastName":"aarnoudse","country":"nl","language":"nl","zipcode":"3355pp","houseNumber":"10","streetName":"Kattestaart","city":"papendrecht","phone":"0786154678","netcode":"31","mobile":"612345678","email":"info@insezo.com","productNumber":"AF101","purchaseDate":"1-1-2013","warranty":3,"complaint":"accio","reference":["one","two"]}
+      responses:
+        '200':
+          description: Ok
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  autofill:
+                    type: object
+                    properties:
+                      productGroup:
+                        type: string
+                  status:
+                    type: integer
+              examples:
+                'production/service':
+                  value:
+                    {
+                      "status": 200,
+                      "autofill": {
+                        "productGroup": "Afzuigkap"
+                      }
+                    }
+        '400':
+          description: Bad request
+        '422':
+          description: Unprocessable Entity
+  /tasks:
+    post:
+      summary: Creates a new task with the supplied data
+      description: ""
+      tags:
+        - Tasks
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                salutation:
+                  type: integer
+                  minimum: 1
+                  maximum: 4
+                language:
+                  type: string
+                firstName:
+                  type: string
+                  maxLength: 35
+                insertion:
+                  type: string
+                  maxLength: 10
+                lastName:
+                  type: string
+                  maxLength: 35
+                country:
+                  type: string
+                  minimum: 2
+                  maximum: 2
+                city:
+                  type: string
+                  maxLength: 40
+                zipcode:
+                  type: string
+                  maxLength: 10
+                streetName:
+                  type: string
+                  maxLength: 60
+                houseNumber:
+                  type: string
+                  maxLength: 10
+                email:
+                  type: string
+                  maxLength: 60
+                mobile:
+                  type: string
+                netcode:
+                  type: string
+                phone:
+                  type: string
+                productNumber:
+                  type: string
+                purchaseDate:
+                  type: string
+                  format: date
+                complaint:
+                  type: string
+                  maxLength: 1500
+                warranty:
+                  type: integer
+                reference:
+                  type: array
+                  items:
+                    type: string
+              required:
+                - salutation
+                - country
+                - zipcode
+                - streetName
+                - houseNumber
+                - city
+                - productNumber
+            examples:
+              'production/service':
+                value: {"salutation": 2,"firstName": "roel","insertion":"","lastName":"aarnoudse","country":"nl","language":"nl","zipcode":"3355pp","houseNumber":"10","streetName":"Kattestaart","city":"papendrecht","phone":"0786154678","netcode":"31","mobile":"612345678","email":"info@insezo.com","productNumber":"AF101","purchaseDate":"1-1-2013","warranty":3,"complaint":"accio","reference":["one","two"]}
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirectUrl:
+                    type: string
+                  id:
+                    type: string
+                  autofill:
+                    type: object
+                    properties:
+                      productGroup:
+                        type: string
+                      brand:
+                        type: number
+                  status:
+                    type: integer
+              examples:
+                'production/service':
+                  value:
+                    {
+                      "status": 201,
+                      "id": "inse21112019-d5e617",
+                      "redirectUrl": "https:\/\/app.insezo.com\/tasks\/overview?p=inse21112019-d5e617",
+                      "autofill": {
+                        "brand": "Insezo",
+                        "productGroup": "Afzuigkap"
+                      }
+                    }
+        '400':
+          description: Bad request
+        '422':
+          description: Unprocessable Entity
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: KEY

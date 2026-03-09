@@ -1,0 +1,155 @@
+openapi: 3.0.0
+info:
+  title: Authentication API
+  description: API for user authentication operations (register, login)
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000/api
+    description: Development server
+  - url: https://api.example.com/v1
+    description: Production server
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user account with email and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: user@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  description: User's password (minimum 8 characters)
+                  example: securePassword123
+              required:
+                - email
+                - password
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique user identifier (UUID)
+                    example: "550e8400-e29b-41d4-a716-446655440000"
+                  email:
+                    type: string
+                    format: email
+                    description: User's email address
+                    example: user@example.com
+                  message:
+                    type: string
+                    description: Success message
+                    example: "Account created successfully"
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      summary: Login user
+      description: Authenticates user with email and password, returns JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's email address
+                  example: user@example.com
+                password:
+                  type: string
+                  description: User's password
+                  example: securePassword123
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  token_type:
+                    type: string
+                    description: Token type (bearer)
+                    example: "bearer"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        description: User's unique identifier
+                        example: "550e8400-e29b-41d4-a716-446655440000"
+                      email:
+                        type: string
+                        format: email
+                        description: User's email
+                        example: user@example.com
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Invalid email or password"
+        status_code:
+          type: integer
+          description: HTTP status code
+          example: 401
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                description: Field name with error
+                example: "email"
+              message:
+                type: string
+                description: Error message for the field
+                example: "Email is required"
+          description: Optional field-specific validation errors

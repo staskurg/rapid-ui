@@ -1,0 +1,346 @@
+openapi: 3.0.3
+info:
+  title: Task Manager - Authentication API
+  description: |
+    Authentication endpoints for user registration and login.
+
+    **Security Model**:
+    - Passwords hashed with bcrypt (cost factor 12)
+    - JWT tokens with 7-day expiration
+    - Tokens stored in httpOnly cookies
+    - Shared secret validation (BETTER_AUTH_SECRET)
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@taskmanager.example.com
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.taskmanager.example.com
+    description: Production server (Neon backend)
+
+tags:
+  - name: Authentication
+    description: User registration and login operations
+
+paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: |
+        Creates a new user account with email and password.
+
+        **Validation Rules**:
+        - Email: Must match regex `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+        - Password: Minimum 8 characters
+        - Password hashed with bcrypt before storage
+
+        **Security**:
+        - Password NEVER returned in response
+        - Password NEVER stored in plaintext
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            examples:
+              validRegistration:
+                summary: Valid registration request
+                value:
+                  email: user@example.com
+                  password: securepassword123
+      responses:
+        '201':
+          description: User account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterResponse'
+              examples:
+                success:
+                  summary: Successful registration
+                  value:
+                    id: 550e8400-e29b-41d4-a716-446655440000
+                    email: user@example.com
+                    message: Account created successfully. Please log in.
+        '400':
+          description: Invalid request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidEmail:
+                  summary: Invalid email format
+                  value:
+                    detail: Invalid email format
+                shortPassword:
+                  summary: Password too short
+                  value:
+                    detail: Password must be at least 8 characters
+        '409':
+          description: Email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailExists:
+                  summary: Email already registered
+                  value:
+                    detail: An account with this email already exists
+        '422':
+          description: Validation error (malformed request body)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate user and issue JWT token
+      description: |
+        Validates user credentials and issues a JWT token for authenticated requests.
+
+        **Authentication Flow**:
+        1. Validate email format
+        2. Retrieve user by email
+        3. Verify password with bcrypt
+        4. Generate JWT token (7-day expiration)
+        5. Set httpOnly cookie with token
+        6. Return token and user info
+
+        **Security**:
+        - Generic error message on failure (no email enumeration)
+        - Rate limiting recommended (not implemented in Phase II)
+        - Token stored in httpOnly cookie (XSS protection)
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              validLogin:
+                summary: Valid login request
+                value:
+                  email: user@example.com
+                  password: securepassword123
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Set-Cookie:
+              description: HttpOnly cookie containing JWT token
+              schema:
+                type: string
+                example: access_token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                success:
+                  summary: Successful authentication
+                  value:
+                    access_token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJleHAiOjE3MzQwMDAwMDB9.abc123def456
+                    token_type: bearer
+                    user:
+                      id: 550e8400-e29b-41d4-a716-446655440000
+                      email: user@example.com
+        '400':
+          description: Invalid request (validation error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidEmail:
+                  summary: Invalid email format
+                  value:
+                    detail: Invalid email format
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  summary: Wrong email or password
+                  value:
+                    detail: Invalid email or password
+        '422':
+          description: Validation error (malformed request body)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+
+components:
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 5
+          maxLength: 255
+          description: User's email address (unique identifier)
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          description: User's password (minimum 8 characters)
+          example: securepassword123
+
+    RegisterResponse:
+      type: object
+      required:
+        - id
+        - email
+        - message
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          description: Registered email address
+          example: user@example.com
+        message:
+          type: string
+          description: Success message
+          example: Account created successfully. Please log in.
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 5
+          maxLength: 255
+          description: User's email address
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 255
+          description: User's password
+          example: securepassword123
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - user
+      properties:
+        access_token:
+          type: string
+          description: JWT token for authenticated requests (7-day expiration)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJleHAiOjE3MzQwMDAwMDB9.abc123def456
+        token_type:
+          type: string
+          enum: [bearer]
+          description: Token type (always "bearer")
+          example: bearer
+        user:
+          $ref: '#/components/schemas/UserInfo'
+
+    UserInfo:
+      type: object
+      required:
+        - id
+        - email
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique user identifier
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          description: User's email address
+          example: user@example.com
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+          example: An account with this email already exists
+
+    ValidationError:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  oneOf:
+                    - type: string
+                    - type: integer
+                description: Location of validation error
+              msg:
+                type: string
+                description: Error message
+              type:
+                type: string
+                description: Error type
+          example:
+            - loc: [body, email]
+              msg: field required
+              type: value_error.missing
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT token obtained from /api/auth/login.
+
+        **Token Format**:
+        - Algorithm: HS256 (HMAC SHA-256)
+        - Expiration: 7 days
+        - Claims: sub (user_id), exp (expiration)
+
+        **Usage**:
+        Include token in Authorization header:
+        `Authorization: Bearer <token>`
+
+        **Validation**:
+        Backend validates using BETTER_AUTH_SECRET shared secret.

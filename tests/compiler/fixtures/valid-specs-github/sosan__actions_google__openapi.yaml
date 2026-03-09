@@ -1,0 +1,112 @@
+openapi: 3.0.3
+info:
+  title: Actions Google API
+  description: API for managing Google actions
+  version: 1.0.0
+servers:
+  - url: https://actions-google.vercel.app
+    description: Production server
+paths:
+  /api/actions/google/sheets:
+    post:
+      summary: Create a Google action
+      description: Endpoint to create a new Google action
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionsCommand'
+      responses:
+        '200':
+          description: Successfully created action
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Action created successfully
+      security:
+        - BearerAuth: []
+
+components:
+  schemas:
+    ActionsCommand:
+      type: object
+      properties:
+        actions:
+          $ref: '#/components/schemas/RequestGoogleAction'
+        type:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - actions
+
+    RequestGoogleAction:
+      type: object
+      properties:
+        actionid:
+          type: string
+        requestid:
+          type: string
+        pollmode:
+          type: string
+        selectdocument:
+          type: string
+        document:
+          type: string
+        namedocument:
+          type: string
+        resourceid:
+          type: string
+        operation:
+          type: string
+        data:
+          type: string
+        credentialid:
+          type: string
+        sub:
+          type: string
+        type:
+          type: string
+        workflowid:
+          type: string
+        nodeid:
+          type: string
+        redirecturl:
+          type: string
+        status:
+          type: string
+        error_message:
+          type: string
+        createdat:
+          type: string
+          format: date-time
+      required:
+        - actionid
+        - requestid
+        - pollmode
+        - selectdocument
+        - document
+        - namedocument
+        - resourceid
+        - operation
+        - data
+        - credentialid
+        - sub
+        - type
+        - workflowid
+        - nodeid
+        - redirecturl
+        - status
+        - createdat
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

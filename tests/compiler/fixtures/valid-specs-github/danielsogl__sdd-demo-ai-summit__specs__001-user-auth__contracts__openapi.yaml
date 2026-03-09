@@ -1,0 +1,470 @@
+openapi: 3.0.3
+info:
+  title: User Authentication API
+  description: |
+    Stateless JWT authentication API with refresh token rotation.
+    
+    **Security Model**:
+    - Short-lived access tokens (15 minutes) for protected endpoint access
+    - Long-lived refresh tokens (7 days) for obtaining new access tokens
+    - Refresh tokens stored server-side and rotated on each use
+    - Rate limiting on failed login attempts (5 per IP per 15 minutes)
+    
+    **Token Management**:
+    - Access tokens are JWTs that cannot be revoked (rely on short lifetime)
+    - Refresh tokens are stored in database and can be invalidated (logout)
+    - All authentication responses include `Cache-Control: no-store` header
+    
+  version: 1.0.0
+  contact:
+    name: API Support
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+    
+tags:
+  - name: Authentication
+    description: User registration, login, token refresh, and logout operations
+  - name: User Profile
+    description: Authenticated user profile operations
+
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user account
+      description: |
+        Creates a new user account with email and password. Returns authentication tokens
+        for immediate use. Email must be unique and password must meet security requirements.
+        
+        **Requirements**:
+        - Email: Valid format (RFC 5322), unique across all users
+        - Password: Minimum 8 characters, at least one uppercase, one lowercase, one number
+        
+        **Behavior**:
+        - Password is hashed with bcrypt (cost factor 12) before storage
+        - Returns both access token (15min) and refresh token (7 days)
+        - Account is immediately active (no email verification required)
+        
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                  description: User's email address (used as login username)
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: SecurePass123
+                  description: User's password (min 8 chars, 1 uppercase, 1 lowercase, 1 number)
+      responses:
+        '201':
+          description: User account created successfully
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+              description: Prevents caching of authentication response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                  - user
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    description: JWT access token (valid for 15 minutes)
+                  refreshToken:
+                    type: string
+                    example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+                    description: Refresh token (valid for 7 days, stored server-side)
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '400':
+          description: Validation error (invalid email format or weak password)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidEmail:
+                  summary: Invalid email format
+                  value:
+                    error: Invalid email format
+                weakPassword:
+                  summary: Weak password
+                  value:
+                    error: Password must be at least 8 characters and contain uppercase, lowercase, and number
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Email already registered
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with email and password
+      description: |
+        Authenticates a user with their email and password. Returns authentication tokens
+        on success. Rate limited to prevent brute force attacks.
+        
+        **Rate Limiting**:
+        - Maximum 5 failed attempts per IP address within 15-minute window
+        - Exceeding limit returns 429 status
+        - Counter resets after 15 minutes
+        
+        **Behavior**:
+        - Validates credentials against stored bcrypt hash
+        - Returns both access token (15min) and refresh token (7 days)
+        - Multiple concurrent sessions allowed (same user, different devices)
+        
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                  description: User's email address
+                password:
+                  type: string
+                  format: password
+                  example: SecurePass123
+                  description: User's password
+      responses:
+        '200':
+          description: Authentication successful
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+              description: Prevents caching of authentication response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                  - user
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    description: JWT access token (valid for 15 minutes)
+                  refreshToken:
+                    type: string
+                    example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+                    description: Refresh token (valid for 7 days, stored server-side)
+                  user:
+                    $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Invalid credentials
+        '429':
+          description: Too many failed login attempts (rate limit exceeded)
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                example: 900
+              description: Seconds until rate limit resets (15 minutes = 900 seconds)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Too many failed login attempts. Please try again later.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Obtain new access token using refresh token
+      description: |
+        Exchanges a valid refresh token for a new access token and new refresh token.
+        Implements token rotation - old refresh token is immediately invalidated.
+        
+        **Token Rotation (Security)**:
+        - Old refresh token is deleted from database
+        - New refresh token is generated with fresh 7-day expiration
+        - Atomicity guaranteed via database transaction
+        - Reusing old token after rotation is detected as potential theft
+        
+        **Behavior**:
+        - Validates refresh token exists and is not expired
+        - Returns new access token (15min) and new refresh token (7 days)
+        - Old refresh token cannot be used again (single-use)
+        
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+                  description: Current refresh token (will be invalidated)
+      responses:
+        '200':
+          description: Tokens refreshed successfully
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+              description: Prevents caching of authentication response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - accessToken
+                  - refreshToken
+                properties:
+                  accessToken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                    description: New JWT access token (valid for 15 minutes)
+                  refreshToken:
+                    type: string
+                    example: z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4
+                    description: New refresh token (valid for 7 days, old token invalidated)
+        '401':
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidToken:
+                  summary: Token does not exist or already used
+                  value:
+                    error: Invalid refresh token
+                expiredToken:
+                  summary: Token is older than 7 days
+                  value:
+                    error: Refresh token expired. Please log in again.
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Invalidate refresh token and end session
+      description: |
+        Logs out the user by invalidating their refresh token. Access tokens cannot be
+        revoked (stateless), but they expire in 15 minutes.
+        
+        **Behavior**:
+        - Deletes refresh token from database
+        - Idempotent (calling with already-deleted token succeeds gracefully)
+        - Invalid/unknown tokens result in successful logout (best effort)
+        
+        **Security Note**:
+        - Access tokens remain valid until 15-minute expiration
+        - For immediate logout, client should discard access token from memory
+        
+      operationId: logoutUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+                  example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
+                  description: Refresh token to invalidate
+      responses:
+        '200':
+          description: Logout successful
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: no-store
+              description: Prevents caching of authentication response
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - message
+                properties:
+                  message:
+                    type: string
+                    example: Logout successful
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+  /auth/me:
+    get:
+      tags:
+        - User Profile
+      summary: Get authenticated user's profile
+      description: |
+        Returns the profile information for the currently authenticated user.
+        Requires a valid access token in the Authorization header.
+        
+        **Authentication**:
+        - Access token must be provided in Authorization header
+        - Token must not be expired (< 15 minutes old)
+        - Returns user data excluding sensitive fields (no password hash)
+        
+      operationId: getUserProfile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Unauthorized (missing, invalid, or expired access token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                noToken:
+                  summary: No authorization header provided
+                  value:
+                    error: No authorization token provided
+                invalidToken:
+                  summary: Token is malformed or signature is invalid
+                  value:
+                    error: Invalid token
+                expiredToken:
+                  summary: Token has expired (> 15 minutes old)
+                  value:
+                    error: Token expired
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Internal server error
+
+components:
+  schemas:
+    UserProfile:
+      type: object
+      required:
+        - id
+        - email
+        - createdAt
+      properties:
+        id:
+          type: integer
+          example: 123
+          description: Unique user identifier
+        email:
+          type: string
+          format: email
+          example: user@example.com
+          description: User's email address
+        createdAt:
+          type: integer
+          example: 1738454400
+          description: Unix timestamp of account creation
+      description: User profile data (excludes password hash)
+    
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          example: Invalid credentials
+          description: Human-readable error message
+      description: Error response format
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token obtained from /auth/register, /auth/login, or /auth/refresh.
+        Include in Authorization header as: `Authorization: Bearer <token>`
+
+security: []

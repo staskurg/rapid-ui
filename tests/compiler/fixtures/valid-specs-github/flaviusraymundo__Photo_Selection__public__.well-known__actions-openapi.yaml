@@ -1,0 +1,112 @@
+openapi: 3.1.0
+info:
+  title: Terapia Floral — GPT Actions
+  version: "1.0.0"
+  description: |
+    PT-BR: Actions para criar sessão de checkout no Stripe e verificar pagamento.
+    EN: Actions to create a Stripe Checkout session and verify payment.
+
+servers:
+  - url: https://www.terapiafloral.org/api
+  
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+  schemas:
+    CreateCheckoutSessionRequest:
+      type: object
+      required: [kind, option, qty, locale]
+      properties:
+        kind:
+          type: string
+          description: "pdf | frasco | consulta | kit"
+        option:
+          type: string
+          description: "ex.: pdf_detalhado | frasco30_pdf | consulta50 | consulta90"
+        qty:
+          type: integer
+          minimum: 1
+          default: 1
+        locale:
+          type: string
+          description: "pt-BR para BRL, en-US para USD"
+        meta:
+          type: object
+          description: "Metadados opcionais"
+          properties:
+            email: { type: string, format: email }
+            name:  { type: string }
+            phone: { type: string }
+            tenant_id: { type: string }
+            event_id:  { type: string }
+    CreateCheckoutSessionResponse:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+        id:  { type: string, description: "Stripe session_id" }
+    VerifyCheckoutSessionResponse:
+      type: object
+      properties:
+        paid: { type: boolean }
+        email: { type: string }
+        products: { type: array, items: { type: string } }
+        amount_total: { type: number }
+        currency: { type: string }
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /create-checkout-session:
+    post:
+      operationId: createCheckoutSession
+      summary: Cria sessão de Stripe Checkout e retorna a URL
+      description: |
+        PT-BR: Usa sua function existente. Moeda por locale (pt-BR→BRL, en-US→USD).
+        EN: Uses your existing function. Currency by locale.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCheckoutSessionRequest' }
+            examples:
+              pdf_pt:
+                value:
+                  kind: "pdf"
+                  option: "pdf_detalhado"
+                  qty: 1
+                  locale: "pt-BR"
+                  meta: { email: "cliente@exemplo.com", tenant_id: "DEFAULT" }
+              consulta_en:
+                value:
+                  kind: "consulta"
+                  option: "consulta50"
+                  qty: 1
+                  locale: "en-US"
+                  meta: { email: "client@example.com", tenant_id: "DEFAULT" }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreateCheckoutSessionResponse' }
+
+  /verify-checkout-session:
+    get:
+      operationId: verifyCheckoutSession
+      summary: Verifica status de pagamento
+      parameters:
+        - in: query
+          name: session_id
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/VerifyCheckoutSessionResponse' }

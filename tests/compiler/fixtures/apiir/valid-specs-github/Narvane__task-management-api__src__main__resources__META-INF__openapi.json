@@ -1,0 +1,259 @@
+{
+  "api": {
+    "title": "Task Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Task",
+      "key": "task",
+      "operations": [
+        {
+          "id": "GET:/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Check and respond to emails"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "TODO",
+                        "COMPLETED"
+                      ]
+                    }
+                  }
+                }
+              },
+              "page": {
+                "type": "integer"
+              },
+              "size": {
+                "type": "integer"
+              },
+              "totalElements": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/tasks/completed",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks/completed",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Check and respond to emails"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "TODO",
+                        "COMPLETED"
+                      ]
+                    }
+                  }
+                }
+              },
+              "page": {
+                "type": "integer"
+              },
+              "size": {
+                "type": "integer"
+              },
+              "totalElements": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/tasks/{id}/toggle-status",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{id}/toggle-status",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "COMPLETED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Check and respond to emails",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "example": "Review incoming emails, prioritize messages, and reply or forward them as needed to ensure communication flows smoothly.",
+                "maxLength": 500
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "COMPLETED"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string",
+                "example": "Check and respond to emails"
+              },
+              "description": {
+                "type": "string",
+                "example": "Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "COMPLETED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/tasks/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/tasks/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "status"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Check and respond to emails",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "example": "Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control.",
+                "maxLength": 500
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "COMPLETED"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string",
+                "example": "Check and respond to emails"
+              },
+              "description": {
+                "type": "string",
+                "example": "Scan your inbox for new messages, filter by urgency, and take quick action — reply, delegate, or archive — to keep communication efficient and inbox under control."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "TODO",
+                  "COMPLETED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/tasks/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/tasks/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string",
+                "example": "Check and respond to emails"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

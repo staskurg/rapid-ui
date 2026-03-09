@@ -2,14 +2,15 @@
 /**
  * Extract valid RUS-v1 specs from raw corpus batch reports into rapidui-corpus-valid-v1.
  *
- * Reads all raw-batch*.json files, collects valid results, deduplicates, and writes:
- *   - rapidui-corpus-valid-v1.json  (full manifest with metadata)
- *   - rapidui-corpus-valid-v1.txt   (paths only, one per line)
+ * Reads raw-{repo}-*.json files, collects valid results, deduplicates, and writes:
+ *   - rapidui-corpus-valid-v1-{repo}.json  (full manifest with metadata)
+ *   - rapidui-corpus-valid-v1-{repo}.txt   (paths only, one per line)
  *
- * Usage: npm run corpus:extract-valid
- *   or:  npm run corpus:extract-valid -- --copy-to-fixtures
- *   or:  npm run corpus:extract-valid -- --github-only   # only raw-github-*.json (exclude APIs.guru)
- *   or:  tsx scripts/corpus-extract-valid.ts [--reports-dir PATH] [--copy-to-fixtures] [--github-only]
+ * Usage: npm run corpus:extract-valid -- --repo REPO [--copy-to-fixtures]
+ *   REPO: api-guru | github
+ *   --copy-to-fixtures: copy valid specs to tests/compiler/fixtures/valid-specs-{repo}
+ *
+ *   or:  tsx scripts/corpus-extract-valid.ts [--repo REPO] [--reports-dir PATH] [--copy-to-fixtures]
  */
 
 import {
@@ -50,21 +51,37 @@ interface ValidSpecEntry {
   compileTimeMs: number;
 }
 
+const VALID_REPOS = ["api-guru", "github"] as const;
+type RepoName = (typeof VALID_REPOS)[number];
+
 function main(): number {
   const args = process.argv.slice(2);
   const cwd = process.cwd();
   let reportsDir = join(cwd, "scripts", "corpus-data", "reports");
 
   let copyToFixtures = false;
-  let githubOnly = false;
+  let repo: RepoName | null = null;
+
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--reports-dir" && args[i + 1]) {
+    if (args[i] === "--repo" && args[i + 1]) {
+      const r = args[++i];
+      if (VALID_REPOS.includes(r as RepoName)) {
+        repo = r as RepoName;
+      } else {
+        console.error(`Unknown repo: ${r}. Use api-guru or github.`);
+        return 1;
+      }
+    } else if (args[i] === "--reports-dir" && args[i + 1]) {
       reportsDir = args[++i];
     } else if (args[i] === "--copy-to-fixtures") {
       copyToFixtures = true;
-    } else if (args[i] === "--github-only") {
-      githubOnly = true;
     }
+  }
+
+  if (!repo) {
+    console.error("Usage: npm run corpus:extract-valid -- --repo REPO [--copy-to-fixtures]");
+    console.error("  REPO: api-guru | github");
+    return 1;
   }
 
   if (!existsSync(reportsDir)) {
@@ -72,20 +89,13 @@ function main(): number {
     return 1;
   }
 
+  const rawPrefix = `raw-${repo}-`;
   const files = readdirSync(reportsDir)
-    .filter((f) => {
-      if (!f.endsWith(".json")) return false;
-      if (githubOnly) return f.startsWith("raw-github-");
-      return f.startsWith("raw-api-guru-") || f.startsWith("raw-github-");
-    })
+    .filter((f) => f.endsWith(".json") && f.startsWith(rawPrefix))
     .sort((a, b) => a.localeCompare(b));
 
   if (files.length === 0) {
-    console.error(
-      githubOnly
-        ? `No raw-github-*.json files found in ${reportsDir}`
-        : `No raw-api-guru-*.json or raw-github-*.json files found in ${reportsDir}`
-    );
+    console.error(`No ${rawPrefix}*.json files found in ${reportsDir}`);
     return 1;
   }
 
@@ -135,25 +145,19 @@ function main(): number {
   const outputDir = join(cwd, "scripts", "corpus-data");
   mkdirSync(outputDir, { recursive: true });
 
-  const manifestPath = join(outputDir, "rapidui-corpus-valid-v1.json");
-  const listPath = join(outputDir, "rapidui-corpus-valid-v1.txt");
+  const manifestName = `rapidui-corpus-valid-v1-${repo}`;
+  const manifestPath = join(outputDir, `${manifestName}.json`);
+  const listPath = join(outputDir, `${manifestName}.txt`);
 
-  const hasGithub = validList.some((s) => s.path.includes("corpus-github") || s.path.includes("specs/github"));
-  const hasApisGuru = validList.some((s) => s.path.includes("specs/api_guru"));
-  let source: string;
-  if (hasGithub && hasApisGuru) {
-    source = "APIs.guru (via openapi-directory) + GitHub";
-  } else if (hasGithub) {
-    source = "GitHub";
-  } else {
-    source = "APIs.guru (via openapi-directory)";
-  }
+  const source =
+    repo === "api-guru" ? "APIs.guru (via openapi-directory)" : "GitHub";
 
   const manifest = {
     meta: {
-      name: "rapidui-corpus-valid-v1",
+      name: manifestName,
       description: "OpenAPI specs that pass RUS-v1 validation",
       source,
+      repo,
       extractedAt: new Date().toISOString(),
       totalSpecs: validList.length,
     },
@@ -163,12 +167,12 @@ function main(): number {
   writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), "utf-8");
   writeFileSync(listPath, validList.map((s) => s.path).join("\n") + "\n", "utf-8");
 
-  console.log(`Extracted ${validList.length} valid specs to rapidui-corpus-valid-v1`);
+  console.log(`Extracted ${validList.length} valid specs to ${manifestName}`);
   console.log(`  Manifest: ${manifestPath}`);
   console.log(`  Path list: ${listPath}`);
 
   if (copyToFixtures) {
-    const fixturesDir = join(cwd, "tests", "compiler", "fixtures", "valid-specs-api-guru");
+    const fixturesDir = join(cwd, "tests", "compiler", "fixtures", `valid-specs-${repo}`);
     mkdirSync(fixturesDir, { recursive: true });
     let copied = 0;
     for (const spec of validList) {
@@ -182,7 +186,7 @@ function main(): number {
         console.warn(`  Skipped (not found): ${spec.path}`);
       }
     }
-    console.log(`  Copied ${copied} specs to ${fixturesDir}`);
+    console.log(`  Copied ${copied} specs to tests/compiler/fixtures/valid-specs-${repo}`);
   }
 
   return 0;

@@ -1,0 +1,170 @@
+openapi: 3.0.0
+info:
+  title: Currency Converter API
+  description: Convert currency amounts using real-time exchange rates via Fixer.io
+  version: 1.0.0
+
+servers:
+  - url: https://pro-code-currency-converter.azurewebsites.net
+    description: Production Azure Functions
+
+paths:
+  /api/convertTo:
+    post:
+      summary: Convert currency amount
+      description: Convert an amount from one currency to another using current or historical exchange rates
+      operationId: convertCurrency
+      tags:
+        - Currency Conversion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from
+                - to
+                - amount
+              properties:
+                from:
+                  type: string
+                  description: Source currency code (ISO 4217 format, e.g., USD, EUR, GBP)
+                  example: USD
+                  minLength: 3
+                  maxLength: 3
+                to:
+                  type: string
+                  description: Target currency code (ISO 4217 format)
+                  example: EUR
+                  minLength: 3
+                  maxLength: 3
+                amount:
+                  type: number
+                  description: Amount to convert
+                  example: 100.50
+                  minimum: 0
+                date:
+                  type: string
+                  description: Date for historical exchange rates (YYYY-MM-DD format). If not provided, uses current date
+                  example: 2025-07-25
+                  format: date
+      responses:
+        "200":
+          description: Successful currency conversion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  from:
+                    type: string
+                    description: Source currency code
+                    example: USD
+                  to:
+                    type: string
+                    description: Target currency code
+                    example: EUR
+                  amount:
+                    type: number
+                    description: Original amount
+                    example: 100.50
+                  convertedAmount:
+                    type: number
+                    description: Converted amount
+                    example: 92.46
+                  rate:
+                    type: number
+                    description: Exchange rate used
+                    example: 0.9196
+                  date:
+                    type: string
+                    description: Exchange rate date
+                    example: 2025-07-25
+        "400":
+          description: Bad request - missing or invalid parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                    example: "Missing or invalid parameters. Required: from, to, amount"
+        "401":
+          description: Unauthorized - missing or invalid API key
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                    example: API key not configured
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                    example: Failed to get exchange rate
+
+components:
+  schemas:
+    ConversionRequest:
+      type: object
+      required:
+        - from
+        - to
+        - amount
+      properties:
+        from:
+          type: string
+          description: Source currency code
+          minLength: 3
+          maxLength: 3
+        to:
+          type: string
+          description: Target currency code
+          minLength: 3
+          maxLength: 3
+        amount:
+          type: number
+          description: Amount to convert
+          minimum: 0
+        date:
+          type: string
+          description: Historical date for exchange rates
+          format: date
+
+    ConversionResponse:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        amount:
+          type: number
+        convertedAmount:
+          type: number
+        rate:
+          type: number
+        date:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+
+tags:
+  - name: Currency Conversion
+    description: Operations for converting between currencies

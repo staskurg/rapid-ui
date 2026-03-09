@@ -189,27 +189,24 @@ RUS-v1 corpus measurement validates the subset against real APIs from APIs.guru.
 ### Commands
 
 ```bash
-# Run check on API guru specs (specs in scripts/corpus-data/specs/api_guru/)
-npm run corpus:run -- --api-guru
+# Run validation (per repository)
+npm run corpus:run -- --repo api-guru   # or --repo github
 
-# Generate report from raw output
-npm run corpus:report -- scripts/corpus-data/reports/raw-api-guru-{timestamp}.json
+# Generate report (auto-finds latest raw file when --repo given)
+npm run corpus:report -- --repo api-guru
 
-# Extract valid specs from all raw reports into manifest
-npm run corpus:extract-valid
-
-# Copy valid specs to fixtures (for LLM determinism testing)
-npm run corpus:copy-valid-to-fixtures
+# Extract valid specs + copy to fixtures
+npm run corpus:copy-valid-to-fixtures -- --repo api-guru
 ```
 
 **GitHub corpus:** For crawling and validating OpenAPI specs from GitHub, see [corpus-github.md](corpus-github.md).
 
 ### Corpus-Valid-v1 Fixtures
 
-Specs that pass RUS-v1 validation across all corpus batches are extracted and copied to `tests/compiler/fixtures/valid-specs-api-guru/`. These serve as:
+Specs that pass RUS-v1 validation are extracted per repository and copied to `tests/compiler/fixtures/valid-specs-{repo}/` (api-guru, github). These serve as:
 
-- **Regression tests** — All 99 valid-specs-api-guru fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
-- **LLM determinism testing** — Future step: use these real APIs to validate LLM output stability across runs
+- **Regression tests** — All valid-specs-* fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
+- **LLM determinism testing** — Use these real APIs to validate LLM output stability across runs
 
 ---
 

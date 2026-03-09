@@ -1,0 +1,397 @@
+{
+  "api": {
+    "title": "Shoprr API",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "getProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "category",
+                "price",
+                "attributes"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "price": {
+                  "type": "number",
+                  "format": "decimal",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "value"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "searchProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products/search",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "category",
+                "price",
+                "attributes"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "price": {
+                  "type": "number",
+                  "format": "decimal",
+                  "minimum": 0
+                },
+                "attributes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "name",
+                      "value"
+                    ],
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "value": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getProductById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "category",
+              "price",
+              "attributes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "minimum": 0
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createProduct",
+          "method": "POST",
+          "kind": "create",
+          "path": "/products",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "price",
+              "category"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "minimum": 0
+              },
+              "category": {
+                "type": "string",
+                "description": "Category name"
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "default": []
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "category",
+              "price",
+              "attributes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "minimum": 0
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updatePrice",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/products/{productId}/price",
+          "identifierParam": "productId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "price"
+            ],
+            "properties": {
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "minimum": 0
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "category",
+              "price",
+              "attributes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                }
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "minimum": 0
+              },
+              "attributes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

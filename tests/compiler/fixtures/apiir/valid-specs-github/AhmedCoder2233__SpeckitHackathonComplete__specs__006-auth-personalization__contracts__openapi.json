@@ -1,0 +1,395 @@
+{
+  "api": {
+    "title": "FastAPI Authentication API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Login",
+      "key": "login",
+      "operations": [
+        {
+          "id": "POST:/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "MyStrongP@ssw0rd"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Login successful"
+              },
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "preferences": {
+                    "type": "object",
+                    "properties": {
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "beginner",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "beginner"
+                      },
+                      "languages": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [
+                          "Python",
+                          "JavaScript"
+                        ]
+                      },
+                      "aiExperience": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "basic",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "basic"
+                      },
+                      "hardwareKnowledge": {
+                        "type": "string",
+                        "enum": [
+                          "basic",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "intermediate"
+                      }
+                    },
+                    "required": [
+                      "level",
+                      "languages",
+                      "aiExperience",
+                      "hardwareKnowledge"
+                    ]
+                  }
+                },
+                "required": [
+                  "userId",
+                  "email",
+                  "name",
+                  "preferences"
+                ]
+              }
+            },
+            "required": [
+              "message",
+              "token",
+              "user"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Me",
+      "key": "me",
+      "operations": [
+        {
+          "id": "GET:/me",
+          "method": "GET",
+          "kind": "list",
+          "path": "/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "preferences": {
+                "type": "object",
+                "properties": {
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "beginner",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "beginner"
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "Python",
+                      "JavaScript"
+                    ]
+                  },
+                  "aiExperience": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "basic",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "basic"
+                  },
+                  "hardwareKnowledge": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "intermediate"
+                  }
+                },
+                "required": [
+                  "level",
+                  "languages",
+                  "aiExperience",
+                  "hardwareKnowledge"
+                ]
+              }
+            },
+            "required": [
+              "userId",
+              "email",
+              "name",
+              "preferences"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Signup",
+      "key": "signup",
+      "operations": [
+        {
+          "id": "POST:/signup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/signup",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "newuser@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "MyStrongP@ssw0rd"
+              },
+              "name": {
+                "type": "string",
+                "example": "Jane Doe"
+              },
+              "preferences": {
+                "type": "object",
+                "properties": {
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "beginner",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "beginner"
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "Python",
+                      "JavaScript"
+                    ]
+                  },
+                  "aiExperience": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "basic",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "basic"
+                  },
+                  "hardwareKnowledge": {
+                    "type": "string",
+                    "enum": [
+                      "basic",
+                      "intermediate",
+                      "advanced"
+                    ],
+                    "example": "intermediate"
+                  }
+                },
+                "required": [
+                  "level",
+                  "languages",
+                  "aiExperience",
+                  "hardwareKnowledge"
+                ]
+              }
+            },
+            "required": [
+              "email",
+              "password",
+              "name",
+              "preferences"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Login successful"
+              },
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "userId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "preferences": {
+                    "type": "object",
+                    "properties": {
+                      "level": {
+                        "type": "string",
+                        "enum": [
+                          "beginner",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "beginner"
+                      },
+                      "languages": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "example": [
+                          "Python",
+                          "JavaScript"
+                        ]
+                      },
+                      "aiExperience": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "basic",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "basic"
+                      },
+                      "hardwareKnowledge": {
+                        "type": "string",
+                        "enum": [
+                          "basic",
+                          "intermediate",
+                          "advanced"
+                        ],
+                        "example": "intermediate"
+                      }
+                    },
+                    "required": [
+                      "level",
+                      "languages",
+                      "aiExperience",
+                      "hardwareKnowledge"
+                    ]
+                  }
+                },
+                "required": [
+                  "userId",
+                  "email",
+                  "name",
+                  "preferences"
+                ]
+              }
+            },
+            "required": [
+              "message",
+              "token",
+              "user"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

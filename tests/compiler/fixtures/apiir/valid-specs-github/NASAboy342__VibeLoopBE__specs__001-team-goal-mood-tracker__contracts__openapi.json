@@ -1,0 +1,450 @@
+{
+  "api": {
+    "title": "Team Daily Goal Tracker with Mood Sync API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Goals",
+      "key": "goals",
+      "operations": [
+        {
+          "id": "createGoal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/goals",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "memberId",
+              "description",
+              "date"
+            ],
+            "properties": {
+              "memberId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the team member who owns this goal",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200,
+                "description": "Goal description text (3-200 characters)",
+                "example": "Complete API documentation"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Target date in YYYY-MM-DD format",
+                "example": "2025-11-24"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "memberId",
+              "description",
+              "completed",
+              "createdAt",
+              "date"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the goal",
+                "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+              },
+              "memberId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Reference to the owning team member",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200,
+                "description": "Goal description text",
+                "example": "Complete API documentation"
+              },
+              "completed": {
+                "type": "boolean",
+                "description": "Whether the goal is completed",
+                "example": false
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp when goal was created",
+                "example": "2025-11-24T07:00:00.000Z"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Target date in YYYY-MM-DD format",
+                "example": "2025-11-24"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteGoal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/goals/delete",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "goalId"
+            ],
+            "properties": {
+              "goalId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the goal to delete",
+                "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "updateGoal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/goals/update",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "goalId",
+              "completed"
+            ],
+            "properties": {
+              "goalId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the goal to update",
+                "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+              },
+              "completed": {
+                "type": "boolean",
+                "description": "New completion status",
+                "example": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "memberId",
+              "description",
+              "completed",
+              "createdAt",
+              "date"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the goal",
+                "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+              },
+              "memberId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Reference to the owning team member",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 200,
+                "description": "Goal description text",
+                "example": "Complete API documentation"
+              },
+              "completed": {
+                "type": "boolean",
+                "description": "Whether the goal is completed",
+                "example": false
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp when goal was created",
+                "example": "2025-11-24T07:00:00.000Z"
+              },
+              "date": {
+                "type": "string",
+                "format": "date",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                "description": "Target date in YYYY-MM-DD format",
+                "example": "2025-11-24"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Members",
+      "key": "members",
+      "operations": [
+        {
+          "id": "getMembers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/members",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "name",
+                "goals"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Unique identifier for the team member",
+                  "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Display name of the team member",
+                  "example": "Alice Johnson"
+                },
+                "mood": {
+                  "type": "string",
+                  "nullable": true,
+                  "enum": [
+                    "great",
+                    "good",
+                    "neutral",
+                    "low",
+                    "stressed"
+                  ],
+                  "description": "Current mood status, null if never set",
+                  "example": "great"
+                },
+                "moodUpdatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true,
+                  "description": "ISO 8601 timestamp of last mood update, null if never set",
+                  "example": "2025-11-24T08:30:00.000Z"
+                },
+                "goals": {
+                  "type": "array",
+                  "description": "All goals for this member (any date)",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "id",
+                      "memberId",
+                      "description",
+                      "completed",
+                      "createdAt",
+                      "date"
+                    ],
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Unique identifier for the goal",
+                        "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+                      },
+                      "memberId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Reference to the owning team member",
+                        "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 200,
+                        "description": "Goal description text",
+                        "example": "Complete API documentation"
+                      },
+                      "completed": {
+                        "type": "boolean",
+                        "description": "Whether the goal is completed",
+                        "example": false
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "description": "ISO 8601 timestamp when goal was created",
+                        "example": "2025-11-24T07:00:00.000Z"
+                      },
+                      "date": {
+                        "type": "string",
+                        "format": "date",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                        "description": "Target date in YYYY-MM-DD format",
+                        "example": "2025-11-24"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateMemberMood",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/members/mood",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "memberId",
+              "mood",
+              "timestamp"
+            ],
+            "properties": {
+              "memberId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "ID of the team member to update",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "mood": {
+                "type": "string",
+                "enum": [
+                  "great",
+                  "good",
+                  "neutral",
+                  "low",
+                  "stressed"
+                ],
+                "description": "New mood value",
+                "example": "stressed"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp of when mood was recorded",
+                "example": "2025-11-24T14:30:00.000Z"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "goals"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the team member",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "name": {
+                "type": "string",
+                "description": "Display name of the team member",
+                "example": "Alice Johnson"
+              },
+              "mood": {
+                "type": "string",
+                "nullable": true,
+                "enum": [
+                  "great",
+                  "good",
+                  "neutral",
+                  "low",
+                  "stressed"
+                ],
+                "description": "Current mood status, null if never set",
+                "example": "great"
+              },
+              "moodUpdatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "ISO 8601 timestamp of last mood update, null if never set",
+                "example": "2025-11-24T08:30:00.000Z"
+              },
+              "goals": {
+                "type": "array",
+                "description": "All goals for this member (any date)",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "memberId",
+                    "description",
+                    "completed",
+                    "createdAt",
+                    "date"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Unique identifier for the goal",
+                      "example": "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+                    },
+                    "memberId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Reference to the owning team member",
+                      "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                    },
+                    "description": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 200,
+                      "description": "Goal description text",
+                      "example": "Complete API documentation"
+                    },
+                    "completed": {
+                      "type": "boolean",
+                      "description": "Whether the goal is completed",
+                      "example": false
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "ISO 8601 timestamp when goal was created",
+                      "example": "2025-11-24T07:00:00.000Z"
+                    },
+                    "date": {
+                      "type": "string",
+                      "format": "date",
+                      "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+                      "description": "Target date in YYYY-MM-DD format",
+                      "example": "2025-11-24"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,237 @@
+{
+  "api": {
+    "title": "DSA Lab API",
+    "version": "0.0.0"
+  },
+  "resources": [
+    {
+      "name": "Modules",
+      "key": "modules",
+      "operations": [
+        {
+          "id": "GET:/modules",
+          "method": "GET",
+          "kind": "list",
+          "path": "/modules",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string"
+                },
+                "summary": {
+                  "type": "string"
+                },
+                "subchallenges": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "template": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "GET:/projects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/projects",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "string"
+                },
+                "moduleId": {
+                  "type": "string"
+                },
+                "language": {
+                  "type": "string"
+                },
+                "githubRepoUrl": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "progress": {
+                  "type": "integer"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/projects",
+          "method": "POST",
+          "kind": "create",
+          "path": "/projects",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "moduleId",
+              "language"
+            ],
+            "properties": {
+              "moduleId": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "moduleId": {
+                "type": "string"
+              },
+              "language": {
+                "type": "string"
+              },
+              "githubRepoUrl": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              },
+              "progress": {
+                "type": "integer"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Submissions",
+      "key": "submissions",
+      "operations": [
+        {
+          "id": "POST:/submissions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/submissions",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "projectId",
+              "details"
+            ],
+            "properties": {
+              "projectId": {
+                "type": "string"
+              },
+              "details": {
+                "type": "object",
+                "required": [
+                  "moduleId",
+                  "summary",
+                  "pass",
+                  "cases"
+                ],
+                "properties": {
+                  "moduleId": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "pass": {
+                    "type": "boolean"
+                  },
+                  "cases": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "subchallengeId",
+                        "passed"
+                      ],
+                      "properties": {
+                        "subchallengeId": {
+                          "type": "string"
+                        },
+                        "passed": {
+                          "type": "boolean"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "commitSha": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "projectUpdated": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,751 @@
+{
+  "api": {
+    "title": "Laravel",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "logInAndGenerateAnAccessToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "description": "The email of the user.",
+                "example": "johndoe@example.com",
+                "nullable": false
+              },
+              "password": {
+                "type": "string",
+                "description": "The password of the user.",
+                "example": "password123",
+                "nullable": false
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+              "token_type": "Bearer"
+            },
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+              },
+              "token_type": {
+                "type": "string",
+                "example": "Bearer"
+              }
+            }
+          }
+        },
+        {
+          "id": "registerANewUserAndGenerateAnAccessToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the user.",
+                "example": "John Doe",
+                "nullable": false
+              },
+              "email": {
+                "type": "string",
+                "description": "The email of the user.",
+                "example": "johndoe@example.com",
+                "nullable": false
+              },
+              "password": {
+                "type": "string",
+                "description": "The password of the user (must be at least 6 characters).",
+                "example": "password123",
+                "nullable": false
+              },
+              "password_confirmation": {
+                "type": "string",
+                "description": "The password confirmation.",
+                "example": "password123",
+                "nullable": false
+              }
+            },
+            "required": [
+              "name",
+              "email",
+              "password",
+              "password_confirmation"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "access_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+              "token_type": "Bearer"
+            },
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "example": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..."
+              },
+              "token_type": {
+                "type": "string",
+                "example": "Bearer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authors",
+      "key": "authors",
+      "operations": [
+        {
+          "id": "getAPaginatedFilteredAndSortedListOfAuthors",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/authors",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "data": [
+                {
+                  "id": 1,
+                  "name": "Author Name",
+                  "email": "author@example.com",
+                  "birthdate": "1980-01-01",
+                  "nationality": "American"
+                }
+              ],
+              "links": {
+                "first": "http://example.com/api/v1/authors?page=1",
+                "last": "http://example.com/api/v1/authors?page=10",
+                "prev": null,
+                "next": "http://example.com/api/v1/authors?page=2"
+              },
+              "meta": {
+                "current_page": 1,
+                "last_page": 10,
+                "per_page": 10,
+                "total": 100
+              }
+            },
+            "properties": {
+              "data": {
+                "type": "array",
+                "example": [
+                  {
+                    "id": 1,
+                    "name": "Author Name",
+                    "email": "author@example.com",
+                    "birthdate": "1980-01-01",
+                    "nationality": "American"
+                  }
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Author Name"
+                    },
+                    "email": {
+                      "type": "string",
+                      "example": "author@example.com"
+                    },
+                    "birthdate": {
+                      "type": "string",
+                      "example": "1980-01-01"
+                    },
+                    "nationality": {
+                      "type": "string",
+                      "example": "American"
+                    }
+                  }
+                }
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/authors?page=1"
+                  },
+                  "last": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/authors?page=10"
+                  },
+                  "prev": {
+                    "type": "string",
+                    "example": null
+                  },
+                  "next": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/authors?page=2"
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getDetailsOfASpecificAuthor",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/authors/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "name": "Author Name",
+              "birthdate": "1980-01-01",
+              "nationality": "American"
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "Author Name"
+              },
+              "birthdate": {
+                "type": "string",
+                "example": "1980-01-01"
+              },
+              "nationality": {
+                "type": "string",
+                "example": "American"
+              }
+            }
+          }
+        },
+        {
+          "id": "createANewAuthor",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/authors",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the author.",
+                "example": "John Doe",
+                "nullable": false
+              },
+              "birthdate": {
+                "type": "date",
+                "description": "The birthdate of the author.",
+                "example": "1980-01-01",
+                "nullable": false
+              },
+              "nationality": {
+                "type": "string",
+                "description": "The nationality of the author.",
+                "example": "American",
+                "nullable": false
+              }
+            },
+            "required": [
+              "name",
+              "birthdate",
+              "nationality"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "name": "John Doe",
+              "birthdate": "1980-01-01",
+              "nationality": "American"
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "birthdate": {
+                "type": "string",
+                "example": "1980-01-01"
+              },
+              "nationality": {
+                "type": "string",
+                "example": "American"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateAnExistingAuthor",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/authors/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Optional The updated name of the author.",
+                "example": "Jane Doe",
+                "nullable": false
+              },
+              "birthdate": {
+                "type": "date",
+                "description": "Optional The updated birthdate of the author.",
+                "example": "1990-01-01",
+                "nullable": false
+              },
+              "nationality": {
+                "type": "string",
+                "description": "Optional The updated nationality of the author.",
+                "example": "British",
+                "nullable": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "name": "Jane Doe",
+              "birthdate": "1990-01-01",
+              "nationality": "British"
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "Jane Doe"
+              },
+              "birthdate": {
+                "type": "string",
+                "example": "1990-01-01"
+              },
+              "nationality": {
+                "type": "string",
+                "example": "British"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteAnAuthor",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/authors/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "message": "Author deleted successfully."
+            },
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Author deleted successfully."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Books",
+      "key": "books",
+      "operations": [
+        {
+          "id": "getAPaginatedFilteredAndSortedListOfBooks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/books",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "data": [
+                {
+                  "id": 1,
+                  "title": "Book Title",
+                  "isbn": "123-4567890123",
+                  "published_date": "2022-01-01",
+                  "author": {
+                    "id": 1,
+                    "name": "Author Name"
+                  }
+                }
+              ],
+              "links": {
+                "first": "http://example.com/api/v1/books?page=1",
+                "last": "http://example.com/api/v1/books?page=10",
+                "prev": null,
+                "next": "http://example.com/api/v1/books?page=2"
+              },
+              "meta": {
+                "current_page": 1,
+                "last_page": 10,
+                "per_page": 10,
+                "total": 100
+              }
+            },
+            "properties": {
+              "data": {
+                "type": "array",
+                "example": [
+                  {
+                    "id": 1,
+                    "title": "Book Title",
+                    "isbn": "123-4567890123",
+                    "published_date": "2022-01-01",
+                    "author": {
+                      "id": 1,
+                      "name": "Author Name"
+                    }
+                  }
+                ],
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Book Title"
+                    },
+                    "isbn": {
+                      "type": "string",
+                      "example": "123-4567890123"
+                    },
+                    "published_date": {
+                      "type": "string",
+                      "example": "2022-01-01"
+                    },
+                    "author": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "Author Name"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/books?page=1"
+                  },
+                  "last": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/books?page=10"
+                  },
+                  "prev": {
+                    "type": "string",
+                    "example": null
+                  },
+                  "next": {
+                    "type": "string",
+                    "example": "http://example.com/api/v1/books?page=2"
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 100
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getDetailsOfASpecificBook",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "title": "Book Title",
+              "isbn": "123-4567890123",
+              "published_date": "2022-01-01",
+              "author": {
+                "id": 1,
+                "name": "Author Name"
+              }
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "title": {
+                "type": "string",
+                "example": "Book Title"
+              },
+              "isbn": {
+                "type": "string",
+                "example": "123-4567890123"
+              },
+              "published_date": {
+                "type": "string",
+                "example": "2022-01-01"
+              },
+              "author": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Author Name"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createANewBook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/books",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "The title of the book.",
+                "example": "My Book",
+                "nullable": false
+              },
+              "isbn": {
+                "type": "string",
+                "description": "The ISBN of the book.",
+                "example": "123-4567890123",
+                "nullable": false
+              },
+              "published_date": {
+                "type": "date",
+                "description": "The publication date of the book.",
+                "example": "2022-01-01",
+                "nullable": false
+              },
+              "author_id": {
+                "type": "integer",
+                "description": "The ID of the author.",
+                "example": 1,
+                "nullable": false
+              }
+            },
+            "required": [
+              "title",
+              "isbn",
+              "published_date",
+              "author_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "title": "My Book",
+              "isbn": "123-4567890123",
+              "published_date": "2022-01-01",
+              "author_id": 1
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "title": {
+                "type": "string",
+                "example": "My Book"
+              },
+              "isbn": {
+                "type": "string",
+                "example": "123-4567890123"
+              },
+              "published_date": {
+                "type": "string",
+                "example": "2022-01-01"
+              },
+              "author_id": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "updateAnExistingBook",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/books/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "Optional The title of the book.",
+                "example": "Updated Book Title",
+                "nullable": false
+              },
+              "isbn": {
+                "type": "string",
+                "description": "Optional The ISBN of the book.",
+                "example": "123-4567890123",
+                "nullable": false
+              },
+              "published_date": {
+                "type": "date",
+                "description": "Optional The publication date of the book.",
+                "example": "2022-01-01",
+                "nullable": false
+              },
+              "author_id": {
+                "type": "integer",
+                "description": "Optional The ID of the author.",
+                "example": 1,
+                "nullable": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "id": 1,
+              "title": "Updated Book Title",
+              "isbn": "123-4567890123",
+              "published_date": "2022-01-01",
+              "author_id": 1
+            },
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "title": {
+                "type": "string",
+                "example": "Updated Book Title"
+              },
+              "isbn": {
+                "type": "string",
+                "example": "123-4567890123"
+              },
+              "published_date": {
+                "type": "string",
+                "example": "2022-01-01"
+              },
+              "author_id": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteABook",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/books/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "example": {
+              "message": "Book deleted successfully."
+            },
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Book deleted successfully."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

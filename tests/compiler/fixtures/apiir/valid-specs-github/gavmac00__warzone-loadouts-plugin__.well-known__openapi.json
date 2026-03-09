@@ -1,0 +1,184 @@
+{
+  "api": {
+    "title": "Next.js App Router Retrieval Plugin API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "query_query_post",
+          "method": "POST",
+          "kind": "create",
+          "path": "/query",
+          "requestSchema": {
+            "title": "QueryRequest",
+            "required": [
+              "queries"
+            ],
+            "type": "object",
+            "properties": {
+              "queries": {
+                "title": "Queries",
+                "type": "array",
+                "items": {
+                  "title": "Query",
+                  "required": [
+                    "query"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "title": "Query",
+                      "type": "string"
+                    },
+                    "filter": {
+                      "title": "DocumentMetadataFilter",
+                      "type": "object",
+                      "properties": {
+                        "document_id": {
+                          "title": "Document Id",
+                          "type": "string"
+                        },
+                        "source": {
+                          "title": "Source",
+                          "enum": [
+                            "email",
+                            "file",
+                            "chat"
+                          ],
+                          "type": "string",
+                          "description": "An enumeration."
+                        },
+                        "source_id": {
+                          "title": "Source Id",
+                          "type": "string"
+                        },
+                        "author": {
+                          "title": "Author",
+                          "type": "string"
+                        },
+                        "start_date": {
+                          "title": "Start Date",
+                          "type": "string"
+                        },
+                        "end_date": {
+                          "title": "End Date",
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "top_k": {
+                      "title": "Top K",
+                      "type": "integer",
+                      "default": 3
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "title": "QueryResponse",
+            "required": [
+              "results"
+            ],
+            "type": "object",
+            "properties": {
+              "results": {
+                "title": "Results",
+                "type": "array",
+                "items": {
+                  "title": "QueryResult",
+                  "required": [
+                    "query",
+                    "results"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "query": {
+                      "title": "Query",
+                      "type": "string"
+                    },
+                    "results": {
+                      "title": "Results",
+                      "type": "array",
+                      "items": {
+                        "title": "DocumentChunkWithScore",
+                        "required": [
+                          "text",
+                          "metadata",
+                          "score"
+                        ],
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "title": "Id",
+                            "type": "string"
+                          },
+                          "text": {
+                            "title": "Text",
+                            "type": "string"
+                          },
+                          "metadata": {
+                            "title": "DocumentChunkMetadata",
+                            "type": "object",
+                            "properties": {
+                              "source": {
+                                "title": "Source",
+                                "enum": [
+                                  "email",
+                                  "file",
+                                  "chat"
+                                ],
+                                "type": "string",
+                                "description": "An enumeration."
+                              },
+                              "source_id": {
+                                "title": "Source Id",
+                                "type": "string"
+                              },
+                              "url": {
+                                "title": "Url",
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "title": "Created At",
+                                "type": "string"
+                              },
+                              "author": {
+                                "title": "Author",
+                                "type": "string"
+                              },
+                              "document_id": {
+                                "title": "Document Id",
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "embedding": {
+                            "title": "Embedding",
+                            "type": "array",
+                            "items": {
+                              "type": "number"
+                            }
+                          },
+                          "score": {
+                            "title": "Score",
+                            "type": "number"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

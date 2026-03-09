@@ -1,0 +1,270 @@
+openapi: 3.0.3
+info:
+  title: Список API-вызовов для системы постов
+  description: В данном описании указано API депозитного сервиса
+  version: '1.0'
+servers:
+  - url: https://localhost:8080/
+
+paths:
+  /products:
+    get:
+      tags:
+        - products
+      summary: Получить список активных банковских депозитных продуктов
+      description: Используется для получения списка депозитных продуктов Банка, возможных для оформления
+      operationId: getAllProducts
+      
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/List'
+          headers:
+              Cache-Control:
+                description: Управление кэшированием
+                schema:
+                  type: string
+                example: max-age=10800, must-revalidate
+              Expires:
+                description: Дата истечения кэширования
+                schema:
+                  type: string
+                example: Thu, 17 Nov 2024 20:00:00 GMT
+          
+        '404':
+          description: Данные не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Данные не найдены"
+        '503':
+          description: Сервер не доступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Ошибка сервера"
+  
+  /products/{productId}:
+    get:
+      tags:
+        - products
+      summary: Получить подробную информацию по выбранному депозитному продукту
+      description:  Используется для получения подробной информации по депозитному продукту, выбранному пользователем
+      operationId: descr_by_id
+      parameters:
+        - name: productId
+          in: path
+          description: id выбранного депозитного продукта
+          required: true
+          schema:
+           type: string
+           
+      responses:
+        '200':
+          description: ОК
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/List' 
+          headers:
+            Cache-Control:
+              description: Управление кэшированием
+              schema:
+                type: string
+              example: max-age=10800, must-revalidate
+            Expires:
+              description: Дата истечения кэширования
+              schema:
+                type: string
+              example: Thu, 17 Nov 2024 20:00:00 GMT
+            
+        '404':
+          description:  Данные не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Данные не найдены"
+           
+        '503':  
+          description: Сервер не доступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Ошибка сервера"
+
+
+  /deposit-orders:
+    post:
+      tags:
+        - deposits
+      summary: Отправка заявки на открытие депозита
+      description: Используется для отправки заявки на открытие депозита
+      operationId: postDeposits
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/order' 
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/orderResponse'        
+        '404':
+          description:  Данные не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "bad request"
+        '409':
+          description: Данные не найдены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Заявка уже была создана"
+           
+        '503':  
+          description: Сервер не доступен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/error'
+              example:
+                errorMessage: "Ошибка сервера"
+
+  
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    error:          
+      required: 
+        - error_message
+      type: object
+      properties:  
+        error_message:
+          type: string
+          example: Данные не найдены 
+          
+    List:
+      required:
+        - Id
+        - currencyCode
+        - title
+        - description
+        - maxInterestRate
+        - minAmount
+        - depositType
+        - status
+      type: object
+      properties:
+        Id:
+          type: string
+          example: "1eb7e351-7b5d-5398-26e3-b93bc23963e8"
+        currencyCode:
+          type: string
+          example: RUB
+        title:
+          type: string
+          example: Выгодный
+        description:
+          type: string
+          example: Оформляйте депозит “Выгодный +” для сохранения и приумножения своих средств
+        maxInterestRate:
+          type: number
+          example: 12.1
+        maxDuration:
+          type: integer
+          example: 1
+        typeOfDuration:
+          type: string
+          example: Y
+        minAmount:
+          type: integer
+          example: 100
+        depositType:
+          type: string
+          example: Отзывной
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+          
+    
+    order:
+      type: object
+      required:
+        - clientId
+        - idempotencyKey
+        - depositProductId
+        - applyDate
+        - accountFromId
+        - sum
+        - depositRate
+      properties:
+        clientId:
+          type: string  
+          example: "E52by00ky0raqYvF459WGGZ7WgV397CiZbM"
+        idempotencyKey:
+          type: string
+          example: "27b4f4wl9-1b5d-029k-26e3-b12bcww763e8h"
+        depositProductId:
+          type: string
+          example: "1eb7e351-7b5d-5398-26e3-b93bc23963e8"
+        applyDate:
+          type: string
+          example: "2024-09-06"
+        accountFromId:
+          type: string
+          example: "E52by00k-j0ra-qYvF-459W-GGZ7WgV397CiZbM"
+        sum:
+          type: number
+          example: 50000.00
+        depositPeriod:
+          type: integer
+          example: 13
+        depositRate:
+          type: number
+          example: 6.3
+        accountPerc:
+          type: string
+          example: "63b4f3wl9-1b5d-329k-26e3-b12bc11763e8h"  
+        typeOfDuration:
+          type: string
+          example: 'M'
+    orderResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          example: "27b4f4wl9-1b5d-029k-26e3-b12bcww763e8h"
+        status:
+          type: string
+          example: "Processing"

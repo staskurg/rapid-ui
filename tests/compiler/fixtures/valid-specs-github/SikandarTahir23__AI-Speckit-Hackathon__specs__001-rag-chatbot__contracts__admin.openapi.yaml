@@ -1,0 +1,437 @@
+openapi: 3.0.3
+info:
+  title: RAG Chatbot API - Admin Endpoints
+  description: |
+    Administrative endpoints for system management and observability.
+    Includes book ingestion, health checks, and system status.
+
+    **Security**: Admin endpoints should be protected by authentication
+    in production (API key, JWT, or IP whitelist).
+  version: 1.0.0
+  contact:
+    name: RAG Chatbot Team
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.rag-chatbot.example.com
+    description: Production server
+
+paths:
+  /admin/load_book:
+    post:
+      summary: Ingest and embed book content
+      description: |
+        Administrative endpoint to process book content, chunk it, generate embeddings,
+        and store in PostgreSQL + Qdrant. This is a one-time setup operation or used
+        for re-indexing when book content is updated.
+
+        **Process**:
+        1. Parse book file (markdown/text)
+        2. Split into chapters and paragraphs
+        3. Chunk content (512 tokens, 50 overlap)
+        4. Generate embeddings (OpenAI or local)
+        5. Upsert to Qdrant vector store
+        6. Store metadata in PostgreSQL
+
+        **Performance**: Processing ~1500 chunks takes 5-10 minutes
+        **Security**: Should be restricted to admin users only
+      operationId: loadBookContent
+      tags:
+        - Admin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadBookRequest'
+            examples:
+              defaultConfig:
+                summary: Load book with default settings
+                value:
+                  book_path: "/app/data/book_source/physical_ai_robotics.md"
+                  chunk_size: 512
+                  overlap: 50
+                  embedding_model: "openai"
+              localEmbeddings:
+                summary: Load book with local embeddings
+                value:
+                  book_path: "/app/data/book_source/physical_ai_robotics.md"
+                  chunk_size: 512
+                  overlap: 50
+                  embedding_model: "local"
+      responses:
+        '200':
+          description: Book successfully processed and loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadBookResponse'
+              example:
+                status: "success"
+                chunks_created: 1523
+                qdrant_upserted: 1523
+                chapters_processed: 12
+                processing_time_seconds: 487
+                embedding_model_used: "openai"
+                message: "Book successfully loaded into knowledge base"
+        '400':
+          description: Invalid request or file not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                fileNotFound:
+                  summary: Book file not found
+                  value:
+                    error: "validation_error"
+                    message: "Book file not found at specified path"
+                    details:
+                      file_path: "/app/data/book_source/missing.md"
+                    request_id: "req_123465"
+                invalidChunkSize:
+                  summary: Invalid chunk size
+                  value:
+                    error: "validation_error"
+                    message: "Chunk size must be between 100 and 1000 tokens"
+                    details:
+                      field: "chunk_size"
+                      value: 50
+                      constraint: "min_value"
+                    request_id: "req_123466"
+        '500':
+          description: Processing error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "internal_error"
+                message: "Failed to generate embeddings"
+                details:
+                  error_type: "OpenAIAPIError"
+                  failed_chunk: 245
+                request_id: "req_123467"
+        '503':
+          description: External service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "service_unavailable"
+                message: "Qdrant vector database is unreachable"
+                details:
+                  service: "qdrant"
+                  endpoint: "http://localhost:6333"
+                request_id: "req_123468"
+
+  /health:
+    get:
+      summary: Health check endpoint
+      description: |
+        Returns system health status. Used by Kubernetes/Docker for liveness
+        and readiness probes.
+
+        **Status Levels**:
+        - `healthy`: All services operational
+        - `degraded`: Some non-critical services down (e.g., rate limiter)
+        - `unhealthy`: Critical services down (PostgreSQL, Qdrant)
+
+        **Use Cases**:
+        - Kubernetes liveness probe (restart if unhealthy)
+        - Load balancer health check (remove unhealthy instances)
+        - Monitoring/alerting systems
+      operationId: healthCheck
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: System is healthy or degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  summary: All systems operational
+                  value:
+                    status: "healthy"
+                    services:
+                      postgres: true
+                      qdrant: true
+                      openai_api: true
+                    version: "1.0.0"
+                    uptime_seconds: 3600
+                degraded:
+                  summary: Non-critical service down
+                  value:
+                    status: "degraded"
+                    services:
+                      postgres: true
+                      qdrant: true
+                      openai_api: false
+                    version: "1.0.0"
+                    uptime_seconds: 7200
+                    warnings:
+                      - "OpenAI API unreachable, using local fallback embeddings"
+        '503':
+          description: System is unhealthy (critical services down)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "unhealthy"
+                services:
+                  postgres: false
+                  qdrant: true
+                  openai_api: true
+                version: "1.0.0"
+                uptime_seconds: 120
+                errors:
+                  - "PostgreSQL connection failed: timeout after 5s"
+
+  /ready:
+    get:
+      summary: Readiness check endpoint
+      description: |
+        Returns whether the system is ready to accept traffic. Used by
+        Kubernetes readiness probes to determine when to route traffic.
+
+        **Readiness Criteria**:
+        - PostgreSQL connection established
+        - Qdrant collection exists and is accessible
+        - At least 1 book chunk loaded (knowledge base not empty)
+
+        Returns 200 if ready, 503 if not ready.
+      operationId: readinessCheck
+      tags:
+        - Admin
+      responses:
+        '200':
+          description: System is ready to accept traffic
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "System ready to accept traffic"
+                  checks:
+                    type: object
+                    properties:
+                      database_connected:
+                        type: boolean
+                        example: true
+                      vector_store_ready:
+                        type: boolean
+                        example: true
+                      knowledge_base_loaded:
+                        type: boolean
+                        example: true
+                        description: "At least 1 chunk exists in Qdrant"
+        '503':
+          description: System is not ready (still initializing or missing data)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: "Knowledge base not loaded"
+                  checks:
+                    type: object
+                    properties:
+                      database_connected:
+                        type: boolean
+                        example: true
+                      vector_store_ready:
+                        type: boolean
+                        example: true
+                      knowledge_base_loaded:
+                        type: boolean
+                        example: false
+
+components:
+  schemas:
+    LoadBookRequest:
+      type: object
+      required:
+        - book_path
+      properties:
+        book_path:
+          type: string
+          description: Absolute or relative path to book file (markdown or text)
+          example: "/app/data/book_source/physical_ai_robotics.md"
+        chunk_size:
+          type: integer
+          minimum: 100
+          maximum: 1000
+          default: 512
+          description: Target chunk size in tokens (max 600 enforced)
+          example: 512
+        overlap:
+          type: integer
+          minimum: 0
+          maximum: 200
+          default: 50
+          description: Overlap between chunks in tokens
+          example: 50
+        embedding_model:
+          type: string
+          enum:
+            - openai
+            - local
+          default: "openai"
+          description: Embedding model to use (openai=text-embedding-3-small, local=MiniLM)
+          example: "openai"
+        force_reload:
+          type: boolean
+          default: false
+          description: Delete existing chunks and reload (use with caution)
+          example: false
+
+    LoadBookResponse:
+      type: object
+      required:
+        - status
+        - chunks_created
+        - qdrant_upserted
+        - message
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+            - partial_success
+            - failed
+          description: Overall processing status
+          example: "success"
+        chunks_created:
+          type: integer
+          description: Number of chunks successfully created in PostgreSQL
+          example: 1523
+        qdrant_upserted:
+          type: integer
+          description: Number of vectors successfully upserted to Qdrant
+          example: 1523
+        chapters_processed:
+          type: integer
+          description: Number of chapters processed
+          example: 12
+        processing_time_seconds:
+          type: integer
+          description: Total processing time
+          example: 487
+        embedding_model_used:
+          type: string
+          description: Embedding model that was used
+          example: "openai"
+        message:
+          type: string
+          description: Human-readable status message
+          example: "Book successfully loaded into knowledge base"
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Non-fatal warnings during processing
+          example:
+            - "Chapter 7 has no section headers, using paragraph-level chunking"
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - services
+        - version
+      properties:
+        status:
+          type: string
+          enum:
+            - healthy
+            - degraded
+            - unhealthy
+          description: Overall system health
+          example: "healthy"
+        services:
+          type: object
+          description: Health status of individual services
+          properties:
+            postgres:
+              type: boolean
+              description: PostgreSQL connection status
+              example: true
+            qdrant:
+              type: boolean
+              description: Qdrant vector database status
+              example: true
+            openai_api:
+              type: boolean
+              description: OpenAI API availability
+              example: true
+        version:
+          type: string
+          description: Application version
+          example: "1.0.0"
+        uptime_seconds:
+          type: integer
+          description: Time since application start
+          example: 3600
+        warnings:
+          type: array
+          items:
+            type: string
+          description: Non-critical warnings
+          example:
+            - "OpenAI API unreachable, using local fallback embeddings"
+        errors:
+          type: array
+          items:
+            type: string
+          description: Critical errors affecting functionality
+          example:
+            - "PostgreSQL connection failed: timeout after 5s"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+        - request_id
+      properties:
+        error:
+          type: string
+          description: Error code
+          enum:
+            - validation_error
+            - not_found
+            - internal_error
+            - service_unavailable
+          example: "internal_error"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "Failed to generate embeddings"
+        details:
+          type: object
+          description: Additional error context
+          additionalProperties: true
+        request_id:
+          type: string
+          description: Unique request ID
+          example: "req_123467"
+
+tags:
+  - name: Admin
+    description: Administrative and system management endpoints

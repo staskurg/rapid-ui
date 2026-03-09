@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: RAG AI Agent API
+  description: AI-powered chat agent for book content Q&A with RAG retrieval
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /chat:
+    post:
+      summary: Chat with AI Agent
+      description: |
+        Submit a natural language query and receive an AI-generated response
+        based on book content. Supports multi-turn conversations via session_id.
+      operationId: chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatRequest"
+            examples:
+              simple_query:
+                summary: Simple question
+                value:
+                  message: "What is physical AI?"
+              follow_up:
+                summary: Follow-up question
+                value:
+                  message: "What are some examples?"
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatResponse"
+              example:
+                session_id: "550e8400-e29b-41d4-a716-446655440000"
+                message: |
+                  Physical AI refers to artificial intelligence systems that interact
+                  with the physical world through sensors and actuators [1]. These systems
+                  combine perception, reasoning, and action to operate in real environments [2].
+
+                  Sources:
+                  [1] Introduction to Physical AI - /chapter-1-index
+                  [2] Humanoid Robotics Foundations - /chapter-3-humanoid
+                sources:
+                  - chunk_id: "doc-001-0001"
+                    title: "Introduction to Physical AI"
+                    slug: "chapter-1-index"
+                    score: 0.92
+                  - chunk_id: "doc-003-0002"
+                    title: "Humanoid Robotics Foundations"
+                    slug: "chapter-3-humanoid"
+                    score: 0.85
+                metadata:
+                  response_time_ms: 2340
+                  tokens_used: 156
+                  context_chunks: 5
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              examples:
+                empty_message:
+                  summary: Empty message
+                  value:
+                    error: "validation_error"
+                    message: "Message cannot be empty"
+                too_long:
+                  summary: Message too long
+                  value:
+                    error: "validation_error"
+                    message: "Message exceeds maximum length of 500 characters"
+        "502":
+          description: LLM service error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "upstream_error"
+                message: "Unable to generate response. Please try again."
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "service_unavailable"
+                message: "The AI agent is temporarily unavailable."
+
+  /chat/sessions/{session_id}:
+    delete:
+      summary: End Chat Session
+      description: Explicitly end a chat session and clear its memory
+      operationId: end_session
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Session identifier to end
+      responses:
+        "200":
+          description: Session ended successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Session ended"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "not_found"
+                message: "Session not found or already expired"
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: User's natural language query
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier for multi-turn conversations
+
+    ChatResponse:
+      type: object
+      required:
+        - session_id
+        - message
+        - sources
+        - metadata
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Session identifier for follow-up queries
+        message:
+          type: string
+          description: AI-generated response with inline citations
+        sources:
+          type: array
+          items:
+            $ref: "#/components/schemas/Source"
+          description: Sources used in the response
+        metadata:
+          $ref: "#/components/schemas/ResponseMetadata"
+
+    Source:
+      type: object
+      required:
+        - chunk_id
+        - slug
+        - score
+      properties:
+        chunk_id:
+          type: string
+          description: Unique chunk identifier
+        title:
+          type: string
+          nullable: true
+          description: Document title
+        slug:
+          type: string
+          description: URL-friendly identifier
+        score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Relevance score
+
+    ResponseMetadata:
+      type: object
+      required:
+        - response_time_ms
+        - context_chunks
+      properties:
+        response_time_ms:
+          type: integer
+          description: Total processing time in milliseconds
+        tokens_used:
+          type: integer
+          nullable: true
+          description: LLM tokens consumed
+        context_chunks:
+          type: integer
+          description: Number of RAG chunks used
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum:
+            - validation_error
+            - upstream_error
+            - service_unavailable
+            - internal_error
+            - not_found
+          description: Error type identifier
+        message:
+          type: string
+          description: Human-readable error message

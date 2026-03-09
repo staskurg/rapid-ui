@@ -1,0 +1,124 @@
+{
+  "api": {
+    "title": "AI Paraphraser API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "model",
+      "key": "model",
+      "operations": [
+        {
+          "id": "getModels",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/models",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "models": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Model identifier"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Model name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Model description"
+                    },
+                    "max_tokens": {
+                      "type": "integer",
+                      "description": "Maximum tokens per request"
+                    },
+                    "supported_styles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Supported paraphrasing styles"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "paraphrase",
+      "key": "paraphrase",
+      "operations": [
+        {
+          "id": "paraphraseText",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/paraphrase",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "text",
+              "style"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "The text to paraphrase",
+                "example": "The quick brown fox jumps over the lazy dog."
+              },
+              "style": {
+                "type": "string",
+                "enum": [
+                  "formal",
+                  "casual",
+                  "creative",
+                  "academic"
+                ],
+                "description": "The desired paraphrasing style",
+                "example": "formal"
+              },
+              "max_length": {
+                "type": "integer",
+                "description": "Maximum length of the paraphrased text",
+                "example": 1000,
+                "default": 500
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "paraphrased_text": {
+                "type": "string",
+                "description": "The paraphrased text",
+                "example": "A swift russet fox leaps over a lethargic canine."
+              },
+              "original_length": {
+                "type": "integer",
+                "description": "Length of the original text",
+                "example": 43
+              },
+              "new_length": {
+                "type": "integer",
+                "description": "Length of the paraphrased text",
+                "example": 45
+              },
+              "style": {
+                "type": "string",
+                "description": "The style used for paraphrasing",
+                "example": "formal"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

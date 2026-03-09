@@ -1,0 +1,87 @@
+{
+  "api": {
+    "title": "Secure Flask User API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/users/{user_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/users/{user_id}",
+          "identifierParam": "user_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "User ID"
+              },
+              "name": {
+                "type": "string",
+                "description": "User name"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "example": "John Doe"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "User ID"
+              },
+              "name": {
+                "type": "string",
+                "description": "User name"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,555 @@
+{
+  "api": {
+    "title": "CyberPuppy Moderation API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analysis",
+      "key": "analysis",
+      "operations": [
+        {
+          "id": "analyzeText",
+          "method": "POST",
+          "kind": "create",
+          "path": "/analyze",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "待分析文本 (1-1000 字符)",
+                "example": "你好，今天天氣真好！"
+              },
+              "context": {
+                "type": "string",
+                "maxLength": 2000,
+                "description": "對話上下文（可選，最多 2000 字符）",
+                "example": "之前討論的是關於教育政策的議題"
+              },
+              "thread_id": {
+                "type": "string",
+                "maxLength": 50,
+                "description": "對話串 ID（可選，最多 50 字符）",
+                "example": "conversation_123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "toxicity",
+              "bullying",
+              "role",
+              "emotion",
+              "emotion_strength",
+              "scores",
+              "explanations",
+              "text_hash",
+              "timestamp",
+              "processing_time_ms"
+            ],
+            "properties": {
+              "toxicity": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "toxic",
+                  "severe"
+                ],
+                "description": "毒性標籤",
+                "example": "none"
+              },
+              "bullying": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "harassment",
+                  "threat"
+                ],
+                "description": "霸凌標籤",
+                "example": "none"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "perpetrator",
+                  "victim",
+                  "bystander"
+                ],
+                "description": "角色標籤",
+                "example": "none"
+              },
+              "emotion": {
+                "type": "string",
+                "enum": [
+                  "pos",
+                  "neu",
+                  "neg"
+                ],
+                "description": "情緒標籤",
+                "example": "pos"
+              },
+              "emotion_strength": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 4,
+                "description": "情緒強度 (0-4)",
+                "example": 3
+              },
+              "scores": {
+                "type": "object",
+                "description": "各類別機率分數",
+                "properties": {
+                  "toxicity": {
+                    "type": "object",
+                    "required": [
+                      "none",
+                      "toxic",
+                      "severe"
+                    ],
+                    "properties": {
+                      "none": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "無毒性機率",
+                        "example": 0.8
+                      },
+                      "toxic": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "一般毒性機率",
+                        "example": 0.15
+                      },
+                      "severe": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "嚴重毒性機率",
+                        "example": 0.05
+                      }
+                    }
+                  },
+                  "bullying": {
+                    "type": "object",
+                    "required": [
+                      "none",
+                      "harassment",
+                      "threat"
+                    ],
+                    "properties": {
+                      "none": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "無霸凌機率",
+                        "example": 0.8
+                      },
+                      "harassment": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "騷擾機率",
+                        "example": 0.15
+                      },
+                      "threat": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "威脅機率",
+                        "example": 0.05
+                      }
+                    }
+                  },
+                  "role": {
+                    "type": "object",
+                    "required": [
+                      "none",
+                      "perpetrator",
+                      "victim",
+                      "bystander"
+                    ],
+                    "properties": {
+                      "none": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "無特定角色機率",
+                        "example": 0.7
+                      },
+                      "perpetrator": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "施暴者機率",
+                        "example": 0.1
+                      },
+                      "victim": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "受害者機率",
+                        "example": 0.1
+                      },
+                      "bystander": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "旁觀者機率",
+                        "example": 0.1
+                      }
+                    }
+                  },
+                  "emotion": {
+                    "type": "object",
+                    "required": [
+                      "positive",
+                      "neutral",
+                      "negative"
+                    ],
+                    "properties": {
+                      "positive": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "正面情緒機率",
+                        "example": 0.7
+                      },
+                      "neutral": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "中性情緒機率",
+                        "example": 0.2
+                      },
+                      "negative": {
+                        "type": "number",
+                        "format": "double",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "description": "負面情緒機率",
+                        "example": 0.1
+                      }
+                    }
+                  }
+                }
+              },
+              "explanations": {
+                "type": "object",
+                "required": [
+                  "important_words",
+                  "method",
+                  "confidence"
+                ],
+                "properties": {
+                  "important_words": {
+                    "type": "array",
+                    "description": "重要詞彙與權重",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "word": {
+                          "type": "string",
+                          "description": "詞彙",
+                          "example": "好"
+                        },
+                        "importance": {
+                          "type": "number",
+                          "format": "double",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "description": "重要性權重 (0-1)",
+                          "example": 0.72
+                        }
+                      }
+                    }
+                  },
+                  "method": {
+                    "type": "string",
+                    "description": "解釋方法",
+                    "enum": [
+                      "IG",
+                      "SHAP"
+                    ],
+                    "example": "IG"
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "format": "double",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "預測信心度",
+                    "example": 0.89
+                  }
+                }
+              },
+              "text_hash": {
+                "type": "string",
+                "description": "輸入文本雜湊值 (SHA256, 16字符)",
+                "example": "a1b2c3d4e5f6g7h8"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "分析時間戳記",
+                "example": "2024-12-30T10:15:30Z"
+              },
+              "processing_time_ms": {
+                "type": "number",
+                "format": "double",
+                "description": "處理時間（毫秒）",
+                "example": 145.7
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "LINE Bot",
+      "key": "line-bot",
+      "operations": [
+        {
+          "id": "lineWebhook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhook",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "events"
+            ],
+            "properties": {
+              "events": {
+                "type": "array",
+                "description": "LINE 事件列表",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "message",
+                        "postback",
+                        "follow",
+                        "unfollow"
+                      ],
+                      "description": "事件類型",
+                      "example": "message"
+                    },
+                    "message": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "text",
+                            "image",
+                            "video",
+                            "audio",
+                            "file",
+                            "location",
+                            "sticker"
+                          ],
+                          "description": "訊息類型",
+                          "example": "text"
+                        },
+                        "text": {
+                          "type": "string",
+                          "description": "文字內容",
+                          "example": "你好"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "訊息 ID",
+                          "example": "message_id_12345"
+                        }
+                      }
+                    },
+                    "postback": {
+                      "type": "object",
+                      "required": [
+                        "data"
+                      ],
+                      "properties": {
+                        "data": {
+                          "type": "string",
+                          "description": "Postback 資料",
+                          "example": "action=understand"
+                        }
+                      }
+                    },
+                    "source": {
+                      "type": "object",
+                      "required": [
+                        "type"
+                      ],
+                      "properties": {
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "user",
+                            "group",
+                            "room"
+                          ],
+                          "description": "來源類型",
+                          "example": "user"
+                        },
+                        "userId": {
+                          "type": "string",
+                          "description": "用戶 ID",
+                          "example": "U1234567890abcdef"
+                        },
+                        "groupId": {
+                          "type": "string",
+                          "description": "群組 ID",
+                          "example": "G1234567890abcdef"
+                        },
+                        "roomId": {
+                          "type": "string",
+                          "description": "聊天室 ID",
+                          "example": "R1234567890abcdef"
+                        }
+                      }
+                    },
+                    "replyToken": {
+                      "type": "string",
+                      "description": "回覆 Token",
+                      "example": "reply_token_12345"
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "description": "事件時間戳記",
+                      "example": 1640861730000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "getApiInfo",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "API 名稱",
+                "example": "CyberPuppy Moderation API"
+              },
+              "description": {
+                "type": "string",
+                "description": "API 描述",
+                "example": "中文網路霸凌防治與毒性偵測 API"
+              },
+              "version": {
+                "type": "string",
+                "description": "API 版本",
+                "example": "1.0.0"
+              },
+              "docs_url": {
+                "type": "string",
+                "description": "文檔 URL",
+                "example": "/docs"
+              },
+              "health_check": {
+                "type": "string",
+                "description": "健康檢查 URL",
+                "example": "/healthz"
+              }
+            }
+          }
+        },
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/healthz",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "timestamp",
+              "version",
+              "uptime_seconds"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy",
+                  "degraded"
+                ],
+                "description": "服務狀態",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "檢查時間",
+                "example": "2024-12-30T10:15:30Z"
+              },
+              "version": {
+                "type": "string",
+                "description": "API 版本",
+                "example": "1.0.0"
+              },
+              "uptime_seconds": {
+                "type": "number",
+                "format": "double",
+                "description": "運行時間（秒）",
+                "example": 86400.5
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

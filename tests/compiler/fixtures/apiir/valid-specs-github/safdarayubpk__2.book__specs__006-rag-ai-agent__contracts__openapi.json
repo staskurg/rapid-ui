@@ -1,0 +1,131 @@
+{
+  "api": {
+    "title": "RAG AI Agent API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "chat",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "User's natural language query"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session identifier for multi-turn conversations"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "session_id",
+              "message",
+              "sources",
+              "metadata"
+            ],
+            "properties": {
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session identifier for follow-up queries"
+              },
+              "message": {
+                "type": "string",
+                "description": "AI-generated response with inline citations"
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "chunk_id",
+                    "slug",
+                    "score"
+                  ],
+                  "properties": {
+                    "chunk_id": {
+                      "type": "string",
+                      "description": "Unique chunk identifier"
+                    },
+                    "title": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Document title"
+                    },
+                    "slug": {
+                      "type": "string",
+                      "description": "URL-friendly identifier"
+                    },
+                    "score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Relevance score"
+                    }
+                  }
+                },
+                "description": "Sources used in the response"
+              },
+              "metadata": {
+                "type": "object",
+                "required": [
+                  "response_time_ms",
+                  "context_chunks"
+                ],
+                "properties": {
+                  "response_time_ms": {
+                    "type": "integer",
+                    "description": "Total processing time in milliseconds"
+                  },
+                  "tokens_used": {
+                    "type": "integer",
+                    "nullable": true,
+                    "description": "LLM tokens consumed"
+                  },
+                  "context_chunks": {
+                    "type": "integer",
+                    "description": "Number of RAG chunks used"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "end_session",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/chat/sessions/{session_id}",
+          "identifierParam": "session_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Session ended"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

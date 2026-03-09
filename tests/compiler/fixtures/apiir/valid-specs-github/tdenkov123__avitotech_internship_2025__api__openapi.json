@@ -1,0 +1,465 @@
+{
+  "api": {
+    "title": "PR Reviewer Assignment Service (Test Task, Fall 2025)",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "PullRequests",
+      "key": "pullrequests",
+      "operations": [
+        {
+          "id": "POST:/pullRequest/create",
+          "method": "POST",
+          "kind": "create",
+          "path": "/pullRequest/create",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "pull_request_id",
+              "pull_request_name",
+              "author_id"
+            ],
+            "properties": {
+              "pull_request_id": {
+                "type": "string"
+              },
+              "pull_request_name": {
+                "type": "string"
+              },
+              "author_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "pr": {
+                "type": "object",
+                "required": [
+                  "pull_request_id",
+                  "pull_request_name",
+                  "author_id",
+                  "status",
+                  "assigned_reviewers"
+                ],
+                "properties": {
+                  "pull_request_id": {
+                    "type": "string"
+                  },
+                  "pull_request_name": {
+                    "type": "string"
+                  },
+                  "author_id": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "MERGED"
+                    ]
+                  },
+                  "assigned_reviewers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "user_id назначенных ревьюверов (0..2)"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "mergedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/pullRequest/merge",
+          "method": "POST",
+          "kind": "create",
+          "path": "/pullRequest/merge",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "pull_request_id"
+            ],
+            "properties": {
+              "pull_request_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "pr": {
+                "type": "object",
+                "required": [
+                  "pull_request_id",
+                  "pull_request_name",
+                  "author_id",
+                  "status",
+                  "assigned_reviewers"
+                ],
+                "properties": {
+                  "pull_request_id": {
+                    "type": "string"
+                  },
+                  "pull_request_name": {
+                    "type": "string"
+                  },
+                  "author_id": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "MERGED"
+                    ]
+                  },
+                  "assigned_reviewers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "user_id назначенных ревьюверов (0..2)"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "mergedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/pullRequest/reassign",
+          "method": "POST",
+          "kind": "create",
+          "path": "/pullRequest/reassign",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "pull_request_id",
+              "old_user_id"
+            ],
+            "properties": {
+              "pull_request_id": {
+                "type": "string"
+              },
+              "old_user_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "pr",
+              "replaced_by"
+            ],
+            "properties": {
+              "pr": {
+                "type": "object",
+                "required": [
+                  "pull_request_id",
+                  "pull_request_name",
+                  "author_id",
+                  "status",
+                  "assigned_reviewers"
+                ],
+                "properties": {
+                  "pull_request_id": {
+                    "type": "string"
+                  },
+                  "pull_request_name": {
+                    "type": "string"
+                  },
+                  "author_id": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "OPEN",
+                      "MERGED"
+                    ]
+                  },
+                  "assigned_reviewers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "user_id назначенных ревьюверов (0..2)"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "mergedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              },
+              "replaced_by": {
+                "type": "string",
+                "description": "user_id нового ревьювера"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "key": "teams",
+      "operations": [
+        {
+          "id": "GET:/team/get",
+          "method": "GET",
+          "kind": "list",
+          "path": "/team/get",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "team_name",
+              "members"
+            ],
+            "properties": {
+              "team_name": {
+                "type": "string"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "user_id",
+                    "username",
+                    "is_active"
+                  ],
+                  "properties": {
+                    "user_id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/team/add",
+          "method": "POST",
+          "kind": "create",
+          "path": "/team/add",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "team_name",
+              "members"
+            ],
+            "properties": {
+              "team_name": {
+                "type": "string"
+              },
+              "members": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "user_id",
+                    "username",
+                    "is_active"
+                  ],
+                  "properties": {
+                    "user_id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "is_active": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "team": {
+                "type": "object",
+                "required": [
+                  "team_name",
+                  "members"
+                ],
+                "properties": {
+                  "team_name": {
+                    "type": "string"
+                  },
+                  "members": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "user_id",
+                        "username",
+                        "is_active"
+                      ],
+                      "properties": {
+                        "user_id": {
+                          "type": "string"
+                        },
+                        "username": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/users/getReview",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users/getReview",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "user_id",
+              "pull_requests"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "pull_requests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "pull_request_id",
+                    "pull_request_name",
+                    "author_id",
+                    "status"
+                  ],
+                  "properties": {
+                    "pull_request_id": {
+                      "type": "string"
+                    },
+                    "pull_request_name": {
+                      "type": "string"
+                    },
+                    "author_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "MERGED"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/users/setIsActive",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/setIsActive",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "user_id",
+              "is_active"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "is_active": {
+                "type": "boolean"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "required": [
+                  "user_id",
+                  "username",
+                  "team_name",
+                  "is_active"
+                ],
+                "properties": {
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "team_name": {
+                    "type": "string"
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

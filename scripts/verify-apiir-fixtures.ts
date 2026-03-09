@@ -22,6 +22,7 @@ function main() {
   const sources: Source[] = [
     { yamlDir: join(FIXTURES_DIR, "demo"), apiirSubdir: "demo" },
     { yamlDir: join(FIXTURES_DIR, "valid-specs-api-guru"), apiirSubdir: "valid-specs-api-guru" },
+    { yamlDir: join(FIXTURES_DIR, "valid-specs-github"), apiirSubdir: "valid-specs-github" },
   ];
 
   let allMatch = true;

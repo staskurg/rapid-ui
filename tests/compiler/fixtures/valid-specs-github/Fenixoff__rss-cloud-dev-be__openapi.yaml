@@ -1,0 +1,145 @@
+openapi: 3.0.3
+info:
+  title: Product Service API
+  description: |-
+    This is a Product Service API, a part of backend application for
+    RS School AWS Cloud Developer course.
+  contact:
+    email: azh.andrei@gmail.com
+  license:
+    name: MIT
+    url: https://github.com/Fenixoff/rss-cloud-developer-be/blob/main/LICENSE
+  version: 0.1.0
+externalDocs:
+  description: Find out more
+  url: https://github.com/Fenixoff/rss-cloud-developer-be
+servers:
+  - url: https://z81yxjs31f.execute-api.eu-north-1.amazonaws.com/dev
+tags:
+  - name: products
+    description: Infromation about available products
+paths:
+  /products:
+    get:
+      tags:
+        - products
+      summary: Returns all products
+      description: Returns information about all available products
+      operationId: getProductsList
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+    post:
+      tags:
+        - products
+      summary: Creates or updates a product
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Product"
+      responses:
+        "200":
+          description: Product was created or updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    default: Poduct updated
+        "400":
+          description: Request body doesn't contain valid `Product` data
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        default: Request body is required
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        default: Product is not valid
+  /products/{productId}:
+    get:
+      tags:
+        - products
+      summary: Returns requested product
+      description: Returns information about specific product
+      operationId: findPetsByStatus
+      parameters:
+        - name: productId
+          in: path
+          description: UUID of requested product
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Product"
+        "400":
+          description: "`productId` wasn't provided or has wrong format"
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        default: ProductId is required
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        default: ProductId is not valid
+        "404":
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    default: Product not found
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 7567ec4b-b10c-48c5-9345-fc73c48a80aa
+        title:
+          type: string
+          example: Product Title
+        description:
+          type: string
+          example: Short Product Description1
+        price:
+          type: number
+          example: 13.20
+        count:
+          type: integer
+          minimum: 0
+          example: 10

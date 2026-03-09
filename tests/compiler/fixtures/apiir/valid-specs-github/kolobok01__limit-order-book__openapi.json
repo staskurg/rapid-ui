@@ -1,0 +1,233 @@
+{
+  "api": {
+    "title": "OrderBook API",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "OrderBook",
+      "key": "orderbook",
+      "operations": [
+        {
+          "id": "OrderBook_ListOrders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/orders",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orders": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "orderId": {
+                      "type": "string"
+                    },
+                    "clientOrderId": {
+                      "type": "string"
+                    },
+                    "instrument": {
+                      "type": "string"
+                    },
+                    "side": {
+                      "type": "integer",
+                      "format": "enum"
+                    },
+                    "type": {
+                      "type": "integer",
+                      "format": "enum"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "format": "enum"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "size": {
+                      "type": "number",
+                      "format": "double"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "OrderBook_GetInstrumentQuote",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/instruments/{instrument}/quote",
+          "identifierParam": "instrument",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "instrument": {
+                "type": "string"
+              },
+              "bestBidPrice": {
+                "type": "number",
+                "format": "double"
+              },
+              "bestBidSize": {
+                "type": "number",
+                "format": "double"
+              },
+              "bestAskPrice": {
+                "type": "number",
+                "format": "double"
+              },
+              "bestAskSize": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        },
+        {
+          "id": "OrderBook_GetOrder",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "clientOrderId": {
+                "type": "string"
+              },
+              "instrument": {
+                "type": "string"
+              },
+              "side": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "status": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "price": {
+                "type": "number",
+                "format": "double"
+              },
+              "size": {
+                "type": "number",
+                "format": "double"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "OrderBook_CreateOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "clientOrderId": {
+                "type": "string"
+              },
+              "instrument": {
+                "type": "string"
+              },
+              "side": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "price": {
+                "type": "number",
+                "format": "double"
+              },
+              "size": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "clientOrderId": {
+                "type": "string"
+              },
+              "instrument": {
+                "type": "string"
+              },
+              "side": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "type": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "status": {
+                "type": "integer",
+                "format": "enum"
+              },
+              "price": {
+                "type": "number",
+                "format": "double"
+              },
+              "size": {
+                "type": "number",
+                "format": "double"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "OrderBook_CancelOrder",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/v1/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "integer",
+                "format": "enum"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

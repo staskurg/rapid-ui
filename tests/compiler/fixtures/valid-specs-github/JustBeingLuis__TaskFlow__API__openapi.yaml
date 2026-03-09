@@ -1,0 +1,551 @@
+openapi: 3.0.0
+info:
+  title: TaskFlow API
+  version: 2.0.0
+  description: API RESTful moderna para gestión de tareas con autenticación JWT, Supabase RLS y asistente AI con Google Gemini
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor de desarrollo local
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT obtenido del endpoint /auth/login
+  schemas:
+    AuthInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 6
+          example: "password123"
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        error:
+          type: string
+          nullable: true
+        token:
+          type: string
+          nullable: true
+          description: JWT token para autenticación
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        title:
+          type: string
+          example: "Completar documentación del proyecto"
+        completed:
+          type: boolean
+          example: false
+        user_id:
+          type: string
+          format: uuid
+          example: "789e4567-e89b-12d3-a456-426614174111"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-05T10:30:00Z"
+    TaskInput:
+      type: object
+      required:
+        - title
+        - completed
+      properties:
+        title:
+          type: string
+          minLength: 1
+          example: "Completar documentación del proyecto"
+        completed:
+          type: boolean
+          example: false
+    AIParseInput:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          minLength: 1
+          example: "Mañana reunión a las 10, comprar leche, y hacer ejercicio"
+          description: Texto en lenguaje natural describiendo una o más tareas
+    AIParseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        tasks:
+          type: array
+          items:
+            type: object
+            properties:
+              title:
+                type: string
+                example: "Reunión a las 10"
+        error:
+          type: string
+          nullable: true
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      summary: Registrar un nuevo usuario
+      description: Crea una nueva cuenta de usuario en el sistema
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+            example:
+              email: "user@example.com"
+              password: "password123"
+      responses:
+        "201":
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                success: true
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                error: null
+        "400":
+          description: Error de validación o registro
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                success: false
+                token: null
+                error: "El email ya está registrado"
+
+  /auth/login:
+    post:
+      summary: Iniciar sesión de usuario
+      description: Autentica al usuario y devuelve un token JWT
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+            example:
+              email: "user@example.com"
+              password: "password123"
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                success: true
+                token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                error: null
+        "400":
+          description: Error de validación o autenticación
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                success: false
+                token: null
+                error: "Credenciales inválidas"
+        "401":
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+              example:
+                success: false
+                token: null
+                error: "Email o contraseña incorrectos"
+
+  /tasks:
+    get:
+      summary: Obtener todas las tareas del usuario autenticado
+      description: Retorna la lista de tareas del usuario con RLS aplicado
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Lista de tareas obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Task"
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                success: true
+                data:
+                  - id: "123e4567-e89b-12d3-a456-426614174000"
+                    title: "Completar documentación"
+                    completed: false
+                    user_id: "789e4567-e89b-12d3-a456-426614174111"
+                    created_at: "2026-01-05T10:30:00Z"
+                  - id: "223e4567-e89b-12d3-a456-426614174001"
+                    title: "Revisar código"
+                    completed: true
+                    user_id: "789e4567-e89b-12d3-a456-426614174111"
+                    created_at: "2026-01-04T15:20:00Z"
+                error: null
+        "401":
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+    post:
+      summary: Crear una nueva tarea
+      description: Crea una nueva tarea asociada al usuario autenticado
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+            example:
+              title: "Completar documentación del proyecto"
+              completed: false
+      responses:
+        "201":
+          description: Tarea creada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Task"
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                success: true
+                data:
+                  - id: "123e4567-e89b-12d3-a456-426614174000"
+                    title: "Completar documentación del proyecto"
+                    completed: false
+                    user_id: "789e4567-e89b-12d3-a456-426614174111"
+                    created_at: "2026-01-05T10:30:00Z"
+                error: null
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: string
+                    nullable: true
+                  error:
+                    type: string
+        "401":
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+  /tasks/{id}:
+    put:
+      summary: Actualizar una tarea existente
+      description: Actualiza el título y/o estado de completado de una tarea
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID único de la tarea a actualizar
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+            example:
+              title: "Completar documentación actualizada"
+              completed: true
+      responses:
+        "200":
+          description: Tarea actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Task"
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                success: true
+                data:
+                  - id: "123e4567-e89b-12d3-a456-426614174000"
+                    title: "Completar documentación actualizada"
+                    completed: true
+                    user_id: "789e4567-e89b-12d3-a456-426614174111"
+                    created_at: "2026-01-05T10:30:00Z"
+                error: null
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: string
+                    nullable: true
+                  error:
+                    type: string
+        "401":
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "404":
+          description: Tarea no encontrada o no pertenece al usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+    delete:
+      summary: Eliminar una tarea existente
+      description: Elimina permanentemente una tarea del sistema
+      tags: [Tasks]
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: ID único de la tarea a eliminar
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        "200":
+          description: Tarea eliminada exitosamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: string
+                    nullable: true
+                  error:
+                    type: string
+                    nullable: true
+              example:
+                success: true
+                data: null
+                error: null
+        "400":
+          description: Error de autenticación o permisos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: string
+                    nullable: true
+                  error:
+                    type: string
+        "401":
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "404":
+          description: Tarea no encontrada o no pertenece al usuario
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+
+  /ai/parse-tasks:
+    post:
+      summary: Parsear texto con IA para crear múltiples tareas
+      description: Utiliza Google Gemini AI para convertir lenguaje natural en tareas estructuradas
+      tags: [AI]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AIParseInput"
+            examples:
+              simple:
+                value:
+                  text: "Mañana reunión a las 10, comprar leche, y hacer ejercicio"
+              complex:
+                value:
+                  text: "Necesito terminar el reporte para el lunes, llamar a Juan sobre el proyecto, y revisar los correos pendientes. También debo preparar la presentación."
+      responses:
+        "200":
+          description: Tareas parseadas exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIParseResponse"
+              examples:
+                success:
+                  value:
+                    success: true
+                    tasks:
+                      - title: "Reunión a las 10 mañana"
+                      - title: "Comprar leche"
+                      - title: "Hacer ejercicio"
+                    error: null
+        "400":
+          description: Error de validación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  tasks:
+                    type: array
+                    items: {}
+                  error:
+                    type: string
+        "401":
+          description: No autorizado - Token inválido o ausente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  error:
+                    type: string
+        "500":
+          description: Error del servidor o del servicio AI
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  tasks:
+                    type: array
+                    items: {}
+                  error:
+                    type: string
+
+tags:
+  - name: Auth
+    description: Endpoints de autenticación y registro de usuarios
+  - name: Tasks
+    description: Operaciones CRUD para gestión de tareas
+  - name: AI
+    description: Endpoints de inteligencia artificial para procesamiento de lenguaje natural

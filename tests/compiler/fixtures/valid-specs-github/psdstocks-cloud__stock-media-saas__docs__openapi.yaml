@@ -1,0 +1,549 @@
+openapi: 3.0.3
+info:
+  title: StockMedia Pro API
+  description: API for managing stock media downloads, user subscriptions, and point-based transactions
+  version: 1.0.0
+  contact:
+    name: StockMedia Pro Support
+    email: support@stockmediapro.com
+    url: https://stockmediapro.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://stock-media-saas-4828lc2uj-psdstocks-projects.vercel.app
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+
+security:
+  - BearerAuth: []
+  - SessionAuth: []
+
+paths:
+  /api/health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API and database
+      security: []
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  timestamp:
+                    type: string
+                    format: date-time
+                  database:
+                    type: string
+                    example: connected
+                  version:
+                    type: string
+                    example: 1.0.0
+
+  /api/auth/register:
+    post:
+      summary: Register a new user
+      description: Create a new user account with subscription
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - planId
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@example.com
+                password:
+                  type: string
+                  minLength: 8
+                  example: securepassword123
+                planId:
+                  type: string
+                  example: cmfb62xtq0000w5bnc9qjc1ly
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      name:
+                        type: string
+                      email:
+                        type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/subscription-plans:
+    get:
+      summary: Get available subscription plans
+      description: Retrieve all active subscription plans
+      security: []
+      responses:
+        '200':
+          description: List of subscription plans
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubscriptionPlan'
+
+  /api/stock-sites:
+    get:
+      summary: Get available stock sites
+      description: Retrieve all active stock sites
+      security: []
+      responses:
+        '200':
+          description: List of stock sites
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  stockSites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/StockSite'
+
+  /api/points:
+    get:
+      summary: Get user's points balance
+      description: Retrieve user's current points balance and transaction history
+      responses:
+        '200':
+          description: Points balance and history
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    example: 150
+                  history:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PointTransaction'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/orders:
+    get:
+      summary: Get user's orders
+      description: Retrieve user's order history
+      responses:
+        '200':
+          description: List of user orders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      summary: Create a new order
+      description: Create a new download order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - stockSiteId
+                - itemUrl
+                - itemType
+                - cost
+              properties:
+                stockSiteId:
+                  type: string
+                  example: cmfb0owei00049k8ka5mmdm0k
+                itemUrl:
+                  type: string
+                  format: uri
+                  example: https://example.com/item
+                itemType:
+                  type: string
+                  enum: [PHOTO, VIDEO, MUSIC, ICON, VECTOR, TEMPLATE]
+                  example: PHOTO
+                cost:
+                  type: number
+                  example: 0.15
+      responses:
+        '200':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/orders/{orderId}/status:
+    get:
+      summary: Get order status
+      description: Retrieve the status of a specific order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/search:
+    get:
+      summary: Search stock media
+      description: Search for stock media content
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Search query
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [PHOTO, VIDEO, MUSIC, ICON, VECTOR, TEMPLATE]
+          description: Content type filter
+        - name: site
+          in: query
+          schema:
+            type: string
+          description: Stock site filter
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SearchResult'
+
+  /api/stripe/checkout:
+    post:
+      summary: Create Stripe checkout session
+      description: Create a Stripe checkout session for subscription
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - planId
+                - successUrl
+                - cancelUrl
+              properties:
+                planId:
+                  type: string
+                successUrl:
+                  type: string
+                  format: uri
+                cancelUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkoutUrl:
+                    type: string
+                    format: uri
+
+  /api/stripe/portal:
+    post:
+      summary: Create Stripe customer portal session
+      description: Create a Stripe customer portal session for subscription management
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - returnUrl
+              properties:
+                returnUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  portalUrl:
+                    type: string
+                    format: uri
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    SessionAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Error message
+      required:
+        - error
+
+    SubscriptionPlan:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cmfb62xtq0000w5bnc9qjc1ly
+        name:
+          type: string
+          example: starter
+        description:
+          type: string
+          example: Perfect for individuals and small projects
+        price:
+          type: number
+          example: 9.99
+        points:
+          type: integer
+          example: 50
+        rolloverLimit:
+          type: integer
+          example: 25
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    StockSite:
+      type: object
+      properties:
+        id:
+          type: string
+          example: cmfb0owei00049k8ka5mmdm0k
+        name:
+          type: string
+          example: freepik
+        displayName:
+          type: string
+          example: Freepik
+        cost:
+          type: number
+          example: 0.15
+        isActive:
+          type: boolean
+          example: true
+        category:
+          type: string
+          example: photos
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    PointTransaction:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: number
+          example: 200
+        type:
+          type: string
+          enum: [SUBSCRIPTION, BONUS, PURCHASE, REFUND]
+          example: SUBSCRIPTION
+        description:
+          type: string
+          example: Monthly subscription points
+        createdAt:
+          type: string
+          format: date-time
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          example: order_123
+        userId:
+          type: string
+        stockSiteId:
+          type: string
+        itemUrl:
+          type: string
+          format: uri
+        itemType:
+          type: string
+          enum: [PHOTO, VIDEO, MUSIC, ICON, VECTOR, TEMPLATE]
+        cost:
+          type: number
+          example: 0.15
+        status:
+          type: string
+          enum: [PENDING, PROCESSING, COMPLETED, FAILED, CANCELLED]
+          example: PENDING
+        downloadUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SearchResult:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          example: Beautiful Landscape
+        url:
+          type: string
+          format: uri
+        thumbnail:
+          type: string
+          format: uri
+        cost:
+          type: number
+          example: 0.15
+        site:
+          type: string
+          example: freepik
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Subscriptions
+    description: Subscription plan management
+  - name: Stock Sites
+    description: Available stock media sites
+  - name: Points
+    description: Point balance and transactions
+  - name: Orders
+    description: Download order management
+  - name: Search
+    description: Stock media search functionality
+  - name: Stripe
+    description: Payment and subscription management

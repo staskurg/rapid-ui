@@ -1,0 +1,837 @@
+{
+  "api": {
+    "title": "Barter API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Admin",
+      "key": "admin",
+      "operations": [
+        {
+          "id": "GET:/admin/offers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/admin/offers",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "latitude": {
+                      "type": "number"
+                    },
+                    "longitude": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "images": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "conditions": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "pending",
+                    "closed"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "userId",
+                "title",
+                "description",
+                "category",
+                "status"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "email",
+                  "username"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              },
+              "username": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password",
+              "username"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "username": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "username"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "key": "messages",
+      "operations": [
+        {
+          "id": "POST:/messages",
+          "method": "POST",
+          "kind": "create",
+          "path": "/messages",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "senderId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "content": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "senderId",
+              "receiverId",
+              "content"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "senderId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "content": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "senderId",
+              "receiverId",
+              "content"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Negotiations",
+      "key": "negotiations",
+      "operations": [
+        {
+          "id": "POST:/negotiations",
+          "method": "POST",
+          "kind": "create",
+          "path": "/negotiations",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "proposerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "accepted",
+                  "rejected"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "proposerId",
+              "receiverId",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "proposerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "accepted",
+                  "rejected"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "proposerId",
+              "receiverId",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Offers",
+      "key": "offers",
+      "operations": [
+        {
+          "id": "GET:/offers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/offers",
+          "queryParamCount": 5,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "object",
+                  "properties": {
+                    "latitude": {
+                      "type": "number"
+                    },
+                    "longitude": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "images": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uri"
+                  }
+                },
+                "conditions": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "pending",
+                    "closed"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "id",
+                "userId",
+                "title",
+                "description",
+                "category",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "id": "GET:/offers/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/offers/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
+                }
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "pending",
+                  "closed"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "title",
+              "description",
+              "category",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "POST:/offers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/offers",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
+                }
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "pending",
+                  "closed"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "title",
+              "description",
+              "category",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "userId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "latitude": {
+                    "type": "number"
+                  },
+                  "longitude": {
+                    "type": "number"
+                  }
+                }
+              },
+              "images": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "conditions": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "pending",
+                  "closed"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "title",
+              "description",
+              "category",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ratings",
+      "key": "ratings",
+      "operations": [
+        {
+          "id": "POST:/ratings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ratings",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tradeId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "raterId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "ratedUserId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "score": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "comment": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "tradeId",
+              "raterId",
+              "ratedUserId",
+              "score"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "tradeId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "raterId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "ratedUserId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "score": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "comment": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "tradeId",
+              "raterId",
+              "ratedUserId",
+              "score"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trades",
+      "key": "trades",
+      "operations": [
+        {
+          "id": "POST:/trades",
+          "method": "POST",
+          "kind": "create",
+          "path": "/trades",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "proposerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "completed"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "proposerId",
+              "receiverId",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "offerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "proposerId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "receiverId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "completed"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "offerId",
+              "proposerId",
+              "receiverId",
+              "status"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

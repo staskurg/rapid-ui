@@ -1,0 +1,408 @@
+openapi: 3.1.0
+info:
+  title: Time Warp API
+  version: 0.1.0
+  description: >
+    Time Warp is a human-curated, chronological archive for discovering live music
+    footage on YouTube without algorithmic feeds. This API supports manual
+    submission of clips and chronological browsing.
+
+servers:
+  - url: http://localhost:3000
+    description: Local development
+  - url: https://api.example.com
+    description: Production (placeholder)
+
+tags:
+  - name: Contributors
+  - name: Submissions
+  - name: Clips
+
+paths:
+  /contributors:
+    post:
+      tags: [Contributors]
+      operationId: createContributor
+      summary: Create a contributor identity
+      description: >
+        Creates a Contributor record. This does not enforce an authentication model;
+        it exists to support attribution and adoption signals.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateContributorRequest"
+      responses:
+        "201":
+          description: Contributor created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Contributor"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /submissions:
+    post:
+      tags: [Submissions]
+      operationId: createSubmission
+      summary: Submit a clip (validate + create clip on success)
+      description: >
+        Creates a Submission record, validates the inputs, and creates a Clip if valid.
+        For invalid inputs, the Submission is returned with status=rejected and a
+        validation_error. Duplicate clip attempts may be rejected with 409 Conflict.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSubmissionRequest"
+      responses:
+        "201":
+          description: Submission created (accepted or rejected)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /submissions/{submissionId}:
+    get:
+      tags: [Submissions]
+      operationId: getSubmission
+      summary: Get a submission by id
+      parameters:
+        - $ref: "#/components/parameters/SubmissionId"
+      responses:
+        "200":
+          description: Submission found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Submission"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /clips:
+    get:
+      tags: [Clips]
+      operationId: listClips
+      summary: List clips ordered by performance_date
+      description: >
+        Returns clips ordered exclusively by performance_date (ascending), with a
+        deterministic created_at tiebreaker (ascending). Supports optional date-range
+        filtering and cursor-based pagination.
+      parameters:
+        - $ref: "#/components/parameters/FromDate"
+        - $ref: "#/components/parameters/ToDate"
+        - $ref: "#/components/parameters/Limit"
+        - $ref: "#/components/parameters/Cursor"
+      responses:
+        "200":
+          description: A page of clips
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClipListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /clips/{clipId}:
+    get:
+      tags: [Clips]
+      operationId: getClip
+      summary: Get a clip by id
+      parameters:
+        - $ref: "#/components/parameters/ClipId"
+      responses:
+        "200":
+          description: Clip found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Clip"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  parameters:
+    ClipId:
+      name: clipId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The Clip identifier.
+
+    SubmissionId:
+      name: submissionId
+      in: path
+      required: true
+      schema:
+        type: string
+      description: The Submission identifier.
+
+    FromDate:
+      name: from
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Inclusive lower bound for performance_date (YYYY-MM-DD).
+
+    ToDate:
+      name: to
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date
+      description: Inclusive upper bound for performance_date (YYYY-MM-DD).
+
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 50
+      description: Maximum number of items to return.
+
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      schema:
+        type: string
+      description: Opaque cursor for pagination.
+
+  responses:
+    BadRequest:
+      description: Bad request (invalid JSON, missing required fields, or invalid formats)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    Conflict:
+      description: Conflict (e.g., duplicate clip)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    # -----------------------------
+    # Core Resources
+    # -----------------------------
+    Contributor:
+      type: object
+      additionalProperties: false
+      required: [id, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the contributor.
+        display_name:
+          type: string
+          nullable: true
+          description: Optional display name.
+        external_id:
+          type: string
+          nullable: true
+          description: Optional external identity reference (implementation-defined).
+        created_at:
+          type: string
+          format: date-time
+          description: RFC3339 timestamp when the contributor was created.
+
+    Clip:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - youtube_video_id
+        - youtube_url
+        - performance_date
+        - title
+        - created_at
+        - created_by_contributor_id
+        - added_via_submission_id
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the clip.
+        youtube_video_id:
+          type: string
+          description: YouTube video identifier.
+        youtube_url:
+          type: string
+          format: uri
+          description: Canonical YouTube URL for the clip.
+        performance_date:
+          type: string
+          format: date
+          description: Date of the performance (YYYY-MM-DD) used for ordering.
+        title:
+          type: string
+          description: Human-facing title (may be user-provided).
+        notes:
+          type: string
+          nullable: true
+          description: Optional free-form notes.
+        created_at:
+          type: string
+          format: date-time
+          description: RFC3339 timestamp when the clip was created.
+        created_by_contributor_id:
+          type: string
+          description: Contributor id attributed as the creator.
+        added_via_submission_id:
+          type: string
+          description: Submission id that resulted in this clip.
+
+    SubmissionStatus:
+      type: string
+      enum: [accepted, rejected]
+      description: Result of validation and ingestion.
+
+    Submission:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - raw_youtube_input
+        - raw_date_input
+        - status
+        - submitted_at
+        - contributor_id
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the submission.
+        raw_youtube_input:
+          type: string
+          description: User-provided YouTube input (URL or id).
+        raw_date_input:
+          type: string
+          description: User-provided date input (expected YYYY-MM-DD).
+        status:
+          $ref: "#/components/schemas/SubmissionStatus"
+        validation_error:
+          type: string
+          nullable: true
+          description: Populated when status=rejected.
+        submitted_at:
+          type: string
+          format: date-time
+          description: RFC3339 timestamp when the submission was created.
+        clip_id:
+          type: string
+          nullable: true
+          description: Present when status=accepted.
+        contributor_id:
+          type: string
+          description: Contributor who made the submission.
+        # Optional fields that may be copied into the Clip when accepted
+        title:
+          type: string
+          nullable: true
+          description: Optional user-provided title.
+        notes:
+          type: string
+          nullable: true
+          description: Optional user-provided notes.
+
+    # -----------------------------
+    # Requests
+    # -----------------------------
+    CreateContributorRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        display_name:
+          type: string
+          nullable: true
+        external_id:
+          type: string
+          nullable: true
+      description: Request payload for creating a contributor.
+
+    CreateSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [contributor_id, raw_youtube_input, raw_date_input]
+      properties:
+        contributor_id:
+          type: string
+          description: Contributor creating the submission.
+        raw_youtube_input:
+          type: string
+          description: YouTube URL, short URL, or video id.
+        raw_date_input:
+          type: string
+          description: Performance date (YYYY-MM-DD).
+        title:
+          type: string
+          nullable: true
+          description: Optional human-facing title.
+        notes:
+          type: string
+          nullable: true
+          description: Optional free-form notes.
+
+    # -----------------------------
+    # List Responses
+    # -----------------------------
+    ClipListResponse:
+      type: object
+      additionalProperties: false
+      required: [items, next_cursor]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Clip"
+        next_cursor:
+          type: string
+          nullable: true
+          description: Opaque cursor for the next page, or null if no more results.
+
+    # -----------------------------
+    # Errors
+    # -----------------------------
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message, details]
+          properties:
+            code:
+              type: string
+              description: Machine-readable error code.
+              examples: [INVALID_DATE, INVALID_YOUTUBE_INPUT, DUPLICATE_CLIP, NOT_FOUND]
+            message:
+              type: string
+              description: Human-readable error message.
+            details:
+              type: object
+              description: Optional structured metadata for debugging.
+              additionalProperties: true

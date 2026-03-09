@@ -1,0 +1,313 @@
+{
+  "api": {
+    "title": "NOUS Platform API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "example": "usr_123456"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "john@example.com"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "service": {
+                "type": "string",
+                "example": "health"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mental Health",
+      "key": "mental-health",
+      "operations": [
+        {
+          "id": "POST:/mental_health/mood",
+          "method": "POST",
+          "kind": "create",
+          "path": "/mental_health/mood",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "mood_123456"
+              },
+              "primary_emotion": {
+                "type": "string",
+                "example": "happy"
+              },
+              "emotion_intensity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "example": 7
+              },
+              "triggers": {
+                "type": "string",
+                "example": "Had a good day at work"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "mood_123456"
+              },
+              "primary_emotion": {
+                "type": "string",
+                "example": "happy"
+              },
+              "emotion_intensity": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "example": 7
+              },
+              "triggers": {
+                "type": "string",
+                "example": "Had a good day at work"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "GET:/tasks/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks/tasks",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "example": "tsk_123456"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Complete project report"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Finish the quarterly project report"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed"
+                      ],
+                      "example": "pending"
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "example": "medium"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/tasks/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Complete project report"
+              },
+              "description": {
+                "type": "string",
+                "example": "Finish the quarterly project report"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "default": "medium"
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "tsk_123456"
+              },
+              "title": {
+                "type": "string",
+                "example": "Complete project report"
+              },
+              "description": {
+                "type": "string",
+                "example": "Finish the quarterly project report"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "example": "pending"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "example": "medium"
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

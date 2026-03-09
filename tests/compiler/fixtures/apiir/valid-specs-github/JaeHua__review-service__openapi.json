@@ -1,0 +1,335 @@
+{
+  "api": {
+    "title": "Review API",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Review",
+      "key": "review",
+      "operations": [
+        {
+          "id": "Review_ListReviewByUserID",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/{userID}/reviews",
+          "identifierParam": "userID",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "reviewID": {
+                      "type": "string"
+                    },
+                    "userID": {
+                      "type": "string"
+                    },
+                    "orderID": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "serviceScore": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "expressScore": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "picInfo": {
+                      "type": "string"
+                    },
+                    "videoInfo": {
+                      "type": "string"
+                    },
+                    "anonymous": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "description": "评价信息"
+                }
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "description": "根据userID查询评价列表的返回值"
+          }
+        },
+        {
+          "id": "Review_GetReview",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/review/{reviewID}",
+          "identifierParam": "reviewID",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "reviewID": {
+                    "type": "string"
+                  },
+                  "userID": {
+                    "type": "string"
+                  },
+                  "orderID": {
+                    "type": "string"
+                  },
+                  "score": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "serviceScore": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "expressScore": {
+                    "type": "integer",
+                    "format": "int32"
+                  },
+                  "content": {
+                    "type": "string"
+                  },
+                  "picInfo": {
+                    "type": "string"
+                  },
+                  "videoInfo": {
+                    "type": "string"
+                  },
+                  "anonymous": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "integer",
+                    "format": "int32"
+                  }
+                },
+                "description": "评价信息"
+              }
+            },
+            "description": "获取评价详情的响应"
+          }
+        },
+        {
+          "id": "Review_AuditAppeal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/appeal/audit",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "appealID": {
+                "type": "string"
+              },
+              "status": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "opUser": {
+                "type": "string"
+              },
+              "opRemarks": {
+                "type": "string"
+              }
+            },
+            "description": "对申诉进行审核的请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "appealID": {
+                "type": "string"
+              }
+            },
+            "description": "对申诉进行审核的返回值"
+          }
+        },
+        {
+          "id": "Review_CreateReview",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/review",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "userID": {
+                "type": "string"
+              },
+              "orderID": {
+                "type": "string"
+              },
+              "score": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "serviceScore": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "expressScore": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "content": {
+                "type": "string"
+              },
+              "picInfo": {
+                "type": "string"
+              },
+              "videoInfo": {
+                "type": "string"
+              },
+              "anonymous": {
+                "type": "boolean"
+              }
+            },
+            "description": "创建评价的请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reviewID": {
+                "type": "string"
+              }
+            },
+            "description": "创建评价的回复"
+          }
+        },
+        {
+          "id": "Review_AppealReview",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/review/appeal",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "reviewID": {
+                "type": "string"
+              },
+              "storeID": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "picInfo": {
+                "type": "string"
+              },
+              "videoInfo": {
+                "type": "string"
+              }
+            },
+            "description": "申诉评价的请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "appealID": {
+                "type": "string"
+              }
+            },
+            "description": "对评价进行申诉的返回值"
+          }
+        },
+        {
+          "id": "Review_AuditReview",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/review/audit",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "reviewID": {
+                "type": "string"
+              },
+              "status": {
+                "type": "integer",
+                "format": "int32"
+              },
+              "opUser": {
+                "type": "string"
+              },
+              "opReason": {
+                "type": "string"
+              },
+              "opRemarks": {
+                "type": "string"
+              }
+            },
+            "description": "审核评价的请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reviewID": {
+                "type": "string"
+              },
+              "status": {
+                "type": "integer",
+                "format": "int32"
+              }
+            },
+            "description": "审核评价的返回值"
+          }
+        },
+        {
+          "id": "Review_ReplyReview",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/review/reply",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "reviewID": {
+                "type": "string"
+              },
+              "storeID": {
+                "type": "string"
+              },
+              "content": {
+                "type": "string"
+              },
+              "picInfo": {
+                "type": "string"
+              },
+              "videoInfo": {
+                "type": "string"
+              }
+            },
+            "description": "回复评价的请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "replyID": {
+                "type": "string"
+              }
+            },
+            "description": "回复评价的返回值"
+          }
+        }
+      ]
+    }
+  ]
+}

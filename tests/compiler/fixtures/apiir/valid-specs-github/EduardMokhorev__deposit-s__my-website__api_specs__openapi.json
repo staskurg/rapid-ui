@@ -1,0 +1,225 @@
+{
+  "api": {
+    "title": "Список API-вызовов для системы постов",
+    "version": "1.0"
+  },
+  "resources": [
+    {
+      "name": "deposits",
+      "key": "deposits",
+      "operations": [
+        {
+          "id": "postDeposits",
+          "method": "POST",
+          "kind": "create",
+          "path": "/deposit-orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "clientId",
+              "idempotencyKey",
+              "depositProductId",
+              "applyDate",
+              "accountFromId",
+              "sum",
+              "depositRate"
+            ],
+            "properties": {
+              "clientId": {
+                "type": "string",
+                "example": "E52by00ky0raqYvF459WGGZ7WgV397CiZbM"
+              },
+              "idempotencyKey": {
+                "type": "string",
+                "example": "27b4f4wl9-1b5d-029k-26e3-b12bcww763e8h"
+              },
+              "depositProductId": {
+                "type": "string",
+                "example": "1eb7e351-7b5d-5398-26e3-b93bc23963e8"
+              },
+              "applyDate": {
+                "type": "string",
+                "example": "2024-09-06"
+              },
+              "accountFromId": {
+                "type": "string",
+                "example": "E52by00k-j0ra-qYvF-459W-GGZ7WgV397CiZbM"
+              },
+              "sum": {
+                "type": "number",
+                "example": 50000
+              },
+              "depositPeriod": {
+                "type": "integer",
+                "example": 13
+              },
+              "depositRate": {
+                "type": "number",
+                "example": 6.3
+              },
+              "accountPerc": {
+                "type": "string",
+                "example": "63b4f3wl9-1b5d-329k-26e3-b12bc11763e8h"
+              },
+              "typeOfDuration": {
+                "type": "string",
+                "example": "M"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "example": "27b4f4wl9-1b5d-029k-26e3-b12bcww763e8h"
+              },
+              "status": {
+                "type": "string",
+                "example": "Processing"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "getAllProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "required": [
+                "Id",
+                "currencyCode",
+                "title",
+                "description",
+                "maxInterestRate",
+                "minAmount",
+                "depositType",
+                "status"
+              ],
+              "type": "object",
+              "properties": {
+                "Id": {
+                  "type": "string",
+                  "example": "1eb7e351-7b5d-5398-26e3-b93bc23963e8"
+                },
+                "currencyCode": {
+                  "type": "string",
+                  "example": "RUB"
+                },
+                "title": {
+                  "type": "string",
+                  "example": "Выгодный"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Оформляйте депозит “Выгодный +” для сохранения и приумножения своих средств"
+                },
+                "maxInterestRate": {
+                  "type": "number",
+                  "example": 12.1
+                },
+                "maxDuration": {
+                  "type": "integer",
+                  "example": 1
+                },
+                "typeOfDuration": {
+                  "type": "string",
+                  "example": "Y"
+                },
+                "minAmount": {
+                  "type": "integer",
+                  "example": 100
+                },
+                "depositType": {
+                  "type": "string",
+                  "example": "Отзывной"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "inactive"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "descr_by_id",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "required": [
+              "Id",
+              "currencyCode",
+              "title",
+              "description",
+              "maxInterestRate",
+              "minAmount",
+              "depositType",
+              "status"
+            ],
+            "type": "object",
+            "properties": {
+              "Id": {
+                "type": "string",
+                "example": "1eb7e351-7b5d-5398-26e3-b93bc23963e8"
+              },
+              "currencyCode": {
+                "type": "string",
+                "example": "RUB"
+              },
+              "title": {
+                "type": "string",
+                "example": "Выгодный"
+              },
+              "description": {
+                "type": "string",
+                "example": "Оформляйте депозит “Выгодный +” для сохранения и приумножения своих средств"
+              },
+              "maxInterestRate": {
+                "type": "number",
+                "example": 12.1
+              },
+              "maxDuration": {
+                "type": "integer",
+                "example": 1
+              },
+              "typeOfDuration": {
+                "type": "string",
+                "example": "Y"
+              },
+              "minAmount": {
+                "type": "integer",
+                "example": 100
+              },
+              "depositType": {
+                "type": "string",
+                "example": "Отзывной"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

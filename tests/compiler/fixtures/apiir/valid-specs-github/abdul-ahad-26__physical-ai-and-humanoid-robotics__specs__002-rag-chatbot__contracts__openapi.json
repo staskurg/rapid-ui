@@ -1,0 +1,322 @@
+{
+  "api": {
+    "title": "RAG Chatbot API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "admin",
+      "key": "admin",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "ingestContent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/ingest",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "content",
+              "chapter_id",
+              "section_id",
+              "anchor_url"
+            ],
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "Markdown content to ingest"
+              },
+              "chapter_id": {
+                "type": "string",
+                "description": "Chapter identifier"
+              },
+              "section_id": {
+                "type": "string",
+                "description": "Section identifier"
+              },
+              "anchor_url": {
+                "type": "string",
+                "description": "URL path with anchor"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "chunks_created",
+              "vector_ids"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "success"
+              },
+              "chunks_created": {
+                "type": "integer",
+                "description": "Number of chunks created"
+              },
+              "vector_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "description": "IDs of created vectors"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "submitChatQuery",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2000,
+                "description": "User's question"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Existing session ID (optional, creates new if omitted)"
+              },
+              "selected_text": {
+                "type": "string",
+                "maxLength": 5000,
+                "description": "User-selected text from the page for additional context"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "session_id",
+              "message_id",
+              "answer",
+              "citations",
+              "created_at"
+            ],
+            "properties": {
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "message_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "answer": {
+                "type": "string",
+                "description": "AI-generated answer or \"I don't know based on this book.\""
+              },
+              "citations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "chapter_id",
+                    "section_id",
+                    "anchor_url",
+                    "display_text"
+                  ],
+                  "properties": {
+                    "chapter_id": {
+                      "type": "string",
+                      "description": "Chapter identifier"
+                    },
+                    "section_id": {
+                      "type": "string",
+                      "description": "Section identifier"
+                    },
+                    "anchor_url": {
+                      "type": "string",
+                      "description": "URL path with anchor (e.g., \"/docs/chapter-1#section\")"
+                    },
+                    "display_text": {
+                      "type": "string",
+                      "description": "Human-readable citation text"
+                    }
+                  }
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "sessions",
+      "key": "sessions",
+      "operations": [
+        {
+          "id": "listSessions",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/sessions",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "sessions"
+            ],
+            "properties": {
+              "sessions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "session_id",
+                    "created_at",
+                    "last_activity",
+                    "message_count"
+                  ],
+                  "properties": {
+                    "session_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "last_activity": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "message_count": {
+                      "type": "integer"
+                    },
+                    "preview": {
+                      "type": "string",
+                      "description": "First message preview (truncated)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getSessionMessages",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/sessions/{session_id}/messages",
+          "identifierParam": "session_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "session_id",
+              "messages"
+            ],
+            "properties": {
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "message_id",
+                    "role",
+                    "content",
+                    "created_at"
+                  ],
+                  "properties": {
+                    "message_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "citations": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "chapter_id",
+                          "section_id",
+                          "anchor_url",
+                          "display_text"
+                        ],
+                        "properties": {
+                          "chapter_id": {
+                            "type": "string",
+                            "description": "Chapter identifier"
+                          },
+                          "section_id": {
+                            "type": "string",
+                            "description": "Section identifier"
+                          },
+                          "anchor_url": {
+                            "type": "string",
+                            "description": "URL path with anchor (e.g., \"/docs/chapter-1#section\")"
+                          },
+                          "display_text": {
+                            "type": "string",
+                            "description": "Human-readable citation text"
+                          }
+                        }
+                      }
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

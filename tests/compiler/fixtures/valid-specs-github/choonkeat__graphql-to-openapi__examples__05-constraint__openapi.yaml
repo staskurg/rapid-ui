@@ -1,0 +1,311 @@
+openapi: 3.0.0
+info:
+    title: '@constraint Directive Example'
+    description: |-
+        This schema demonstrates how validation constraints from the @constraint directive
+        (a de facto standard in the GraphQL community) are converted to OpenAPI validation
+        properties.
+
+        Common @constraint arguments:
+        - minLength, maxLength: String length validation
+        - min, max: Numeric range validation
+        - pattern: Regex pattern validation
+        - format: String format validation (email, url, etc.)
+
+        ---
+
+        Converted from GraphQL (1.0.0)
+    version: 1.0.0
+paths:
+    /createUser:
+        post:
+            operationId: createUser
+            summary: Create a new user with validated input
+            description: Create a new user with validated input
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                input:
+                                    $ref: '#/components/schemas/CreateUserInput'
+                            required:
+                                - input
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /products:
+        get:
+            operationId: listProducts
+            summary: List products
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Product'
+        post:
+            operationId: createProduct
+            summary: Create a product with constraints
+            description: Create a product with constraints
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                input:
+                                    $ref: '#/components/schemas/CreateProductInput'
+                            required:
+                                - input
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/Product'
+    /searchProducts:
+        get:
+            operationId: searchProducts
+            summary: Search products by name (with constraints)
+            description: Search products by name (with constraints)
+            parameters:
+                - name: query
+                  in: query
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/Product'
+    /updateProfile:
+        post:
+            operationId: updateProfile
+            summary: Update user profile
+            description: Update user profile
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            properties:
+                                input:
+                                    $ref: '#/components/schemas/UpdateProfileInput'
+                            required:
+                                - input
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/User'
+    /usersByAge:
+        get:
+            operationId: usersByAge
+            summary: Find users by age range
+            description: Find users by age range
+            parameters:
+                - name: minAge
+                  in: query
+                  required: true
+                  schema:
+                    type: integer
+                    format: int32
+            responses:
+                "200":
+                    description: Successful response
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/User'
+components:
+    schemas:
+        CreateProductInput:
+            type: object
+            description: Input type for creating products
+            properties:
+                description:
+                    type: string
+                    description: Description - Product description
+                    maxLength: 2000
+                name:
+                    type: string
+                    description: Name - Product name
+                    minLength: 1
+                    maxLength: 200
+                price:
+                    type: number
+                    format: double
+                    description: Price - Price (must be positive)
+                    minimum: 0.01
+                    maximum: 1e+06
+                sku:
+                    type: string
+                    description: Sku - SKU code
+                    pattern: ^[A-Z]{3}-[0-9]{5}$
+                stock:
+                    type: integer
+                    format: int32
+                    description: Stock - Initial stock quantity
+                    minimum: 0
+                    maximum: 999999
+            required:
+                - name
+                - price
+                - stock
+                - sku
+        CreateUserInput:
+            type: object
+            description: Input type for creating users with validation
+            properties:
+                age:
+                    type: integer
+                    format: int32
+                    description: Age - Age (13+)
+                    minimum: 13
+                    maximum: 120
+                email:
+                    type: string
+                    format: email
+                    description: Email - Valid email address
+                name:
+                    type: string
+                    description: Name - Full name (required)
+                    minLength: 1
+                    maxLength: 100
+                password:
+                    type: string
+                    description: Password - Password (min 8 chars, must contain letter and number)
+                    minLength: 8
+                    maxLength: 128
+                    pattern: ^(?=.*[A-Za-z])(?=.*\d).+$
+                username:
+                    type: string
+                    description: Username - Username (3-20 chars, alphanumeric)
+                    minLength: 3
+                    maxLength: 20
+                    pattern: ^[a-zA-Z0-9_]+$
+            required:
+                - username
+                - name
+                - email
+                - password
+        Product:
+            type: object
+            description: Product type with price constraints
+            properties:
+                description:
+                    type: string
+                    description: Description - Product description
+                    maxLength: 2000
+                discountPercent:
+                    type: number
+                    format: double
+                    description: Discount Percent - Discount percentage (0-100)
+                    minimum: 0
+                    maximum: 100
+                id:
+                    type: string
+                name:
+                    type: string
+                    description: Name - Product name
+                    minLength: 1
+                    maxLength: 200
+                price:
+                    type: number
+                    format: double
+                    description: Price - Price must be positive
+                    minimum: 0.01
+                sku:
+                    type: string
+                    description: 'Sku - SKU format: ABC-12345'
+                    pattern: ^[A-Z]{3}-[0-9]{5}$
+                stock:
+                    type: integer
+                    format: int32
+                    description: Stock - Stock quantity (non-negative)
+                    minimum: 0
+            required:
+                - id
+                - name
+                - price
+                - stock
+                - sku
+        UpdateProfileInput:
+            type: object
+            description: Input type for profile updates
+            properties:
+                bio:
+                    type: string
+                    description: Bio - Updated bio
+                    maxLength: 500
+                name:
+                    type: string
+                    description: Name - Updated name
+                    minLength: 1
+                    maxLength: 100
+                website:
+                    type: string
+                    format: url
+                    description: Website - Website URL
+        User:
+            type: object
+            description: User type with constraint validations
+            properties:
+                age:
+                    type: integer
+                    format: int32
+                    description: Age - Age must be between 13 and 120
+                    minimum: 13
+                    maximum: 120
+                bio:
+                    type: string
+                    description: Bio - Bio with character limit
+                    maxLength: 500
+                email:
+                    type: string
+                    format: email
+                    description: Email - Valid email address
+                id:
+                    type: string
+                name:
+                    type: string
+                    description: Name - Full name with length constraints
+                    minLength: 1
+                    maxLength: 100
+                username:
+                    type: string
+                    description: Username - Username must be 3-20 alphanumeric characters
+                    minLength: 3
+                    maxLength: 20
+                    pattern: ^[a-zA-Z0-9_]+$
+                website:
+                    type: string
+                    format: url
+                    description: Website - Website URL
+            required:
+                - id
+                - username
+                - name
+                - email

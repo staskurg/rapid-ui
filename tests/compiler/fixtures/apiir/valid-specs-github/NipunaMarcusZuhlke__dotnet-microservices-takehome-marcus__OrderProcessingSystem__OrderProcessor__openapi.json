@@ -1,0 +1,190 @@
+{
+  "api": {
+    "title": "Order processing system",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Notifications",
+      "key": "notifications",
+      "operations": [
+        {
+          "id": "Notifications_GetAllNotifications",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/notifications",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "notificationId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "orderId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "paymentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "amount": {
+                "type": "number",
+                "format": "decimal"
+              },
+              "customerEmail": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "Orders_GetAllOrders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/orders",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "orderId": {
+                  "type": "string",
+                  "format": "guid"
+                },
+                "amount": {
+                  "type": "number",
+                  "format": "decimal"
+                },
+                "customerEmail": {
+                  "type": "string"
+                },
+                "timeStamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "Orders_GetOrderById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "orderId": {
+                  "type": "string",
+                  "format": "guid"
+                },
+                "amount": {
+                  "type": "number",
+                  "format": "decimal"
+                },
+                "customerEmail": {
+                  "type": "string"
+                },
+                "timeStamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "Orders_CreateOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/orders",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "amount": {
+                "type": "number",
+                "format": "decimal"
+              },
+              "customerEmail": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "amount": {
+                "type": "number",
+                "format": "decimal"
+              },
+              "customerEmail": {
+                "type": "string"
+              },
+              "timeStamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "Payments_GetAllProcessedPayments",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/payments",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "paymentId": {
+                "type": "string",
+                "format": "guid"
+              },
+              "amount": {
+                "type": "number",
+                "format": "decimal"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

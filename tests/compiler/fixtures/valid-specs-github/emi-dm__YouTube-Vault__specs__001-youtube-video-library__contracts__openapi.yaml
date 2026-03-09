@@ -1,0 +1,204 @@
+openapi: 3.0.3
+info:
+  title: YouTube Video Library API
+  version: 1.0.0
+  description: API for managing a local YouTube video library
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /videos:
+    post:
+      summary: Add a new video to the library
+      operationId: addVideo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - url
+              properties:
+                url:
+                  type: string
+                  format: uri
+                  description: YouTube video URL
+                  example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      responses:
+        '201':
+          description: Video added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                    description: Video ID
+                    example: 1
+                  status:
+                    type: string
+                    enum: [processing, completed]
+                    example: processing
+        '400':
+          description: Invalid YouTube URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid YouTube URL"
+        '409':
+          description: Video already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Video already in library"
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Download failed"
+
+  /videos/search:
+    get:
+      summary: Search videos by transcription content
+      operationId: searchVideos
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: Search query
+          example: "machine learning"
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of results
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: integer
+                        title:
+                          type: string
+                        thumbnail_path:
+                          type: string
+                        created_at:
+                          type: string
+                          format: date-time
+                        excerpt:
+                          type: string
+                          description: Relevant excerpt from transcription
+                  total:
+                    type: integer
+        '400':
+          description: Invalid search query
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /videos/{id}:
+    get:
+      summary: Get video details
+      operationId: getVideo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: Video ID
+      responses:
+        '200':
+          description: Video details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  url:
+                    type: string
+                  title:
+                    type: string
+                  thumbnail_path:
+                    type: string
+                  video_path:
+                    type: string
+                  transcription:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Video not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Video not found"
+
+components:
+  schemas:
+    Video:
+      type: object
+      properties:
+        id:
+          type: integer
+        url:
+          type: string
+        title:
+          type: string
+        thumbnail_path:
+          type: string
+        video_path:
+          type: string
+        transcription:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+    Error:
+      type: object
+      properties:
+        error:
+          type: string

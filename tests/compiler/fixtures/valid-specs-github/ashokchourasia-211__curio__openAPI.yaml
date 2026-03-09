@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Curio - Anonymous Classroom API
+  description: >
+    API for the Curio platform (EdTech Hackathon).
+    Handles session management (Room Codes) and anonymous Q&A with AI-augmented answers using Google ADK + Gemini 2.5 Flash.
+  version: 1.0.0
+servers:
+  - url: http://localhost:8000
+    description: Local Development Server
+
+paths:
+  /sessions:
+    post:
+      summary: Create a new classroom session
+      operationId: createSession
+      tags:
+        - Teacher
+      description: Allows a teacher to create a new room and generate a 6-digit access code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreateRequest'
+      responses:
+        '201':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionCreateResponse'
+        '422':
+          description: Validation Error
+
+  /sessions/verify/{code}:
+    get:
+      summary: Verify a session code
+      operationId: verifySession
+      tags:
+        - Student
+      description: Check if a room code exists and is active. Used by students on the landing page.
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: The 6-character session code (e.g., PHY-88)
+          schema:
+            type: string
+            example: 'PHY-88'
+      responses:
+        '200':
+          description: Session found and valid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionVerifyResponse'
+        '404':
+          description: Session code not found or inactive
+
+  /questions:
+    post:
+      summary: Post a doubt (AI Agent Trigger)
+      operationId: postQuestion
+      tags:
+        - Student
+      description: >
+        Receives a student's question.
+        1. Checks toxicity using Gemini Agent.
+        2. If safe, generates an AI response.
+        3. Saves to database.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuestionCreateRequest'
+      responses:
+        '200':
+          description: Question processed (either posted or flagged)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionResponse'
+        '404':
+          description: Session ID not found
+        '422':
+          description: Validation Error
+
+  /questions/{session_id}:
+    get:
+      summary: Poll for new questions
+      operationId: getQuestions
+      tags:
+        - Teacher
+      description: >
+        Fetches questions for a specific session.
+        Supports polling via 'last_seen_timestamp' to get only new messages.
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: last_seen_timestamp
+          in: query
+          required: false
+          description: Fetch only questions created after this timestamp (ISO 8601).
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: List of questions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/QuestionResponse'
+
+components:
+  schemas:
+    # --- Session Models ---
+    SessionCreateRequest:
+      type: object
+      required:
+        - teacher_id
+        - subject
+      properties:
+        teacher_id:
+          type: string
+          example: 'teacher_001'
+        subject:
+          type: string
+          example: 'Physics 101'
+
+    SessionCreateResponse:
+      type: object
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          example: '123e4567-e89b-12d3-a456-426614174000'
+        code:
+          type: string
+          description: Unique 6-char code
+          example: 'PHY-88'
+
+    SessionVerifyResponse:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: true
+        session_id:
+          type: string
+          format: uuid
+        subject:
+          type: string
+          example: 'Physics 101'
+
+    # --- Question Models ---
+    QuestionCreateRequest:
+      type: object
+      required:
+        - session_id
+        - text
+        - student_hash
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          example: 'Why does an apple fall down?'
+        student_hash:
+          type: string
+          description: Anonymized fingerprint of the student
+          example: 'user_hash_xyz123'
+
+    QuestionResponse:
+      type: object
+      properties:
+        question_id:
+          type: string
+          format: uuid
+        text:
+          type: string
+          example: 'Why does an apple fall down?'
+        student_name:
+          type: string
+          description: Randomly generated name
+          example: 'Anonymous Badger'
+        ai_response:
+          type: string
+          description: The answer generated by Gemini 2.5 Flash
+          example: 'Gravity is a force that pulls objects toward the center of the Earth.'
+        status:
+          type: string
+          enum: [posted, flagged]
+          example: 'posted'
+        created_at:
+          type: string
+          format: date-time

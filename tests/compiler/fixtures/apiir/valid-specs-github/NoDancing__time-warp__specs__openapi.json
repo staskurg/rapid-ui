@@ -1,0 +1,392 @@
+{
+  "api": {
+    "title": "Time Warp API",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Clips",
+      "key": "clips",
+      "operations": [
+        {
+          "id": "listClips",
+          "method": "GET",
+          "kind": "list",
+          "path": "/clips",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "items",
+              "next_cursor"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "youtube_video_id",
+                    "youtube_url",
+                    "performance_date",
+                    "title",
+                    "created_at",
+                    "created_by_contributor_id",
+                    "added_via_submission_id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier for the clip."
+                    },
+                    "youtube_video_id": {
+                      "type": "string",
+                      "description": "YouTube video identifier."
+                    },
+                    "youtube_url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Canonical YouTube URL for the clip."
+                    },
+                    "performance_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "Date of the performance (YYYY-MM-DD) used for ordering."
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-facing title (may be user-provided)."
+                    },
+                    "notes": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Optional free-form notes."
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "RFC3339 timestamp when the clip was created."
+                    },
+                    "created_by_contributor_id": {
+                      "type": "string",
+                      "description": "Contributor id attributed as the creator."
+                    },
+                    "added_via_submission_id": {
+                      "type": "string",
+                      "description": "Submission id that resulted in this clip."
+                    }
+                  }
+                }
+              },
+              "next_cursor": {
+                "type": "string",
+                "nullable": true,
+                "description": "Opaque cursor for the next page, or null if no more results."
+              }
+            }
+          }
+        },
+        {
+          "id": "getClip",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/clips/{clipId}",
+          "identifierParam": "clipId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "youtube_video_id",
+              "youtube_url",
+              "performance_date",
+              "title",
+              "created_at",
+              "created_by_contributor_id",
+              "added_via_submission_id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the clip."
+              },
+              "youtube_video_id": {
+                "type": "string",
+                "description": "YouTube video identifier."
+              },
+              "youtube_url": {
+                "type": "string",
+                "format": "uri",
+                "description": "Canonical YouTube URL for the clip."
+              },
+              "performance_date": {
+                "type": "string",
+                "format": "date",
+                "description": "Date of the performance (YYYY-MM-DD) used for ordering."
+              },
+              "title": {
+                "type": "string",
+                "description": "Human-facing title (may be user-provided)."
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional free-form notes."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "RFC3339 timestamp when the clip was created."
+              },
+              "created_by_contributor_id": {
+                "type": "string",
+                "description": "Contributor id attributed as the creator."
+              },
+              "added_via_submission_id": {
+                "type": "string",
+                "description": "Submission id that resulted in this clip."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contributors",
+      "key": "contributors",
+      "operations": [
+        {
+          "id": "createContributor",
+          "method": "POST",
+          "kind": "create",
+          "path": "/contributors",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "display_name": {
+                "type": "string",
+                "nullable": true
+              },
+              "external_id": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "description": "Request payload for creating a contributor."
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "created_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the contributor."
+              },
+              "display_name": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional display name."
+              },
+              "external_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional external identity reference (implementation-defined)."
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "RFC3339 timestamp when the contributor was created."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Submissions",
+      "key": "submissions",
+      "operations": [
+        {
+          "id": "getSubmission",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/submissions/{submissionId}",
+          "identifierParam": "submissionId",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "raw_youtube_input",
+              "raw_date_input",
+              "status",
+              "submitted_at",
+              "contributor_id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the submission."
+              },
+              "raw_youtube_input": {
+                "type": "string",
+                "description": "User-provided YouTube input (URL or id)."
+              },
+              "raw_date_input": {
+                "type": "string",
+                "description": "User-provided date input (expected YYYY-MM-DD)."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "rejected"
+                ],
+                "description": "Result of validation and ingestion."
+              },
+              "validation_error": {
+                "type": "string",
+                "nullable": true,
+                "description": "Populated when status=rejected."
+              },
+              "submitted_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "RFC3339 timestamp when the submission was created."
+              },
+              "clip_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Present when status=accepted."
+              },
+              "contributor_id": {
+                "type": "string",
+                "description": "Contributor who made the submission."
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional user-provided title."
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional user-provided notes."
+              }
+            }
+          }
+        },
+        {
+          "id": "createSubmission",
+          "method": "POST",
+          "kind": "create",
+          "path": "/submissions",
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "contributor_id",
+              "raw_youtube_input",
+              "raw_date_input"
+            ],
+            "properties": {
+              "contributor_id": {
+                "type": "string",
+                "description": "Contributor creating the submission."
+              },
+              "raw_youtube_input": {
+                "type": "string",
+                "description": "YouTube URL, short URL, or video id."
+              },
+              "raw_date_input": {
+                "type": "string",
+                "description": "Performance date (YYYY-MM-DD)."
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional human-facing title."
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional free-form notes."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "raw_youtube_input",
+              "raw_date_input",
+              "status",
+              "submitted_at",
+              "contributor_id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the submission."
+              },
+              "raw_youtube_input": {
+                "type": "string",
+                "description": "User-provided YouTube input (URL or id)."
+              },
+              "raw_date_input": {
+                "type": "string",
+                "description": "User-provided date input (expected YYYY-MM-DD)."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "rejected"
+                ],
+                "description": "Result of validation and ingestion."
+              },
+              "validation_error": {
+                "type": "string",
+                "nullable": true,
+                "description": "Populated when status=rejected."
+              },
+              "submitted_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "RFC3339 timestamp when the submission was created."
+              },
+              "clip_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Present when status=accepted."
+              },
+              "contributor_id": {
+                "type": "string",
+                "description": "Contributor who made the submission."
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional user-provided title."
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true,
+                "description": "Optional user-provided notes."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,586 @@
+{
+  "api": {
+    "title": "Role Management Internal API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Intent Recognition",
+      "key": "intent-recognition",
+      "operations": [
+        {
+          "id": "POST:/intent/recognize",
+          "method": "POST",
+          "kind": "create",
+          "path": "/intent/recognize",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "text",
+              "session_id"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "原始輸入文字"
+              },
+              "session_id": {
+                "type": "string",
+                "description": "會話 ID"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "intent_type": {
+                    "type": "string",
+                    "enum": [
+                      "role_switch",
+                      "role_query",
+                      "role_list",
+                      "unknown"
+                    ]
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "target_role": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "original_text": {
+                    "type": "string"
+                  },
+                  "processing_time_ms": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role Management",
+      "key": "role-management",
+      "operations": [
+        {
+          "id": "GET:/roles",
+          "method": "GET",
+          "kind": "list",
+          "path": "/roles",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role_type": {
+                          "type": "string",
+                          "enum": [
+                            "interviewer",
+                            "assistant",
+                            "coach",
+                            "custom"
+                          ]
+                        },
+                        "tone_style": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/roles/{role_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/roles/{role_id}",
+          "identifierParam": "role_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role_type": {
+                    "type": "string",
+                    "enum": [
+                      "interviewer",
+                      "assistant",
+                      "coach",
+                      "custom"
+                    ]
+                  },
+                  "system_prompt": {
+                    "type": "string"
+                  },
+                  "tone_style": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "example_responses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/roles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/roles",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "name",
+              "role_type",
+              "system_prompt",
+              "tone_style"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "角色唯一識別碼"
+              },
+              "name": {
+                "type": "string",
+                "description": "角色顯示名稱"
+              },
+              "role_type": {
+                "type": "string",
+                "enum": [
+                  "interviewer",
+                  "assistant",
+                  "coach",
+                  "custom"
+                ]
+              },
+              "system_prompt": {
+                "type": "string",
+                "description": "LLM 系統提示詞"
+              },
+              "tone_style": {
+                "type": "string",
+                "description": "語氣風格描述"
+              },
+              "description": {
+                "type": "string",
+                "description": "角色描述"
+              },
+              "example_responses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "範例回應"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role_type": {
+                    "type": "string",
+                    "enum": [
+                      "interviewer",
+                      "assistant",
+                      "coach",
+                      "custom"
+                    ]
+                  },
+                  "system_prompt": {
+                    "type": "string"
+                  },
+                  "tone_style": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "example_responses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "is_active": {
+                    "type": "boolean"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Role State",
+      "key": "role-state",
+      "operations": [
+        {
+          "id": "GET:/role-state/{session_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/role-state/{session_id}",
+          "identifierParam": "session_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "current_role": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "role_type": {
+                        "type": "string",
+                        "enum": [
+                          "interviewer",
+                          "assistant",
+                          "coach",
+                          "custom"
+                        ]
+                      },
+                      "tone_style": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "is_active": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "last_updated": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "transition_count": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/role-state/{session_id}/history",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/role-state/{session_id}/history",
+          "identifierParam": "session_id",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "history": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "from_role": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "to_role": {
+                          "type": "string"
+                        },
+                        "reason": {
+                          "type": "string"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/role-state/switch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/role-state/switch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "session_id",
+              "target_role_id",
+              "reason"
+            ],
+            "properties": {
+              "session_id": {
+                "type": "string"
+              },
+              "target_role_id": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "user_voice_command",
+                  "ui_selection",
+                  "system_trigger",
+                  "api_call"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "session_id": {
+                    "type": "string"
+                  },
+                  "current_role_id": {
+                    "type": "string"
+                  },
+                  "previous_role_id": {
+                    "type": "string"
+                  },
+                  "switch_time": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "confirmation_message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "UI State",
+      "key": "ui-state",
+      "operations": [
+        {
+          "id": "GET:/ui/role-state/{session_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/ui/role-state/{session_id}",
+          "identifierParam": "session_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "current_role": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "role_type": {
+                        "type": "string",
+                        "enum": [
+                          "interviewer",
+                          "assistant",
+                          "coach",
+                          "custom"
+                        ]
+                      },
+                      "tone_style": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "is_active": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "available_roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "role_type": {
+                          "type": "string",
+                          "enum": [
+                            "interviewer",
+                            "assistant",
+                            "coach",
+                            "custom"
+                          ]
+                        },
+                        "tone_style": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "is_active": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  },
+                  "last_switch_time": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "total_switches": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,300 @@
+{
+  "api": {
+    "title": "BrightAI API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "POST:/api/ai/chat",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/ai/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "maxLength": 1000,
+                "description": "الرسالة المراد إرسالها"
+              },
+              "history": {
+                "type": "array",
+                "description": "سجل المحادثة السابقة",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sender": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "bot"
+                      ]
+                    },
+                    "text": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "sessionId": {
+                "type": "string",
+                "description": "معرف الجلسة"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reply": {
+                "type": "string",
+                "description": "رد الذكاء الاصطناعي"
+              },
+              "sessionId": {
+                "type": "string",
+                "description": "معرف الجلسة"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medical",
+      "key": "medical",
+      "operations": [
+        {
+          "id": "POST:/api/ai/medical",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/ai/medical",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "textParts"
+            ],
+            "properties": {
+              "textParts": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "مصفوفة من النصوص للتحليل"
+              },
+              "inlineDataParts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "mimeType": {
+                      "type": "string",
+                      "enum": [
+                        "image/jpeg",
+                        "image/png",
+                        "image/webp",
+                        "application/dicom"
+                      ]
+                    },
+                    "data": {
+                      "type": "string",
+                      "format": "byte",
+                      "description": "بيانات الصورة بترميز base64"
+                    }
+                  }
+                }
+              },
+              "config": {
+                "type": "object",
+                "properties": {
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
+                    "default": 0.2
+                  },
+                  "top_p": {
+                    "type": "number",
+                    "default": 0.9
+                  },
+                  "top_k": {
+                    "type": "number",
+                    "default": 40
+                  },
+                  "max_output_tokens": {
+                    "type": "number",
+                    "default": 2048
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "نتيجة التحليل الطبي"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "POST:/api/ai/search",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/ai/search",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 3,
+                "description": "سؤال المستخدم أو عبارة البحث"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "إجابة مباشرة مولدة من المقاطع المسترجعة"
+              },
+              "sources": {
+                "type": "array",
+                "description": "مصادر الإجابة من صفحات الموقع",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "sourceId": {
+                      "type": "string",
+                      "example": "S1"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "quote": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "results": {
+                "type": "array",
+                "description": "روابط إضافية مرتبطة بالسؤال",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "mode": {
+                "type": "string",
+                "description": "وضع التنفيذ (rag_groq أو fallback)",
+                "example": "rag_groq"
+              },
+              "retrievalCount": {
+                "type": "integer",
+                "description": "عدد المقاطع المسترجعة قبل التوليد",
+                "example": 10
+              },
+              "query": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Summary",
+      "key": "summary",
+      "operations": [
+        {
+          "id": "POST:/api/ai/summary",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/ai/summary",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "maxLength": 5000,
+                "description": "النص المراد تلخيصه"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string",
+                "description": "الملخص المولد"
+              },
+              "timestamp": {
+                "type": "number",
+                "description": "وقت التوليد"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "GET:/api/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "timestamp": {
+                "type": "number",
+                "example": 1234567890
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "api": {
+    "title": "Terapia Floral — GPT Actions",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Create-checkout-session",
+      "key": "create-checkout-session",
+      "operations": [
+        {
+          "id": "createCheckoutSession",
+          "method": "POST",
+          "kind": "create",
+          "path": "/create-checkout-session",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "kind",
+              "option",
+              "qty",
+              "locale"
+            ],
+            "properties": {
+              "kind": {
+                "type": "string",
+                "description": "pdf | frasco | consulta | kit"
+              },
+              "option": {
+                "type": "string",
+                "description": "ex.: pdf_detalhado | frasco30_pdf | consulta50 | consulta90"
+              },
+              "qty": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              },
+              "locale": {
+                "type": "string",
+                "description": "pt-BR para BRL, en-US para USD"
+              },
+              "meta": {
+                "type": "object",
+                "description": "Metadados opcionais",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "tenant_id": {
+                    "type": "string"
+                  },
+                  "event_id": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "id": {
+                "type": "string",
+                "description": "Stripe session_id"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify-checkout-session",
+      "key": "verify-checkout-session",
+      "operations": [
+        {
+          "id": "verifyCheckoutSession",
+          "method": "GET",
+          "kind": "list",
+          "path": "/verify-checkout-session",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "paid": {
+                "type": "boolean"
+              },
+              "email": {
+                "type": "string"
+              },
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "amount_total": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "api": {
+    "title": "user-api",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/users/auth/login",
+          "requestSchema": {
+            "description": "Аунтефикация",
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "description": "Аунтефикация",
+            "type": "object",
+            "required": [
+              "token"
+            ],
+            "properties": {
+              "token": {
+                "description": "JWT токен",
+                "type": "string",
+                "example": "803f29aa-cca4-4fe7-8254-e0005106cdc3"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/users",
+          "requestSchema": {
+            "description": "Создание пользователя",
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 30
+              },
+              "password": {
+                "minLength": 1,
+                "maxLength": 30,
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "description": "Пользователь",
+            "type": "object",
+            "properties": {
+              "userId": {
+                "description": "Идентификатор пользователя",
+                "type": "string",
+                "format": "uuid",
+                "example": "803f29aa-cca4-4fe7-8254-e0005106cdc3"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

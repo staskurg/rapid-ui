@@ -1,0 +1,1087 @@
+openapi: 3.0.0
+info:
+  title: API Documentación con OpenAPI
+  description: API de ejemplo documentada con OpenAPI y Swagger
+  version: 1.0.0
+
+servers:
+  - url: https://api.devnico.cl
+    description: Servidor de desarrollo  Ruta base de los endpoints
+
+paths:
+  /api/data/obtenerClienteRut:
+    get:
+      description: Obtiene lista de clientes (todos o por rut si se provee)
+      x-eov-operation-handler: clientes
+      operationId: clienteRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listaClientes"
+        "204":
+          description: Sin Contenido
+        "400":
+          description: error 400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "403":
+          description: Acceso no permitido al contenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "404":
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Clientes
+  /api/data/obtenerClientes:
+    get:
+      description: Obtiene lista de clientes (todos o por rut si se provee)
+      x-eov-operation-handler: clientes
+      operationId: todoClientes
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/listaClientes"
+        "204":
+          description: Sin Contenido
+        "400":
+          description: error 400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "403":
+          description: Acceso no permitido al contenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "404":
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Clientes
+        
+  /api/data/crearCliente:
+    post:
+      summary: Crear un nuevo cliente
+      description: Crea un nuevo cliente si el rut no existe previamente
+      operationId: crearCliente
+      x-eov-operation-handler: clientes
+      tags:
+        - Clientes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cliente'
+      responses:
+        "201":
+          description: Cliente creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: Cliente guardado correctamente
+        "400":
+          description: El cliente ya existe
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno al crear cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+
+  /api/data/cotizacionesRut:
+    get:
+      description: Obtiene cotizaciones por Rut
+      x-eov-operation-handler: cotizacion
+      operationId: obtenerCotizacionRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cotizacion"
+        "204":
+          description: Sin Contenido
+        "400":
+          description: error 400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "403":
+          description: Acceso no permitido al contenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "404":
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Cotizaciones
+  /api/data/cotizaciones:
+    get:
+      description: Obtiene cotizaciones por Rut
+      x-eov-operation-handler: cotizacion
+      operationId: obtenerCotizaciones
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cotizacion"
+        "204":
+          description: Sin Contenido
+        "400":
+          description: error 400
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "403":
+          description: Acceso no permitido al contenido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "404":
+          description: Cliente no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Cotizaciones
+
+  /api/data/crearCotizaciones:
+    post:
+      description: Crea cotizaciones por rut
+      x-eov-operation-handler: cotizacion
+      operationId: crearCotizacion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CotizacionClienteInput"
+      responses:
+        "201":
+          description: Cotización creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  msg:
+                    type: string
+        "400":
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Cotizaciones
+
+  /api/data/deudaRut:
+    get:
+      description: Obtiene las deudas asociadas a un RUT
+      x-eov-operation-handler: deuda
+      operationId: obtenerDeudaRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: true
+          description: RUT del cliente para buscar deudas
+      responses:
+        "200":
+          description: Deuda encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeudaCliente"
+        "404":
+          description: Deuda no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Deuda
+
+  /api/data/crearDeuda:
+    post:
+      description: Crea o actualiza las deudas de un cliente por rut
+      x-eov-operation-handler: deuda
+      operationId: crearDeuda
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeudaCliente'
+      responses:
+        "201":
+          description: Deuda guardada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: Datos deuda guardados correctamente
+        "400":
+          description: Solicitud incorrecta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Deuda
+
+  /api/data/obtenerDeudas:
+    get:
+      description: Obtiene todas las deudas de todos los clientes
+      x-eov-operation-handler: deuda
+      operationId: obtenerDeuda
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  deuda:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeudaCliente'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Deuda
+
+  /api/data/oferta:
+    post:
+      summary: Crea una nueva oferta
+      description: Registra una oferta para un cliente por RUT
+      x-eov-operation-handler: ofertas
+      operationId: crearOferta
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Oferta"
+      responses:
+        "201":
+          description: Oferta creada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: oferta guardado correctamente
+        "400":
+          description: Error en los datos enviados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Oferta
+
+  /api/data/ofertaRut:
+    get:
+      description: Obtiene las deudas asociadas a un RUT
+      x-eov-operation-handler: ofertas
+      operationId: obtenerOfertaRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: true
+          description: RUT del cliente para buscar oferta
+      responses:
+        "200":
+          description: Oferta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Oferta"
+        "404":
+          description: Oferta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Oferta
+
+  /api/data/ofertasClientes:
+    get:
+      description: Obtiene todas las deudas de todos los clientes
+      x-eov-operation-handler: ofertas
+      operationId: obtenerOfertas
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  deuda:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Oferta'
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorGenerico'
+      tags:
+        - Oferta
+
+  /api/data/persona:
+    post:
+      summary: Crea una persona
+      description: Registra una nueva persona con su información básica
+      x-eov-operation-handler: persona
+      operationId: crearPersona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Persona"
+      responses:
+        "201":
+          description: Persona creada correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: Datos persona guardados correctamente
+        "400":
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error al crear persona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Persona
+
+
+  /api/data/personRut:
+    get:
+      description: Obtiene las deudas asociadas a un RUT
+      x-eov-operation-handler: persona
+      operationId: obtenerPersonaRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: true
+          description: RUT del cliente para buscar oferta
+      responses:
+        "200":
+          description: Oferta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "404":
+          description: Oferta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Persona
+
+  /api/data/listaPersonas:
+    get:
+      description: Obtiene las deudas asociadas a un RUT
+      x-eov-operation-handler: persona
+      operationId: obtenerPersona
+      responses:
+        "200":
+          description: Oferta encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+        "404":
+          description: Oferta no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Persona
+
+  /api/data/tablaRangos:
+    get:
+      summary: Obtiene los rangos que se validan
+      description: Retorna todos los rangos configurados en la base de datos
+      x-eov-operation-handler: tabla-rangos
+      operationId: obtenerTablaRangos
+      responses:
+        "200":
+          description: Tabla rangos obtenida
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TablaRango"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - TablaRangos
+
+  /api/data/nuevaTablaRangos:
+    post:
+        summary: Crea una configuración de tabla de rangos
+        description: Permite crear un nuevo registro de rangos
+        x-eov-operation-handler: tabla-rangos
+        operationId: crearTablaRangos
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TablaRango"
+        responses:
+          "201":
+            description: Rangos creados correctamente
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    ok:
+                      type: boolean
+                      example: true
+                    msg:
+                      type: string
+                      example: Tabla rangos guardados correctamente
+          "500":
+            description: Error al crear rangos
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/ErrorGenerico"
+        tags:
+          - TablaRangos
+
+  /api/data/score:
+    post:
+      summary: Crea o actualiza el score de un cliente
+      description: Guarda o actualiza un registro de score por RUT
+      x-eov-operation-handler: score
+      operationId: crearScore
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Score"
+      responses:
+        "201":
+          description: Score creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: Datos de score guardados correctamente
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Score
+
+  /api/data/listaScoreRut:
+    get:
+      description: Obtienes el score de un cliente
+      x-eov-operation-handler: score
+      operationId: obtenerScoreRut
+      parameters:
+        - in: query
+          name: rut
+          schema:
+            type: string
+          required: true
+          description: RUT del cliente para buscar score
+      responses:
+        "200":
+          description: Score encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Score"
+        "404":
+          description: Cliente no cuenta con Score
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Score
+
+  /api/data/listaScore:
+    get:
+      description: Obtiene el score de los clientes
+      x-eov-operation-handler: score
+      operationId: obtenerScore
+      responses:
+        "200":
+          description: Score encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Score"
+        "404":
+          description: Score no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Score
+
+  /api/data/tipos:
+    get:
+      description: Obtiene el tipo de el cliente
+      x-eov-operation-handler: tipo
+      operationId: obtenerTipo
+      responses:
+        "200":
+          description: Tipo encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tipo"
+        "404":
+          description: Tipo no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Tipo
+
+  /api/data/guardar-tipos:
+    post:
+      summary: Crear un nuevo tipo de cliente
+      description: Crea y guarda un nuevo registro de tipo asociado a un cliente.
+      x-eov-operation-handler: tipo
+      operationId: crearTipo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Tipo"
+      responses:
+        "201":
+          description: Tipo creado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  msg:
+                    type: string
+                    example: Datos de tipo persona guardados correctamente
+        "400":
+          description: Error en los datos enviados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Tipo
+
+  /api/data/tipos/{rut}:
+    get:
+      summary: Obtener tipo de persona por RUT
+      description: Devuelve el registro de tipo asociado a un cliente específico según su RUT.
+      x-eov-operation-handler: tipo
+      operationId: obtenerTipoRut
+      parameters:
+        - name: rut
+          in: path
+          required: true
+          description: RUT del cliente (sin puntos ni guion)
+          schema:
+            type: string
+            example: "987654321"
+      responses:
+        "200":
+          description: Tipo encontrado correctamente
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: "#/components/schemas/Tipo"
+        "404":
+          description: Tipo no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+        "500":
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorGenerico"
+      tags:
+        - Tipo
+
+components:
+  schemas:
+    Cliente:
+      type: object
+      required:
+        - rut
+        - datos
+      properties:
+        rut:
+          type: string
+          example: "12345678-9"
+        datos:
+          type: array
+          items:
+            type: object
+            required:
+              - nombreCompleto
+              - cupoClp
+              - cupoUsd
+              - tipoTarjeta
+            properties:
+              nombreCompleto:
+                type: string
+                example: "Juan Pérez"
+              cupoClp:
+                type: string
+                example: "500000"
+              cupoUsd:
+                type: string
+                example: "600"
+              tipoTarjeta:
+                type: string
+                example: "Visa Gold"
+
+    DatoCliente:
+      type: object
+      properties:
+        nombreCompleto:
+          type: string
+          example: "Juan Pérez"
+        Cupo:
+          type: string
+          example: "500000"
+        tipoTarjeta:
+          type: string
+          example: "Visa Gold"
+
+    RespuestaCreacion:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          example: true
+        msg:
+          type: string
+          example: Cliente creado correctamente
+    listaClientes:
+      type: array
+      items:
+        $ref: "#/components/schemas/Cliente"
+
+    Cotizacion:
+      type: object
+      properties:
+        mes:
+          type: string
+          example: "012024"
+        remuneracionImponible:
+          type: string
+          example: "1000000"
+        afp:
+          type: string
+          example: "HABITAD"
+    CotizacionCliente:
+      type: object
+      properties:
+        rut:
+          type: string
+          example: "123456789"
+        cotizaciones:
+          type: array
+          items:
+            $ref: "#/components/schemas/Cotizacion"
+
+    CotizacionClienteInput:
+      type: object
+      required:
+        - rut
+        - cotizaciones
+      properties:
+        rut:
+          type: string
+          example: "123456789"
+        cotizaciones:
+          type: array
+          items:
+            type: object
+            required:
+              - mes
+              - remuneracionImponible
+              - afp
+            properties:
+              mes:
+                type: string
+                example: "012024"
+              remuneracionImponible:
+                type: string
+                example: "1000000"
+              afp:
+                type: string
+                example: "HABITAD"
+
+    Deuda:
+      type: object
+      required:
+        - nombreInstitucion
+        - monto
+        - fecha
+      properties:
+        nombreInstitucion:
+          type: string
+          example: "Banco Estado"
+        monto:
+          type: string
+          example: "1000000"
+        fecha:
+          type: string
+          format: date
+          example: "2024-05-01"
+
+    DeudaCliente:
+      type: object
+      required:
+        - rut
+        - deuda
+      properties:
+        rut:
+          type: string
+          example: "123456789"
+        deuda:
+          type: array
+          items:
+            $ref: "#/components/schemas/Deuda"
+
+    Oferta:
+      type: object
+      required:
+        - rut
+        - montoClp
+        - montoUsd
+      properties:
+        rut:
+          type: string
+          example: "123456789"
+        montoClp:
+          type: number
+          example: 1500000
+        montoUsd:
+          type: number
+          example: 1800
+
+    Persona:
+      type: object
+      required:
+        - rut
+        - nombreCompleto
+        - apellidoPaterno
+        - apellidoMaterno
+        - nombres
+      properties:
+        rut:
+          type: string
+          example: "123456789"
+        nombreCompleto:
+          type: string
+          example: "Juan Carlos Pérez Soto"
+        apellidoPaterno:
+          type: string
+          example: "Pérez"
+        apellidoMaterno:
+          type: string
+          example: "Soto"
+        nombres:
+          type: string
+          example: "Juan Carlos"
+
+    TablaRango:
+      type: object
+      required:
+        - maximoDeuda
+        - politico
+        - delincuente
+        - scoreMaximo
+      properties:
+        maximoDeuda:
+          type: number
+          example: 5000000
+        politico:
+          type: string
+          example: "NO"
+        delincuente:
+          type: string
+          example: "NO"
+        scoreMaximo:
+          type: number
+          example: 850
+
+    Score:
+        type: object
+        required:
+          - rut
+          - score
+        properties:
+          rut:
+            type: string
+            example: "123456789"
+          score:
+            type: number
+            example: 720
+
+    Tipo:
+      type: object
+      required:
+        - rut
+        - politico
+        - delincuente
+      properties:
+        rut:
+          type: string
+          example: "987654321"
+        politico:
+          type: string
+          example: "NO"
+        delincuente:
+          type: string
+          example: "NO"
+
+
+    ErrorGenerico:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Ocurrió un error inesperado
+        code:
+          type: integer
+          example: 500
+

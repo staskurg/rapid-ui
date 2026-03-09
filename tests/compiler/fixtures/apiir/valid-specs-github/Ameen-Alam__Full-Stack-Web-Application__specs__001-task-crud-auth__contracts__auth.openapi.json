@@ -1,0 +1,147 @@
+{
+  "api": {
+    "title": "Task Manager - Authentication API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "minLength": 5,
+                "maxLength": 255,
+                "description": "User's email address",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 255,
+                "description": "User's password",
+                "example": "securepassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "access_token",
+              "token_type",
+              "user"
+            ],
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "JWT token for authenticated requests (7-day expiration)",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJleHAiOjE3MzQwMDAwMDB9.abc123def456"
+              },
+              "token_type": {
+                "type": "string",
+                "enum": [
+                  "bearer"
+                ],
+                "description": "Token type (always \"bearer\")",
+                "example": "bearer"
+              },
+              "user": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "email"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique user identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "minLength": 5,
+                "maxLength": 255,
+                "description": "User's email address (unique identifier)",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 255,
+                "description": "User's password (minimum 8 characters)",
+                "example": "securepassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "email",
+              "message"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique user identifier",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Registered email address",
+                "example": "user@example.com"
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "Account created successfully. Please log in."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

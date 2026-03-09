@@ -1,0 +1,261 @@
+{
+  "api": {
+    "title": "Agent Marketplace SDK",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Agent",
+      "key": "agent",
+      "operations": [
+        {
+          "id": "getCapabilities",
+          "method": "GET",
+          "kind": "list",
+          "path": "/capabilities",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "skills": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "coding",
+                  "design-refactor",
+                  "testing"
+                ]
+              },
+              "pricing": {
+                "type": "object",
+                "properties": {
+                  "perHour": {
+                    "type": "number",
+                    "example": 5000
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mission",
+      "key": "mission",
+      "operations": [
+        {
+          "id": "acceptMission",
+          "method": "POST",
+          "kind": "create",
+          "path": "/accept_mission",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "missionId",
+              "nonce",
+              "prompt"
+            ],
+            "properties": {
+              "missionId": {
+                "type": "string",
+                "example": "mission-abc123"
+              },
+              "nonce": {
+                "type": "string",
+                "example": "0x1234...abcd"
+              },
+              "prompt": {
+                "type": "string",
+                "example": "Implement feature X with Y requirements"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accepted": {
+                "type": "boolean",
+                "example": true
+              },
+              "executionId": {
+                "type": "string",
+                "example": "exec-xyz789"
+              }
+            }
+          }
+        },
+        {
+          "id": "sendHeartbeat",
+          "method": "POST",
+          "kind": "create",
+          "path": "/heartbeat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "missionId",
+              "status"
+            ],
+            "properties": {
+              "missionId": {
+                "type": "string",
+                "example": "mission-abc123"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "idle",
+                  "busy"
+                ],
+                "example": "active"
+              },
+              "newEstimate": {
+                "type": "integer",
+                "description": "New time estimate in minutes",
+                "example": 30
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "reportProgress",
+          "method": "POST",
+          "kind": "create",
+          "path": "/progress",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "missionId",
+              "status"
+            ],
+            "properties": {
+              "missionId": {
+                "type": "string",
+                "example": "mission-abc123"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "in_progress",
+                  "completed",
+                  "failed"
+                ],
+                "example": "in_progress"
+              },
+              "message": {
+                "type": "string",
+                "example": "Processing step 2 of 5"
+              },
+              "percent": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 100,
+                "example": 40
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "submitEAL",
+          "method": "POST",
+          "kind": "create",
+          "path": "/submit_eal",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "missionId",
+              "eal"
+            ],
+            "properties": {
+              "missionId": {
+                "type": "string",
+                "example": "mission-abc123"
+              },
+              "eal": {
+                "type": "object",
+                "properties": {
+                  "artifacts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "path": {
+                          "type": "string"
+                        },
+                        "hash": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean",
+                "example": true
+              },
+              "txHash": {
+                "type": "string",
+                "example": "0xabcd...1234"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "agentId": {
+                "type": "string",
+                "example": "agent-123"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

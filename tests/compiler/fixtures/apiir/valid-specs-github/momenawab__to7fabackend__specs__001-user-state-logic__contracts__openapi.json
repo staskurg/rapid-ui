@@ -1,0 +1,229 @@
+{
+  "api": {
+    "title": "To7fa User State & Authorization API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login/",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Optional guest session for cart merge"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "phone_number": {
+                    "type": "string"
+                  },
+                  "is_mobile_verified": {
+                    "type": "boolean"
+                  },
+                  "is_locked": {
+                    "type": "boolean"
+                  },
+                  "is_blocked": {
+                    "type": "boolean"
+                  },
+                  "blocked_capabilities": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "SELL",
+                        "WITHDRAW",
+                        "CREATE_PRODUCT",
+                        "MANAGE_ORDERS"
+                      ]
+                    }
+                  },
+                  "user_type": {
+                    "type": "string",
+                    "enum": [
+                      "customer",
+                      "artist",
+                      "store"
+                    ]
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "sendOtp",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/send-otp/",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "mobile_number"
+            ],
+            "properties": {
+              "mobile_number": {
+                "type": "string",
+                "description": "Mobile number to verify",
+                "example": "+201234567890"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "OTP sent successfully"
+                  },
+                  "expires_in": {
+                    "type": "integer",
+                    "description": "Seconds until OTP expires",
+                    "example": 300
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "verifyOtp",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/verify-otp/",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "otp_code"
+            ],
+            "properties": {
+              "otp_code": {
+                "type": "string",
+                "description": "6-digit OTP code",
+                "pattern": "^\\d{6}$",
+                "example": "123456"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "Mobile verified successfully"
+                  },
+                  "is_mobile_verified": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "key": "cart",
+      "operations": [
+        {
+          "id": "mergeCart",
+          "method": "POST",
+          "kind": "create",
+          "path": "/cart/merge/",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "session_id"
+            ],
+            "properties": {
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Guest session ID",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "message": {
+                    "type": "string",
+                    "example": "Cart merged successfully"
+                  },
+                  "items_added": {
+                    "type": "integer",
+                    "description": "Number of new items added",
+                    "example": 3
+                  },
+                  "items_skipped": {
+                    "type": "integer",
+                    "description": "Duplicates that were skipped",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

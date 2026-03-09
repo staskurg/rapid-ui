@@ -1,0 +1,303 @@
+openapi: 3.0.0
+info:
+  title: XYK token swap API
+  description: REST API spec for XYK token swap
+  contact:
+    email: vanderka.marian@gmail.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+- url: http://localhost:3000
+  description: localhost
+- url: https://virtserver.swaggerhub.com/vanderian/pyxyk/1.0.0
+  description: SwaggerHub API Auto Mocking
+tags:
+- name: write
+  description: write calls which alter the liquidity pools
+- name: read
+  description: read only calls
+paths:
+  /liquidity/add:
+    post:
+      tags:
+      - write
+      summary: adds liquidity pools for swap pair
+      description: |
+        Deposit to liquidity native/token pools for existing or new token pair
+      operationId: addLiquidity
+      requestBody:
+        description: Liquidity pool to add/update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LiquidityPool'
+      responses:
+        "200":
+          description: updated liquidity pool amounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiquidityPool'
+        "400":
+          description: bad input parameter
+  /liquidity/drain:
+    post:
+      tags:
+      - write
+      summary: drain liquidity from swap pair pools
+      description: Drain liqudity native/token pools for for existing token pair
+      operationId: drainLiquidity
+      requestBody:
+        description: Liquidity pool to drain
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LiquidityPool'
+      responses:
+        "200":
+          description: updated liquidity pool amounts
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LiquidityPool'
+        "400":
+          description: bad input parameter
+        "404":
+          description: symbol's pool pair not found
+  /liquidity/pools:
+    get:
+      tags:
+      - read
+      summary: get swap pairs
+      description: Get existing swap pairs with pools
+      operationId: getLiquidity
+      responses:
+        "200":
+          description: liquidity pools
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LiquidityPool'
+  /swap:
+    get:
+      tags:
+      - read
+      summary: get swap rate
+      description: Get token swap rate defined by in & out symbols and input amount
+      operationId: getSwapRate
+      parameters:
+      - name: tokenIn
+        in: query
+        description: symbol to convert from
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: XYK
+      - name: tokenOut
+        in: query
+        description: symbol to convert to
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: USD
+      - name: amount
+        in: query
+        description: amount to convert
+        required: true
+        style: form
+        explode: true
+        schema:
+          type: number
+          example: 10
+      responses:
+        "200":
+          description: token rate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenSwap'
+        "400":
+          description: invalid input amount
+        "401":
+          description: symbol not found
+    post:
+      tags:
+      - write
+      summary: swap tokens and update pools
+      description: Swap tokens defined by in & out symbols and input amount
+      operationId: swapTokens
+      requestBody:
+        description: tokens to swap with amount
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwapInput'
+      responses:
+        "200":
+          description: token swap
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenSwap'
+        "400":
+          description: invalid input amount
+        "401":
+          description: symbol not found
+  /swaps:
+    get:
+      tags:
+      - read
+      summary: get token swaps
+      description: Get existing token swaps
+      operationId: getTokenSwaps
+      parameters:
+      - name: tokenIn
+        in: query
+        description: query swaps with convert from symbol
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: XYK
+      - name: tokenOut
+        in: query
+        description: query swaps with converted to symbol
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: USD
+      - name: dateFrom
+        in: query
+        description: filter from date
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          format: date-time
+          example: 2020-02-27T09:12:33.001Z
+      - name: dateTo
+        in: query
+        description: filter to date
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: 2020-02-27T09:12:33.001Z
+      - name: limit
+        in: query
+        description: limit of items to retrieve per page
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: number
+          example: 100
+      - name: nextPageId
+        in: query
+        description: id specifing the next page, should be retrieved from response
+          from previous api call
+        required: false
+        style: form
+        explode: true
+        schema:
+          type: string
+          example: c808226c-7af3-4461-bf1c-54d044f607d8
+      responses:
+        "200":
+          description: token swaps
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenSwaps'
+components:
+  schemas:
+    LiquidityPool:
+      required:
+      - poolNative
+      - poolToken
+      - tokenSymbol
+      type: object
+      properties:
+        tokenSymbol:
+          type: string
+          example: USD
+        poolNative:
+          minimum: 0
+          type: number
+          format: float
+          example: 100
+        poolToken:
+          minimum: 0
+          type: number
+          format: float
+          example: 200
+    SwapInput:
+      required:
+      - amount
+      - tokenIn
+      - tokenOut
+      type: object
+      properties:
+        tokenIn:
+          type: string
+          example: USD
+        tokenOut:
+          type: string
+          example: XYK
+        amount:
+          minimum: 0
+          type: number
+          format: float
+          example: 10
+    TokenSwap:
+      required:
+      - amountIn
+      - amountOut
+      - createdAt
+      - tokenIn
+      - tokenOut
+      type: object
+      properties:
+        tokenIn:
+          type: string
+          example: USD
+        tokenOut:
+          type: string
+          example: EUR
+        amountIn:
+          minimum: 0
+          type: number
+          format: float
+          example: 100
+        amountOut:
+          minimum: 0
+          type: number
+          format: float
+          example: 100
+        createdAt:
+          type: string
+          format: date-time
+          example: 2020-02-27T09:12:33.001Z
+    TokenSwaps:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TokenSwap'
+        nextPageId:
+          type: string
+          example: c808226c-7af3-4461-bf1c-54d044f607d8

@@ -1,0 +1,437 @@
+{
+  "api": {
+    "title": "Task Manager API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Resource",
+      "key": "resource",
+      "operations": [
+        {
+          "id": "queryTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "queryParamCount": 6,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "task": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "task_1704067200000_x7k2m"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "Review PR #142"
+                      },
+                      "description": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5,
+                        "example": 4
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "in_progress",
+                          "completed"
+                        ]
+                      },
+                      "dueDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "example": "2024-01-15"
+                      },
+                      "snoozedUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "activeAfter": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "preferredTime": {
+                        "type": "string",
+                        "enum": [
+                          "morning",
+                          "afternoon",
+                          "evening",
+                          "any"
+                        ],
+                        "nullable": true
+                      },
+                      "estimatedMinutes": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 30
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "task_1704067200000_x7k2m"
+                        },
+                        "title": {
+                          "type": "string",
+                          "example": "Review PR #142"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "priority": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 5,
+                          "example": 4
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed"
+                          ]
+                        },
+                        "dueDate": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true,
+                          "example": "2024-01-15"
+                        },
+                        "snoozedUntil": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "activeAfter": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "preferredTime": {
+                          "type": "string",
+                          "enum": [
+                            "morning",
+                            "afternoon",
+                            "evening",
+                            "any"
+                          ],
+                          "nullable": true
+                        },
+                        "estimatedMinutes": {
+                          "type": "integer",
+                          "nullable": true,
+                          "example": 30
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  },
+                  "count": {
+                    "type": "integer"
+                  },
+                  "score": {
+                    "type": "integer"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "mutateTasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 1000
+              },
+              "priority": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              },
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ]
+              },
+              "dueDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "preferredTime": {
+                "type": "string",
+                "enum": [
+                  "morning",
+                  "afternoon",
+                  "evening",
+                  "any"
+                ]
+              },
+              "estimatedMinutes": {
+                "type": "integer",
+                "minimum": 5,
+                "maximum": 480
+              },
+              "until": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "task": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "example": "task_1704067200000_x7k2m"
+                      },
+                      "title": {
+                        "type": "string",
+                        "example": "Review PR #142"
+                      },
+                      "description": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "priority": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5,
+                        "example": 4
+                      },
+                      "status": {
+                        "type": "string",
+                        "enum": [
+                          "pending",
+                          "in_progress",
+                          "completed"
+                        ]
+                      },
+                      "dueDate": {
+                        "type": "string",
+                        "format": "date",
+                        "nullable": true,
+                        "example": "2024-01-15"
+                      },
+                      "snoozedUntil": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "activeAfter": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                      },
+                      "preferredTime": {
+                        "type": "string",
+                        "enum": [
+                          "morning",
+                          "afternoon",
+                          "evening",
+                          "any"
+                        ],
+                        "nullable": true
+                      },
+                      "estimatedMinutes": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 30
+                      },
+                      "createdAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "updatedAt": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "example": "task_1704067200000_x7k2m"
+                        },
+                        "title": {
+                          "type": "string",
+                          "example": "Review PR #142"
+                        },
+                        "description": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "priority": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 5,
+                          "example": 4
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed"
+                          ]
+                        },
+                        "dueDate": {
+                          "type": "string",
+                          "format": "date",
+                          "nullable": true,
+                          "example": "2024-01-15"
+                        },
+                        "snoozedUntil": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "activeAfter": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "preferredTime": {
+                          "type": "string",
+                          "enum": [
+                            "morning",
+                            "afternoon",
+                            "evening",
+                            "any"
+                          ],
+                          "nullable": true
+                        },
+                        "estimatedMinutes": {
+                          "type": "integer",
+                          "nullable": true,
+                          "example": 30
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      }
+                    }
+                  },
+                  "count": {
+                    "type": "integer"
+                  },
+                  "score": {
+                    "type": "integer"
+                  },
+                  "explanation": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

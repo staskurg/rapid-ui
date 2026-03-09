@@ -1,0 +1,232 @@
+openapi: 3.0.3
+info:
+  title: Mytheresa Catalog API
+  version: 1.0.0
+  description: |
+    Simple catalog and categories API. This OpenAPI definition documents all available endpoints.
+servers:
+  - url: http://localhost:{port}
+    description: Local server
+    variables:
+      port:
+        default: "8080"
+paths:
+  /catalog:
+    get:
+      summary: List products
+      description: Returns a paginated list of products with optional filters.
+      parameters:
+        - in: query
+          name: offset
+          schema:
+            type: integer
+            minimum: 0
+          description: Number of items to skip before starting to collect the result set. Defaults to 0.
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+          description: Maximum number of items to return. Defaults to 10.
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Category code to filter by.
+        - in: query
+          name: price_lt
+          schema:
+            type: number
+            format: float
+            exclusiveMaximum: true
+          description: Return products with price strictly less than this value.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CatalogResponse'
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /catalog/{code}:
+    get:
+      summary: Get product details
+      description: Returns a single product by its code, including its category and variants. Variants without a specific price inherit the product price; the returned variant price is always numeric.
+      parameters:
+        - in: path
+          name: code
+          required: true
+          schema:
+            type: string
+          description: Product code
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                example:
+                  summary: Product with variants (one inherits the product price)
+                  value:
+                    code: PROD001
+                    price: 100
+                    category:
+                      code: clothing
+                      name: Clothing
+                    variants:
+                      - name: Red
+                        sku: SKU1
+                        price: 19.99
+                      - name: Blue
+                        sku: SKU2
+                        price: 100
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+  /categories:
+    get:
+      summary: List categories
+      responses:
+        '200':
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CategoryItem'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+    post:
+      summary: Create a category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryItem'
+      responses:
+        '201':
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryItem'
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '409':
+          description: Conflict (e.g. duplicate code)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppError'
+components:
+  schemas:
+    Category:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+      required: [code, name]
+    Variant:
+      type: object
+      properties:
+        name:
+          type: string
+        sku:
+          type: string
+        price:
+          type: number
+          format: float
+      required: [name, sku, price]
+      description: A specific product option. If a variant has no specific price in the DB, the product price applies; responses always return a numeric price.
+    Product:
+      type: object
+      properties:
+        code:
+          type: string
+        price:
+          type: number
+          format: float
+        category:
+          $ref: '#/components/schemas/Category'
+        variants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Variant'
+          description: Optional list of variants. Empty or omitted when product has no variants.
+      required: [code, price, category]
+    CatalogResponse:
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+      required: [total, products]
+    CategoryItem:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+      required: [code, name]
+    AppError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        code:
+          type: string
+          description: Stable error code (invalid, not_found, conflict, internal)
+      required: [error, code]

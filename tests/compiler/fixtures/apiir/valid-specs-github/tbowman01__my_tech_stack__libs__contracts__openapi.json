@@ -1,0 +1,321 @@
+{
+  "api": {
+    "title": "Enterprise AI Platform API",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "AI",
+      "key": "ai",
+      "operations": [
+        {
+          "id": "generateEmbedding",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ai/embed",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000
+              },
+              "model": {
+                "type": "string",
+                "default": "default"
+              }
+            },
+            "required": [
+              "text"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "embedding": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              },
+              "model": {
+                "type": "string"
+              },
+              "dimension": {
+                "type": "integer"
+              },
+              "request_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "embedding",
+              "model",
+              "dimension",
+              "request_id"
+            ]
+          }
+        },
+        {
+          "id": "generateInference",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ai/infer",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "prompt": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000
+              },
+              "model": {
+                "type": "string",
+                "default": "default"
+              },
+              "max_tokens": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2048,
+                "default": 100
+              },
+              "temperature": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 2,
+                "default": 0.7
+              }
+            },
+            "required": [
+              "prompt"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "response": {
+                "type": "string"
+              },
+              "model": {
+                "type": "string"
+              },
+              "tokens_used": {
+                "type": "integer"
+              },
+              "inference_time_ms": {
+                "type": "number"
+              },
+              "request_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "response",
+              "model",
+              "tokens_used",
+              "inference_time_ms",
+              "request_id"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/healthz",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "ready"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "service": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "timestamp",
+              "service",
+              "version"
+            ]
+          }
+        },
+        {
+          "id": "readinessCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/readyz",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ok",
+                  "ready"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "service": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "timestamp",
+              "service",
+              "version"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "listUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 100
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "maxLength": 255
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "created_at"
+                  ]
+                }
+              },
+              "total": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "offset": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "users",
+              "total",
+              "limit",
+              "offset"
+            ]
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255
+              }
+            },
+            "required": [
+              "name",
+              "email"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "email",
+              "created_at"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

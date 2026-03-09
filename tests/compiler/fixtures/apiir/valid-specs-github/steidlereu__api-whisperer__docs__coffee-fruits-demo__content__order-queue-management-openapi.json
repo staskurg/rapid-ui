@@ -1,0 +1,262 @@
+{
+  "api": {
+    "title": "Order Queue Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/api/orders/queue",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/orders/queue",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "orderId": {
+                  "type": "string",
+                  "example": "12341"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "in_progress",
+                    "completed"
+                  ],
+                  "example": "in_progress"
+                },
+                "priority": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "normal",
+                    "high"
+                  ],
+                  "example": "high"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/orders/{orderId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "example": "12345"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "itemId": {
+                      "type": "string",
+                      "example": "coffee_001"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "example": 2
+                    }
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "example": "in_progress"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "normal",
+                  "high"
+                ],
+                "example": "high"
+              },
+              "customerName": {
+                "type": "string",
+                "example": "John Doe"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-04-10T10:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "example": "12345"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "itemId": {
+                      "type": "string",
+                      "example": "coffee_001"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "example": 2
+                    }
+                  }
+                }
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "normal",
+                  "high"
+                ],
+                "example": "normal"
+              },
+              "customerName": {
+                "type": "string",
+                "example": "John Doe"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Order added to queue"
+              },
+              "queuePosition": {
+                "type": "integer",
+                "example": 5
+              }
+            }
+          }
+        },
+        {
+          "id": "PATCH:/api/orders/{orderId}/priority",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/orders/{orderId}/priority",
+          "identifierParam": "orderId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "normal",
+                  "high"
+                ],
+                "example": "high"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Order priority updated"
+              },
+              "orderId": {
+                "type": "string",
+                "example": "12345"
+              },
+              "newPriority": {
+                "type": "string",
+                "example": "high"
+              }
+            }
+          }
+        },
+        {
+          "id": "PATCH:/api/orders/{orderId}/status",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/orders/{orderId}/status",
+          "identifierParam": "orderId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "example": "in_progress"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Order status updated"
+              },
+              "orderId": {
+                "type": "string",
+                "example": "12345"
+              },
+              "newStatus": {
+                "type": "string",
+                "example": "in_progress"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/orders/{orderId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Order removed from queue"
+              },
+              "orderId": {
+                "type": "string",
+                "example": "12345"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

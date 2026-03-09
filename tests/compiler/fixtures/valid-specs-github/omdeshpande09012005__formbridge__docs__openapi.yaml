@@ -1,0 +1,363 @@
+openapi: 3.0.3
+info:
+  title: FormBridge API
+  description: |-
+    FormBridge is a serverless form submission service with built-in analytics.
+    
+    **Security:** 
+    - In PRODUCTION: `X-Api-Key` header is **required** for all endpoints
+    - In DEVELOPMENT: `X-Api-Key` header is optional
+    
+    **API Architecture:**
+    - Built on AWS Lambda + API Gateway
+    - Uses DynamoDB for persistent storage
+    - CloudWatch for analytics aggregation
+  version: 1.0.0
+  contact:
+    name: FormBridge Support
+    url: https://github.com/omdeshpande09012005/formbridge
+  license:
+    name: MIT
+    url: https://github.com/omdeshpande09012005/formbridge/blob/main/LICENSE
+
+servers:
+  - url: http://127.0.0.1:3000
+    description: Local Development (SAM emulator)
+    variables:
+      stage:
+        default: dev
+  - url: https://{apiId}.execute-api.{region}.amazonaws.com/{stage}
+    description: AWS API Gateway (Production)
+    variables:
+      apiId:
+        default: 12mse3zde5
+        description: API Gateway ID
+      region:
+        default: ap-south-1
+        description: AWS Region
+      stage:
+        default: Prod
+        description: API Gateway stage (Prod or Dev)
+
+tags:
+  - name: Forms
+    description: Form submission endpoints
+  - name: Analytics
+    description: Analytics and metrics endpoints
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+      description: |-
+        API Key for authentication.
+        - DEVELOPMENT: Optional (can be empty)
+        - PRODUCTION: Required
+
+  schemas:
+    SubmitRequest:
+      type: object
+      required:
+        - message
+      properties:
+        form_id:
+          type: string
+          description: Identifier for the form (defaults to "default" if omitted)
+          default: default
+          example: my-portfolio
+        name:
+          type: string
+          description: Name of the form submitter
+          example: John Doe
+        email:
+          type: string
+          format: email
+          description: Email address of the submitter
+          example: john@example.com
+        message:
+          type: string
+          description: Main message content (required)
+          example: I would like to discuss a project opportunity.
+        page:
+          type: string
+          format: uri
+          description: URL of the page where the form was submitted
+          example: https://omdeshpande09012005.github.io/
+
+    SubmitResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the submitted form
+          example: my-portfolio#1731800000000
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+          example: Validation error
+
+    AnalyticsRequest:
+      type: object
+      required:
+        - form_id
+      properties:
+        form_id:
+          type: string
+          description: Filter analytics by this form identifier
+          example: my-portfolio
+
+    DailyMetric:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date in YYYY-MM-DD format
+          example: "2025-11-05"
+        count:
+          type: integer
+          description: Number of submissions on this date
+          example: 5
+
+    AnalyticsResponse:
+      type: object
+      required:
+        - form_id
+        - total_submissions
+        - last_7_days
+      properties:
+        form_id:
+          type: string
+          description: The form ID these analytics are for
+          example: my-portfolio
+        total_submissions:
+          type: integer
+          description: Total number of submissions for this form
+          example: 42
+        last_7_days:
+          type: array
+          description: Daily submission counts for the past 7 days
+          items:
+            $ref: '#/components/schemas/DailyMetric'
+        latest_id:
+          type: string
+          description: ID of the most recent submission
+          example: my-portfolio#1731800000000
+        last_submission_ts:
+          type: integer
+          description: Unix timestamp (milliseconds) of the most recent submission
+          example: 1731800000000
+
+paths:
+  /submit:
+    post:
+      operationId: submitForm
+      summary: Submit a form
+      description: |-
+        Submit a new form entry. This endpoint:
+        - Validates input fields
+        - Stores the submission in DynamoDB
+        - Increments daily submission counters
+        - Returns a unique submission ID
+      tags:
+        - Forms
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitRequest'
+            examples:
+              valid:
+                summary: Valid submission (minimal)
+                value:
+                  form_id: my-portfolio
+                  name: Alice Smith
+                  email: alice@example.com
+                  message: Great work on your portfolio!
+              with_page:
+                summary: Valid submission with page URL
+                value:
+                  form_id: my-portfolio
+                  name: Bob Johnson
+                  email: bob@company.com
+                  message: I'd like to hire you for a project.
+                  page: https://omdeshpande09012005.github.io/#contact
+              minimal:
+                summary: Minimal submission (message only)
+                value:
+                  message: Just sending a quick message!
+
+      responses:
+        '200':
+          description: Form submitted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitResponse'
+              examples:
+                success:
+                  summary: Successful submission
+                  value:
+                    id: my-portfolio#1731800000000
+
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_message:
+                  summary: Missing required field
+                  value:
+                    error: "Missing required field: message"
+                invalid_email:
+                  summary: Invalid email format
+                  value:
+                    error: "Invalid email format in 'email' field"
+                invalid_uri:
+                  summary: Invalid page URL
+                  value:
+                    error: "Invalid URI format in 'page' field"
+
+        '401':
+          description: Missing or invalid API key (production only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_key:
+                  summary: Missing API key
+                  value:
+                    error: "Unauthorized: X-Api-Key header required"
+
+        '403':
+          description: API key validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_key:
+                  summary: Invalid API key
+                  value:
+                    error: "Forbidden: Invalid API key"
+
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                server_error:
+                  summary: Internal server error
+                  value:
+                    error: "Internal server error: DynamoDB write failed"
+
+  /analytics:
+    post:
+      operationId: getAnalytics
+      summary: Get form analytics
+      description: |-
+        Retrieve analytics for a specific form. Returns:
+        - Total submission count
+        - Daily breakdown for last 7 days
+        - Latest submission ID and timestamp
+      tags:
+        - Analytics
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyticsRequest'
+            examples:
+              basic:
+                summary: Get analytics for my-portfolio
+                value:
+                  form_id: my-portfolio
+
+      responses:
+        '200':
+          description: Analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+              examples:
+                success:
+                  summary: Successful analytics response
+                  value:
+                    form_id: my-portfolio
+                    total_submissions: 42
+                    last_7_days:
+                      - date: "2025-10-30"
+                        count: 3
+                      - date: "2025-10-31"
+                        count: 5
+                      - date: "2025-11-01"
+                        count: 2
+                      - date: "2025-11-02"
+                        count: 7
+                      - date: "2025-11-03"
+                        count: 4
+                      - date: "2025-11-04"
+                        count: 8
+                      - date: "2025-11-05"
+                        count: 13
+                    latest_id: my-portfolio#1731800000000
+                    last_submission_ts: 1731800000000
+
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missing_form_id:
+                  summary: Missing form_id
+                  value:
+                    error: "Missing required field: form_id"
+                form_not_found:
+                  summary: Form ID not found
+                  value:
+                    error: "Form not found: unknown-form"
+
+        '401':
+          description: Missing or invalid API key (production only)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '403':
+          description: API key validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'

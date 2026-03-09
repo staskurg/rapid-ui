@@ -1,0 +1,313 @@
+openapi: 3.0.3
+info:
+  title: Flights API
+  description: A simple CRUD API for managing flights, built with Nuxt server routes.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+  - url: https://your-app.com/api
+    description: Production server
+
+tags:
+  - name: Flights
+    description: Operations related to flight management
+
+paths:
+  /flights:
+    get:
+      tags:
+        - Flights
+      summary: List all flights
+      description: Returns a list of all available flights.
+      operationId: getFlights
+      responses:
+        '200':
+          description: A list of flights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Flight'
+                  total:
+                    type: integer
+                    example: 2
+              example:
+                data:
+                  - id: "1"
+                    flightNumber: AA101
+                    origin: JFK
+                    destination: LAX
+                    departureTime: "2026-03-10T08:00:00Z"
+                    arrivalTime: "2026-03-10T11:30:00Z"
+                    airline: American Airlines
+                    status: scheduled
+                    price: 299.99
+                    seats: 150
+                total: 1
+
+    post:
+      tags:
+        - Flights
+      summary: Create a new flight
+      description: Adds a new flight to the system.
+      operationId: createFlight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightInput'
+            example:
+              flightNumber: BA300
+              origin: LHR
+              destination: CDG
+              departureTime: "2026-04-01T09:00:00Z"
+              arrivalTime: "2026-04-01T11:15:00Z"
+              airline: British Airways
+              status: scheduled
+              price: 149.99
+              seats: 200
+      responses:
+        '201':
+          description: Flight created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flight'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /flights/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique ID of the flight
+        schema:
+          type: string
+        example: "1"
+
+    get:
+      tags:
+        - Flights
+      summary: Get a flight by ID
+      description: Returns a single flight by its ID.
+      operationId: getFlightById
+      responses:
+        '200':
+          description: Flight found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flight'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags:
+        - Flights
+      summary: Update a flight
+      description: Updates an existing flight's details. Only provided fields will be updated.
+      operationId: updateFlight
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightInput'
+            example:
+              status: boarding
+              price: 259.99
+      responses:
+        '200':
+          description: Flight updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flight'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      tags:
+        - Flights
+      summary: Delete a flight
+      description: Permanently removes a flight from the system.
+      operationId: deleteFlight
+      responses:
+        '200':
+          description: Flight deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/Flight'
+                  message:
+                    type: string
+                    example: Flight deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    Flight:
+      type: object
+      required:
+        - id
+        - flightNumber
+        - origin
+        - destination
+        - departureTime
+        - arrivalTime
+        - airline
+        - status
+        - price
+        - seats
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the flight
+          example: "1"
+        flightNumber:
+          type: string
+          description: IATA flight number
+          example: AA101
+        origin:
+          type: string
+          description: IATA code for the origin airport
+          example: JFK
+        destination:
+          type: string
+          description: IATA code for the destination airport
+          example: LAX
+        departureTime:
+          type: string
+          format: date-time
+          description: Scheduled departure time (ISO 8601)
+          example: "2026-03-10T08:00:00Z"
+        arrivalTime:
+          type: string
+          format: date-time
+          description: Scheduled arrival time (ISO 8601)
+          example: "2026-03-10T11:30:00Z"
+        airline:
+          type: string
+          description: Name of the airline operating the flight
+          example: American Airlines
+        status:
+          type: string
+          enum:
+            - scheduled
+            - boarding
+            - departed
+            - arrived
+            - cancelled
+          description: Current status of the flight
+          example: scheduled
+        price:
+          type: number
+          format: float
+          description: Ticket price in USD
+          example: 299.99
+        seats:
+          type: integer
+          description: Total number of seats available
+          example: 150
+
+    FlightInput:
+      type: object
+      required:
+        - flightNumber
+        - origin
+        - destination
+        - departureTime
+        - arrivalTime
+        - airline
+      properties:
+        flightNumber:
+          type: string
+          example: AA101
+        origin:
+          type: string
+          example: JFK
+        destination:
+          type: string
+          example: LAX
+        departureTime:
+          type: string
+          format: date-time
+          example: "2026-03-10T08:00:00Z"
+        arrivalTime:
+          type: string
+          format: date-time
+          example: "2026-03-10T11:30:00Z"
+        airline:
+          type: string
+          example: American Airlines
+        status:
+          type: string
+          enum:
+            - scheduled
+            - boarding
+            - departed
+            - arrived
+            - cancelled
+          default: scheduled
+        price:
+          type: number
+          format: float
+          example: 299.99
+        seats:
+          type: integer
+          example: 150
+
+    Error:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          example: 404
+        message:
+          type: string
+          example: Flight with id "99" not found
+
+  responses:
+    NotFound:
+      description: The specified flight was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 404
+            message: Flight with id "99" not found
+
+    BadRequest:
+      description: Invalid request body or missing required fields
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            statusCode: 400
+            message: "Missing required fields: flightNumber, origin, destination, departureTime, arrivalTime, airline"

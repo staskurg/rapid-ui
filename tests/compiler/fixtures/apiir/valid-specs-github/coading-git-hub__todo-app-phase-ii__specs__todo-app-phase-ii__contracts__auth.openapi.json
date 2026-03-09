@@ -1,0 +1,132 @@
+{
+  "api": {
+    "title": "Phase II Todo App - Authentication API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "signinUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/signin",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "securepassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIiwiZXhwIjoxNjczMDA2NDAwfQ.signature",
+                "description": "JWT token for authentication (valid for 7 days)"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Unique user identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com",
+                    "description": "User's email address"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-01-02T10:30:00Z",
+                    "description": "Account creation timestamp (ISO 8601)"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "signupUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/signup",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255,
+                "example": "user@example.com",
+                "description": "User's email address (unique identifier)"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 255,
+                "example": "securepassword123",
+                "description": "Plain text password (will be hashed)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "User created successfully"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Unique user identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com",
+                    "description": "User's email address"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2026-01-02T10:30:00Z",
+                    "description": "Account creation timestamp (ISO 8601)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

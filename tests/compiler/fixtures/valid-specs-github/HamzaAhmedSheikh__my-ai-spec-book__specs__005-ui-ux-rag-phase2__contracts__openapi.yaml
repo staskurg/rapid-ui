@@ -1,0 +1,313 @@
+openapi: 3.0.3
+info:
+  title: Physical AI Book RAG Chatbot API
+  description: |
+    FastAPI backend for context-grounded Q&A on Physical AI & Humanoid Robotics textbook.
+    Supports both global context (full-book search) and grounded context (selected text priority).
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com
+    description: Production server (Render/Railway)
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: health
+    description: Health check endpoints
+  - name: chat
+    description: Chatbot Q&A endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - health
+      summary: Health Check
+      description: Returns API health status and version information
+      operationId: getHealth
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                version: 1.0.0
+                timestamp: '2025-11-30T12:00:00Z'
+
+  /chat:
+    post:
+      tags:
+        - chat
+      summary: Global Context Chat
+      description: |
+        Ask questions about the book using full-book vector search.
+        Retrieves top-5 relevant chunks and generates answer with chapter citations.
+      operationId: chatGlobal
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              query: 'What are the main components of ROS 2?'
+              conversation_id: '550e8400-e29b-41d4-a716-446655440000'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                answer: 'According to Chapter 7 on ROS 2 Nodes, Topics, and Services, the main components of ROS 2 include nodes (the building blocks of ROS 2 applications), topics (named buses for publish-subscribe messaging), services (synchronous request-response communication), and actions (long-running tasks with feedback). These components work together to enable modular, distributed robot systems.'
+                sources:
+                  - chapter: 'module-1/nodes-topics-services'
+                    title: 'ROS 2 Nodes, Topics, and Services'
+                    relevance_score: 0.92
+                  - chapter: 'module-1/ros2-architecture'
+                    title: 'ROS 2 Architecture Overview'
+                    relevance_score: 0.85
+                conversation_id: '550e8400-e29b-41d4-a716-446655440000'
+                grounded: false
+        '400':
+          description: Invalid request (query too short, empty, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: 'Query must be at least 3 characters long'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: 'OpenAI API error: Rate limit exceeded'
+
+  /chat/grounded:
+    post:
+      tags:
+        - chat
+      summary: Grounded Context Chat (Magna Carta Mode)
+      description: |
+        Ask questions about selected text from the book.
+        Prioritizes grounding in the provided excerpt, refuses to answer if insufficient context.
+      operationId: chatGrounded
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroundedChatRequest'
+            example:
+              query: 'Explain how nodes communicate'
+              selected_text: 'ROS 2 nodes communicate via topics, which are named buses that use a publish-subscribe pattern. Publishers send messages to topics, and subscribers receive them. This decouples node implementations and allows for flexible system architectures.'
+              source_chapter: 'module-1/nodes-topics-services'
+              conversation_id: '550e8400-e29b-41d4-a716-446655440000'
+      responses:
+        '200':
+          description: Successful grounded response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              example:
+                answer: 'Based on the selected text, nodes in ROS 2 communicate via topics using a publish-subscribe pattern. This means that nodes can publish (send) messages to named topics, and other nodes can subscribe (listen) to those topics to receive messages. This architecture decouples the nodes, meaning they don''t need to know about each other directly, which makes the system more flexible and modular.'
+                grounded_in: 'ROS 2 nodes communicate via topics...'
+                conversation_id: '550e8400-e29b-41d4-a716-446655440000'
+                grounded: true
+        '400':
+          description: Invalid request (selected text too short, query empty, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                detail: 'Selected text must be at least 10 characters long'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded]
+          description: API health status
+        version:
+          type: string
+          description: API version (semver)
+          example: '1.0.0'
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server time (ISO 8601)
+
+    ChatRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 3
+          maxLength: 1000
+          description: User's question about the book
+          example: 'What is NVIDIA Isaac Sim?'
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional session identifier for multi-turn conversations
+          example: '550e8400-e29b-41d4-a716-446655440000'
+
+    GroundedChatRequest:
+      type: object
+      required:
+        - query
+        - selected_text
+      properties:
+        query:
+          type: string
+          minLength: 3
+          maxLength: 1000
+          description: User's question about the selected text
+          example: 'Explain this concept'
+        selected_text:
+          type: string
+          minLength: 10
+          maxLength: 10000
+          description: Text highlighted by user from book page
+          example: 'ROS 2 is a middleware framework...'
+        source_chapter:
+          type: string
+          nullable: true
+          description: Chapter slug where text was selected (optional metadata)
+          example: 'module-1/ros2-architecture'
+        conversation_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional session identifier
+          example: '550e8400-e29b-41d4-a716-446655440000'
+
+    ChatResponse:
+      type: object
+      required:
+        - answer
+        - conversation_id
+        - grounded
+      properties:
+        answer:
+          type: string
+          description: LLM-generated response
+          example: 'According to Chapter 21...'
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/SourceCitation'
+          description: Chapter citations (global mode only)
+        grounded_in:
+          type: string
+          nullable: true
+          description: Confirmation of selected text (grounded mode only)
+          example: 'ROS 2 is a middleware framework...'
+        conversation_id:
+          type: string
+          format: uuid
+          description: Session identifier
+          example: '550e8400-e29b-41d4-a716-446655440000'
+        grounded:
+          type: boolean
+          description: Whether response used selected text (true) or full-book search (false)
+          example: false
+
+    SourceCitation:
+      type: object
+      required:
+        - chapter
+        - title
+      properties:
+        chapter:
+          type: string
+          description: Chapter slug (e.g., 'module-1/ros2-architecture')
+          example: 'module-3/isaac-sim-setup'
+        title:
+          type: string
+          description: Human-readable chapter title
+          example: 'Isaac Sim Setup & Basics'
+        relevance_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          nullable: true
+          description: Cosine similarity score (higher = more relevant)
+          example: 0.87
+
+    ErrorResponse:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: 'OpenAI API rate limit exceeded'
+
+    ValidationError:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+                description: Location of the validation error
+              msg:
+                type: string
+                description: Error message
+              type:
+                type: string
+                description: Error type
+          example:
+            - loc: ['body', 'query']
+              msg: 'ensure this value has at least 3 characters'
+              type: 'value_error.any_str.min_length'

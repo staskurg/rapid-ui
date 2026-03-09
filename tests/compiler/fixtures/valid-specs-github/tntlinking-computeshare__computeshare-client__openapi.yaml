@@ -1,0 +1,519 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: ""
+    version: 0.0.1
+paths:
+    /health:
+        get:
+            tags:
+                - AgentRegister
+            operationId: AgentRegister_Heartbeat
+            parameters:
+                - name: peerId
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.system.v1.HeartbeatReply'
+    /v1/compute-power/client/python:
+        post:
+            tags:
+                - ComputePowerClient
+            description: 执行脚本
+            operationId: ComputePowerClient_RunPythonPackage
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.compute.v1.RunPythonPackageClientRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.RunPythonPackageClientReply'
+    /v1/compute-power/client/python/cancel:
+        post:
+            tags:
+                - ComputePowerClient
+            description: 取消执行
+            operationId: ComputePowerClient_CancelExecPythonPackage
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.compute.v1.CancelExecPythonPackageClientRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.CancelExecPythonPackageClientReply'
+    /v1/p2p/close:
+        post:
+            tags:
+                - P2P
+            operationId: P2P_CloseListen
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.network.v1.CloseListenRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.network.v1.CloseListenReply'
+    /v1/p2p/forward:
+        post:
+            tags:
+                - P2P
+            operationId: P2P_CreateForward
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.network.v1.CreateForwardRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.network.v1.CreateForwardReply'
+    /v1/p2p/listen:
+        post:
+            tags:
+                - P2P
+            operationId: P2P_CreateListen
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.network.v1.CreateListenRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.network.v1.CreateListenReply'
+    /v1/p2p/ls:
+        get:
+            tags:
+                - P2P
+            operationId: P2P_ListListen
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.network.v1.ListListenReply'
+    /v1/user:
+        get:
+            tags:
+                - User
+            operationId: User_ListUser
+            parameters:
+                - name: name
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.user.v1.ListUserReply'
+        post:
+            tags:
+                - User
+            operationId: User_CreateUser
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.user.v1.CreateUserRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.user.v1.CreateUserReply'
+    /v1/user/{id}:
+        get:
+            tags:
+                - User
+            operationId: User_GetUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.user.v1.GetUserReply'
+        put:
+            tags:
+                - User
+            operationId: User_UpdateUserPassword
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.user.v1.UpdateUserPasswordRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.user.v1.UpdateUserPasswordReply'
+        delete:
+            tags:
+                - User
+            operationId: User_DeleteUser
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.user.v1.DeleteUserReply'
+    /v1/vm/docker:
+        get:
+            tags:
+                - VmDocker
+            operationId: VmDocker_ListVm
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.ListVmDockerReply'
+        post:
+            tags:
+                - VmDocker
+            operationId: VmDocker_CreateVm
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.compute.v1.CreateVmDockerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.GetVmDockerReply'
+    /v1/vm/docker/{id}:
+        get:
+            tags:
+                - VmDocker
+            operationId: VmDocker_GetVm
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.GetVmDockerReply'
+        delete:
+            tags:
+                - VmDocker
+            operationId: VmDocker_DeleteVm
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.DeleteVmDockerReply'
+    /v1/vm/docker/{id}/start:
+        put:
+            tags:
+                - VmDocker
+            operationId: VmDocker_StartVm
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.compute.v1.GetVmDockerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.GetVmDockerReply'
+    /v1/vm/docker/{id}/stop:
+        put:
+            tags:
+                - VmDocker
+            operationId: VmDocker_StopVm
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/client.compute.v1.GetVmDockerRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/client.compute.v1.GetVmDockerReply'
+components:
+    schemas:
+        client.compute.v1.CancelExecPythonPackageClientReply:
+            type: object
+            properties: {}
+        client.compute.v1.CancelExecPythonPackageClientRequest:
+            type: object
+            properties:
+                pid:
+                    type: integer
+                    format: int32
+        client.compute.v1.CreateVmDockerRequest:
+            type: object
+            properties:
+                image:
+                    type: string
+                port:
+                    type: string
+                command:
+                    type: array
+                    items:
+                        type: string
+                businessId:
+                    type: string
+        client.compute.v1.DeleteVmDockerReply:
+            type: object
+            properties: {}
+        client.compute.v1.GetVmDockerReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                image:
+                    type: string
+                ports:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/client.compute.v1.PortBinding'
+                cpuUsage:
+                    type: string
+                memoryUsage:
+                    type: string
+        client.compute.v1.GetVmDockerRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+        client.compute.v1.ListVmDockerReply:
+            type: object
+            properties:
+                result:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/client.compute.v1.GetVmDockerReply'
+        client.compute.v1.PortBinding:
+            type: object
+            properties:
+                ip:
+                    type: string
+                privatePort:
+                    type: integer
+                    format: uint32
+                publicPort:
+                    type: integer
+                    format: uint32
+                type:
+                    type: string
+        client.compute.v1.RunPythonPackageClientReply:
+            type: object
+            properties:
+                executeResult:
+                    type: string
+        client.compute.v1.RunPythonPackageClientRequest:
+            type: object
+            properties:
+                cid:
+                    type: string
+        client.network.v1.CloseListenReply:
+            type: object
+            properties: {}
+        client.network.v1.CloseListenRequest:
+            type: object
+            properties:
+                protocol:
+                    type: string
+                listenAddress:
+                    type: string
+                targetAddress:
+                    type: string
+        client.network.v1.CreateForwardReply:
+            type: object
+            properties: {}
+        client.network.v1.CreateForwardRequest:
+            type: object
+            properties:
+                portal:
+                    type: string
+                listenAddress:
+                    type: string
+                targetAddress:
+                    type: string
+        client.network.v1.CreateListenReply:
+            type: object
+            properties: {}
+        client.network.v1.CreateListenRequest:
+            type: object
+            properties:
+                protocol:
+                    type: string
+                targetAddress:
+                    type: string
+        client.network.v1.ListListenReply:
+            type: object
+            properties:
+                result:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/client.network.v1.ListenReply'
+        client.network.v1.ListenReply:
+            type: object
+            properties:
+                protocol:
+                    type: string
+                listenAddress:
+                    type: string
+                targetAddress:
+                    type: string
+        client.system.v1.HeartbeatReply:
+            type: object
+            properties:
+                code:
+                    type: integer
+                    format: uint32
+                msg:
+                    type: string
+        client.user.v1.CreateUserReply:
+            type: object
+            properties:
+                id:
+                    type: string
+        client.user.v1.CreateUserRequest:
+            type: object
+            properties:
+                name:
+                    type: string
+                password:
+                    type: string
+        client.user.v1.DeleteUserReply:
+            type: object
+            properties: {}
+        client.user.v1.GetUserReply:
+            type: object
+            properties:
+                id:
+                    type: string
+                name:
+                    type: string
+                createDate:
+                    type: string
+                lastLoginDate:
+                    type: string
+        client.user.v1.ListUserReply:
+            type: object
+            properties:
+                result:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/client.user.v1.GetUserReply'
+        client.user.v1.UpdateUserPasswordReply:
+            type: object
+            properties: {}
+        client.user.v1.UpdateUserPasswordRequest:
+            type: object
+            properties:
+                id:
+                    type: string
+                oldPassword:
+                    type: string
+                newPassword:
+                    type: string
+tags:
+    - name: AgentRegister
+    - name: ComputePowerClient
+    - name: P2P
+    - name: User
+    - name: VmDocker

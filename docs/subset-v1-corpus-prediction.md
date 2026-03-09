@@ -247,7 +247,7 @@ After corpus run, update this doc or create `docs/subset-v1-corpus-report.md` wi
 
 ## Corpus-Valid-v1 Fixtures
 
-Valid specs from the corpus run are extracted and copied to `tests/compiler/fixtures/valid-specs-api-guru/` via `npm run corpus:copy-valid-to-fixtures`. These 99 specs:
+Valid specs from the corpus run are extracted and copied to `tests/compiler/fixtures/valid-specs-{repo}/` via `npm run corpus:copy-valid-to-fixtures -- --repo api-guru` or `--repo github`. These specs:
 
 - Serve as regression tests (all must pass `check:openapi`)
 - Will be used for **LLM determinism testing** — validating that LLM output is stable across runs on real APIs

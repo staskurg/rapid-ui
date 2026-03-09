@@ -1,0 +1,459 @@
+openapi: 3.0.3
+info:
+  title: User Management API
+  description: API endpoints for administrator user management (Feature 004)
+  version: 1.0.0
+  contact:
+    name: OSEM Ladders Team
+
+servers:
+  - url: https://api.example.com/api
+    description: Production API Gateway
+  - url: http://localhost:3000/api
+    description: Local development server
+
+security:
+  - CognitoAuth: []
+
+paths:
+  /admin/users:
+    get:
+      summary: List all users
+      description: Retrieve paginated list of all users in the organization (admin only)
+      operationId: listUsers
+      tags:
+        - User Management
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of users to return per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 100
+        - name: nextToken
+          in: query
+          description: Pagination token from previous response
+          required: false
+          schema:
+            type: string
+        - name: search
+          in: query
+          description: Search query to filter by name or email
+          required: false
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: status
+          in: query
+          description: Filter by activation status
+          required: false
+          schema:
+            type: string
+            enum: [active, inactive, all]
+            default: all
+      responses:
+        '200':
+          description: Successful response with user list
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - users
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  nextToken:
+                    type: string
+                    description: Token for fetching next page (null if no more pages)
+                    nullable: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      summary: Create new user
+      description: Add a new user to the organization (admin only)
+      operationId: createUser
+      tags:
+        - User Management
+      security:
+        - CognitoAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          description: User with this email already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: USER_EXISTS
+                message: User with this email already exists
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /admin/users/{userId}:
+    get:
+      summary: Get user by ID
+      description: Retrieve detailed information for a specific user (admin only)
+      operationId: getUser
+      tags:
+        - User Management
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: User's email address (user ID)
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: Successful response with user details
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: USER_NOT_FOUND
+                message: User not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      summary: Update user roles
+      description: Modify a user's elevated role assignments (admin only)
+      operationId: updateUserRoles
+      tags:
+        - User Management
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: User's email address (user ID)
+          required: true
+          schema:
+            type: string
+            format: email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRolesRequest'
+      responses:
+        '200':
+          description: User roles updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: USER_NOT_FOUND
+                message: User not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      summary: Deactivate user
+      description: Soft delete a user (prevents authentication, preserves historical data) (admin only)
+      operationId: deactivateUser
+      tags:
+        - User Management
+      security:
+        - CognitoAuth: []
+      parameters:
+        - name: userId
+          in: path
+          description: User's email address (user ID)
+          required: true
+          schema:
+            type: string
+            format: email
+      responses:
+        '200':
+          description: User deactivated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - userId
+                  - deactivatedAt
+                properties:
+                  userId:
+                    type: string
+                    format: email
+                  deactivatedAt:
+                    type: number
+                    description: Unix milliseconds timestamp of deactivation
+        '400':
+          description: Business rule violation (self-deactivation, team manager, already inactive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                selfDeactivation:
+                  summary: Self-deactivation attempt
+                  value:
+                    error: SELF_DEACTIVATION
+                    message: Cannot deactivate your own account
+                teamManager:
+                  summary: User is team manager
+                  value:
+                    error: USER_IS_MANAGER
+                    message: User is manager of 2 team(s). Reassign teams before deactivating.
+                alreadyInactive:
+                  summary: User already deactivated
+                  value:
+                    error: ALREADY_INACTIVE
+                    message: User is already deactivated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: USER_NOT_FOUND
+                message: User not found
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    CognitoAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: AWS Cognito JWT token (must include "admin" role in claims)
+
+  schemas:
+    User:
+      type: object
+      required:
+        - userId
+        - name
+        - roles
+        - isActive
+        - createdAt
+        - updatedAt
+        - createdBy
+      properties:
+        userId:
+          type: string
+          format: email
+          description: User's email address (immutable)
+          example: john.doe@example.com
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User's full name
+          example: John Doe
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [manager, admin]
+          description: Elevated roles assigned to user (empty array = default user access)
+          example: ["manager"]
+        team:
+          type: string
+          nullable: true
+          description: Team ID user belongs to (null if no team assigned)
+          example: engineering
+        isActive:
+          type: boolean
+          description: User activation status (false = deactivated)
+          example: true
+        createdAt:
+          type: number
+          description: Unix milliseconds timestamp of creation
+          example: 1732100000000
+        updatedAt:
+          type: number
+          description: Unix milliseconds timestamp of last update
+          example: 1732100000000
+        createdBy:
+          type: string
+          format: email
+          description: Email of admin who created this user
+          example: admin@example.com
+
+    CreateUserRequest:
+      type: object
+      required:
+        - email
+        - name
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          description: User's email address (will become userId)
+          example: jane.smith@example.com
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: User's full name
+          example: Jane Smith
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [manager, admin]
+          description: Optional elevated roles (defaults to [] if omitted)
+          example: ["admin"]
+        team:
+          type: string
+          description: Optional team ID to assign user to
+          example: marketing
+
+    UpdateUserRolesRequest:
+      type: object
+      required:
+        - roles
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+            enum: [manager, admin]
+          description: New roles array (can be empty for default user access)
+          example: ["manager", "admin"]
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: INVALID_EMAIL
+        message:
+          type: string
+          description: Human-readable error message
+          example: Email address format is invalid
+        details:
+          type: object
+          description: Optional additional context for the error
+          additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request parameters or validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: INVALID_EMAIL
+            message: Email address format is invalid
+
+    Unauthorized:
+      description: Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: UNAUTHORIZED
+            message: Authentication token is missing or invalid
+
+    Forbidden:
+      description: User does not have required admin role
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: FORBIDDEN
+            message: Admin access required
+
+    InternalServerError:
+      description: Unexpected server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: INTERNAL_SERVER_ERROR
+            message: An unexpected error occurred

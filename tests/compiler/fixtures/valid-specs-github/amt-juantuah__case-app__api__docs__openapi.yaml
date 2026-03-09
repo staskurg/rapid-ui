@@ -1,0 +1,223 @@
+openapi: 3.1.0
+info:
+  title: Case Management API
+  description: API for creating, retrieving, updating, and deleting cases.
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+
+paths:
+  /cases:
+    post:
+      summary: Create a new case
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - dueDate
+              properties:
+                title:
+                  type: string
+                  example: "Network outage"
+                description:
+                  type: string
+                  example: "Issue affecting all users"
+                status:
+                  type: string
+                  enum: [OPEN, IN_PROGRESS, CLOSED]
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH]
+                dueDate:
+                  type: string
+                  format: date-time
+                  example: "2025-10-05T12:00:00Z"
+      responses:
+        "201":
+          description: Case created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseResponse"
+        "400":
+          description: Invalid input
+        "500":
+          description: Server error
+
+    get:
+      summary: Get all cases
+      responses:
+        "200":
+          description: List of cases
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Case"
+
+  /cases/{id}:
+    get:
+      summary: Get case by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Case UUID
+      responses:
+        "200":
+          description: Case found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseResponse"
+        "404":
+          description: Case not found
+        "400":
+          description: Invalid UUID
+
+    delete:
+      summary: Delete case by ID
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Case UUID
+      responses:
+        "200":
+          description: Case deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        "404":
+          description: Case not found
+        "400":
+          description: Invalid UUID
+
+  /cases/{id}/status:
+    patch:
+      summary: Update case status
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Case UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [OPEN, IN_PROGRESS, CLOSED]
+                  example: "IN_PROGRESS"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseResponse"
+        "404":
+          description: Case not found
+        "400":
+          description: Invalid input
+
+  /cases/{id}/priority:
+    patch:
+      summary: Update case priority
+      parameters:
+        - in: path
+          name: id
+          schema:
+            type: string
+            format: uuid
+          required: true
+          description: Case UUID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - priority
+              properties:
+                priority:
+                  type: string
+                  enum: [LOW, MEDIUM, HIGH]
+                  example: "MEDIUM"
+      responses:
+        "200":
+          description: Priority updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CaseResponse"
+        "404":
+          description: Case not found
+        "400":
+          description: Invalid input
+
+components:
+  schemas:
+    Case:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [OPEN, IN_PROGRESS, CLOSED]
+        priority:
+          type: string
+          enum: [LOW, MEDIUM, HIGH]
+        createdDate:
+          type: string
+          format: date-time
+        dueDate:
+          type: string
+          format: date-time
+
+    CaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: "#/components/schemas/Case"

@@ -1,0 +1,363 @@
+{
+  "api": {
+    "title": "TaskFlow API",
+    "version": "2.0.0"
+  },
+  "resources": [
+    {
+      "name": "AI",
+      "key": "ai",
+      "operations": [
+        {
+          "id": "POST:/ai/parse-tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ai/parse-tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Mañana reunión a las 10, comprar leche, y hacer ejercicio",
+                "description": "Texto en lenguaje natural describiendo una o más tareas"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "example": "Reunión a las 10"
+                    }
+                  }
+                }
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 6,
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              },
+              "token": {
+                "type": "string",
+                "nullable": true,
+                "description": "JWT token para autenticación"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 6,
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              },
+              "token": {
+                "type": "string",
+                "nullable": true,
+                "description": "JWT token para autenticación"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "GET:/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Completar documentación del proyecto"
+                    },
+                    "completed": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "789e4567-e89b-12d3-a456-426614174111"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-01-05T10:30:00Z"
+                    }
+                  }
+                }
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "completed"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Completar documentación del proyecto"
+              },
+              "completed": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Completar documentación del proyecto"
+                    },
+                    "completed": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "789e4567-e89b-12d3-a456-426614174111"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-01-05T10:30:00Z"
+                    }
+                  }
+                }
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/tasks/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/tasks/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "completed"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Completar documentación del proyecto"
+              },
+              "completed": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Completar documentación del proyecto"
+                    },
+                    "completed": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "user_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "789e4567-e89b-12d3-a456-426614174111"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2026-01-05T10:30:00Z"
+                    }
+                  }
+                }
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/tasks/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/tasks/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "string",
+                "nullable": true
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,180 @@
+openapi: 3.0.0
+info:
+  title: Task List API
+  description: A simple API to manage tasks for an IT team.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local Development Server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Enter your API Key to access secured endpoints.
+
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Fix Docker configuration"
+        description:
+          type: string
+          example: "Ensure the database container starts before the API."
+        is_completed:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+    
+    NewTask:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+    
+    UpdateTask:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        is_completed:
+          type: boolean
+
+paths:
+  /tasks:
+    get:
+      summary: Retrieve all tasks
+      tags: [Tasks]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: A list of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized (Invalid API Key)
+        500:
+          description: Internal Server Error
+
+    post:
+      summary: Create a new task
+      tags: [Tasks]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewTask'
+      responses:
+        201:
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        400:
+          description: Validation error (missing title)
+        401:
+          description: Unauthorized (Invalid API Key)
+        500:
+          description: Internal Server Error
+
+  /tasks/{id}:
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: Numeric ID of the task to get
+
+    get:
+      summary: Get a task by ID
+      tags: [Tasks]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized (Invalid API Key)
+        404:
+          description: Task not found
+        500:
+          description: Internal Server Error
+
+    put:
+      summary: Update a task
+      tags: [Tasks]
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTask'
+      responses:
+        200:
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized (Invalid API Key)
+        404:
+          description: Task not found
+        500:
+          description: Internal Server Error
+
+    delete:
+      summary: Delete a task
+      tags: [Tasks]
+      security:
+        - ApiKeyAuth: []
+      responses:
+        200:
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Task deleted successfully"
+                  deletedTask:
+                    $ref: '#/components/schemas/Task'
+        401:
+          description: Unauthorized (Invalid API Key)
+        404:
+          description: Task not found
+        500:
+          description: Internal Server Error

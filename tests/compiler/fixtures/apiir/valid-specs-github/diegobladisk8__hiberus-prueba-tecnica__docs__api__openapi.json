@@ -1,0 +1,345 @@
+{
+  "api": {
+    "title": "Payment Initiation - PaymentOrder (BIAN)",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Payment Orders",
+      "key": "payment-orders",
+      "operations": [
+        {
+          "id": "getPaymentOrder",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/payment-initiation/payment-orders/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "externalReference",
+              "status",
+              "debtorAccount",
+              "creditorAccount",
+              "instructedAmount"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identificador único de la orden de pago",
+                "example": "PO-0001"
+              },
+              "externalReference": {
+                "type": "string",
+                "description": "Referencia externa única para la orden de pago",
+                "example": "EXT-1"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PROCESSING",
+                  "COMPLETED",
+                  "REJECTED"
+                ],
+                "description": "Estado de la orden de pago",
+                "example": "PENDING"
+              },
+              "debtorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "creditorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "instructedAmount": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Monto",
+                    "example": 150.75
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Moneda",
+                    "example": "USD"
+                  }
+                }
+              },
+              "remittanceInformation": {
+                "type": "string",
+                "description": "Información de remesa",
+                "example": "Factura 001-123"
+              },
+              "requestedExecutionDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Fecha solicitada de ejecución",
+                "example": "2025-10-31"
+              },
+              "creationDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Fecha de creación de la orden",
+                "example": "2023-11-15T10:30:00Z"
+              },
+              "lastUpdateDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Fecha de última actualización",
+                "example": "2023-11-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "getPaymentOrderStatus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/payment-initiation/payment-orders/{id}/status",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "status",
+              "lastUpdateDate"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identificador único de la orden de pago",
+                "example": "PO-0001"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PROCESSING",
+                  "COMPLETED",
+                  "REJECTED"
+                ],
+                "description": "Estado de la orden de pago",
+                "example": "PENDING"
+              },
+              "lastUpdateDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Fecha de última actualización",
+                "example": "2023-11-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "initiatePaymentOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/payment-initiation/payment-orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "externalReference",
+              "debtorAccount",
+              "creditorAccount",
+              "instructedAmount"
+            ],
+            "properties": {
+              "externalReference": {
+                "type": "string",
+                "description": "Referencia externa única para la orden de pago",
+                "example": "EXT-1"
+              },
+              "debtorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "creditorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "instructedAmount": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Monto",
+                    "example": 150.75
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Moneda",
+                    "example": "USD"
+                  }
+                }
+              },
+              "remittanceInformation": {
+                "type": "string",
+                "description": "Información de remesa",
+                "example": "Factura 001-123"
+              },
+              "requestedExecutionDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Fecha solicitada de ejecución",
+                "example": "2025-10-31"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "externalReference",
+              "status",
+              "debtorAccount",
+              "creditorAccount",
+              "instructedAmount"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Identificador único de la orden de pago",
+                "example": "PO-0001"
+              },
+              "externalReference": {
+                "type": "string",
+                "description": "Referencia externa única para la orden de pago",
+                "example": "EXT-1"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PROCESSING",
+                  "COMPLETED",
+                  "REJECTED"
+                ],
+                "description": "Estado de la orden de pago",
+                "example": "PENDING"
+              },
+              "debtorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "creditorAccount": {
+                "type": "object",
+                "required": [
+                  "iban"
+                ],
+                "properties": {
+                  "iban": {
+                    "type": "string",
+                    "description": "IBAN de la cuenta",
+                    "example": "EC12DEBTOR"
+                  }
+                }
+              },
+              "instructedAmount": {
+                "type": "object",
+                "required": [
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "amount": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Monto",
+                    "example": 150.75
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "Moneda",
+                    "example": "USD"
+                  }
+                }
+              },
+              "remittanceInformation": {
+                "type": "string",
+                "description": "Información de remesa",
+                "example": "Factura 001-123"
+              },
+              "requestedExecutionDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Fecha solicitada de ejecución",
+                "example": "2025-10-31"
+              },
+              "creationDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Fecha de creación de la orden",
+                "example": "2023-11-15T10:30:00Z"
+              },
+              "lastUpdateDate": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Fecha de última actualización",
+                "example": "2023-11-15T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

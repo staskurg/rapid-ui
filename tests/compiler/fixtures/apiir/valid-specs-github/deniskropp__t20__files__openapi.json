@@ -1,0 +1,456 @@
+{
+  "api": {
+    "title": "T20 Multi-Agent Runtime API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Run",
+      "key": "run",
+      "operations": [
+        {
+          "id": "POST:/run",
+          "method": "POST",
+          "kind": "create",
+          "path": "/run",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "object",
+                "properties": {
+                  "high_level_goal": {
+                    "type": "string",
+                    "description": "The main goal this plan is designed to achieve."
+                  },
+                  "reasoning": {
+                    "type": "string",
+                    "description": "A brief explanation of the plan's structure and strategy."
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "description": "Title of the role (or an agent's name)."
+                        },
+                        "purpose": {
+                          "type": "string",
+                          "description": "Purpose of the role (or an agent's goal)."
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "purpose"
+                      ]
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique ID for the task (e.g., 'T-00.1', 'P-A02')."
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Detailed description of what to do for this task."
+                        },
+                        "role": {
+                          "type": "string",
+                          "description": "The role responsible for this task."
+                        },
+                        "agent": {
+                          "type": "string",
+                          "description": "The agent assigned to this task."
+                        },
+                        "requires": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "List of requirements (IDs, e.g. ['T-00.4', 'P-B01'])."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "role",
+                        "agent",
+                        "requires"
+                      ]
+                    }
+                  },
+                  "team": {
+                    "type": "object",
+                    "properties": {
+                      "notes": {
+                        "type": "string",
+                        "description": "General notes or feedback about the team's performance or the plan."
+                      },
+                      "prompts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "agent": {
+                              "type": "string",
+                              "description": "Name of the agent this prompt is for. Must match exactly an existing agent."
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "Role context of the agent."
+                            },
+                            "system_prompt": {
+                              "type": "string",
+                              "description": "Full text of the system prompt for this agent."
+                            }
+                          },
+                          "required": [
+                            "agent",
+                            "role",
+                            "system_prompt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "notes"
+                    ]
+                  }
+                },
+                "required": [
+                  "high_level_goal",
+                  "reasoning",
+                  "roles",
+                  "tasks"
+                ]
+              },
+              "rounds": {
+                "type": "integer",
+                "default": 1,
+                "description": "The number of rounds to execute the workflow."
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "description": "List of file paths to be used in the task."
+              }
+            },
+            "required": [
+              "plan"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "step": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique ID for the task (e.g., 'T-00.1', 'P-A02')."
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Detailed description of what to do for this task."
+                        },
+                        "role": {
+                          "type": "string",
+                          "description": "The role responsible for this task."
+                        },
+                        "agent": {
+                          "type": "string",
+                          "description": "The agent assigned to this task."
+                        },
+                        "requires": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "List of requirements (IDs, e.g. ['T-00.4', 'P-B01'])."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "role",
+                        "agent",
+                        "requires"
+                      ]
+                    },
+                    "result": {
+                      "type": "object",
+                      "properties": {
+                        "output": {
+                          "type": "string",
+                          "description": "Text message content (response from agent)."
+                        },
+                        "artifact": {
+                          "type": "object",
+                          "properties": {
+                            "task": {
+                              "type": "string",
+                              "description": "ID of the task that produced this artifact (e.g., 'T-10.0')."
+                            },
+                            "files": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "path": {
+                                    "type": "string",
+                                    "description": "File path or name (e.g., 'src/main.py')."
+                                  },
+                                  "content": {
+                                    "type": "string",
+                                    "description": "Full content of the file."
+                                  }
+                                },
+                                "required": [
+                                  "path",
+                                  "content"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "task",
+                            "files"
+                          ]
+                        },
+                        "team": {
+                          "type": "object",
+                          "properties": {
+                            "notes": {
+                              "type": "string",
+                              "description": "General notes or feedback about the team's performance or the plan."
+                            },
+                            "prompts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "agent": {
+                                    "type": "string",
+                                    "description": "Name of the agent this prompt is for. Must match exactly an existing agent."
+                                  },
+                                  "role": {
+                                    "type": "string",
+                                    "description": "Role context of the agent."
+                                  },
+                                  "system_prompt": {
+                                    "type": "string",
+                                    "description": "Full text of the system prompt for this agent."
+                                  }
+                                },
+                                "required": [
+                                  "agent",
+                                  "role",
+                                  "system_prompt"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "notes"
+                          ]
+                        },
+                        "reasoning": {
+                          "type": "string",
+                          "nullable": true,
+                          "description": "Explanation of how the agent arrived at this output."
+                        }
+                      },
+                      "required": [
+                        "output"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start",
+      "key": "start",
+      "operations": [
+        {
+          "id": "POST:/start",
+          "method": "POST",
+          "kind": "create",
+          "path": "/start",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "high_level_goal": {
+                "type": "string",
+                "description": "The main goal to achieve."
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [],
+                "description": "List of file paths to be used in the task."
+              },
+              "plan_from": {
+                "type": "string",
+                "nullable": true,
+                "description": "File path to read a pre-existing plan from."
+              },
+              "orchestrator": {
+                "type": "string",
+                "default": "Meta-AI",
+                "description": "The name of the orchestrator to use."
+              },
+              "model": {
+                "type": "string",
+                "default": "gemini-2.5-flash-lite",
+                "description": "The default LLM model to use."
+              }
+            },
+            "required": [
+              "high_level_goal"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "plan": {
+                "type": "object",
+                "properties": {
+                  "high_level_goal": {
+                    "type": "string",
+                    "description": "The main goal this plan is designed to achieve."
+                  },
+                  "reasoning": {
+                    "type": "string",
+                    "description": "A brief explanation of the plan's structure and strategy."
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string",
+                          "description": "Title of the role (or an agent's name)."
+                        },
+                        "purpose": {
+                          "type": "string",
+                          "description": "Purpose of the role (or an agent's goal)."
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "purpose"
+                      ]
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique ID for the task (e.g., 'T-00.1', 'P-A02')."
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "Detailed description of what to do for this task."
+                        },
+                        "role": {
+                          "type": "string",
+                          "description": "The role responsible for this task."
+                        },
+                        "agent": {
+                          "type": "string",
+                          "description": "The agent assigned to this task."
+                        },
+                        "requires": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "List of requirements (IDs, e.g. ['T-00.4', 'P-B01'])."
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "description",
+                        "role",
+                        "agent",
+                        "requires"
+                      ]
+                    }
+                  },
+                  "team": {
+                    "type": "object",
+                    "properties": {
+                      "notes": {
+                        "type": "string",
+                        "description": "General notes or feedback about the team's performance or the plan."
+                      },
+                      "prompts": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "agent": {
+                              "type": "string",
+                              "description": "Name of the agent this prompt is for. Must match exactly an existing agent."
+                            },
+                            "role": {
+                              "type": "string",
+                              "description": "Role context of the agent."
+                            },
+                            "system_prompt": {
+                              "type": "string",
+                              "description": "Full text of the system prompt for this agent."
+                            }
+                          },
+                          "required": [
+                            "agent",
+                            "role",
+                            "system_prompt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "notes"
+                    ]
+                  }
+                },
+                "required": [
+                  "high_level_goal",
+                  "reasoning",
+                  "roles",
+                  "tasks"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

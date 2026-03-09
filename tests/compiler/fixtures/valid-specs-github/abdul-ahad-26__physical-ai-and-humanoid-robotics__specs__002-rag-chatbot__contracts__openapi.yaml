@@ -1,0 +1,430 @@
+openapi: 3.1.0
+info:
+  title: RAG Chatbot API
+  description: API for the Docusaurus Textbook RAG Chatbot
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.yourdomain.com
+    description: Production server
+
+tags:
+  - name: chat
+    description: Chat operations
+  - name: sessions
+    description: Session management
+  - name: admin
+    description: Admin operations (content ingestion)
+
+paths:
+  /api/chat:
+    post:
+      tags:
+        - chat
+      summary: Submit a chat query
+      description: Submit a user question and receive an AI-generated response grounded in textbook content
+      operationId: submitChatQuery
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            examples:
+              basicQuery:
+                summary: Basic question
+                value:
+                  query: "What is reinforcement learning?"
+              withContext:
+                summary: Question with selected text
+                value:
+                  query: "Can you explain this further?"
+                  selected_text: "Reinforcement learning uses reward signals..."
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successful response with answer and citations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Invalid request (empty query, too long)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sessions:
+    get:
+      tags:
+        - sessions
+      summary: List user's chat sessions
+      description: Retrieve all chat sessions for the authenticated user
+      operationId: listSessions
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of sessions to return
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of sessions to skip
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionListResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/sessions/{session_id}/messages:
+    get:
+      tags:
+        - sessions
+      summary: Get messages for a session
+      description: Retrieve all messages in a specific chat session
+      operationId: getSessionMessages
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessagesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ingest:
+    post:
+      tags:
+        - admin
+      summary: Ingest textbook content
+      description: Ingest markdown content into the vector store (admin only)
+      operationId: ingestContent
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IngestRequest'
+            examples:
+              chapterIngest:
+                summary: Ingest a chapter
+                value:
+                  content: "# Introduction to Reinforcement Learning\n\nReinforcement learning is..."
+                  chapter_id: "chapter-1"
+                  section_id: "intro"
+                  anchor_url: "/docs/chapter-1#intro"
+      responses:
+        '200':
+          description: Content ingested successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngestResponse'
+        '400':
+          description: Invalid content or metadata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: Forbidden - not an administrator
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/health:
+    get:
+      tags:
+        - admin
+      summary: Health check
+      description: Check API health status
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+      description: Better Auth session cookie
+
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 2000
+          description: User's question
+        session_id:
+          type: string
+          format: uuid
+          description: Existing session ID (optional, creates new if omitted)
+        selected_text:
+          type: string
+          maxLength: 5000
+          description: User-selected text from the page for additional context
+
+    ChatResponse:
+      type: object
+      required:
+        - session_id
+        - message_id
+        - answer
+        - citations
+        - created_at
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        message_id:
+          type: string
+          format: uuid
+        answer:
+          type: string
+          description: AI-generated answer or "I don't know based on this book."
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        created_at:
+          type: string
+          format: date-time
+
+    Citation:
+      type: object
+      required:
+        - chapter_id
+        - section_id
+        - anchor_url
+        - display_text
+      properties:
+        chapter_id:
+          type: string
+          description: Chapter identifier
+        section_id:
+          type: string
+          description: Section identifier
+        anchor_url:
+          type: string
+          description: URL path with anchor (e.g., "/docs/chapter-1#section")
+        display_text:
+          type: string
+          description: Human-readable citation text
+
+    SessionListResponse:
+      type: object
+      required:
+        - sessions
+      properties:
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionSummary'
+
+    SessionSummary:
+      type: object
+      required:
+        - session_id
+        - created_at
+        - last_activity
+        - message_count
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        last_activity:
+          type: string
+          format: date-time
+        message_count:
+          type: integer
+        preview:
+          type: string
+          description: First message preview (truncated)
+
+    MessagesResponse:
+      type: object
+      required:
+        - session_id
+        - messages
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      required:
+        - message_id
+        - role
+        - content
+        - created_at
+      properties:
+        message_id:
+          type: string
+          format: uuid
+        role:
+          type: string
+          enum:
+            - user
+            - assistant
+        content:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Citation'
+        created_at:
+          type: string
+          format: date-time
+
+    IngestRequest:
+      type: object
+      required:
+        - content
+        - chapter_id
+        - section_id
+        - anchor_url
+      properties:
+        content:
+          type: string
+          description: Markdown content to ingest
+        chapter_id:
+          type: string
+          description: Chapter identifier
+        section_id:
+          type: string
+          description: Section identifier
+        anchor_url:
+          type: string
+          description: URL path with anchor
+
+    IngestResponse:
+      type: object
+      required:
+        - status
+        - chunks_created
+        - vector_ids
+      properties:
+        status:
+          type: string
+          example: "success"
+        chunks_created:
+          type: integer
+          description: Number of chunks created
+        vector_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: IDs of created vectors
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details

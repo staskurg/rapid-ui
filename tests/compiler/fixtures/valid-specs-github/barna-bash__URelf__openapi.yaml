@@ -1,0 +1,374 @@
+openapi: 3.1.0
+info:
+  title: URELf API
+  version: 1.0.0
+  description: API for shortening URLs with user authentication and rate limiting
+
+servers:
+  - url: https://urelf.com
+    description: Production server
+  - url: http://localhost:3000
+    description: Development server
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+  schemas:
+    NewUserDto:
+      type: object
+      required:
+        - userName
+      properties:
+        userName:
+          type: string
+          description: Unique username for the user
+        email:
+          type: string
+          format: email
+          description: Optional email address for the user
+          nullable: true
+    ApiKeyResponse:
+      type: object
+      properties:
+        apiKey:
+          type: string
+          description: The generated API key to be used for authenticated requests
+    NewUrlDto:
+      type: object
+      required:
+        - originalUrl
+        - customAlias
+      properties:
+        originalUrl:
+          type: string
+          format: uri
+          description: The original URL to be shortened
+        customAlias:
+          type: string
+          description: Custom customAlias for the shortened URL
+        description:
+          type: string
+          description: Optional description of the URL
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration date for the URL, defaults to 7 days if not provided
+    UpdateUrlDto:
+      type: object
+      properties:
+        originalUrl:
+          type: string
+          format: uri
+          description: The original URL to be shortened
+        customAlias:
+          type: string
+          description: Custom customAlias for the shortened URL
+        description:
+          type: string
+          description: Optional description of the URL
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration date for the URL
+    Url:
+      type: object
+      properties:
+        _id:
+          type: string
+          format: objectid
+        originalUrl:
+          type: string
+          format: uri
+        customAlias:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        usage:
+          type: array
+          items:
+            type: string
+            format: date-time
+        userId:
+          type: string
+          format: objectid
+    UrlAnalyticsDto:
+      type: object
+      properties:
+        totalRedirects:
+          type: integer
+          description: Total number of redirects for the URL
+        lastRedirects:
+          type: array
+          items:
+            type: string
+            format: date-time
+          description: Timestamps of the last redirects
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user and get an API key
+      description: Register a new user to get an API key for authenticated requests
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUserDto"
+      responses:
+        "201":
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyResponse"
+        "400":
+          description: Invalid input or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /urls:
+    get:
+      summary: Get all URLs for the authenticated user
+      security:
+        - ApiKeyAuth: []
+      responses:
+        "200":
+          description: List of URLs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Url"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create a new shortened URL
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewUrlDto"
+      responses:
+        "201":
+          description: URL created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Url"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /urls/{id}:
+    get:
+      summary: Get a specific URL by ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: URL details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Url"
+        "404":
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a URL by ID
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUrlDto"
+      responses:
+        "200":
+          description: URL updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Url"
+        "400":
+          description: Invalid input or URL with alias already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "429":
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete a URL
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: URL deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "404":
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /analytics/{alias}:
+    get:
+      summary: Get analytics for a specific URL by alias
+      description: Retrieves usage statistics for a URL identified by its custom alias
+      security:
+        - ApiKeyAuth: []
+      parameters:
+        - name: alias
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The custom alias of the URL to get analytics for
+      responses:
+        "200":
+          description: URL analytics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UrlAnalyticsDto"
+        "400":
+          description: Invalid input, alias is required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: URL not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"

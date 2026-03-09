@@ -1,0 +1,193 @@
+{
+  "api": {
+    "title": "Payment Processing API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "createPaymentIntent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/process_payment/create_payment",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "properties": {
+                  "processPaymentCreatePaymentInput": {
+                    "type": "object",
+                    "properties": {
+                      "amount": {
+                        "type": "integer",
+                        "description": "Payment amount in the smallest currency unit (e.g., cents for USD)",
+                        "example": 1000
+                      },
+                      "currency": {
+                        "type": "string",
+                        "description": "ISO 4217 currency code",
+                        "example": "usd"
+                      },
+                      "paymentMethodId": {
+                        "type": "string",
+                        "description": "Payment method ID obtained from the client",
+                        "example": "pm_card_visa"
+                      }
+                    }
+                  }
+                },
+                "required": [
+                  "processPaymentCreatePaymentInput"
+                ]
+              },
+              "session_variables": {
+                "type": "object",
+                "properties": {
+                  "x-hasura-user-id": {
+                    "type": "string",
+                    "description": "The user ID from Hasura session variables",
+                    "example": "f8a07f3e-61b3-4e4a-8e6b-d1ef9f2f9c65"
+                  }
+                }
+              }
+            },
+            "required": [
+              "input",
+              "session_variables"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Indicates if the operation was successful",
+                "example": true
+              },
+              "paymentId": {
+                "type": "string",
+                "description": "Unique identifier of the created payment record in the database",
+                "format": "uuid",
+                "example": "f8a07f3e-61b3-4e4a-8e6b-d1ef9f2f9c65"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RabbitMQ",
+      "key": "rabbitmq",
+      "operations": [
+        {
+          "id": "sendMessageToRabbitMQ",
+          "method": "POST",
+          "kind": "create",
+          "path": "/keyword_validation/insertKeywordIfValidated",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "string",
+                "description": "The input string to send to RabbitMQ.",
+                "example": "test string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Indicates if the operation was successful.",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "description": "Contains the result of the mutation if successful.",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "description": "The ID of the inserted keyword.",
+                    "example": 1
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "key": "webhooks",
+      "operations": [
+        {
+          "id": "updatePaymentStatus",
+          "method": "POST",
+          "kind": "create",
+          "path": "/process_payment/update_payment_status",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The ID of the Stripe event."
+              },
+              "object": {
+                "type": "string",
+                "description": "The type of the event object."
+              },
+              "type": {
+                "type": "string",
+                "description": "The type of the Stripe event (e.g., `payment_intent.succeeded`)."
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "object": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "description": "The ID of the payment intent."
+                      },
+                      "status": {
+                        "type": "string",
+                        "description": "The status of the payment intent."
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "example": {
+              "id": "evt_test_webhook",
+              "object": "event",
+              "type": "payment_intent.succeeded",
+              "data": {
+                "object": {
+                  "id": "pi_test_payment_intent",
+                  "status": "succeeded"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean",
+                "description": "Confirmation that the event was processed."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

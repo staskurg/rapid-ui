@@ -1,0 +1,271 @@
+{
+  "api": {
+    "title": "User Authentication API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com",
+                "description": "User's email address"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "SecurePass123",
+                "description": "User's password"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "refreshToken",
+              "user"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "description": "JWT access token (valid for 15 minutes)"
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+                "description": "Refresh token (valid for 7 days, stored server-side)"
+              },
+              "user": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "email",
+                  "createdAt"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 123,
+                    "description": "Unique user identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com",
+                    "description": "User's email address"
+                  },
+                  "createdAt": {
+                    "type": "integer",
+                    "example": 1738454400,
+                    "description": "Unix timestamp of account creation"
+                  }
+                },
+                "description": "User profile data (excludes password hash)"
+              }
+            }
+          }
+        },
+        {
+          "id": "logoutUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/logout",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refreshToken"
+            ],
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "example": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+                "description": "Refresh token to invalidate"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Logout successful"
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refreshToken"
+            ],
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "example": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+                "description": "Current refresh token (will be invalidated)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "refreshToken"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "description": "New JWT access token (valid for 15 minutes)"
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "z9y8x7w6v5u4t3s2r1q0p9o8n7m6l5k4",
+                "description": "New refresh token (valid for 7 days, old token invalidated)"
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com",
+                "description": "User's email address (used as login username)"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "example": "SecurePass123",
+                "description": "User's password (min 8 chars, 1 uppercase, 1 lowercase, 1 number)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "refreshToken",
+              "user"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                "description": "JWT access token (valid for 15 minutes)"
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6",
+                "description": "Refresh token (valid for 7 days, stored server-side)"
+              },
+              "user": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "email",
+                  "createdAt"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 123,
+                    "description": "Unique user identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com",
+                    "description": "User's email address"
+                  },
+                  "createdAt": {
+                    "type": "integer",
+                    "example": 1738454400,
+                    "description": "Unix timestamp of account creation"
+                  }
+                },
+                "description": "User profile data (excludes password hash)"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Profile",
+      "key": "user-profile",
+      "operations": [
+        {
+          "id": "getUserProfile",
+          "method": "GET",
+          "kind": "list",
+          "path": "/auth/me",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "email",
+              "createdAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 123,
+                "description": "Unique user identifier"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com",
+                "description": "User's email address"
+              },
+              "createdAt": {
+                "type": "integer",
+                "example": 1738454400,
+                "description": "Unix timestamp of account creation"
+              }
+            },
+            "description": "User profile data (excludes password hash)"
+          }
+        }
+      ]
+    }
+  ]
+}

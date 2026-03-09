@@ -1,0 +1,417 @@
+{
+  "api": {
+    "title": "Product Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "get_all_products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "example": {
+              "total": 3,
+              "data": [
+                {
+                  "price": 1200.5,
+                  "name": "Laptop Dell XPS 13",
+                  "id": 1,
+                  "stock": 15
+                },
+                {
+                  "price": 1200.5,
+                  "name": "Laptop Dell XPS 13",
+                  "id": 1,
+                  "stock": 15
+                }
+              ],
+              "success": true
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "title": "success",
+                "type": "boolean"
+              },
+              "data": {
+                "items": {
+                  "example": {
+                    "price": 1200.5,
+                    "name": "Laptop Dell XPS 13",
+                    "id": 1,
+                    "stock": 15
+                  },
+                  "properties": {
+                    "id": {
+                      "description": "ID tự động của product",
+                      "example": 1,
+                      "title": "id",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "Tên sản phẩm",
+                      "example": "Laptop Dell XPS 13",
+                      "title": "name",
+                      "type": "string"
+                    },
+                    "price": {
+                      "description": "Giá sản phẩm (USD)",
+                      "example": 1200.5,
+                      "format": "float",
+                      "title": "price",
+                      "type": "number"
+                    },
+                    "stock": {
+                      "default": 0,
+                      "description": "Số lượng tồn kho",
+                      "example": 15,
+                      "title": "stock",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "price"
+                  ],
+                  "title": "Product",
+                  "type": "object"
+                },
+                "title": "data",
+                "type": "array"
+              },
+              "total": {
+                "example": 3,
+                "title": "total",
+                "type": "integer"
+              }
+            },
+            "title": "getAllProducts_200_response",
+            "type": "object"
+          }
+        },
+        {
+          "id": "get_product_by_id",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "example": {
+              "data": {
+                "price": 1200.5,
+                "name": "Laptop Dell XPS 13",
+                "id": 1,
+                "stock": 15
+              },
+              "success": true
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "title": "success",
+                "type": "boolean"
+              },
+              "data": {
+                "example": {
+                  "price": 1200.5,
+                  "name": "Laptop Dell XPS 13",
+                  "id": 1,
+                  "stock": 15
+                },
+                "properties": {
+                  "id": {
+                    "description": "ID tự động của product",
+                    "example": 1,
+                    "title": "id",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "description": "Tên sản phẩm",
+                    "example": "Laptop Dell XPS 13",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "price": {
+                    "description": "Giá sản phẩm (USD)",
+                    "example": 1200.5,
+                    "format": "float",
+                    "title": "price",
+                    "type": "number"
+                  },
+                  "stock": {
+                    "default": 0,
+                    "description": "Số lượng tồn kho",
+                    "example": 15,
+                    "title": "stock",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price"
+                ],
+                "title": "Product",
+                "type": "object"
+              }
+            },
+            "title": "getProductById_200_response",
+            "type": "object"
+          }
+        },
+        {
+          "id": "create_product",
+          "method": "POST",
+          "kind": "create",
+          "path": "/products",
+          "requestSchema": {
+            "example": {
+              "price": 1200.5,
+              "name": "Laptop Dell XPS 13",
+              "stock": 15
+            },
+            "properties": {
+              "name": {
+                "description": "Tên sản phẩm",
+                "example": "Laptop Dell XPS 13",
+                "title": "name",
+                "type": "string"
+              },
+              "price": {
+                "description": "Giá sản phẩm (USD)",
+                "example": 1200.5,
+                "format": "float",
+                "title": "price",
+                "type": "number"
+              },
+              "stock": {
+                "description": "Số lượng tồn kho",
+                "example": 15,
+                "title": "stock",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "price"
+            ],
+            "title": "ProductInput",
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "data": {
+                "price": 1200.5,
+                "name": "Laptop Dell XPS 13",
+                "id": 1,
+                "stock": 15
+              },
+              "success": true,
+              "message": "Tạo product thành công"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "title": "success",
+                "type": "boolean"
+              },
+              "message": {
+                "example": "Tạo product thành công",
+                "title": "message",
+                "type": "string"
+              },
+              "data": {
+                "example": {
+                  "price": 1200.5,
+                  "name": "Laptop Dell XPS 13",
+                  "id": 1,
+                  "stock": 15
+                },
+                "properties": {
+                  "id": {
+                    "description": "ID tự động của product",
+                    "example": 1,
+                    "title": "id",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "description": "Tên sản phẩm",
+                    "example": "Laptop Dell XPS 13",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "price": {
+                    "description": "Giá sản phẩm (USD)",
+                    "example": 1200.5,
+                    "format": "float",
+                    "title": "price",
+                    "type": "number"
+                  },
+                  "stock": {
+                    "default": 0,
+                    "description": "Số lượng tồn kho",
+                    "example": 15,
+                    "title": "stock",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price"
+                ],
+                "title": "Product",
+                "type": "object"
+              }
+            },
+            "title": "createProduct_201_response",
+            "type": "object"
+          }
+        },
+        {
+          "id": "update_product",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "requestSchema": {
+            "example": {
+              "price": 1200.5,
+              "name": "Laptop Dell XPS 13",
+              "stock": 15
+            },
+            "properties": {
+              "name": {
+                "description": "Tên sản phẩm",
+                "example": "Laptop Dell XPS 13",
+                "title": "name",
+                "type": "string"
+              },
+              "price": {
+                "description": "Giá sản phẩm (USD)",
+                "example": 1200.5,
+                "format": "float",
+                "title": "price",
+                "type": "number"
+              },
+              "stock": {
+                "description": "Số lượng tồn kho",
+                "example": 15,
+                "title": "stock",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "name",
+              "price"
+            ],
+            "title": "ProductInput",
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "data": {
+                "price": 1200.5,
+                "name": "Laptop Dell XPS 13",
+                "id": 1,
+                "stock": 15
+              },
+              "success": true,
+              "message": "Cập nhật product thành công"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "title": "success",
+                "type": "boolean"
+              },
+              "message": {
+                "example": "Cập nhật product thành công",
+                "title": "message",
+                "type": "string"
+              },
+              "data": {
+                "example": {
+                  "price": 1200.5,
+                  "name": "Laptop Dell XPS 13",
+                  "id": 1,
+                  "stock": 15
+                },
+                "properties": {
+                  "id": {
+                    "description": "ID tự động của product",
+                    "example": 1,
+                    "title": "id",
+                    "type": "integer"
+                  },
+                  "name": {
+                    "description": "Tên sản phẩm",
+                    "example": "Laptop Dell XPS 13",
+                    "title": "name",
+                    "type": "string"
+                  },
+                  "price": {
+                    "description": "Giá sản phẩm (USD)",
+                    "example": 1200.5,
+                    "format": "float",
+                    "title": "price",
+                    "type": "number"
+                  },
+                  "stock": {
+                    "default": 0,
+                    "description": "Số lượng tồn kho",
+                    "example": 15,
+                    "title": "stock",
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price"
+                ],
+                "title": "Product",
+                "type": "object"
+              }
+            },
+            "title": "updateProduct_200_response",
+            "type": "object"
+          }
+        },
+        {
+          "id": "delete_product",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "example": {
+              "success": true,
+              "message": "Đã xóa product ID 1"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "title": "success",
+                "type": "boolean"
+              },
+              "message": {
+                "example": "Đã xóa product ID 1",
+                "title": "message",
+                "type": "string"
+              }
+            },
+            "title": "deleteProduct_200_response",
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+openapi: 3.1.0
+info:
+  title: Bitrix24 Task Proxy
+  version: 1.0.0
+  description: Прокси для создания задач в Bitrix24 от имени GPT через Vercel.
+
+servers:
+  - url: https://bitrix24-gpt-proxy.vercel.app/api
+    description: Vercel-прокси для Bitrix24
+
+paths:
+  /create-task:
+    post:
+      operationId: createLegalTask
+      summary: Создать юридическую задачу
+      description: Отправляет задачу в Bitrix24 через прокси. Используется GPT для взаимодействия с Bitrix API.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - TITLE
+                - RESPONSIBLE_ID
+              properties:
+                TITLE:
+                  type: string
+                  description: Заголовок задачи
+                DESCRIPTION:
+                  type: string
+                  description: Подробности задачи
+                RESPONSIBLE_ID:
+                  type: integer
+                  description: ID ответственного сотрудника
+                DEADLINE:
+                  type: string
+                  format: date-time
+                  description: Крайний срок задачи (ISO 8601)
+      responses:
+        '200':
+          description: Успешный ответ от Bitrix24
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result:
+                    type: integer
+                    description: ID созданной задачи
+        '400':
+          description: Неверный формат запроса
+        '500':
+          description: Ошибка при вызове Bitrix24 API

@@ -1,0 +1,239 @@
+openapi: 3.0.0
+info:
+  title: Integrated FastAPI RAG Service and Claude Agent System API
+  version: 1.0.0
+description: API for the Physical AI & Humanoid Robotics Textbook backend, including RAG, authentication, personalization, and translation.
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+paths:
+  /chat:
+    post:
+      summary: RAG Chatbot Endpoint
+      operationId: chatWithRAG
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+      responses:
+        '200':
+          description: Successful RAG response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+
+  /auth/signup:
+    post:
+      summary: User Signup Endpoint
+      operationId: userSignup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+
+  /auth/signin:
+    post:
+      summary: User Signin Endpoint
+      operationId: userSignin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigninRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SigninResponse'
+
+  /personalize:
+    post:
+      summary: Personalize Chapter Content
+      operationId: personalizeContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonalizationRequest'
+      responses:
+        '200':
+          description: Personalized content returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonalizationResponse'
+
+  /translate:
+    post:
+      summary: Translate Chapter Content to Urdu
+      operationId: translateContent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationRequest'
+      responses:
+        '200':
+          description: Translated content returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationResponse'
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: User's query.
+        selected_text:
+          type: string
+          nullable: true
+          description: Optional selected text from the Docusaurus frontend.
+
+    ChatResponse:
+      type: object
+      required:
+        - answer
+      properties:
+        answer:
+          type: string
+          description: The chatbot's answer.
+        sources:
+          type: array
+          items:
+            type: string
+          description: List of sources used for the answer.
+
+    SignupRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address.
+        password:
+          type: string
+          format: password
+          description: User's password.
+        software_background:
+          type: string
+          nullable: true
+          description: User's software experience background.
+        hardware_background:
+          type: string
+          nullable: true
+          description: User's hardware experience background.
+
+    SignupResponse:
+      type: object
+      required:
+        - message
+        - user_id
+      properties:
+        message:
+          type: string
+          description: Confirmation message.
+        user_id:
+          type: string
+          format: uuid
+          description: The ID of the newly registered user.
+
+    SigninRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: User's email address.
+        password:
+          type: string
+          format: password
+          description: User's password.
+
+    SigninResponse:
+      type: object
+      required:
+        - message
+        - access_token
+        - token_type
+      properties:
+        message:
+          type: string
+          description: Confirmation message.
+        access_token:
+          type: string
+          description: JWT access token.
+        token_type:
+          type: string
+          description: Type of the token, typically 'bearer'.
+
+    PersonalizationRequest:
+      type: object
+      required:
+        - chapter_content
+        - user_id
+      properties:
+        chapter_content:
+          type: string
+          description: The content of the chapter to personalize.
+        user_id:
+          type: string
+          format: uuid
+          description: The ID of the user requesting personalization.
+
+    PersonalizationResponse:
+      type: object
+      required:
+        - personalized_content
+      properties:
+        personalized_content:
+          type: string
+          description: The adapted chapter content.
+
+    TranslationRequest:
+      type: object
+      required:
+        - chapter_content
+      properties:
+        chapter_content:
+          type: string
+          description: The content of the chapter to translate.
+
+    TranslationResponse:
+      type: object
+      required:
+        - translated_content
+      properties:
+        translated_content:
+          type: string
+          description: The translated chapter content in Urdu.

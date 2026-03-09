@@ -1,0 +1,660 @@
+openapi: 3.0.1
+info:
+  title: Swiftcart API
+  description: API for the Swiftcart e-commerce platform
+  version: 1.0.0
+  contact:
+    email: contact@swiftcart.com
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+
+tags:
+  - name: Products
+    description: Product management endpoints
+  - name: Customers
+    description: Customer management endpoints
+  - name: Cart
+    description: Shopping cart operations
+  - name: Orders
+    description: Order management endpoints
+
+paths:
+  /products:
+    get:
+      summary: List all products
+      description: Retrieve a list of all available products
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  count:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+
+  /products/{productId}:
+    get:
+      summary: Get product details
+      description: Retrieve detailed information about a specific product
+      tags:
+        - Products
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the product to retrieve
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customers:
+    get:
+      summary: List all customers
+      description: Retrieve a list of all customers
+      tags:
+        - Customers
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+    post:
+      summary: Create a new customer
+      description: Create a new customer account
+      tags:
+        - Customers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - first_name
+                - last_name
+                - email
+                - phone
+                - address
+                - city
+                - state
+                - zip_code
+                - country
+              properties:
+                first_name:
+                  type: string
+                  description: Customer's first name
+                last_name:
+                  type: string
+                  description: Customer's last name
+                email:
+                  type: string
+                  format: email
+                  description: Customer's email address
+                phone:
+                  type: string
+                  description: Customer's phone number
+                address:
+                  type: string
+                  description: Customer's address
+                city:
+                  type: string
+                  description: Customer's city
+                state:
+                  type: string
+                  description: Customer's state
+                zip_code:
+                  type: string
+                  description: Customer's ZIP code
+                country:
+                  type: string
+                  description: Customer's country
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /customers/{customerId}:
+    get:
+      summary: Get customer details
+      description: Retrieve detailed information about a specific customer
+      tags:
+        - Customers
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the customer to retrieve
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update customer
+      description: Update an existing customer's information
+      tags:
+        - Customers
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the customer to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  description: Customer's first name
+                last_name:
+                  type: string
+                  description: Customer's last name
+                email:
+                  type: string
+                  format: email
+                  description: Customer's email address
+                phone:
+                  type: string
+                  description: Customer's phone number
+                address:
+                  type: string
+                  description: Customer's address
+                city:
+                  type: string
+                  description: Customer's city
+                state:
+                  type: string
+                  description: Customer's state
+                zip_code:
+                  type: string
+                  description: Customer's ZIP code
+                country:
+                  type: string
+                  description: Customer's country
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Customer'
+        '404':
+          description: Customer not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      summary: Delete customer
+      description: Delete an existing customer
+      tags:
+        - Customers
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the customer to delete
+      responses:
+        '200':
+          description: Customer deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /cart:
+    get:
+      summary: Get cart contents
+      description: Retrieve the contents of a shopping cart
+      tags:
+        - Cart
+      parameters:
+        - name: cart_id
+          in: query
+          required: true
+          schema:
+            type: integer
+          description: ID of the cart to retrieve
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Cart'
+
+  /cart/items:
+    post:
+      summary: Add item to cart
+      description: Add a product to the shopping cart
+      tags:
+        - Cart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - product_id
+                - quantity
+              properties:
+                product_id:
+                  type: integer
+                  description: ID of the product to add
+                quantity:
+                  type: integer
+                  minimum: 1
+                  description: Quantity to add
+      responses:
+        '201':
+          description: Item added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CartItem'
+
+  /cart/items/{itemId}:
+    put:
+      summary: Update cart item
+      description: Update the quantity of an item in the cart
+      tags:
+        - Cart
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the cart item to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - quantity
+              properties:
+                quantity:
+                  type: integer
+                  minimum: 1
+                  description: New quantity for the item
+      responses:
+        '200':
+          description: Cart item updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/CartItem'
+    delete:
+      summary: Remove cart item
+      description: Remove an item from the cart
+      tags:
+        - Cart
+      parameters:
+        - name: itemId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the cart item to remove
+      responses:
+        '200':
+          description: Cart item removed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+
+  /orders:
+    post:
+      summary: Create order
+      description: Create a new order from the shopping cart
+      tags:
+        - Orders
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - cart_id
+              properties:
+                cart_id:
+                  type: integer
+                  description: ID of the cart to convert to order
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Order'
+    get:
+      summary: List all orders
+      description: Retrieve a list of all orders
+      tags:
+        - Orders
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Order'
+
+  /orders/{orderId}:
+    get:
+      summary: Get order details
+      description: Retrieve detailed information about a specific order
+      tags:
+        - Orders
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the order to retrieve
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    put:
+      summary: Update order status
+      description: Update the status of an existing order
+      tags:
+        - Orders
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID of the order to update
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum:
+                    - PENDING
+                    - PROCESSING
+                    - COMPLETED
+                    - CANCELLED
+                  description: New status for the order
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          description: Unique identifier for the product
+        name:
+          type: string
+          description: Name of the product
+        description:
+          type: string
+          description: Product description
+        price:
+          type: number
+          format: float
+          description: Product price
+        stock_quantity:
+          type: integer
+          description: Available stock quantity
+
+    Customer:
+      type: object
+      properties:
+        customer_id:
+          type: integer
+          description: Unique identifier for the customer
+        first_name:
+          type: string
+          description: Customer's first name
+        last_name:
+          type: string
+          description: Customer's last name
+        email:
+          type: string
+          format: email
+          description: Customer's email address
+        phone:
+          type: string
+          description: Customer's phone number
+        address:
+          type: string
+          description: Customer's address
+        city:
+          type: string
+          description: Customer's city
+        state:
+          type: string
+          description: Customer's state
+        zip_code:
+          type: string
+          description: Customer's ZIP code
+        country:
+          type: string
+          description: Customer's country
+
+    Cart:
+      type: object
+      properties:
+        cart_id:
+          type: integer
+          description: Unique identifier for the cart
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+
+    CartItem:
+      type: object
+      properties:
+        cart_item_id:
+          type: integer
+          description: Unique identifier for the cart item
+        product_id:
+          type: integer
+          description: ID of the product
+        quantity:
+          type: integer
+          description: Quantity of the product
+        product:
+          $ref: '#/components/schemas/Product'
+
+    Order:
+      type: object
+      properties:
+        order_id:
+          type: integer
+          description: Unique identifier for the order
+        cart_id:
+          type: integer
+          description: ID of the cart used for the order
+        total_amount:
+          type: number
+          format: float
+          description: Total amount of the order
+        status:
+          type: string
+          enum:
+            - PENDING
+            - PROCESSING
+            - COMPLETED
+            - CANCELLED
+          description: Current status of the order
+        order_date:
+          type: string
+          format: date-time
+          description: When the order was placed
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP status code
+        message:
+          type: string
+          description: Error message 

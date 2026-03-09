@@ -1,0 +1,318 @@
+{
+  "api": {
+    "title": "Golang Microservices Gateway API",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "GET:/auth/validate",
+          "method": "GET",
+          "kind": "list",
+          "path": "/auth/validate",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              },
+              "valid": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "email",
+              "password",
+              "role"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "format": "int32"
+                    }
+                  },
+                  "required": [
+                    "product_id",
+                    "quantity"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "user_id",
+              "items"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "order": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "product_id": {
+                          "type": "string"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "format": "int32"
+                        },
+                        "price": {
+                          "type": "integer",
+                          "format": "int64"
+                        }
+                      }
+                    }
+                  },
+                  "subtotal": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PAID",
+                      "CANCELED"
+                    ]
+                  }
+                }
+              },
+              "payment_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "GET:/payments/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/payments/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "order_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PAID",
+                  "FAILED"
+                ]
+              },
+              "amount": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string"
+                },
+                "price": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "stock": {
+                  "type": "integer",
+                  "format": "int64"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/products",
+          "method": "POST",
+          "kind": "create",
+          "path": "/products",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "price": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "stock": {
+                "type": "integer",
+                "format": "int64"
+              }
+            },
+            "required": [
+              "name",
+              "category",
+              "price",
+              "stock"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "price": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "stock": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Shoprr API
+  version: 0.0.1
+
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      operationId: getProducts
+      summary: List all products
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+    post:
+      tags:
+        - Products
+      operationId: createProduct
+      summary: Create a new product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: Product created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/search:
+    get:
+      tags:
+        - Products
+      operationId: searchProducts
+      summary: Search products by query
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      operationId: getProductById
+      summary: Get a product by ID
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+
+  /products/{productId}/price:
+    put:
+      tags:
+        - Products
+      operationId: updatePrice
+      summary: Update the price of a product
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePriceRequest'
+      responses:
+        '200':
+          description: Price updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - price
+        - attributes
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        category:
+          $ref: '#/components/schemas/Category'
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAttribute'
+
+    Category:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+
+    ProductAttribute:
+      type: object
+      required:
+        - name
+        - value
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+
+    CreateProductRequest:
+      type: object
+      required:
+        - name
+        - price
+        - category
+      properties:
+        name:
+          type: string
+        price:
+          type: number
+          format: decimal
+          minimum: 0
+        category:
+          type: string
+          description: Category name
+        attributes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductAttribute'
+          default: [ ]
+
+    UpdatePriceRequest:
+      type: object
+      required:
+        - price
+      properties:
+        price:
+          type: number
+          format: decimal
+          minimum: 0

@@ -1,0 +1,184 @@
+{
+  "api": {
+    "title": "FedRAMP Compliance Scanner Agent API",
+    "version": "0.3.3"
+  },
+  "resources": [
+    {
+      "name": "remediation",
+      "key": "remediation",
+      "operations": [
+        {
+          "id": "remediate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/remediate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "violation_id"
+            ],
+            "properties": {
+              "violation_id": {
+                "type": "string",
+                "description": "Violation identifier from scan"
+              },
+              "auto_apply": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether to automatically apply remediation"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "remediated": {
+                "type": "boolean"
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "reporting",
+      "key": "reporting",
+      "operations": [
+        {
+          "id": "generateReport",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reports/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "format"
+            ],
+            "properties": {
+              "format": {
+                "type": "string",
+                "enum": [
+                  "pdf",
+                  "html",
+                  "json"
+                ],
+                "default": "json"
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "report_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "total_controls": {
+                    "type": "integer"
+                  },
+                  "compliant": {
+                    "type": "integer"
+                  },
+                  "violations": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "scanning",
+      "key": "scanning",
+      "operations": [
+        {
+          "id": "scanInfrastructure",
+          "method": "POST",
+          "kind": "create",
+          "path": "/scan",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "namespace"
+            ],
+            "properties": {
+              "namespace": {
+                "type": "string",
+                "description": "Kubernetes namespace to scan"
+              },
+              "controls": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Specific controls to check (e.g., AC-2, AC-3)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "compliant": {
+                "type": "boolean"
+              },
+              "violations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "control": {
+                      "type": "string"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ]
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "resource": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "api": {
+    "title": "Authentication API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "description": "User's password",
+                "example": "securePassword123"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "JWT access token",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "token_type": {
+                "type": "string",
+                "description": "Token type (bearer)",
+                "example": "bearer"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "User's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email",
+                    "example": "user@example.com"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8,
+                "description": "User's password (minimum 8 characters)",
+                "example": "securePassword123"
+              }
+            },
+            "required": [
+              "email",
+              "password"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique user identifier (UUID)",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "user@example.com"
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "Account created successfully"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

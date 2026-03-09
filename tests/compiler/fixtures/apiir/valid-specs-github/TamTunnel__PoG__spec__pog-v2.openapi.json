@@ -1,0 +1,72 @@
+{
+  "api": {
+    "title": "Proof-of-Generation (PoG) v2",
+    "version": "2.0.0"
+  },
+  "resources": [
+    {
+      "name": "Register",
+      "key": "register",
+      "operations": [
+        {
+          "id": "registerMedia",
+          "method": "POST",
+          "kind": "create",
+          "path": "/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "contentHash",
+              "tool"
+            ],
+            "properties": {
+              "contentHash": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{64}$",
+                "description": "keccak256(exact bytes)"
+              },
+              "perceptualHash": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{64}$"
+              },
+              "tool": {
+                "type": "string",
+                "example": "ComfyUI"
+              },
+              "pipeline": {
+                "type": "string",
+                "example": "ComfyUI:Flux|Upscayl"
+              },
+              "paramsHash": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{64}$"
+              },
+              "parentHash": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{64}$",
+                "description": "0x00… for originals"
+              },
+              "attesterSig": {
+                "type": "string",
+                "pattern": "^0x[a-fA-F0-9]{130}$",
+                "description": "Optional tool signature"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "txHash": {
+                "type": "string",
+                "example": "0x1234…abcd"
+              },
+              "explorer": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

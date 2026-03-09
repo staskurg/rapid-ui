@@ -1,0 +1,198 @@
+openapi: 3.1.0
+info:
+  version: "v1"
+  title: "Double Entry Book Keeping for Scalabe Currency"
+  license:
+    identifier: MIT
+    name: MIT
+servers:
+  - url: "localhost:3000"
+paths:
+  /currency/transfer:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assetName:
+                  type: string
+                from:
+                  $ref: "#/components/schemas/uuid"
+                to:
+                  $ref: "#/components/schemas/uuid"
+                amount:
+                  type: integer
+      responses:
+        "200":
+          description: "Transaction response"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+  /currency/fund:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                assetName:
+                  type: string
+                to:
+                  $ref: "#/components/schemas/uuid"
+                amount:
+                  type: integer
+      responses:
+        "200":
+          description: "Transaction response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+  /currency/transactions:
+    get:
+      parameters:
+        - name: uid
+          in: query
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+        - name: assetName
+          in: query
+          description: Inquiring asset name
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page index
+          schema:
+            type: integer
+        - name: limit
+          in: query
+          description: Max page size
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: "Transaction list response"
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Transaction"
+  /currency/balance:
+    get:
+      parameters:
+        - name: uid
+          in: query
+          description: ID of the user
+          required: true
+          schema:
+            type: string
+        - name: account
+          in: query
+          description: Inquiring account
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: "BalanceState response"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BalanceState"
+components:
+  schemas:
+    uuid:
+      type: string
+      format: uuid
+      example:
+        - 6c4044a4-f986-4dc2-b5e2-6e3a45f7505e
+        - 00332c74-8283-4096-bcf3-5ececd3853cb
+        - bafc6d2f-7d26-41c7-8f60-b0925deb245c
+        - c623579b-bacf-4ceb-a24d-5942871c8edc
+        - 1faf1f92-6ebf-402b-8549-a2f5dbd9ad14
+        - af3721c0-da1e-4e3e-bf40-d47fa221433e
+        - 556675d6-59be-4392-967c-ed57bf30e8fa
+        - ad759648-912c-4864-bdcd-974ba1da7eb2
+        - de1c266f-8d4f-44d8-8a9a-5f47e7159bed
+        - fa9c6f1a-6345-4f70-b405-cdf919fd4530
+    txid:
+      type: string
+      format: uuid
+      example:
+        - 5dc540c7-9252-4d03-a2cd-0532db61f250
+        - 060a9470-c738-4b35-865c-7e936c242936
+        - 6eebc3a4-ac33-48be-821d-0ce7d495cd5d
+        - 5eef15e2-3756-4c39-8330-bf536b980b3c
+        - 4b77865d-9c0a-4053-87a9-566a4194080d
+        - 9a23ea37-a4d4-4ea2-a75d-c838075d1d7a
+        - bde62f8b-27d6-451e-af44-1f3814f78050
+        - 0afc8899-6f6c-447c-8d0b-9aa7c6f59935
+        - 874b0599-ffb6-49c7-b350-34c892a838b0
+        - 1cf85869-277f-44aa-a86d-653122ac70a8
+    ACCOUNT:
+      type: string
+      enum:
+        - ASSET
+        - LIABILITIES
+        - EQUITY
+        - INCOME
+        - EXPENSE
+    Transaction:
+      type: object
+      properties:
+        txid:
+          $ref: "#/components/schemas/txid"
+        owner:
+          $ref: "#/components/schemas/uuid"
+        assetName:
+          type: string
+          example:
+            - GEM
+        ts:
+          type: integer
+        amount:
+          type: number
+        account:
+          $ref: "#/components/schemas/ACCOUNT"
+        entryType:
+          type: string
+          enum:
+            - CREDIT
+            - DEBIT
+    BalanceState:
+      type: object
+      properties:
+        txid:
+          $ref: "#/components/schemas/txid"
+        owner:
+          $ref: "#/components/schemas/uuid"
+        assetName:
+          type: string
+          example:
+            - GEM
+        ts:
+          type: integer
+        amount:
+          type: number
+        account:
+          $ref: "#/components/schemas/ACCOUNT"
+    securitySchemes:
+      bearerAuth: # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT # optional, arbitrary value for documentation purposes
+
+# Apply the security globally to all operations
+security:
+  - bearerAuth: [] # use the same name as above

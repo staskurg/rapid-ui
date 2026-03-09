@@ -1,0 +1,137 @@
+{
+  "api": {
+    "title": "Syllabi Search API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Courses",
+      "key": "courses",
+      "operations": [
+        {
+          "id": "listCourses",
+          "method": "GET",
+          "kind": "list",
+          "path": "/courses",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "info": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "info"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "ok",
+              "data"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Healthz",
+      "key": "healthz",
+      "operations": [
+        {
+          "id": "healthz",
+          "method": "GET",
+          "kind": "list",
+          "path": "/healthz",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "ok"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "semanticSearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "用户自然语言问题"
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 3,
+                "minimum": 1,
+                "maximum": 20
+              }
+            },
+            "required": [
+              "query"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "text",
+                    "score"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "ok",
+              "data"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

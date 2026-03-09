@@ -23,7 +23,7 @@ The report covers four layers of insight:
 
 The corpus run produces reports: **`scripts/corpus-data/reports/report-{name}-{timestamp}.md`** (e.g. report-api-guru-{timestamp}.md). Copy to `docs/subset-v1-corpus-report.md` only when publishing a final synthesis. This document specifies what each report must contain.
 
-**Corpus workflow:** Specs in `scripts/corpus-data/specs/api_guru/` (pre-filtered 3.0/3.1) → `corpus:run --api-guru` → raw JSON → `corpus:report` → report MD. Valid specs extracted via `corpus:extract-valid` and optionally copied to `tests/compiler/fixtures/valid-specs-api-guru/` for regression and LLM determinism testing. See plan Phase 4 Implementation Details.
+**Corpus workflow:** Specs in `scripts/corpus-data/specs/{api_guru|github}/` → `corpus:run --repo REPO` → raw JSON → `corpus:report --repo REPO` → report MD. Valid specs extracted via `corpus:extract-valid --repo REPO` and optionally copied to `tests/compiler/fixtures/valid-specs-{repo}/` for regression and LLM determinism testing. See plan Phase 4 Implementation Details.
 
 ---
 

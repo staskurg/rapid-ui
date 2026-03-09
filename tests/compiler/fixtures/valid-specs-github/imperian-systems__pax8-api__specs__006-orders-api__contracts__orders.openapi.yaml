@@ -1,0 +1,323 @@
+openapi: 3.0.3
+info:
+  title: Pax8 Orders API - Client Contract
+  description: |
+    OpenAPI contract for the Orders API client implementation.
+    Covers listing orders, retrieving order details, and creating orders
+    with validated line items.
+  version: 1.0.0
+  contact:
+    name: Pax8 API Client
+servers:
+  - url: https://api.pax8.com/v1
+    description: Pax8 Production API
+
+paths:
+  /orders:
+    get:
+      operationId: listOrders
+      summary: List orders
+      description: |
+        Retrieves a paginated list of orders. Supports filtering by companyId.
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/CompanyIdParam'
+      responses:
+        '200':
+          description: Successfully retrieved orders list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+    post:
+      operationId: createOrder
+      summary: Create order
+      description: |
+        Creates a new order for a company. Optional `isMock` query performs validation only.
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/IsMockParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /orders/{orderId}:
+    get:
+      operationId: getOrder
+      summary: Get order
+      description: Retrieves a specific order by ID.
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/OrderIdParam'
+      responses:
+        '200':
+          description: Successfully retrieved order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  parameters:
+    PageParam:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      description: 0-based page number
+    SizeParam:
+      in: query
+      name: size
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 200
+        default: 10
+      description: Page size (max 200)
+    CompanyIdParam:
+      in: query
+      name: companyId
+      schema:
+        type: string
+        format: uuid
+      description: Filter orders by company ID
+    OrderIdParam:
+      in: path
+      name: orderId
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Order identifier
+    IsMockParam:
+      in: query
+      name: isMock
+      schema:
+        type: boolean
+      description: If true, validates the order without persisting (mock mode)
+
+  schemas:
+    OrderListResponse:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        page:
+          $ref: '#/components/schemas/Page'
+      required: [content, page]
+
+    Page:
+      type: object
+      properties:
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        number:
+          type: integer
+      required: [size, totalElements, totalPages, number]
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        companyId:
+          type: string
+          format: uuid
+        createdDate:
+          type: string
+          format: date-time
+        orderedBy:
+          $ref: '#/components/schemas/OrderedBy'
+        orderedByUserId:
+          type: string
+          format: uuid
+        orderedByUserEmail:
+          type: string
+          format: email
+        isScheduled:
+          type: boolean
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderLineItem'
+      required: [id, companyId, createdDate, orderedBy, lineItems]
+
+    OrderLineItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        productId:
+          type: string
+          format: uuid
+        subscriptionId:
+          type: string
+          format: uuid
+          nullable: true
+        commitmentTermId:
+          type: string
+          format: uuid
+        provisionStartDate:
+          type: string
+          format: date-time
+        lineItemNumber:
+          type: number
+        billingTerm:
+          $ref: '#/components/schemas/BillingTerm'
+        parentSubscriptionId:
+          type: string
+          format: uuid
+        parentLineItemNumber:
+          type: number
+        quantity:
+          type: number
+        provisioningDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProvisioningDetail'
+      required: [id, productId, quantity, billingTerm]
+
+    CreateOrderRequest:
+      type: object
+      properties:
+        companyId:
+          type: string
+          format: uuid
+        lineItems:
+          type: array
+          items:
+            $ref: '#/components/schemas/CreateLineItem'
+        orderedBy:
+          $ref: '#/components/schemas/OrderedBy'
+        orderedByUserEmail:
+          type: string
+          format: email
+      required: [companyId, lineItems]
+
+    CreateLineItem:
+      type: object
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: number
+        billingTerm:
+          $ref: '#/components/schemas/BillingTerm'
+        lineItemNumber:
+          type: number
+        commitmentTermId:
+          type: string
+          format: uuid
+        provisionStartDate:
+          type: string
+          format: date-time
+        parentSubscriptionId:
+          type: string
+          format: uuid
+        parentLineItemNumber:
+          type: number
+        provisioningDetails:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProvisioningDetail'
+      required: [productId, quantity, billingTerm, lineItemNumber]
+
+    BillingTerm:
+      type: string
+      enum: [Monthly, Annual, 2-Year, 3-Year, One-Time, Trial, Activation]
+
+    OrderedBy:
+      type: string
+      enum: ["Pax8 Partner", Customer, Pax8]
+
+    ProvisioningDetail:
+      type: object
+      properties:
+        label:
+          type: string
+        key:
+          type: string
+        values:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        valueType:
+          type: string
+          enum: [Input, Single-Value, Multi-Value]
+        possibleValues:
+          type: array
+          items:
+            type: string
+
+  responses:
+    UnauthorizedError:
+      description: Unauthorized
+    ForbiddenError:
+      description: Forbidden
+    NotFoundError:
+      description: Not found
+    ValidationError:
+      description: Validation error
+    RateLimitError:
+      description: Rate limit exceeded
+    InternalError:
+      description: Internal server error

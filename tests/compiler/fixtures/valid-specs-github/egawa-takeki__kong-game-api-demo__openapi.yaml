@@ -1,0 +1,775 @@
+openapi: 3.0.3
+info:
+  title: Game Backend API
+  description: Game Backend API for gacha, user, and inventory services
+  version: 1.0.0
+  contact:
+    name: Game Backend Team
+
+servers:
+  - url: https://api.game.example.com
+    description: Production
+  - url: http://localhost:8000
+    description: Local development
+
+tags:
+  - name: auth
+    description: Authentication endpoints
+  - name: users
+    description: User endpoints
+  - name: gacha
+    description: Gacha endpoints
+  - name: inventory
+    description: Inventory endpoints
+
+# Global security - all endpoints require JWT by default
+security:
+  - bearerAuth: []
+
+paths:
+  # ============================================
+  # Auth Endpoints (User Service)
+  # ============================================
+  /v1/auth/guest:
+    post:
+      tags:
+        - auth
+      summary: Guest authentication
+      description: Authenticate as a guest user using device ID
+      operationId: guestAuth
+      security: []  # Override: No JWT required
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestAuthRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /v1/auth/refresh:
+    post:
+      tags:
+        - auth
+      summary: Refresh access token
+      description: Get new access token using refresh token
+      operationId: refreshToken
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # User Endpoints (User Service)
+  # ============================================
+  /v1/users/me:
+    get:
+      tags:
+        - users
+      summary: Get current user
+      description: Get current authenticated user information
+      operationId: getMe
+      responses:
+        '200':
+          description: User information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/users/me/currency:
+    get:
+      tags:
+        - users
+      summary: Get current user currency
+      description: Get current user's currency balance
+      operationId: getMyCurrency
+      responses:
+        '200':
+          description: Currency balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrencyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # Gacha Endpoints (Gacha Service)
+  # ============================================
+  /v1/gacha/pools:
+    get:
+      tags:
+        - gacha
+      summary: Get gacha pools
+      description: Get list of available gacha pools
+      operationId: getGachaPools
+      parameters:
+        - $ref: '#/components/parameters/ActiveOnly'
+      responses:
+        '200':
+          description: List of gacha pools
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/gacha/pools/{pool_id}:
+    get:
+      tags:
+        - gacha
+      summary: Get gacha pool
+      description: Get specific gacha pool details
+      operationId: getGachaPool
+      parameters:
+        - $ref: '#/components/parameters/PoolId'
+      responses:
+        '200':
+          description: Gacha pool details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GachaPoolResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /v1/gacha/draw:
+    post:
+      tags:
+        - gacha
+      summary: Draw gacha
+      description: Execute gacha draw
+      operationId: drawGacha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DrawGachaRequest'
+      responses:
+        '200':
+          description: Draw result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DrawGachaResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '402':
+          description: Insufficient currency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /v1/gacha/history:
+    get:
+      tags:
+        - gacha
+      summary: Get gacha history
+      description: Get user's gacha draw history
+      operationId: getGachaHistory
+      parameters:
+        - name: pool_id
+          in: query
+          description: Filter by pool ID
+          schema:
+            type: string
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Gacha history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HistoryListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/gacha/pity/{pool_id}:
+    get:
+      tags:
+        - gacha
+      summary: Get pity count
+      description: Get user's current pity count for a pool
+      operationId: getPityCount
+      parameters:
+        - $ref: '#/components/parameters/PoolId'
+      responses:
+        '200':
+          description: Pity count
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PityResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================
+  # Inventory Endpoints (Inventory Service)
+  # ============================================
+  /v1/inventory/items:
+    get:
+      tags:
+        - inventory
+      summary: Get user items
+      description: Get user's inventory items
+      operationId: getInventoryItems
+      parameters:
+        - $ref: '#/components/parameters/ItemType'
+      responses:
+        '200':
+          description: List of items
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemListResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /v1/inventory/items/{item_id}:
+    get:
+      tags:
+        - inventory
+      summary: Get user item
+      description: Get specific item from user's inventory
+      operationId: getInventoryItem
+      parameters:
+        - $ref: '#/components/parameters/ItemId'
+      responses:
+        '200':
+          description: Item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ItemResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  # ============================================
+  # Reusable Parameters
+  # ============================================
+  parameters:
+    PoolId:
+      name: pool_id
+      in: path
+      required: true
+      description: Pool ID
+      schema:
+        type: string
+        minLength: 1
+
+    ItemId:
+      name: item_id
+      in: path
+      required: true
+      description: Item ID
+      schema:
+        type: string
+        minLength: 1
+
+    ActiveOnly:
+      name: active_only
+      in: query
+      description: Filter active pools only
+      schema:
+        type: boolean
+        default: true
+
+    Limit:
+      name: limit
+      in: query
+      description: Maximum number of records to return
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+
+    ItemType:
+      name: item_type
+      in: query
+      description: Filter by item type
+      schema:
+        $ref: '#/components/schemas/ItemType'
+
+  # ============================================
+  # Reusable Responses
+  # ============================================
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    # ============================================
+    # Common Types
+    # ============================================
+    Rarity:
+      type: string
+      enum: [N, R, SR, SSR, UR]
+      example: SSR
+
+    ItemType:
+      type: string
+      enum: [character, weapon, material, consumable]
+      example: character
+
+    CurrencyType:
+      type: string
+      enum: [free_gem, paid_gem, gold]
+      example: free_gem
+
+    DeviceType:
+      type: string
+      enum: [ios, android, web]
+      example: ios
+
+    # ============================================
+    # Reusable Data Objects
+    # ============================================
+    GachaPool:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "pool-001"
+        name:
+          type: string
+          example: "Featured Banner"
+        description:
+          type: string
+          example: "Limited time banner with rate up"
+        cost_currency:
+          $ref: '#/components/schemas/CurrencyType'
+        cost_amount:
+          type: integer
+          example: 300
+        is_active:
+          type: boolean
+          example: true
+        start_at:
+          type: string
+          format: date-time
+          nullable: true
+        end_at:
+          type: string
+          format: date-time
+          nullable: true
+        rates:
+          $ref: '#/components/schemas/GachaRates'
+
+    GachaRates:
+      type: object
+      properties:
+        ssr:
+          type: number
+          format: double
+          example: 0.01
+        sr:
+          type: number
+          format: double
+          example: 0.05
+        r:
+          type: number
+          format: double
+          example: 0.15
+        n:
+          type: number
+          format: double
+          example: 0.79
+
+    DrawResult:
+      type: object
+      properties:
+        item_master_id:
+          type: string
+          example: "char-001"
+        name:
+          type: string
+          example: "Hero Character"
+        rarity:
+          $ref: '#/components/schemas/Rarity'
+        is_new:
+          type: boolean
+          example: true
+        is_pickup:
+          type: boolean
+          example: true
+
+    PityInfo:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 45
+        max_count:
+          type: integer
+          example: 90
+
+    InventoryItem:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "item-abc-123"
+        item_master_id:
+          type: string
+          example: "char-001"
+        name:
+          type: string
+          example: "Hero Character"
+        item_type:
+          $ref: '#/components/schemas/ItemType'
+        rarity:
+          $ref: '#/components/schemas/Rarity'
+        quantity:
+          type: integer
+          example: 1
+        obtained_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    HistoryEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "hist-abc-123"
+        pool_id:
+          type: string
+          example: "pool-001"
+        pool_name:
+          type: string
+          example: "Featured Banner"
+        item_master_id:
+          type: string
+          example: "char-001"
+        item_name:
+          type: string
+          example: "Hero Character"
+        rarity:
+          $ref: '#/components/schemas/Rarity'
+        pity_count:
+          type: integer
+          example: 45
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-01T12:00:00Z"
+
+    # ============================================
+    # Request Schemas
+    # ============================================
+    GuestAuthRequest:
+      type: object
+      required:
+        - device_id
+        - device_type
+      properties:
+        device_id:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Unique device identifier
+          example: "device-abc-123"
+        device_type:
+          $ref: '#/components/schemas/DeviceType'
+        device_name:
+          type: string
+          maxLength: 255
+          description: Human-readable device name
+          example: "iPhone 15 Pro"
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refresh_token
+      properties:
+        refresh_token:
+          type: string
+          minLength: 1
+          description: Refresh token from previous authentication
+          example: "eyJhbGciOiJIUzI1NiIs..."
+
+    DrawGachaRequest:
+      type: object
+      required:
+        - pool_id
+        - draw_count
+      properties:
+        pool_id:
+          type: string
+          minLength: 1
+          description: Target gacha pool ID
+          example: "pool-001"
+        draw_count:
+          type: integer
+          enum: [1, 10]
+          description: Number of draws (1 for single, 10 for multi)
+          example: 10
+
+    # ============================================
+    # Response Schemas
+    # ============================================
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_REQUEST"
+            message:
+              type: string
+              example: "Invalid request body"
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user_id:
+              type: string
+              example: "usr-abc-123"
+            player_id:
+              type: string
+              example: "PLY123456"
+            access_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIs..."
+            refresh_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIs..."
+            is_guest:
+              type: boolean
+              example: true
+
+    TokenResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            access_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIs..."
+            refresh_token:
+              type: string
+              example: "eyJhbGciOiJIUzI1NiIs..."
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            user_id:
+              type: string
+              example: "usr-abc-123"
+            player_id:
+              type: string
+              example: "PLY123456"
+            nickname:
+              type: string
+              example: "Player123"
+            is_guest:
+              type: boolean
+              example: true
+            created_at:
+              type: string
+              format: date-time
+              example: "2024-01-01T00:00:00Z"
+
+    CurrencyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            free_gem:
+              type: integer
+              example: 10000
+            paid_gem:
+              type: integer
+              example: 0
+            gold:
+              type: integer
+              example: 50000
+            stamina:
+              type: integer
+              example: 100
+
+    GachaPoolResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/GachaPool'
+
+    PoolListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            pools:
+              type: array
+              items:
+                $ref: '#/components/schemas/GachaPool'
+
+    DrawGachaResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            saga_id:
+              type: string
+              example: "saga-abc-123"
+            status:
+              type: string
+              example: "COMPLETED"
+            results:
+              type: array
+              items:
+                $ref: '#/components/schemas/DrawResult'
+            cost:
+              type: object
+              properties:
+                currency_type:
+                  $ref: '#/components/schemas/CurrencyType'
+                amount:
+                  type: integer
+                  example: 3000
+            pity:
+              $ref: '#/components/schemas/PityInfo'
+
+    HistoryListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            history:
+              type: array
+              items:
+                $ref: '#/components/schemas/HistoryEntry'
+            total:
+              type: integer
+              example: 100
+
+    PityResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/PityInfo'
+
+    ItemListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/InventoryItem'
+
+    ItemResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/InventoryItem'

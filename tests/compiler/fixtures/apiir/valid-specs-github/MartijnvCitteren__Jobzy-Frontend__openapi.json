@@ -1,0 +1,283 @@
+{
+  "api": {
+    "title": "Jobly Jobs API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Job Creation",
+      "key": "job-creation",
+      "operations": [
+        {
+          "id": "createCompanyInfo",
+          "method": "POST",
+          "kind": "create",
+          "path": "/create-company-info",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "companyWebsite",
+              "country"
+            ],
+            "properties": {
+              "companyName": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50,
+                "description": "Name of the company",
+                "example": "Tech Innovators BV"
+              },
+              "companyWebsite": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 50,
+                "pattern": "^www\\..+\\..+$",
+                "description": "Company website URL in format 'www.example.com'",
+                "example": "www.techinnovators.nl"
+              },
+              "country": {
+                "type": "string",
+                "enum": [
+                  "THE_NETHERLANDS",
+                  "BELGIUM",
+                  "GERMANY"
+                ],
+                "description": "Country where the company is located",
+                "example": "THE_NETHERLANDS"
+              },
+              "exampleVacancyUrl": {
+                "type": "string",
+                "maxLength": 100,
+                "pattern": "^www\\..+\\..+$",
+                "description": "Optional URL to an example vacancy from the company's website",
+                "example": "www.techinnovators.nl/careers/senior-developer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique token to be used for creating vacancies",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          }
+        },
+        {
+          "id": "createVacancyText",
+          "method": "POST",
+          "kind": "create",
+          "path": "/create-vacancy",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "seniorityLevel",
+              "writingStyle"
+            ],
+            "properties": {
+              "jobTitle": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 75,
+                "description": "Title of the job position",
+                "example": "Senior Full Stack Developer"
+              },
+              "seniorityLevel": {
+                "type": "string",
+                "enum": [
+                  "INTERN",
+                  "JUNIOR",
+                  "MEDIOR",
+                  "SENIOR"
+                ],
+                "description": "Seniority level of the position",
+                "example": "SENIOR"
+              },
+              "jobSummary": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 300,
+                "description": "Brief summary of the job position",
+                "example": "We are looking for an experienced Full Stack Developer to join our innovative team."
+              },
+              "tasks": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 300,
+                "description": "Main tasks and responsibilities",
+                "example": "Design and develop scalable web applications, mentor junior developers, participate in architecture decisions."
+              },
+              "skills": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 300,
+                "description": "Required skills and qualifications",
+                "example": "Java, Spring Boot, React, TypeScript, AWS, Docker, Kubernetes, microservices architecture."
+              },
+              "teamDescription": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 300,
+                "description": "Description of the team the candidate will join",
+                "example": "Join our agile team of 8 passionate developers working on innovative cloud-based products."
+              },
+              "writingStyle": {
+                "type": "object",
+                "required": [
+                  "writingStyle",
+                  "language"
+                ],
+                "properties": {
+                  "writingStyle": {
+                    "type": "string",
+                    "enum": [
+                      "FORMAL",
+                      "BUSINESS_CASUAL",
+                      "CASUAL",
+                      "CREATIVE",
+                      "TECHNICAL"
+                    ],
+                    "description": "Writing style for the vacancy text:\n- FORMAL: Professional and precise language\n- BUSINESS_CASUAL: Relaxed but professional and approachable\n- CASUAL: Informal, conversational and friendly\n- CREATIVE: Expressive, imaginative and engaging\n- TECHNICAL: Clear, precise and technical with domain-specific terminology\n",
+                    "example": "BUSINESS_CASUAL"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "DUTCH",
+                      "ENGLISH",
+                      "FLEMISH",
+                      "FRENCH",
+                      "GERMAN"
+                    ],
+                    "description": "Language for the generated vacancy text",
+                    "example": "ENGLISH"
+                  }
+                }
+              },
+              "benefits": {
+                "type": "object",
+                "required": [
+                  "salaryPeriod"
+                ],
+                "properties": {
+                  "salaryPeriod": {
+                    "type": "string",
+                    "enum": [
+                      "YEARLY",
+                      "MONTHLY",
+                      "WEEKLY",
+                      "DAILY",
+                      "HOURLY"
+                    ],
+                    "description": "Period for salary calculation",
+                    "example": "YEARLY"
+                  },
+                  "minSalary": {
+                    "type": "number",
+                    "format": "decimal",
+                    "minimum": 0,
+                    "multipleOf": 0.01,
+                    "description": "Minimum salary offered (between 0.00 and 999999.99)",
+                    "example": 65000
+                  },
+                  "maxSalary": {
+                    "type": "number",
+                    "format": "decimal",
+                    "multipleOf": 0.01,
+                    "description": "Maximum salary offered (between 0.00 and 999999.99)",
+                    "example": 85000
+                  },
+                  "extraPerks": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 100,
+                    "description": "Additional perks and benefits",
+                    "example": "Flexible working hours, remote work options, yearly training budget"
+                  }
+                }
+              },
+              "contactInfo": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "maxLength": 25,
+                    "description": "Name of the contact person",
+                    "example": "Sarah Johnson"
+                  },
+                  "mail": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "format": "email",
+                    "description": "Email address of the contact person",
+                    "example": "sarah.johnson@example.com"
+                  },
+                  "phoneNumber": {
+                    "type": "string",
+                    "maxLength": 15,
+                    "pattern": "^[0-9\\-\\+ ]+$",
+                    "description": "Phone number (at least 10 characters, only numbers, '-', '+' or spaces)",
+                    "example": "+31 20 123 4567"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string",
+                "description": "Generated summary of the vacancy",
+                "example": "Join our team as a Senior Full Stack Developer"
+              },
+              "companyDescription": {
+                "type": "string",
+                "description": "AI-generated description of the company",
+                "example": "Tech Innovators BV is a leading software company specializing in cloud-based solutions..."
+              },
+              "teamDescription": {
+                "type": "string",
+                "description": "Generated description of the team",
+                "example": "Work alongside a talented team of 8 developers in an agile environment..."
+              },
+              "dayToDayDescription": {
+                "type": "string",
+                "description": "Description of typical day-to-day activities",
+                "example": "Your day will involve designing scalable applications, mentoring team members..."
+              },
+              "jobDescription": {
+                "type": "string",
+                "description": "Comprehensive job description",
+                "example": "As a Senior Full Stack Developer, you'll be responsible for building and maintaining..."
+              },
+              "jobUniqueSellingPoints": {
+                "type": "string",
+                "description": "Unique aspects that make this job attractive",
+                "example": "Work on cutting-edge technology, influence architectural decisions..."
+              },
+              "requirements": {
+                "type": "string",
+                "description": "Formatted list of requirements",
+                "example": "5+ years of Java development, strong React skills, experience with AWS..."
+              },
+              "offer": {
+                "type": "string",
+                "description": "What the company offers to the candidate",
+                "example": "Competitive salary between €65,000 and €85,000, flexible hours, remote work..."
+              },
+              "contactInformation": {
+                "type": "string",
+                "description": "Formatted contact information",
+                "example": "Interested? Contact Sarah Johnson at sarah.johnson@example.com or +31 20 123 4567"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

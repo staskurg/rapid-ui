@@ -1,0 +1,100 @@
+openapi: 3.0.0
+info:
+  title: Weather Analytics API
+  version: 1.0.0
+  description: API for retrieving weather KPI data based on event type and time period.
+servers:
+  - url: http://localhost:8080/v1/weather
+    description: Local server
+  - url: https://starfish-app-5d2xl.ondigitalocean.app/v1/weather
+    description: Hosted server
+paths:
+  /kpi:
+    get:
+      summary: Get weather KPI data
+      description: Retrieve weather KPI data based on event type and time period.
+      parameters:
+        - name: eventType
+          in: query
+          description: The type of weather event to retrieve data for.
+          required: true
+          schema:
+            type: string
+            enum: [SUMMARY, PRECIP_TYPE]
+        - name: timestamp
+          in: query
+          description: The time period for the data.
+          required: true
+          schema:
+            type: string
+            enum: [CUSTOM, DAY, MONTH, YEAR]
+        - name: startDate
+          in: query
+          description: The start date for the data period (required for CUSTOM timestamp).
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2006-04-01 20:00:00'
+        - name: endDate
+          in: query
+          description: The end date for the data period (required for CUSTOM timestamp).
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: '2006-07-27 23:00:00'
+      responses:
+        '200':
+          description: Successful response with weather KPI data.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeatherKPIResponse'
+        '400':
+          description: Bad request when input parameters are invalid.
+        '404':
+          description: Not found if data is not available.
+        '500':
+          description: Internal server error.
+  /health:
+    get:
+      summary: Check health status of the application
+      description: Returns UP if the application is healthy
+      responses:
+        '200':
+          description: Application is up and running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - UP
+
+components:
+  schemas:
+    WeatherKPIResponse:
+      type: object
+      properties:
+        type:
+          type: string
+          example: SUMMARY
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WeatherDataPoint'
+        unit:
+          type: string
+          example: '%'
+    WeatherDataPoint:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Partly Cloudy
+        value:
+          type: integer
+          example: 33

@@ -1,0 +1,150 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: unity@jpl.nasa.gov
+  description: Unity DAPA Process Mapper
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: https://unity.jpl.nasa.gov/terms/
+  title: Unity DAPA Process Mapper
+  version: 0.0.1
+servers:
+  - description: Local development server
+    url: http://localhost:8080/unity/v0/
+
+paths:
+
+
+  # 20200516, xing
+  # this would have openapi-generator create bad code
+  # ref: https://github.com/OpenAPITools/openapi-generator/issues/3304
+  #/RepresentationInformation/{id}:
+  /collections/{collection_id}/processes:
+    get:
+      summary: "List processes applicable to a collection specified by collection id"
+      description: Get processes for collection id
+      operationId: get_processes_for_collection_id
+      parameters:
+        - $ref: '#/components/parameters/CollectionId'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Processes'
+          description: Successfully return a list of processors
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InlineResponse400'
+          description: processor not found
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+
+  /collections/{collection_id}/processes/time-series:area:
+    get:
+      summary: "Get time series by spatial and temporal constraints for a collection specified by collection id"
+      description: Get time series for collection id
+      operationId: get_time_series_for_collection_id
+      parameters:
+        - $ref: '#/components/parameters/CollectionId'
+        - $ref: '#/components/parameters/BoundingBox'
+        - $ref: '#/components/parameters/DateTime'
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSeries'
+          description: Successfully return a time series
+        404:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InlineResponse400'
+          description: processor not found
+      x-openapi-router-controller: openapi_server.controllers.default_controller
+
+components:
+
+  parameters:
+      CollectionId:
+        description: id of a collection
+        explode: false
+        in: path
+        name: collection_id
+        required: true
+        schema:
+          $ref: '#/components/schemas/CollectionId'
+        style: simple
+      BoundingBox:
+        description: bounding box
+        explode: false
+        in: query
+        name: bbox
+        required: true
+        schema:
+          $ref: '#/components/schemas/BoundingBox'
+        style: simple
+      DateTime:
+        description: start and end time
+        explode: false
+        in: query
+        name: datetime
+        required: true
+        schema:
+          $ref: '#/components/schemas/DateTime'
+        style: simple
+
+  responses:
+    400Error:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InlineResponse400'
+      description: Invalid store
+    404Error:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InlineResponse400'
+      description: Store not found
+
+  schemas:
+    InlineResponse400:
+      description: A customized HTTP 400 response which explains why the service cannot or will not process the store.
+      properties:
+        message:
+          description: A message to accompany the HTTP 400 response.
+          type: string
+
+    CollectionId:
+      description: collection id
+      type: string
+      #pattern: ^(\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}\.){0,1}\w{8}\-\w{4}\-\w{4}\-\w{4}\-\w{12}$
+      example: JPL_MUR25-JPL-L4-GLOB-v04.2
+
+    BoundingBox:
+      description: bounding box
+      type: string
+      #pattern: ^(\w){3}(\w)$
+      example: -160,-15,-130,15
+
+    DateTime:
+      description: start/end time in iso format
+      type: string
+      #pattern: ^(\w){3}(\w)$
+      example: 2022-01-01T00:00:00Z/2022-01-31T23:59:59Z
+
+    Processes:
+      type: array
+      items:
+        type: string
+        #$ref: '#/components/schemas/ProcessorMin'
+
+    TimeSeries:
+      type: array
+      items:
+        type: number
+        format: float

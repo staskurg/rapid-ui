@@ -1,0 +1,177 @@
+# Generated with protoc-gen-openapi
+# https://github.com/google/gnostic/tree/master/cmd/protoc-gen-openapi
+
+openapi: 3.0.3
+info:
+    title: OrderBook API
+    version: 0.0.1
+paths:
+    /v1/instruments/{instrument}/quote:
+        get:
+            tags:
+                - OrderBook
+            operationId: OrderBook_GetInstrumentQuote
+            parameters:
+                - name: instrument
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/orderbook.v1.InstrumentQuote'
+    /v1/orders:
+        get:
+            tags:
+                - OrderBook
+            operationId: OrderBook_ListOrders
+            parameters:
+                - name: instrument
+                  in: query
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/orderbook.v1.ListOrdersResponse'
+        post:
+            tags:
+                - OrderBook
+            operationId: OrderBook_CreateOrder
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            $ref: '#/components/schemas/orderbook.v1.CreateOrderRequest'
+                required: true
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/orderbook.v1.Order'
+    /v1/orders/{orderId}:
+        get:
+            tags:
+                - OrderBook
+            operationId: OrderBook_GetOrder
+            parameters:
+                - name: orderId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/orderbook.v1.Order'
+        delete:
+            tags:
+                - OrderBook
+            operationId: OrderBook_CancelOrder
+            parameters:
+                - name: orderId
+                  in: path
+                  required: true
+                  schema:
+                    type: string
+            responses:
+                "200":
+                    description: OK
+                    content:
+                        application/json:
+                            schema:
+                                $ref: '#/components/schemas/orderbook.v1.CancelOrderResponse'
+components:
+    schemas:
+        orderbook.v1.CancelOrderResponse:
+            type: object
+            properties:
+                orderId:
+                    type: string
+                status:
+                    type: integer
+                    format: enum
+        orderbook.v1.CreateOrderRequest:
+            type: object
+            properties:
+                clientOrderId:
+                    type: string
+                instrument:
+                    type: string
+                side:
+                    type: integer
+                    format: enum
+                type:
+                    type: integer
+                    format: enum
+                price:
+                    type: number
+                    format: double
+                size:
+                    type: number
+                    format: double
+        orderbook.v1.InstrumentQuote:
+            type: object
+            properties:
+                instrument:
+                    type: string
+                bestBidPrice:
+                    type: number
+                    format: double
+                bestBidSize:
+                    type: number
+                    format: double
+                bestAskPrice:
+                    type: number
+                    format: double
+                bestAskSize:
+                    type: number
+                    format: double
+        orderbook.v1.ListOrdersResponse:
+            type: object
+            properties:
+                orders:
+                    type: array
+                    items:
+                        $ref: '#/components/schemas/orderbook.v1.Order'
+        orderbook.v1.Order:
+            type: object
+            properties:
+                orderId:
+                    type: string
+                clientOrderId:
+                    type: string
+                instrument:
+                    type: string
+                side:
+                    type: integer
+                    format: enum
+                type:
+                    type: integer
+                    format: enum
+                status:
+                    type: integer
+                    format: enum
+                price:
+                    type: number
+                    format: double
+                size:
+                    type: number
+                    format: double
+                createdAt:
+                    type: string
+                    format: date-time
+tags:
+    - name: OrderBook

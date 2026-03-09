@@ -1,0 +1,484 @@
+{
+  "api": {
+    "title": "Fabrikage API - Live Mirror Architecture",
+    "version": "3.0.0"
+  },
+  "resources": [
+    {
+      "name": "Energy-ledger",
+      "key": "energy-ledger",
+      "operations": [
+        {
+          "id": "getEnergyLedger",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/energy-ledger",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "sources",
+              "sinks",
+              "balance",
+              "efficiency"
+            ],
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "mw",
+                    "level"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "mw": {
+                      "type": "number"
+                    },
+                    "level": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "sinks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "mw",
+                    "level"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "mw": {
+                      "type": "number"
+                    },
+                    "level": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "balance": {
+                "type": "number"
+              },
+              "efficiency": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Events",
+      "key": "events",
+      "operations": [
+        {
+          "id": "listEvents",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/events",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "stage",
+                "message",
+                "timestamp"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "stage": {
+                  "type": "string",
+                  "enum": [
+                    "sense",
+                    "commit",
+                    "transform",
+                    "emerge"
+                  ]
+                },
+                "message": {
+                  "type": "string"
+                },
+                "signature": {
+                  "type": "string"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "ok",
+              "status",
+              "version",
+              "system",
+              "timestamp"
+            ],
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "operational",
+                  "degraded",
+                  "down"
+                ]
+              },
+              "version": {
+                "type": "string"
+              },
+              "system": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Links",
+      "key": "links",
+      "operations": [
+        {
+          "id": "listLinks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/links",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "from",
+                "to",
+                "type"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "from": {
+                  "type": "string"
+                },
+                "to": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "MATERIAL",
+                    "ENERGY",
+                    "INFORMATION",
+                    "META"
+                  ]
+                },
+                "capacity": {
+                  "type": "string"
+                },
+                "latencyRange": {
+                  "type": "string"
+                },
+                "protocol": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Morph",
+      "key": "morph",
+      "operations": [
+        {
+          "id": "morphNode",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/morph",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "action",
+              "target"
+            ],
+            "properties": {
+              "action": {
+                "type": "string",
+                "enum": [
+                  "replicate",
+                  "transform",
+                  "merge",
+                  "split"
+                ]
+              },
+              "target": {
+                "type": "string"
+              },
+              "morphType": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "ok",
+              "action",
+              "target",
+              "result",
+              "timestamp"
+            ],
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "action": {
+                "type": "string"
+              },
+              "target": {
+                "type": "string"
+              },
+              "morphType": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string"
+              },
+              "commitWindow": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "newState": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Nodes",
+      "key": "nodes",
+      "operations": [
+        {
+          "id": "listNodes",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/nodes",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "level",
+                "ports"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "level": {
+                  "type": "string",
+                  "enum": [
+                    "NANO",
+                    "MESO",
+                    "PLANET_SPHERE",
+                    "SOLAR_SPHERE",
+                    "GALACTIC",
+                    "SUPERCLUSTER",
+                    "UNIVERSAL",
+                    "TRANSUNIVERSAL_META",
+                    "CONTINUUM_FIELD"
+                  ]
+                },
+                "ports": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "material",
+                      "energy",
+                      "info",
+                      "meta"
+                    ]
+                  }
+                },
+                "holoState": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createNode",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/nodes",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "level"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "level": {
+                "type": "string"
+              },
+              "ports": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "holoState": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "ok",
+              "node",
+              "timestamp"
+            ],
+            "properties": {
+              "ok": {
+                "type": "boolean"
+              },
+              "node": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "level",
+                  "ports"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "string",
+                    "enum": [
+                      "NANO",
+                      "MESO",
+                      "PLANET_SPHERE",
+                      "SOLAR_SPHERE",
+                      "GALACTIC",
+                      "SUPERCLUSTER",
+                      "UNIVERSAL",
+                      "TRANSUNIVERSAL_META",
+                      "CONTINUUM_FIELD"
+                    ]
+                  },
+                  "ports": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "material",
+                        "energy",
+                        "info",
+                        "meta"
+                      ]
+                    }
+                  },
+                  "holoState": {
+                    "type": "string"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Universal",
+      "key": "universal",
+      "operations": [
+        {
+          "id": "getUniversalLayers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/universal/layers",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "layers",
+              "active",
+              "current"
+            ],
+            "properties": {
+              "layers": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "active": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "current": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

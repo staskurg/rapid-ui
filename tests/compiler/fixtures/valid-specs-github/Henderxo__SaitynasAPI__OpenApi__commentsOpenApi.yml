@@ -1,0 +1,395 @@
+openapi: 3.0.0
+info:
+  title: Comments API
+  description: API for managing comments on games, with user authentication and authorization
+  version: 1.0.0
+
+servers:
+  - url: 'http://localhost:3000'
+    description: Local server
+
+paths:
+  /login:
+    post:
+      summary: Login a user
+      description: Authenticates a user by verifying email and password, returning a JWT token for further requests. The JWT token will be stored as a cookie for automatic inclusion in subsequent requests.
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  example: user@example.com
+                password:
+                  type: string
+                  example: password123
+      responses:
+        '200':
+          description: Successful login and JWT token issued (stored in cookie)
+          headers:
+            Set-Cookie:
+              description: JWT token stored in a cookie
+              schema:
+                type: string
+                example: "accessToken=<JWT_TOKEN_HERE>"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Login successful, JWT token issued."
+                  token:
+                    type: string
+                    description: The JWT token for authorization
+        '400':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Invalid email or password."
+        '500':
+          description: Server error
+
+  /comments:
+    get:
+      summary: Get all comments
+      description: Retrieves all comments in the database.
+      operationId: getAllComments
+      tags:
+        - Comments
+      responses:
+        '200':
+          description: A list of all comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
+                    body:
+                      type: string
+                    gameId:
+                      type: string
+                    userId:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+        '500':
+          description: Server error
+
+    post:
+      summary: Create a new comment
+      description: Creates a new comment for a specific game. The userId is taken from the authenticated user (JWT token). The gameId must exist and be associated with a valid game.
+      operationId: createComment
+      tags:
+        - Comments
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - body
+                - gameId
+              properties:
+                title:
+                  type: string
+                  example: "Great Game!"
+                body:
+                  type: string
+                  example: "I really enjoyed this game, the mechanics are awesome."
+                gameId:
+                  type: string
+                  example: "60b8d0f6f8b16f1d8c09f6d9"
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  title:
+                    type: string
+                  body:
+                    type: string
+                  gameId:
+                    type: string
+                  userId:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Bad request (invalid data or missing fields)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Missing title, body, or gameId."
+        '404':
+          description: Game not found or User not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Game not found"
+        '500':
+          description: Server error
+
+  /comments/{id}:
+    get:
+      summary: Get a single comment by ID
+      description: Retrieve a comment by its ID, with optional expansions (gameId, userId)
+      operationId: getCommentById
+      tags:
+        - Comments
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The unique identifier of the comment
+          schema:
+            type: string
+        - in: query
+          name: expand
+          description: A comma-separated list of fields to expand (e.g. 'gameId,userId')
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: The requested comment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  title:
+                    type: string
+                  body:
+                    type: string
+                  gameId:
+                    type: string
+                  userId:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comment not found"
+        '500':
+          description: Server error
+
+    put:
+      summary: Update an existing comment
+      description: Update the title or body of a comment
+      operationId: updateComment
+      tags:
+        - Comments
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The unique identifier of the comment
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - body
+              properties:
+                title:
+                  type: string
+                  example: "Updated Title"
+                body:
+                  type: string
+                  example: "Updated body content."
+      responses:
+        '200':
+          description: Successfully updated comment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  title:
+                    type: string
+                  body:
+                    type: string
+                  gameId:
+                    type: string
+                  userId:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '400':
+          description: Missing required fields
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Need all fields"
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comment not found"
+        '500':
+          description: Server error
+
+    delete:
+      summary: Delete a comment
+      description: Delete a specific comment by its ID
+      operationId: deleteComment
+      tags:
+        - Comments
+      parameters:
+        - in: path
+          name: id
+          required: true
+          description: The unique identifier of the comment
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successfully deleted comment
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                  title:
+                    type: string
+                  body:
+                    type: string
+                  gameId:
+                    type: string
+                  userId:
+                    type: string
+                  created_at:
+                    type: string
+                    format: date-time
+        '404':
+          description: Comment not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Comment not found"
+        '500':
+          description: Server error
+
+  /games/{gameId}/comments:
+    get:
+      summary: Get all comments for a specific game
+      description: Retrieves all comments for a specific game by its ID
+      operationId: getCommentsByGame
+      tags:
+        - Comments
+      parameters:
+        - in: path
+          name: gameId
+          required: true
+          description: The unique identifier of the game
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of comments for the specified game
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    _id:
+                      type: string
+                    title:
+                      type: string
+                    body:
+                      type: string
+                    gameId:
+                      type: string
+                    userId:
+                      type: string
+                    created_at:
+                      type: string
+                      format: date-time
+        '404':
+          description: Game not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Game not found"
+        '500':
+          description: Server error

@@ -1,0 +1,219 @@
+openapi: "3.0.2"
+info:
+  description: "A Node.js authentication API that uses JWT to provide simple user authentication endpoints. \n \n This project has a simple behavior, and it's intended to be the backbone of more complex user management."
+  version: "1.0.0"
+  title: "Auth API"
+  license:
+    name: "MIT"
+    url: "https://github.com/iammateus/AuthAPI/blob/master/LICENSE"
+servers:
+  - url: "http://localhost:8000"
+    description: "Local server"
+tags:
+- name: "User"
+  description: "Operations about user"
+- name: "Health"
+  description: "Operations about health"
+paths:
+  /users:
+    post:
+      tags:
+      - "User"
+      summary: "Create user"
+      operationId: "createUser"
+      requestBody:
+        description: "User data"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/userInput"
+      responses:
+        201:
+          description: "Success"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "The user was created successfully"
+                  data: 
+                    type: object
+                    properties:
+                      user:
+                        $ref: "#/components/schemas/userOutput"
+        422:
+          description: "Invalid data"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "\"email\" is required"
+  /auth/login:
+    post:
+      tags:
+      - "User"
+      summary: "Authenticate user"
+      operationId: "authenticateUser"
+      requestBody:
+        description: "User credentials"
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/userCredentials"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  message:
+                    type: "string"
+                    example: "User authenticated successfully"
+                  data: 
+                    type: "object"
+                    properties:
+                      token:
+                        type: "string"
+                        example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2MDUxM2U2YmJkOTdlZTA5YjVjZTNlODAiLCJpYXQiOjE2MTc0NjU1NjR9.lfDS9QwLys_MMHxM8QqYPGO2v2B9bGdJC6O_w_8VJhA"
+        401:
+          description: "Invalid credentials"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "Email or password does not exist"
+        422:
+          description: "Invalid data"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "\"email\" is required"
+  /users/me:
+    get:
+      security:
+        - auth: [] 
+      tags:
+      - "User"
+      summary: "Show user"
+      operationId: "showUser"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  data:
+                    type: "object"
+                    properties:
+                      user: 
+                        $ref: "#/components/schemas/userOutput"
+        401:
+          description: "Unauthorized"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "Unauthorized"
+  /health:
+    get:
+      tags:
+      - "Health"
+      summary: "Show application health"
+      operationId: "health"
+      responses:
+        200:
+          description: "Success"
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  message:
+                    type: "string"
+                    example: "The application is running (Auth API)"
+                  mongodb: 
+                    type: object
+                    properties:
+                      connection: 
+                        example: "connected"
+components:
+  schemas:
+    userInput:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+          example: "user@email.com"
+          description: "Should be a valid email"
+        name:
+          type: "string"
+          example: "Funny Puppy"
+        password:
+          type: "string"
+          example: "&8mTwX*e"
+          description: "Should have at least 8 characters"
+        password_confirmation:
+          type: "string"
+          example: "&8mTwX*e"
+          description: "Should have the same value of the field \"password\""
+      required:
+        - "email"
+        - "name"
+        - "password"
+        - "password_confirmation"
+    userCredentials:
+      type: "object"
+      properties:
+        email:
+          type: "string"
+          example: "user@email.com"
+        password:
+          type: "string"
+          example: "&8mTwX*e"
+      required:
+        - "password"
+        - "email"
+    userOutput:
+      type: "object"
+      properties:
+        id:
+          type: "string"
+          example: "6064d43defea9e027af8e4de"
+        email:
+          type: "string"
+          example: "user@email.com"
+        name:
+          type: "string"
+          example: "Funny Puppy"
+        createdAt:
+          type: "string"
+          example: "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+        updatedAt:
+          type: "string"
+          example: "Tue Mar 09 2021 00:00:54 GMT+0000 (Coordinated Universal Time)"
+  securitySchemes:
+    auth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

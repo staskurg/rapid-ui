@@ -1,0 +1,278 @@
+{
+  "api": {
+    "title": "TaskMaster - Chat-Based Task Entry API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "listTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "tasks",
+              "count"
+            ],
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "user_input",
+                    "status",
+                    "enrichment_status",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Unique task identifier (auto-generated)",
+                      "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+                    },
+                    "user_input": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000,
+                      "description": "Original user message from chat (trimmed)",
+                      "example": "call mom"
+                    },
+                    "enriched_text": {
+                      "type": "string",
+                      "nullable": true,
+                      "maxLength": 2000,
+                      "description": "LLM-improved version (null during enrichment)",
+                      "example": "Call Mom to discuss weekend plans"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open"
+                      ],
+                      "description": "Task completion status (always \"open\" for this feature)",
+                      "example": "open"
+                    },
+                    "enrichment_status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "processing",
+                        "completed",
+                        "failed"
+                      ],
+                      "description": "LLM enrichment processing state",
+                      "example": "completed"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Task creation timestamp (UTC, ISO8601)",
+                      "example": "2025-11-04T10:30:00Z"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Last modification timestamp (UTC, ISO8601)",
+                      "example": "2025-11-04T10:30:03Z"
+                    },
+                    "error_message": {
+                      "type": "string",
+                      "nullable": true,
+                      "maxLength": 500,
+                      "description": "Error details if enrichment fails",
+                      "example": "Ollama API timeout after 5s"
+                    }
+                  }
+                }
+              },
+              "count": {
+                "type": "integer",
+                "description": "Total number of tasks returned",
+                "example": 15
+              }
+            }
+          }
+        },
+        {
+          "id": "getTask",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "user_input",
+              "status",
+              "enrichment_status",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique task identifier (auto-generated)",
+                "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+              },
+              "user_input": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "Original user message from chat (trimmed)",
+                "example": "call mom"
+              },
+              "enriched_text": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 2000,
+                "description": "LLM-improved version (null during enrichment)",
+                "example": "Call Mom to discuss weekend plans"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ],
+                "description": "Task completion status (always \"open\" for this feature)",
+                "example": "open"
+              },
+              "enrichment_status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "completed",
+                  "failed"
+                ],
+                "description": "LLM enrichment processing state",
+                "example": "completed"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task creation timestamp (UTC, ISO8601)",
+                "example": "2025-11-04T10:30:00Z"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last modification timestamp (UTC, ISO8601)",
+                "example": "2025-11-04T10:30:03Z"
+              },
+              "error_message": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 500,
+                "description": "Error details if enrichment fails",
+                "example": "Ollama API timeout after 5s"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTask",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "user_input"
+            ],
+            "properties": {
+              "user_input": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "User message from chat interface",
+                "example": "call mom"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "user_input",
+              "status",
+              "enrichment_status",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique task identifier (auto-generated)",
+                "example": "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+              },
+              "user_input": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "Original user message from chat (trimmed)",
+                "example": "call mom"
+              },
+              "enriched_text": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 2000,
+                "description": "LLM-improved version (null during enrichment)",
+                "example": "Call Mom to discuss weekend plans"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open"
+                ],
+                "description": "Task completion status (always \"open\" for this feature)",
+                "example": "open"
+              },
+              "enrichment_status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "completed",
+                  "failed"
+                ],
+                "description": "LLM enrichment processing state",
+                "example": "completed"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task creation timestamp (UTC, ISO8601)",
+                "example": "2025-11-04T10:30:00Z"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last modification timestamp (UTC, ISO8601)",
+                "example": "2025-11-04T10:30:03Z"
+              },
+              "error_message": {
+                "type": "string",
+                "nullable": true,
+                "maxLength": 500,
+                "description": "Error details if enrichment fails",
+                "example": "Ollama API timeout after 5s"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

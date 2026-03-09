@@ -1,0 +1,251 @@
+{
+  "api": {
+    "title": "Physical AI Book RAG Chatbot API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "chatGlobal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 1000,
+                "description": "User's question about the book",
+                "example": "What is NVIDIA Isaac Sim?"
+              },
+              "conversation_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true,
+                "description": "Optional session identifier for multi-turn conversations",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "answer",
+              "conversation_id",
+              "grounded"
+            ],
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "LLM-generated response",
+                "example": "According to Chapter 21..."
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "chapter",
+                    "title"
+                  ],
+                  "properties": {
+                    "chapter": {
+                      "type": "string",
+                      "description": "Chapter slug (e.g., 'module-1/ros2-architecture')",
+                      "example": "module-3/isaac-sim-setup"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable chapter title",
+                      "example": "Isaac Sim Setup & Basics"
+                    },
+                    "relevance_score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "nullable": true,
+                      "description": "Cosine similarity score (higher = more relevant)",
+                      "example": 0.87
+                    }
+                  }
+                },
+                "description": "Chapter citations (global mode only)"
+              },
+              "grounded_in": {
+                "type": "string",
+                "nullable": true,
+                "description": "Confirmation of selected text (grounded mode only)",
+                "example": "ROS 2 is a middleware framework..."
+              },
+              "conversation_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session identifier",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "grounded": {
+                "type": "boolean",
+                "description": "Whether response used selected text (true) or full-book search (false)",
+                "example": false
+              }
+            }
+          }
+        },
+        {
+          "id": "chatGrounded",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat/grounded",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query",
+              "selected_text"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 1000,
+                "description": "User's question about the selected text",
+                "example": "Explain this concept"
+              },
+              "selected_text": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 10000,
+                "description": "Text highlighted by user from book page",
+                "example": "ROS 2 is a middleware framework..."
+              },
+              "source_chapter": {
+                "type": "string",
+                "nullable": true,
+                "description": "Chapter slug where text was selected (optional metadata)",
+                "example": "module-1/ros2-architecture"
+              },
+              "conversation_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true,
+                "description": "Optional session identifier",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "answer",
+              "conversation_id",
+              "grounded"
+            ],
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "LLM-generated response",
+                "example": "According to Chapter 21..."
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "chapter",
+                    "title"
+                  ],
+                  "properties": {
+                    "chapter": {
+                      "type": "string",
+                      "description": "Chapter slug (e.g., 'module-1/ros2-architecture')",
+                      "example": "module-3/isaac-sim-setup"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Human-readable chapter title",
+                      "example": "Isaac Sim Setup & Basics"
+                    },
+                    "relevance_score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "nullable": true,
+                      "description": "Cosine similarity score (higher = more relevant)",
+                      "example": 0.87
+                    }
+                  }
+                },
+                "description": "Chapter citations (global mode only)"
+              },
+              "grounded_in": {
+                "type": "string",
+                "nullable": true,
+                "description": "Confirmation of selected text (grounded mode only)",
+                "example": "ROS 2 is a middleware framework..."
+              },
+              "conversation_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session identifier",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "grounded": {
+                "type": "boolean",
+                "description": "Whether response used selected text (true) or full-book search (false)",
+                "example": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "version"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded"
+                ],
+                "description": "API health status"
+              },
+              "version": {
+                "type": "string",
+                "description": "API version (semver)",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Current server time (ISO 8601)"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1514 @@
+{
+  "api": {
+    "title": "Merchant APIs",
+    "version": "6.0"
+  },
+  "resources": [
+    {
+      "name": "GotItMerchant",
+      "key": "gotitmerchant",
+      "operations": [
+        {
+          "id": "checkMultiple",
+          "method": "POST",
+          "kind": "create",
+          "path": "/merchant/v6.0/checkmultiple",
+          "requestSchema": {
+            "example": {
+              "codes": [
+                "070898022379",
+                "7132616187"
+              ],
+              "bill_number": "BILL001",
+              "pin": "1212",
+              "skip_reserved_when_mark_used": true,
+              "skus_info": [
+                {
+                  "sku": "SKU001",
+                  "quantity": 1,
+                  "price": 100000
+                },
+                {
+                  "sku": "SKU002",
+                  "quantity": 2,
+                  "price": 200000
+                }
+              ],
+              "total_bill": 1000000
+            },
+            "properties": {
+              "pin": {
+                "description": "Store pin",
+                "example": "1212",
+                "type": "string"
+              },
+              "codes": {
+                "description": "Array of 10-16 characters Got It voucher codes",
+                "example": [
+                  "070898022379",
+                  "7132616187"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "bill_number": {
+                "description": "Bill number will apply vouchers",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "total_bill": {
+                "description": "Total bill amount",
+                "example": 1000000,
+                "type": "integer"
+              },
+              "skip_reserved_when_mark_used": {
+                "description": "When true the system will execute the flow without reserve",
+                "example": true,
+                "type": "boolean"
+              },
+              "skus_info": {
+                "description": "SKU information in bill_number",
+                "example": [
+                  {
+                    "sku": "SKU001",
+                    "quantity": 1,
+                    "price": 100000
+                  },
+                  {
+                    "sku": "SKU002",
+                    "quantity": 2,
+                    "price": 200000
+                  }
+                ],
+                "items": {
+                  "properties": {
+                    "sku": {
+                      "description": "SKU code",
+                      "example": "SKU001",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "description": "Quantity of SKU. Default = 1",
+                      "example": 1,
+                      "type": "integer"
+                    },
+                    "price": {
+                      "description": "Price of SKU in bill",
+                      "example": 100000,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "message_vi": "Voucher hợp lệ",
+              "data": [
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "used_date": "2025-01-10 12:00:00",
+                    "bill_number": "BILL001",
+                    "used_store": {
+                      "name_vi": "Store Hồ Chí Minh",
+                      "name_en": "Store HCM"
+                    },
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "expiry_date": "2025-12-26",
+                  "cancel_date": "",
+                  "state": 1,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                },
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "used_date": "2025-01-10 12:00:00",
+                    "bill_number": "BILL001",
+                    "used_store": {
+                      "name_vi": "Store Hồ Chí Minh",
+                      "name_en": "Store HCM"
+                    },
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "expiry_date": "2025-12-26",
+                  "cancel_date": "",
+                  "state": 1,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                }
+              ],
+              "success": true,
+              "message_en": "Valid voucher",
+              "return_code": "return_code"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "type": "boolean"
+              },
+              "return_code": {
+                "description": "Result code if failed. In case of successful request: value is null",
+                "nullable": true,
+                "type": "string",
+                "example": null
+              },
+              "message_en": {
+                "description": "Message notification in English",
+                "example": "Valid voucher",
+                "type": "string"
+              },
+              "message_vi": {
+                "description": "Message notification in Vietnamese",
+                "example": "Voucher hợp lệ",
+                "type": "string"
+              },
+              "data": {
+                "description": "Detail items of voucher, if result is failed, response will return the first voucher code which is invalid",
+                "items": {
+                  "example": {
+                    "code": "070898022379",
+                    "redemptions": {
+                      "redemption_value": 10000,
+                      "used_date": "2025-01-10 12:00:00",
+                      "bill_number": "BILL001",
+                      "used_store": {
+                        "name_vi": "Store Hồ Chí Minh",
+                        "name_en": "Store HCM"
+                      },
+                      "redeem_sku_codes": [
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        },
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        }
+                      ]
+                    },
+                    "product_id": 12345,
+                    "voucher_type": "conditional",
+                    "expiry_date": "2025-12-26",
+                    "cancel_date": "",
+                    "state": 1,
+                    "conditions": {
+                      "exclude_specific_date": [
+                        "2025-01-01",
+                        "2025-01-01"
+                      ],
+                      "exclude_recurring_day": [
+                        "Tuesday",
+                        "Tuesday"
+                      ],
+                      "redeemable_skus": [
+                        "SKU001",
+                        "SKU001"
+                      ],
+                      "start_date": "2025-01-10",
+                      "order_value": 100000
+                    },
+                    "value": 100000
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "Voucher code",
+                      "example": "070898022379",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "Value of voucher",
+                      "example": 100000,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "description": "Product ID",
+                      "example": 12345,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "state": {
+                      "description": "State of voucher",
+                      "example": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "voucher_type": {
+                      "description": "Voucher type, standard or conditional",
+                      "example": "conditional",
+                      "type": "string"
+                    },
+                    "expiry_date": {
+                      "description": "Expiry date of voucher (YYYY-MM-DD)",
+                      "example": "2025-12-26",
+                      "type": "string"
+                    },
+                    "cancel_date": {
+                      "description": "Date cancel voucher (YYYY-MM-DD)",
+                      "example": "",
+                      "type": "string"
+                    },
+                    "conditions": {
+                      "description": "Include information involve with voucher type is conditional",
+                      "example": {
+                        "exclude_specific_date": [
+                          "2025-01-01",
+                          "2025-01-01"
+                        ],
+                        "exclude_recurring_day": [
+                          "Tuesday",
+                          "Tuesday"
+                        ],
+                        "redeemable_skus": [
+                          "SKU001",
+                          "SKU001"
+                        ],
+                        "start_date": "2025-01-10",
+                        "order_value": 100000
+                      },
+                      "properties": {
+                        "start_date": {
+                          "description": "Promo start date (YYYY-MM-DD)",
+                          "example": "2025-01-10",
+                          "type": "string"
+                        },
+                        "exclude_specific_date": {
+                          "description": "Promo non-effective dates (YYYY-MM-DD)",
+                          "items": {
+                            "example": "2025-01-01",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "exclude_recurring_day": {
+                          "description": "Promo non-effective day of week",
+                          "items": {
+                            "example": "Tuesday",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "order_value": {
+                          "description": "Order value of voucher type = conditional",
+                          "example": 100000,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "redeemable_skus": {
+                          "description": "List of redeemable SKUs of the voucher code. For voucher type = conditional, bill number must contain at least 1 redeemable SKU of the voucher.",
+                          "items": {
+                            "example": "SKU001",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "redemptions": {
+                      "description": "Include information related to the use of the voucher (all types)",
+                      "example": {
+                        "redemption_value": 10000,
+                        "used_date": "2025-01-10 12:00:00",
+                        "bill_number": "BILL001",
+                        "used_store": {
+                          "name_vi": "Store Hồ Chí Minh",
+                          "name_en": "Store HCM"
+                        },
+                        "redeem_sku_codes": [
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          },
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          }
+                        ]
+                      },
+                      "properties": {
+                        "redeem_sku_codes": {
+                          "description": "Contains redeemed SKU information of the voucher (for voucher type is conditional and support sku)",
+                          "items": {
+                            "example": {
+                              "quantity": 1,
+                              "price": 100000,
+                              "sku": "SKU001"
+                            },
+                            "properties": {
+                              "sku": {
+                                "description": "SKU code is redeemed for voucher",
+                                "example": "SKU001",
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "description": "SKU quantity is redeemed for voucher",
+                                "example": 1,
+                                "type": "integer"
+                              },
+                              "price": {
+                                "description": "Selling price of SKU in bill.",
+                                "example": 100000,
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "redemption_value": {
+                          "description": "Actual redemption value of voucher type = conditional",
+                          "example": 10000,
+                          "type": "integer"
+                        },
+                        "used_store": {
+                          "example": {
+                            "name_vi": "Store Hồ Chí Minh",
+                            "name_en": "Store HCM"
+                          },
+                          "properties": {
+                            "name_vi": {
+                              "description": "Store name in Vietnamese",
+                              "example": "Store Hồ Chí Minh",
+                              "type": "string"
+                            },
+                            "name_en": {
+                              "description": "Store name in English",
+                              "example": "Store HCM",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "used_date": {
+                          "description": "Date voucher marked as used in case the voucher has been redeemed. Format (YYYY-MM-DD HH:MM:SS)",
+                          "example": "2025-01-10 12:00:00",
+                          "type": "string"
+                        },
+                        "bill_number": {
+                          "description": "Bill number for which voucher used/reserved",
+                          "example": "BILL001",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "reserved",
+          "method": "POST",
+          "kind": "create",
+          "path": "/merchant/v6.0/reserved",
+          "requestSchema": {
+            "example": {
+              "codes": [
+                "070898022379",
+                "7132616187"
+              ],
+              "bill_created_at": "2024-12-12 12:00:00",
+              "bill_number": "BILL001",
+              "pin": "1212",
+              "skus_info": [
+                {
+                  "sku": "SKU001",
+                  "quantity": 1,
+                  "price": 100000
+                },
+                {
+                  "sku": "SKU002",
+                  "quantity": 2,
+                  "price": 200000
+                }
+              ],
+              "total_bill": 1000000
+            },
+            "properties": {
+              "pin": {
+                "description": "Store pin",
+                "example": "1212",
+                "type": "string"
+              },
+              "codes": {
+                "description": "Array of 10-16 characters Got It voucher codes",
+                "example": [
+                  "070898022379",
+                  "7132616187"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "bill_number": {
+                "description": "Bill number will apply vouchers",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "total_bill": {
+                "description": "Total bill amount",
+                "example": 1000000,
+                "type": "integer"
+              },
+              "bill_created_at": {
+                "description": "Bill creation time. Format: YYYY-MM-DD HH:MM:SS",
+                "example": "2024-12-12 12:00:00",
+                "type": "string"
+              },
+              "skus_info": {
+                "description": "SKU information in bill_number",
+                "example": [
+                  {
+                    "sku": "SKU001",
+                    "quantity": 1,
+                    "price": 100000
+                  },
+                  {
+                    "sku": "SKU002",
+                    "quantity": 2,
+                    "price": 200000
+                  }
+                ],
+                "items": {
+                  "properties": {
+                    "sku": {
+                      "description": "SKU code",
+                      "example": "SKU001",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "description": "Quantity of SKU. Default = 1",
+                      "example": 1,
+                      "type": "integer"
+                    },
+                    "price": {
+                      "description": "Price of SKU in bill",
+                      "example": 100000,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "message_vi": "Voucher hợp lệ",
+              "bill_number": "BILL001",
+              "used_store": {
+                "name_vi": "Store HCM",
+                "name_en": "Store Hồ Chí Minh"
+              },
+              "data": [
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "state": 1,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                },
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "state": 1,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                }
+              ],
+              "success": true,
+              "message_en": "Valid voucher",
+              "return_code": "return_code"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "type": "boolean"
+              },
+              "return_code": {
+                "description": "Result code if failed. In case of successful request: value is null",
+                "nullable": true,
+                "type": "string",
+                "example": null
+              },
+              "message_en": {
+                "description": "Message notification in English",
+                "example": "Valid voucher",
+                "type": "string"
+              },
+              "message_vi": {
+                "description": "Message notification in Vietnamese",
+                "example": "Voucher hợp lệ",
+                "type": "string"
+              },
+              "used_store": {
+                "description": "Store marked voucher used/reserved",
+                "example": {
+                  "name_vi": "Store HCM",
+                  "name_en": "Store Hồ Chí Minh"
+                },
+                "properties": {
+                  "name_vi": {
+                    "description": "Store name in Vietnamese",
+                    "example": "Store HCM",
+                    "type": "string"
+                  },
+                  "name_en": {
+                    "description": "Store name in English",
+                    "example": "Store Hồ Chí Minh",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "bill_number": {
+                "description": "Bill number",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "data": {
+                "description": "Detail items of voucher, if result is failed, response will return the first voucher code which is invalid",
+                "items": {
+                  "example": {
+                    "code": "070898022379",
+                    "redemptions": {
+                      "redemption_value": 10000,
+                      "redeem_sku_codes": [
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        },
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        }
+                      ]
+                    },
+                    "product_id": 12345,
+                    "voucher_type": "conditional",
+                    "state": 1,
+                    "conditions": {
+                      "exclude_specific_date": [
+                        "2025-01-01",
+                        "2025-01-01"
+                      ],
+                      "exclude_recurring_day": [
+                        "Tuesday",
+                        "Tuesday"
+                      ],
+                      "redeemable_skus": [
+                        "SKU001",
+                        "SKU001"
+                      ],
+                      "start_date": "2025-01-10",
+                      "order_value": 100000
+                    },
+                    "value": 100000
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "Voucher code",
+                      "example": "070898022379",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "Value of voucher",
+                      "example": 100000,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "state": {
+                      "description": "State of voucher",
+                      "example": 1,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "description": "Product ID",
+                      "example": 12345,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "voucher_type": {
+                      "description": "Voucher type, standard or conditional",
+                      "example": "conditional",
+                      "type": "string"
+                    },
+                    "conditions": {
+                      "description": "Include information involve with voucher type is conditional",
+                      "example": {
+                        "exclude_specific_date": [
+                          "2025-01-01",
+                          "2025-01-01"
+                        ],
+                        "exclude_recurring_day": [
+                          "Tuesday",
+                          "Tuesday"
+                        ],
+                        "redeemable_skus": [
+                          "SKU001",
+                          "SKU001"
+                        ],
+                        "start_date": "2025-01-10",
+                        "order_value": 100000
+                      },
+                      "properties": {
+                        "start_date": {
+                          "description": "Promo start date (YYYY-MM-DD)",
+                          "example": "2025-01-10",
+                          "type": "string"
+                        },
+                        "exclude_specific_date": {
+                          "description": "Promo non-effective dates (YYYY-MM-DD)",
+                          "items": {
+                            "example": "2025-01-01",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "exclude_recurring_day": {
+                          "description": "Promo non-effective day of week",
+                          "items": {
+                            "example": "Tuesday",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "order_value": {
+                          "description": "Order value of voucher type = conditional",
+                          "example": 100000,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "redeemable_skus": {
+                          "description": "List of redeemable SKUs of the voucher code. For voucher type = conditional, bill number must contain at least 1 redeemable SKU of the voucher.",
+                          "items": {
+                            "example": "SKU001",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "redemptions": {
+                      "description": "Include information related to the use of the voucher (all types)",
+                      "example": {
+                        "redemption_value": 10000,
+                        "redeem_sku_codes": [
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          },
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          }
+                        ]
+                      },
+                      "properties": {
+                        "redeem_sku_codes": {
+                          "description": "Contains redeemed SKU information of the voucher (for voucher type is conditional and support sku)",
+                          "items": {
+                            "example": {
+                              "quantity": 1,
+                              "price": 100000,
+                              "sku": "SKU001"
+                            },
+                            "properties": {
+                              "sku": {
+                                "description": "SKU code is redeemed for voucher",
+                                "example": "SKU001",
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "description": "SKU quantity is redeemed for voucher",
+                                "example": 1,
+                                "type": "integer"
+                              },
+                              "price": {
+                                "description": "Selling price of SKU in bill.",
+                                "example": 100000,
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "redemption_value": {
+                          "description": "Actual redemption value of voucher type = conditional",
+                          "example": 10000,
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "unreserved",
+          "method": "POST",
+          "kind": "create",
+          "path": "/merchant/v6.0/unreserved",
+          "requestSchema": {
+            "example": {
+              "codes": [
+                "070898022379",
+                "7132616187"
+              ],
+              "bill_created_at": "2024-12-12 12:00:00",
+              "bill_number": "BILL001",
+              "pin": "1212"
+            },
+            "properties": {
+              "pin": {
+                "description": "Store pin",
+                "example": "1212",
+                "type": "string"
+              },
+              "codes": {
+                "description": "Array of 10-16 characters Got It voucher codes",
+                "example": [
+                  "070898022379",
+                  "7132616187"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "bill_number": {
+                "description": "Bill number will apply vouchers",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "bill_created_at": {
+                "description": "Bill creation time. Format: YYYY-MM-DD HH:MM:SS",
+                "example": "2024-12-12 12:00:00",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "message_vi": "Voucher hợp lệ",
+              "bill_number": "BILL001",
+              "used_store": {
+                "name_vi": "Store HCM",
+                "name_en": "Store Hồ Chí Minh"
+              },
+              "data": [
+                {
+                  "code": "070898022379",
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "value": 100000
+                },
+                {
+                  "code": "070898022379",
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "value": 100000
+                }
+              ],
+              "success": true,
+              "message_en": "Valid voucher",
+              "return_code": "return_code"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "type": "boolean"
+              },
+              "return_code": {
+                "description": "Result code if failed. In case of successful request: value is null",
+                "nullable": true,
+                "type": "string"
+              },
+              "message_en": {
+                "description": "Message notification in English",
+                "example": "Valid voucher",
+                "type": "string"
+              },
+              "message_vi": {
+                "description": "Message notification in Vietnamese",
+                "example": "Voucher hợp lệ",
+                "type": "string"
+              },
+              "used_store": {
+                "description": "Store marked voucher used/reserved",
+                "example": {
+                  "name_vi": "Store HCM",
+                  "name_en": "Store Hồ Chí Minh"
+                },
+                "properties": {
+                  "name_vi": {
+                    "description": "Store name in Vietnamese",
+                    "example": "Store HCM",
+                    "type": "string"
+                  },
+                  "name_en": {
+                    "description": "Store name in English",
+                    "example": "Store Hồ Chí Minh",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "bill_number": {
+                "description": "Bill number",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "data": {
+                "description": "Detail items of voucher, if result is failed, response will return the first voucher code which is invalid",
+                "items": {
+                  "example": {
+                    "code": "070898022379",
+                    "product_id": 12345,
+                    "voucher_type": "conditional",
+                    "value": 100000
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "Voucher code",
+                      "example": "070898022379",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "Value of voucher",
+                      "example": 100000,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "description": "Product ID",
+                      "example": 12345,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "voucher_type": {
+                      "description": "Voucher type, standard or conditional",
+                      "example": "conditional",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "useMultiple",
+          "method": "POST",
+          "kind": "create",
+          "path": "/merchant/v6.0/usemultiple",
+          "requestSchema": {
+            "example": {
+              "codes": [
+                "070898022379",
+                "7132616187"
+              ],
+              "bill_number": "BILL001",
+              "pin": "1212",
+              "skip_reserved_when_mark_used": true,
+              "skus_info": [
+                {
+                  "sku": "SKU001",
+                  "quantity": 1,
+                  "price": 100000
+                },
+                {
+                  "sku": "SKU002",
+                  "quantity": 2,
+                  "price": 200000
+                }
+              ],
+              "total_bill": 1000000
+            },
+            "properties": {
+              "pin": {
+                "description": "Store pin",
+                "example": "1212",
+                "type": "string"
+              },
+              "codes": {
+                "description": "Array of 10-16 characters Got It voucher codes",
+                "example": [
+                  "070898022379",
+                  "7132616187"
+                ],
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "bill_number": {
+                "description": "Bill number will apply vouchers",
+                "example": "BILL001",
+                "type": "string"
+              },
+              "total_bill": {
+                "description": "Total bill amount",
+                "example": 1000000,
+                "type": "integer"
+              },
+              "skip_reserved_when_mark_used": {
+                "description": "When true the system will execute the flow without reserve",
+                "example": true,
+                "type": "boolean"
+              },
+              "skus_info": {
+                "description": "SKU information in bill_number",
+                "example": [
+                  {
+                    "sku": "SKU001",
+                    "quantity": 1,
+                    "price": 100000
+                  },
+                  {
+                    "sku": "SKU002",
+                    "quantity": 2,
+                    "price": 200000
+                  }
+                ],
+                "items": {
+                  "properties": {
+                    "sku": {
+                      "description": "SKU code",
+                      "example": "SKU001",
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "description": "Quantity of SKU. Default = 1",
+                      "example": 1,
+                      "type": "integer"
+                    },
+                    "price": {
+                      "description": "Price of SKU in bill",
+                      "example": 100000,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "transaction_id": "2978_20230308135416027074",
+              "message_vi": "Voucher hợp lệ",
+              "bill_number": "BILL001",
+              "data": [
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "used_date": "2025-01-10 12:00:00",
+                    "used_store": {
+                      "name_vi": "Store Hồ Chí Minh",
+                      "name_en": "Store HCM"
+                    },
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "state": 4,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                },
+                {
+                  "code": "070898022379",
+                  "redemptions": {
+                    "redemption_value": 10000,
+                    "used_date": "2025-01-10 12:00:00",
+                    "used_store": {
+                      "name_vi": "Store Hồ Chí Minh",
+                      "name_en": "Store HCM"
+                    },
+                    "redeem_sku_codes": [
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      },
+                      {
+                        "quantity": 1,
+                        "price": 100000,
+                        "sku": "SKU001"
+                      }
+                    ]
+                  },
+                  "product_id": 12345,
+                  "voucher_type": "conditional",
+                  "state": 4,
+                  "conditions": {
+                    "exclude_specific_date": [
+                      "2025-01-01",
+                      "2025-01-01"
+                    ],
+                    "exclude_recurring_day": [
+                      "Tuesday",
+                      "Tuesday"
+                    ],
+                    "redeemable_skus": [
+                      "SKU001",
+                      "SKU001"
+                    ],
+                    "start_date": "2025-01-10",
+                    "order_value": 100000
+                  },
+                  "value": 100000
+                }
+              ],
+              "success": true,
+              "message_en": "Valid voucher",
+              "return_code": "return_code"
+            },
+            "properties": {
+              "success": {
+                "example": true,
+                "type": "boolean"
+              },
+              "return_code": {
+                "description": "Result code if failed. In case of successful request: value is null",
+                "nullable": true,
+                "type": "string",
+                "example": null
+              },
+              "message_en": {
+                "description": "Message notification in English",
+                "example": "Valid voucher",
+                "type": "string"
+              },
+              "message_vi": {
+                "description": "Message notification in Vietnamese",
+                "example": "Voucher hợp lệ",
+                "type": "string"
+              },
+              "data": {
+                "description": "Detail items of voucher, if result is failed, response will return the first voucher code which is invalid",
+                "items": {
+                  "example": {
+                    "code": "070898022379",
+                    "redemptions": {
+                      "redemption_value": 10000,
+                      "used_date": "2025-01-10 12:00:00",
+                      "used_store": {
+                        "name_vi": "Store Hồ Chí Minh",
+                        "name_en": "Store HCM"
+                      },
+                      "redeem_sku_codes": [
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        },
+                        {
+                          "quantity": 1,
+                          "price": 100000,
+                          "sku": "SKU001"
+                        }
+                      ]
+                    },
+                    "product_id": 12345,
+                    "voucher_type": "conditional",
+                    "state": 4,
+                    "conditions": {
+                      "exclude_specific_date": [
+                        "2025-01-01",
+                        "2025-01-01"
+                      ],
+                      "exclude_recurring_day": [
+                        "Tuesday",
+                        "Tuesday"
+                      ],
+                      "redeemable_skus": [
+                        "SKU001",
+                        "SKU001"
+                      ],
+                      "start_date": "2025-01-10",
+                      "order_value": 100000
+                    },
+                    "value": 100000
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "Voucher code",
+                      "example": "070898022379",
+                      "type": "string"
+                    },
+                    "value": {
+                      "description": "Value of voucher",
+                      "example": 100000,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "product_id": {
+                      "description": "Product ID",
+                      "example": 12345,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "state": {
+                      "description": "State of voucher",
+                      "example": 4,
+                      "nullable": true,
+                      "type": "integer"
+                    },
+                    "voucher_type": {
+                      "description": "Voucher type, standard or conditional",
+                      "example": "conditional",
+                      "type": "string"
+                    },
+                    "conditions": {
+                      "description": "Include information involve with voucher type is conditional",
+                      "example": {
+                        "exclude_specific_date": [
+                          "2025-01-01",
+                          "2025-01-01"
+                        ],
+                        "exclude_recurring_day": [
+                          "Tuesday",
+                          "Tuesday"
+                        ],
+                        "redeemable_skus": [
+                          "SKU001",
+                          "SKU001"
+                        ],
+                        "start_date": "2025-01-10",
+                        "order_value": 100000
+                      },
+                      "properties": {
+                        "start_date": {
+                          "description": "Promo start date (YYYY-MM-DD)",
+                          "example": "2025-01-10",
+                          "type": "string"
+                        },
+                        "exclude_specific_date": {
+                          "description": "Promo non-effective dates (YYYY-MM-DD)",
+                          "items": {
+                            "example": "2025-01-01",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "exclude_recurring_day": {
+                          "description": "Promo non-effective day of week",
+                          "items": {
+                            "example": "Tuesday",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "order_value": {
+                          "description": "Order value of voucher type = conditional",
+                          "example": 100000,
+                          "nullable": true,
+                          "type": "integer"
+                        },
+                        "redeemable_skus": {
+                          "description": "List of redeemable SKUs of the voucher code. For voucher type = conditional, bill number must contain at least 1 redeemable SKU of the voucher.",
+                          "items": {
+                            "example": "SKU001",
+                            "type": "string"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "redemptions": {
+                      "description": "Include information related to the use of the voucher (all types)",
+                      "example": {
+                        "redemption_value": 10000,
+                        "used_date": "2025-01-10 12:00:00",
+                        "used_store": {
+                          "name_vi": "Store Hồ Chí Minh",
+                          "name_en": "Store HCM"
+                        },
+                        "redeem_sku_codes": [
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          },
+                          {
+                            "quantity": 1,
+                            "price": 100000,
+                            "sku": "SKU001"
+                          }
+                        ]
+                      },
+                      "properties": {
+                        "redeem_sku_codes": {
+                          "description": "Contains redeemed SKU information of the voucher (for voucher type is conditional and support sku)",
+                          "items": {
+                            "example": {
+                              "quantity": 1,
+                              "price": 100000,
+                              "sku": "SKU001"
+                            },
+                            "properties": {
+                              "sku": {
+                                "description": "SKU code is redeemed for voucher",
+                                "example": "SKU001",
+                                "type": "string"
+                              },
+                              "quantity": {
+                                "description": "SKU quantity is redeemed for voucher",
+                                "example": 1,
+                                "type": "integer"
+                              },
+                              "price": {
+                                "description": "Selling price of SKU in bill.",
+                                "example": 100000,
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "redemption_value": {
+                          "description": "Actual redemption value of voucher type = conditional",
+                          "example": 10000,
+                          "type": "integer"
+                        },
+                        "used_store": {
+                          "example": {
+                            "name_vi": "Store Hồ Chí Minh",
+                            "name_en": "Store HCM"
+                          },
+                          "properties": {
+                            "name_vi": {
+                              "description": "Store name in Vietnamese",
+                              "example": "Store Hồ Chí Minh",
+                              "type": "string"
+                            },
+                            "name_en": {
+                              "description": "Store name in English",
+                              "example": "Store HCM",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "used_date": {
+                          "description": "Date voucher marked as used in case the voucher has been redeemed. Format (YYYY-MM-DD HH:MM:SS)",
+                          "example": "2025-01-10 12:00:00",
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "transaction_id": {
+                "description": "Transaction ID (if mark used successfully)",
+                "example": "2978_20230308135416027074",
+                "type": "string"
+              },
+              "bill_number": {
+                "description": "Bill number that vouchers were marked as used for.",
+                "example": "BILL001",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,626 @@
+{
+  "api": {
+    "title": "Pizza API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "getOrders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "1618057820123"
+                },
+                "userId": {
+                  "type": "string",
+                  "example": "user123"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO date string of when the order was created",
+                  "example": "2025-04-10T14:30:00Z"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "pizzaId": {
+                        "type": "string",
+                        "example": "pizza-1"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 1
+                      },
+                      "extraToppingIds": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "Optional list of extra topping IDs to add to the pizza",
+                        "example": [
+                          "topping-1",
+                          "topping-2"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "pizzaId",
+                      "quantity"
+                    ]
+                  }
+                },
+                "estimatedCompletionAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO date string for estimated completion time",
+                  "example": "2025-04-10T15:00:00Z"
+                },
+                "totalPrice": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 22.98
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "in-preparation",
+                    "ready",
+                    "completed",
+                    "cancelled"
+                  ],
+                  "description": "- pending: Order has been created but not yet started - in-preparation: Order is being prepared - ready: Order is ready for pickup - completed: Order has been picked up - cancelled: Order has been cancelled"
+                }
+              },
+              "required": [
+                "id",
+                "userId",
+                "createdAt",
+                "items",
+                "estimatedCompletionAt",
+                "totalPrice",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "id": "getOrderById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "1618057820123"
+              },
+              "userId": {
+                "type": "string",
+                "example": "user123"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string of when the order was created",
+                "example": "2025-04-10T14:30:00Z"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pizzaId": {
+                      "type": "string",
+                      "example": "pizza-1"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "extraToppingIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Optional list of extra topping IDs to add to the pizza",
+                      "example": [
+                        "topping-1",
+                        "topping-2"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pizzaId",
+                    "quantity"
+                  ]
+                }
+              },
+              "estimatedCompletionAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string for estimated completion time",
+                "example": "2025-04-10T15:00:00Z"
+              },
+              "totalPrice": {
+                "type": "number",
+                "format": "float",
+                "example": 22.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in-preparation",
+                  "ready",
+                  "completed",
+                  "cancelled"
+                ],
+                "description": "- pending: Order has been created but not yet started - in-preparation: Order is being prepared - ready: Order is ready for pickup - completed: Order has been picked up - cancelled: Order has been cancelled"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "createdAt",
+              "items",
+              "estimatedCompletionAt",
+              "totalPrice",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "createOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "userId": {
+                "type": "string",
+                "example": "user123"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pizzaId": {
+                      "type": "string",
+                      "example": "pizza-1"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "extraToppingIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Optional list of extra topping IDs to add to the pizza",
+                      "example": [
+                        "topping-1",
+                        "topping-2"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pizzaId",
+                    "quantity"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "userId",
+              "items"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "1618057820123"
+              },
+              "userId": {
+                "type": "string",
+                "example": "user123"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string of when the order was created",
+                "example": "2025-04-10T14:30:00Z"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pizzaId": {
+                      "type": "string",
+                      "example": "pizza-1"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "extraToppingIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Optional list of extra topping IDs to add to the pizza",
+                      "example": [
+                        "topping-1",
+                        "topping-2"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pizzaId",
+                    "quantity"
+                  ]
+                }
+              },
+              "estimatedCompletionAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string for estimated completion time",
+                "example": "2025-04-10T15:00:00Z"
+              },
+              "totalPrice": {
+                "type": "number",
+                "format": "float",
+                "example": 22.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in-preparation",
+                  "ready",
+                  "completed",
+                  "cancelled"
+                ],
+                "description": "- pending: Order has been created but not yet started - in-preparation: Order is being prepared - ready: Order is ready for pickup - completed: Order has been picked up - cancelled: Order has been cancelled"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "createdAt",
+              "items",
+              "estimatedCompletionAt",
+              "totalPrice",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "cancelOrder",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "1618057820123"
+              },
+              "userId": {
+                "type": "string",
+                "example": "user123"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string of when the order was created",
+                "example": "2025-04-10T14:30:00Z"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pizzaId": {
+                      "type": "string",
+                      "example": "pizza-1"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "extraToppingIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Optional list of extra topping IDs to add to the pizza",
+                      "example": [
+                        "topping-1",
+                        "topping-2"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pizzaId",
+                    "quantity"
+                  ]
+                }
+              },
+              "estimatedCompletionAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO date string for estimated completion time",
+                "example": "2025-04-10T15:00:00Z"
+              },
+              "totalPrice": {
+                "type": "number",
+                "format": "float",
+                "example": 22.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in-preparation",
+                  "ready",
+                  "completed",
+                  "cancelled"
+                ],
+                "description": "- pending: Order has been created but not yet started - in-preparation: Order is being prepared - ready: Order is ready for pickup - completed: Order has been picked up - cancelled: Order has been cancelled"
+              }
+            },
+            "required": [
+              "id",
+              "userId",
+              "createdAt",
+              "items",
+              "estimatedCompletionAt",
+              "totalPrice",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "pizzas",
+      "key": "pizzas",
+      "operations": [
+        {
+          "id": "getPizzas",
+          "method": "GET",
+          "kind": "list",
+          "path": "/pizzas",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "pizza-1"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "pizza",
+                    "drink",
+                    "side",
+                    "topping"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Margherita Pizza"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Classic pizza with tomato sauce and mozzarella"
+                },
+                "price": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 12.99
+                }
+              },
+              "required": [
+                "id",
+                "category",
+                "name",
+                "description",
+                "price"
+              ]
+            }
+          }
+        },
+        {
+          "id": "getPizzaById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/pizzas/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "pizza-1"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "pizza",
+                  "drink",
+                  "side",
+                  "topping"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "example": "Margherita Pizza"
+              },
+              "description": {
+                "type": "string",
+                "example": "Classic pizza with tomato sauce and mozzarella"
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 12.99
+              }
+            },
+            "required": [
+              "id",
+              "category",
+              "name",
+              "description",
+              "price"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "toppings",
+      "key": "toppings",
+      "operations": [
+        {
+          "id": "getToppings",
+          "method": "GET",
+          "kind": "list",
+          "path": "/toppings",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "example": "pizza-1"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "pizza",
+                    "drink",
+                    "side",
+                    "topping"
+                  ]
+                },
+                "name": {
+                  "type": "string",
+                  "example": "Margherita Pizza"
+                },
+                "description": {
+                  "type": "string",
+                  "example": "Classic pizza with tomato sauce and mozzarella"
+                },
+                "price": {
+                  "type": "number",
+                  "format": "float",
+                  "example": 12.99
+                }
+              },
+              "required": [
+                "id",
+                "category",
+                "name",
+                "description",
+                "price"
+              ]
+            }
+          }
+        },
+        {
+          "id": "getToppingCategories",
+          "method": "GET",
+          "kind": "list",
+          "path": "/toppings/categories",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "id": "getToppingById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/toppings/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "example": "pizza-1"
+              },
+              "category": {
+                "type": "string",
+                "enum": [
+                  "pizza",
+                  "drink",
+                  "side",
+                  "topping"
+                ]
+              },
+              "name": {
+                "type": "string",
+                "example": "Margherita Pizza"
+              },
+              "description": {
+                "type": "string",
+                "example": "Classic pizza with tomato sauce and mozzarella"
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 12.99
+              }
+            },
+            "required": [
+              "id",
+              "category",
+              "name",
+              "description",
+              "price"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

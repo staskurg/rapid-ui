@@ -1,0 +1,208 @@
+openapi: 3.1.0
+info:
+  title: IntelliJ MkDocs Plugin Shell Control Contract
+  version: 0.2.0
+  description: >
+    Internal plugin-shell control contract for runIde readiness, tool window shell creation,
+    Start MkDocs Preview action behavior, and runtime handoff delegation.
+servers:
+  - url: plugin://local
+    description: In-process plugin shell boundary
+paths:
+  /v1/plugin-shell/readiness:
+    get:
+      summary: Get plugin shell readiness state for a project
+      operationId: getPluginShellReadiness
+      parameters:
+        - in: query
+          name: projectId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current shell readiness state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PluginShellReadiness'
+  /v1/plugin-shell/tool-window/create:
+    post:
+      summary: Create or refresh MkDocs tool window shell content
+      operationId: createToolWindowShell
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToolWindowCreateRequest'
+      responses:
+        '200':
+          description: Tool window shell state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToolWindowState'
+  /v1/plugin-shell/actions/start-preview/update:
+    post:
+      summary: Resolve Start MkDocs Preview action visibility/enabled state
+      operationId: updateStartPreviewAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionUpdateRequest'
+      responses:
+        '200':
+          description: Action presentation state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActionPresentationState'
+  /v1/plugin-shell/actions/start-preview/perform:
+    post:
+      summary: Invoke Start MkDocs Preview action and delegate to existing runtime services
+      operationId: performStartPreviewAction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartPreviewActionRequest'
+      responses:
+        '200':
+          description: Runtime handoff result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StartPreviewActionResult'
+  /v1/plugin-shell/runtime/handoff:
+    post:
+      summary: Direct adapter-level runtime handoff for shell integration
+      operationId: handoffRuntimeFromPluginShell
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RuntimeHandoffRequest'
+      responses:
+        '200':
+          description: Runtime handoff outcome
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RuntimeHandoffResult'
+components:
+  schemas:
+    PluginShellReadiness:
+      type: object
+      required: [projectId, pluginLoaded, toolWindowRegistered, startActionRegistered, runIdeReady]
+      properties:
+        projectId:
+          type: string
+        pluginLoaded:
+          type: boolean
+        toolWindowRegistered:
+          type: boolean
+        startActionRegistered:
+          type: boolean
+        runIdeReady:
+          type: boolean
+    ToolWindowCreateRequest:
+      type: object
+      required: [projectId]
+      properties:
+        projectId:
+          type: string
+        refresh:
+          type: boolean
+          default: false
+    ToolWindowState:
+      type: object
+      required: [projectId, contentCreated, visible]
+      properties:
+        projectId:
+          type: string
+        contentCreated:
+          type: boolean
+        visible:
+          type: boolean
+        statusMessage:
+          type: string
+    ActionUpdateRequest:
+      type: object
+      required: [projectId]
+      properties:
+        projectId:
+          type: string
+        projectPath:
+          type: string
+    ActionPresentationState:
+      type: object
+      required: [projectId, visible, enabled]
+      properties:
+        projectId:
+          type: string
+        visible:
+          type: boolean
+        enabled:
+          type: boolean
+        disabledReason:
+          type: string
+    StartPreviewActionRequest:
+      type: object
+      required: [projectId, projectPath, triggerSource]
+      properties:
+        projectId:
+          type: string
+        projectPath:
+          type: string
+        triggerSource:
+          type: string
+          enum: [ACTION, TOOL_WINDOW]
+        startupOutput:
+          type: string
+    StartPreviewActionResult:
+      type: object
+      required: [projectId, invoked, delegated]
+      properties:
+        projectId:
+          type: string
+        invoked:
+          type: boolean
+        delegated:
+          type: boolean
+        handoffResult:
+          $ref: '#/components/schemas/RuntimeHandoffResult'
+    RuntimeHandoffRequest:
+      type: object
+      required: [projectId, projectPath, triggerSource]
+      properties:
+        projectId:
+          type: string
+        projectPath:
+          type: string
+        triggerSource:
+          type: string
+          enum: [ACTION, TOOL_WINDOW]
+        startupOutput:
+          type: string
+    RuntimeHandoffResult:
+      type: object
+      required: [projectId, started, alreadyRunning, baseUrlDetected]
+      properties:
+        projectId:
+          type: string
+        started:
+          type: boolean
+        alreadyRunning:
+          type: boolean
+        baseUrlDetected:
+          type: boolean
+        previewUrl:
+          type: string
+          format: uri
+        failureReason:
+          type: string

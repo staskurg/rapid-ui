@@ -1,0 +1,586 @@
+{
+  "api": {
+    "title": "Flights API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Flights",
+      "key": "flights",
+      "operations": [
+        {
+          "id": "getFlights",
+          "method": "GET",
+          "kind": "list",
+          "path": "/flights",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "flightNumber",
+                    "origin",
+                    "destination",
+                    "departureTime",
+                    "arrivalTime",
+                    "airline",
+                    "status",
+                    "price",
+                    "seats"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique identifier for the flight",
+                      "example": "1"
+                    },
+                    "flightNumber": {
+                      "type": "string",
+                      "description": "IATA flight number",
+                      "example": "AA101"
+                    },
+                    "origin": {
+                      "type": "string",
+                      "description": "IATA code for the origin airport",
+                      "example": "JFK"
+                    },
+                    "destination": {
+                      "type": "string",
+                      "description": "IATA code for the destination airport",
+                      "example": "LAX"
+                    },
+                    "departureTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Scheduled departure time (ISO 8601)",
+                      "example": "2026-03-10T08:00:00Z"
+                    },
+                    "arrivalTime": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Scheduled arrival time (ISO 8601)",
+                      "example": "2026-03-10T11:30:00Z"
+                    },
+                    "airline": {
+                      "type": "string",
+                      "description": "Name of the airline operating the flight",
+                      "example": "American Airlines"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "scheduled",
+                        "boarding",
+                        "departed",
+                        "arrived",
+                        "cancelled"
+                      ],
+                      "description": "Current status of the flight",
+                      "example": "scheduled"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "Ticket price in USD",
+                      "example": 299.99
+                    },
+                    "seats": {
+                      "type": "integer",
+                      "description": "Total number of seats available",
+                      "example": 150
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer",
+                "example": 2
+              }
+            }
+          }
+        },
+        {
+          "id": "getFlightById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/flights/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "flightNumber",
+                  "origin",
+                  "destination",
+                  "departureTime",
+                  "arrivalTime",
+                  "airline",
+                  "status",
+                  "price",
+                  "seats"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the flight",
+                    "example": "1"
+                  },
+                  "flightNumber": {
+                    "type": "string",
+                    "description": "IATA flight number",
+                    "example": "AA101"
+                  },
+                  "origin": {
+                    "type": "string",
+                    "description": "IATA code for the origin airport",
+                    "example": "JFK"
+                  },
+                  "destination": {
+                    "type": "string",
+                    "description": "IATA code for the destination airport",
+                    "example": "LAX"
+                  },
+                  "departureTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled departure time (ISO 8601)",
+                    "example": "2026-03-10T08:00:00Z"
+                  },
+                  "arrivalTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled arrival time (ISO 8601)",
+                    "example": "2026-03-10T11:30:00Z"
+                  },
+                  "airline": {
+                    "type": "string",
+                    "description": "Name of the airline operating the flight",
+                    "example": "American Airlines"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "boarding",
+                      "departed",
+                      "arrived",
+                      "cancelled"
+                    ],
+                    "description": "Current status of the flight",
+                    "example": "scheduled"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Ticket price in USD",
+                    "example": 299.99
+                  },
+                  "seats": {
+                    "type": "integer",
+                    "description": "Total number of seats available",
+                    "example": 150
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createFlight",
+          "method": "POST",
+          "kind": "create",
+          "path": "/flights",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "flightNumber",
+              "origin",
+              "destination",
+              "departureTime",
+              "arrivalTime",
+              "airline"
+            ],
+            "properties": {
+              "flightNumber": {
+                "type": "string",
+                "example": "AA101"
+              },
+              "origin": {
+                "type": "string",
+                "example": "JFK"
+              },
+              "destination": {
+                "type": "string",
+                "example": "LAX"
+              },
+              "departureTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-10T08:00:00Z"
+              },
+              "arrivalTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-10T11:30:00Z"
+              },
+              "airline": {
+                "type": "string",
+                "example": "American Airlines"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "scheduled",
+                  "boarding",
+                  "departed",
+                  "arrived",
+                  "cancelled"
+                ],
+                "default": "scheduled"
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 299.99
+              },
+              "seats": {
+                "type": "integer",
+                "example": 150
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "flightNumber",
+                  "origin",
+                  "destination",
+                  "departureTime",
+                  "arrivalTime",
+                  "airline",
+                  "status",
+                  "price",
+                  "seats"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the flight",
+                    "example": "1"
+                  },
+                  "flightNumber": {
+                    "type": "string",
+                    "description": "IATA flight number",
+                    "example": "AA101"
+                  },
+                  "origin": {
+                    "type": "string",
+                    "description": "IATA code for the origin airport",
+                    "example": "JFK"
+                  },
+                  "destination": {
+                    "type": "string",
+                    "description": "IATA code for the destination airport",
+                    "example": "LAX"
+                  },
+                  "departureTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled departure time (ISO 8601)",
+                    "example": "2026-03-10T08:00:00Z"
+                  },
+                  "arrivalTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled arrival time (ISO 8601)",
+                    "example": "2026-03-10T11:30:00Z"
+                  },
+                  "airline": {
+                    "type": "string",
+                    "description": "Name of the airline operating the flight",
+                    "example": "American Airlines"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "boarding",
+                      "departed",
+                      "arrived",
+                      "cancelled"
+                    ],
+                    "description": "Current status of the flight",
+                    "example": "scheduled"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Ticket price in USD",
+                    "example": 299.99
+                  },
+                  "seats": {
+                    "type": "integer",
+                    "description": "Total number of seats available",
+                    "example": 150
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateFlight",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/flights/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "flightNumber",
+              "origin",
+              "destination",
+              "departureTime",
+              "arrivalTime",
+              "airline"
+            ],
+            "properties": {
+              "flightNumber": {
+                "type": "string",
+                "example": "AA101"
+              },
+              "origin": {
+                "type": "string",
+                "example": "JFK"
+              },
+              "destination": {
+                "type": "string",
+                "example": "LAX"
+              },
+              "departureTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-10T08:00:00Z"
+              },
+              "arrivalTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2026-03-10T11:30:00Z"
+              },
+              "airline": {
+                "type": "string",
+                "example": "American Airlines"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "scheduled",
+                  "boarding",
+                  "departed",
+                  "arrived",
+                  "cancelled"
+                ],
+                "default": "scheduled"
+              },
+              "price": {
+                "type": "number",
+                "format": "float",
+                "example": 299.99
+              },
+              "seats": {
+                "type": "integer",
+                "example": 150
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "flightNumber",
+                  "origin",
+                  "destination",
+                  "departureTime",
+                  "arrivalTime",
+                  "airline",
+                  "status",
+                  "price",
+                  "seats"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the flight",
+                    "example": "1"
+                  },
+                  "flightNumber": {
+                    "type": "string",
+                    "description": "IATA flight number",
+                    "example": "AA101"
+                  },
+                  "origin": {
+                    "type": "string",
+                    "description": "IATA code for the origin airport",
+                    "example": "JFK"
+                  },
+                  "destination": {
+                    "type": "string",
+                    "description": "IATA code for the destination airport",
+                    "example": "LAX"
+                  },
+                  "departureTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled departure time (ISO 8601)",
+                    "example": "2026-03-10T08:00:00Z"
+                  },
+                  "arrivalTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled arrival time (ISO 8601)",
+                    "example": "2026-03-10T11:30:00Z"
+                  },
+                  "airline": {
+                    "type": "string",
+                    "description": "Name of the airline operating the flight",
+                    "example": "American Airlines"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "boarding",
+                      "departed",
+                      "arrived",
+                      "cancelled"
+                    ],
+                    "description": "Current status of the flight",
+                    "example": "scheduled"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Ticket price in USD",
+                    "example": 299.99
+                  },
+                  "seats": {
+                    "type": "integer",
+                    "description": "Total number of seats available",
+                    "example": 150
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteFlight",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/flights/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "flightNumber",
+                  "origin",
+                  "destination",
+                  "departureTime",
+                  "arrivalTime",
+                  "airline",
+                  "status",
+                  "price",
+                  "seats"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique identifier for the flight",
+                    "example": "1"
+                  },
+                  "flightNumber": {
+                    "type": "string",
+                    "description": "IATA flight number",
+                    "example": "AA101"
+                  },
+                  "origin": {
+                    "type": "string",
+                    "description": "IATA code for the origin airport",
+                    "example": "JFK"
+                  },
+                  "destination": {
+                    "type": "string",
+                    "description": "IATA code for the destination airport",
+                    "example": "LAX"
+                  },
+                  "departureTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled departure time (ISO 8601)",
+                    "example": "2026-03-10T08:00:00Z"
+                  },
+                  "arrivalTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Scheduled arrival time (ISO 8601)",
+                    "example": "2026-03-10T11:30:00Z"
+                  },
+                  "airline": {
+                    "type": "string",
+                    "description": "Name of the airline operating the flight",
+                    "example": "American Airlines"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "scheduled",
+                      "boarding",
+                      "departed",
+                      "arrived",
+                      "cancelled"
+                    ],
+                    "description": "Current status of the flight",
+                    "example": "scheduled"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Ticket price in USD",
+                    "example": 299.99
+                  },
+                  "seats": {
+                    "type": "integer",
+                    "description": "Total number of seats available",
+                    "example": 150
+                  }
+                }
+              },
+              "message": {
+                "type": "string",
+                "example": "Flight deleted successfully"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

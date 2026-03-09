@@ -1,0 +1,444 @@
+openapi: 3.0.3
+info:
+  title: POS System API
+  description: API for Point of Sale System with user management, product management, and sales reporting
+  version: 1.0.0
+  
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        username:
+          type: string
+        role:
+          type: string
+
+    ProfileResponse:
+      type: object
+      properties:
+        username:
+          type: string
+        role:
+          type: string
+
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+        image:
+          type: string
+        name:
+          type: string
+        sku:
+          type: string
+        harga_modal:
+          type: number
+          format: float64
+        harga_jual:
+          type: number
+          format: float64
+        stock:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    ProductListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    UpdateProductRequest:
+      type: object
+      properties:
+        image:
+          type: string
+        name:
+          type: string
+        sku:
+          type: string
+        harga_modal:
+          type: number
+          format: float64
+        harga_jual:
+          type: number
+          format: float64
+        stock:
+          type: integer
+
+    UpdateStockRequest:
+      type: object
+      required:
+        - stock
+      properties:
+        stock:
+          type: integer
+          minimum: 0
+
+    TransactionItem:
+      type: object
+      properties:
+        product_id:
+          type: integer
+          format: uint
+        quantity:
+          type: integer
+          minimum: 1
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: uint
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionItem'
+        user:
+          type: string
+        payment_method:
+          type: string
+        discount:
+          type: number
+          format: float64
+        total_price:
+          type: number
+          format: float64
+        created_at:
+          type: string
+          format: date-time
+
+    TransactionListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    CreateTransactionRequest:
+      type: object
+      required:
+        - items
+        - user
+        - payment_method
+        - total_price
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TransactionItem'
+        user:
+          type: string
+        payment_method:
+          type: string
+        discount:
+          type: number
+          format: float64
+        total_price:
+          type: number
+          format: float64
+
+    ReportResponse:
+      type: object
+      properties:
+        total_revenue:
+          type: number
+          format: float64
+        items_sold:
+          type: integer
+        average_transaction:
+          type: number
+          format: float64
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: integer
+                format: uint
+              product_id:
+                type: integer
+                format: uint
+              product_name:
+                type: string
+              total:
+                type: integer
+              total_price:
+                type: number
+                format: float64
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+
+paths:
+  /auth/login:
+    post:
+      summary: Login to the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /profile:
+    get:
+      summary: Get user profile
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products:
+    get:
+      summary: List all products
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: List of products
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListResponse'
+
+  /products/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
+    get:
+      summary: Get a product by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Product details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+    put:
+      summary: Update a product
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: Product updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /products/{id}/stock:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
+    put:
+      summary: Update product stock
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateStockRequest'
+      responses:
+        '200':
+          description: Product stock updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+
+  /transactions:
+    get:
+      summary: List all transactions
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        '200':
+          description: List of transactions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionListResponse'
+    post:
+      summary: Create a new transaction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: Transaction created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /transactions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: uint
+    get:
+      summary: Get a transaction by ID
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Transaction details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+
+  /reports:
+    get:
+      summary: Get sales report
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Sales report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReportResponse' 

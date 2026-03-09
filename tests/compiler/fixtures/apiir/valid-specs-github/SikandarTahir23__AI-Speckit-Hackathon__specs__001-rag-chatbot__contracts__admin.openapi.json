@@ -1,0 +1,240 @@
+{
+  "api": {
+    "title": "RAG Chatbot API - Admin Endpoints",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Admin",
+      "key": "admin",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "services",
+              "version"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ],
+                "description": "Overall system health",
+                "example": "healthy"
+              },
+              "services": {
+                "type": "object",
+                "description": "Health status of individual services",
+                "properties": {
+                  "postgres": {
+                    "type": "boolean",
+                    "description": "PostgreSQL connection status",
+                    "example": true
+                  },
+                  "qdrant": {
+                    "type": "boolean",
+                    "description": "Qdrant vector database status",
+                    "example": true
+                  },
+                  "openai_api": {
+                    "type": "boolean",
+                    "description": "OpenAI API availability",
+                    "example": true
+                  }
+                }
+              },
+              "version": {
+                "type": "string",
+                "description": "Application version",
+                "example": "1.0.0"
+              },
+              "uptime_seconds": {
+                "type": "integer",
+                "description": "Time since application start",
+                "example": 3600
+              },
+              "warnings": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Non-critical warnings",
+                "example": [
+                  "OpenAI API unreachable, using local fallback embeddings"
+                ]
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Critical errors affecting functionality",
+                "example": [
+                  "PostgreSQL connection failed: timeout after 5s"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "readinessCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/ready",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ready": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "System ready to accept traffic"
+              },
+              "checks": {
+                "type": "object",
+                "properties": {
+                  "database_connected": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "vector_store_ready": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "knowledge_base_loaded": {
+                    "type": "boolean",
+                    "example": true,
+                    "description": "At least 1 chunk exists in Qdrant"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "loadBookContent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/admin/load_book",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "book_path"
+            ],
+            "properties": {
+              "book_path": {
+                "type": "string",
+                "description": "Absolute or relative path to book file (markdown or text)",
+                "example": "/app/data/book_source/physical_ai_robotics.md"
+              },
+              "chunk_size": {
+                "type": "integer",
+                "minimum": 100,
+                "maximum": 1000,
+                "default": 512,
+                "description": "Target chunk size in tokens (max 600 enforced)",
+                "example": 512
+              },
+              "overlap": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 200,
+                "default": 50,
+                "description": "Overlap between chunks in tokens",
+                "example": 50
+              },
+              "embedding_model": {
+                "type": "string",
+                "enum": [
+                  "openai",
+                  "local"
+                ],
+                "default": "openai",
+                "description": "Embedding model to use (openai=text-embedding-3-small, local=MiniLM)",
+                "example": "openai"
+              },
+              "force_reload": {
+                "type": "boolean",
+                "default": false,
+                "description": "Delete existing chunks and reload (use with caution)",
+                "example": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "chunks_created",
+              "qdrant_upserted",
+              "message"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "partial_success",
+                  "failed"
+                ],
+                "description": "Overall processing status",
+                "example": "success"
+              },
+              "chunks_created": {
+                "type": "integer",
+                "description": "Number of chunks successfully created in PostgreSQL",
+                "example": 1523
+              },
+              "qdrant_upserted": {
+                "type": "integer",
+                "description": "Number of vectors successfully upserted to Qdrant",
+                "example": 1523
+              },
+              "chapters_processed": {
+                "type": "integer",
+                "description": "Number of chapters processed",
+                "example": 12
+              },
+              "processing_time_seconds": {
+                "type": "integer",
+                "description": "Total processing time",
+                "example": 487
+              },
+              "embedding_model_used": {
+                "type": "string",
+                "description": "Embedding model that was used",
+                "example": "openai"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable status message",
+                "example": "Book successfully loaded into knowledge base"
+              },
+              "warnings": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Non-fatal warnings during processing",
+                "example": [
+                  "Chapter 7 has no section headers, using paragraph-level chunking"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,520 @@
+{
+  "api": {
+    "title": "@constraint Directive Example",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Createuser",
+      "key": "createuser",
+      "operations": [
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/createUser",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "description": "Input type for creating users with validation",
+                "properties": {
+                  "age": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Age - Age (13+)",
+                    "minimum": 13,
+                    "maximum": 120
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email - Valid email address"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name - Full name (required)",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "password": {
+                    "type": "string",
+                    "description": "Password - Password (min 8 chars, must contain letter and number)",
+                    "minLength": 8,
+                    "maxLength": 128,
+                    "pattern": "^(?=.*[A-Za-z])(?=.*\\d).+$"
+                  },
+                  "username": {
+                    "type": "string",
+                    "description": "Username - Username (3-20 chars, alphanumeric)",
+                    "minLength": 3,
+                    "maxLength": 20,
+                    "pattern": "^[a-zA-Z0-9_]+$"
+                  }
+                },
+                "required": [
+                  "username",
+                  "name",
+                  "email",
+                  "password"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "User type with constraint validations",
+            "properties": {
+              "age": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Age - Age must be between 13 and 120",
+                "minimum": 13,
+                "maximum": 120
+              },
+              "bio": {
+                "type": "string",
+                "description": "Bio - Bio with character limit",
+                "maxLength": 500
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email - Valid email address"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "Name - Full name with length constraints",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "username": {
+                "type": "string",
+                "description": "Username - Username must be 3-20 alphanumeric characters",
+                "minLength": 3,
+                "maxLength": 20,
+                "pattern": "^[a-zA-Z0-9_]+$"
+              },
+              "website": {
+                "type": "string",
+                "format": "url",
+                "description": "Website - Website URL"
+              }
+            },
+            "required": [
+              "id",
+              "username",
+              "name",
+              "email"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "listProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Product type with price constraints",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "description": "Description - Product description",
+                  "maxLength": 2000
+                },
+                "discountPercent": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Discount Percent - Discount percentage (0-100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name - Product name",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "price": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Price - Price must be positive",
+                  "minimum": 0.01
+                },
+                "sku": {
+                  "type": "string",
+                  "description": "Sku - SKU format: ABC-12345",
+                  "pattern": "^[A-Z]{3}-[0-9]{5}$"
+                },
+                "stock": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Stock - Stock quantity (non-negative)",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "price",
+                "stock",
+                "sku"
+              ]
+            }
+          }
+        },
+        {
+          "id": "createProduct",
+          "method": "POST",
+          "kind": "create",
+          "path": "/products",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "description": "Input type for creating products",
+                "properties": {
+                  "description": {
+                    "type": "string",
+                    "description": "Description - Product description",
+                    "maxLength": 2000
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name - Product name",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Price - Price (must be positive)",
+                    "minimum": 0.01,
+                    "maximum": 1000000
+                  },
+                  "sku": {
+                    "type": "string",
+                    "description": "Sku - SKU code",
+                    "pattern": "^[A-Z]{3}-[0-9]{5}$"
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "format": "int32",
+                    "description": "Stock - Initial stock quantity",
+                    "minimum": 0,
+                    "maximum": 999999
+                  }
+                },
+                "required": [
+                  "name",
+                  "price",
+                  "stock",
+                  "sku"
+                ]
+              }
+            },
+            "required": [
+              "input"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Product type with price constraints",
+            "properties": {
+              "description": {
+                "type": "string",
+                "description": "Description - Product description",
+                "maxLength": 2000
+              },
+              "discountPercent": {
+                "type": "number",
+                "format": "double",
+                "description": "Discount Percent - Discount percentage (0-100)",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "Name - Product name",
+                "minLength": 1,
+                "maxLength": 200
+              },
+              "price": {
+                "type": "number",
+                "format": "double",
+                "description": "Price - Price must be positive",
+                "minimum": 0.01
+              },
+              "sku": {
+                "type": "string",
+                "description": "Sku - SKU format: ABC-12345",
+                "pattern": "^[A-Z]{3}-[0-9]{5}$"
+              },
+              "stock": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Stock - Stock quantity (non-negative)",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "price",
+              "stock",
+              "sku"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Searchproducts",
+      "key": "searchproducts",
+      "operations": [
+        {
+          "id": "searchProducts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/searchProducts",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Product type with price constraints",
+              "properties": {
+                "description": {
+                  "type": "string",
+                  "description": "Description - Product description",
+                  "maxLength": 2000
+                },
+                "discountPercent": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Discount Percent - Discount percentage (0-100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name - Product name",
+                  "minLength": 1,
+                  "maxLength": 200
+                },
+                "price": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Price - Price must be positive",
+                  "minimum": 0.01
+                },
+                "sku": {
+                  "type": "string",
+                  "description": "Sku - SKU format: ABC-12345",
+                  "pattern": "^[A-Z]{3}-[0-9]{5}$"
+                },
+                "stock": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Stock - Stock quantity (non-negative)",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "price",
+                "stock",
+                "sku"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Updateprofile",
+      "key": "updateprofile",
+      "operations": [
+        {
+          "id": "updateProfile",
+          "method": "POST",
+          "kind": "create",
+          "path": "/updateProfile",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "input": {
+                "type": "object",
+                "description": "Input type for profile updates",
+                "properties": {
+                  "bio": {
+                    "type": "string",
+                    "description": "Bio - Updated bio",
+                    "maxLength": 500
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name - Updated name",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "website": {
+                    "type": "string",
+                    "format": "url",
+                    "description": "Website - Website URL"
+                  }
+                }
+              }
+            },
+            "required": [
+              "input"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "User type with constraint validations",
+            "properties": {
+              "age": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Age - Age must be between 13 and 120",
+                "minimum": 13,
+                "maximum": 120
+              },
+              "bio": {
+                "type": "string",
+                "description": "Bio - Bio with character limit",
+                "maxLength": 500
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email - Valid email address"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string",
+                "description": "Name - Full name with length constraints",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "username": {
+                "type": "string",
+                "description": "Username - Username must be 3-20 alphanumeric characters",
+                "minLength": 3,
+                "maxLength": 20,
+                "pattern": "^[a-zA-Z0-9_]+$"
+              },
+              "website": {
+                "type": "string",
+                "format": "url",
+                "description": "Website - Website URL"
+              }
+            },
+            "required": [
+              "id",
+              "username",
+              "name",
+              "email"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usersbyage",
+      "key": "usersbyage",
+      "operations": [
+        {
+          "id": "usersByAge",
+          "method": "GET",
+          "kind": "list",
+          "path": "/usersByAge",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "User type with constraint validations",
+              "properties": {
+                "age": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Age - Age must be between 13 and 120",
+                  "minimum": 13,
+                  "maximum": 120
+                },
+                "bio": {
+                  "type": "string",
+                  "description": "Bio - Bio with character limit",
+                  "maxLength": 500
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email - Valid email address"
+                },
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Name - Full name with length constraints",
+                  "minLength": 1,
+                  "maxLength": 100
+                },
+                "username": {
+                  "type": "string",
+                  "description": "Username - Username must be 3-20 alphanumeric characters",
+                  "minLength": 3,
+                  "maxLength": 20,
+                  "pattern": "^[a-zA-Z0-9_]+$"
+                },
+                "website": {
+                  "type": "string",
+                  "format": "url",
+                  "description": "Website - Website URL"
+                }
+              },
+              "required": [
+                "id",
+                "username",
+                "name",
+                "email"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

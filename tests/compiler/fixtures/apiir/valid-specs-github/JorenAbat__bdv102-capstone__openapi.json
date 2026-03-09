@@ -1,0 +1,934 @@
+{
+  "api": {
+    "title": "Swiftcart API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Cart",
+      "key": "cart",
+      "operations": [
+        {
+          "id": "GET:/cart",
+          "method": "GET",
+          "kind": "list",
+          "path": "/cart",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "cart_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the cart"
+                  },
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "cart_item_id": {
+                          "type": "integer",
+                          "description": "Unique identifier for the cart item"
+                        },
+                        "product_id": {
+                          "type": "integer",
+                          "description": "ID of the product"
+                        },
+                        "quantity": {
+                          "type": "integer",
+                          "description": "Quantity of the product"
+                        },
+                        "product": {
+                          "type": "object",
+                          "properties": {
+                            "product_id": {
+                              "type": "integer",
+                              "description": "Unique identifier for the product"
+                            },
+                            "name": {
+                              "type": "string",
+                              "description": "Name of the product"
+                            },
+                            "description": {
+                              "type": "string",
+                              "description": "Product description"
+                            },
+                            "price": {
+                              "type": "number",
+                              "format": "float",
+                              "description": "Product price"
+                            },
+                            "stock_quantity": {
+                              "type": "integer",
+                              "description": "Available stock quantity"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/cart/items",
+          "method": "POST",
+          "kind": "create",
+          "path": "/cart/items",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "product_id",
+              "quantity"
+            ],
+            "properties": {
+              "product_id": {
+                "type": "integer",
+                "description": "ID of the product to add"
+              },
+              "quantity": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Quantity to add"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "cart_item_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the cart item"
+                  },
+                  "product_id": {
+                    "type": "integer",
+                    "description": "ID of the product"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "description": "Quantity of the product"
+                  },
+                  "product": {
+                    "type": "object",
+                    "properties": {
+                      "product_id": {
+                        "type": "integer",
+                        "description": "Unique identifier for the product"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the product"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Product description"
+                      },
+                      "price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Product price"
+                      },
+                      "stock_quantity": {
+                        "type": "integer",
+                        "description": "Available stock quantity"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/cart/items/{itemId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/cart/items/{itemId}",
+          "identifierParam": "itemId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "quantity"
+            ],
+            "properties": {
+              "quantity": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "New quantity for the item"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "cart_item_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the cart item"
+                  },
+                  "product_id": {
+                    "type": "integer",
+                    "description": "ID of the product"
+                  },
+                  "quantity": {
+                    "type": "integer",
+                    "description": "Quantity of the product"
+                  },
+                  "product": {
+                    "type": "object",
+                    "properties": {
+                      "product_id": {
+                        "type": "integer",
+                        "description": "Unique identifier for the product"
+                      },
+                      "name": {
+                        "type": "string",
+                        "description": "Name of the product"
+                      },
+                      "description": {
+                        "type": "string",
+                        "description": "Product description"
+                      },
+                      "price": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Product price"
+                      },
+                      "stock_quantity": {
+                        "type": "integer",
+                        "description": "Available stock quantity"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/cart/items/{itemId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/cart/items/{itemId}",
+          "identifierParam": "itemId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "key": "customers",
+      "operations": [
+        {
+          "id": "GET:/customers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/customers",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "customer_id": {
+                      "type": "integer",
+                      "description": "Unique identifier for the customer"
+                    },
+                    "first_name": {
+                      "type": "string",
+                      "description": "Customer's first name"
+                    },
+                    "last_name": {
+                      "type": "string",
+                      "description": "Customer's last name"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email",
+                      "description": "Customer's email address"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "Customer's phone number"
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "Customer's address"
+                    },
+                    "city": {
+                      "type": "string",
+                      "description": "Customer's city"
+                    },
+                    "state": {
+                      "type": "string",
+                      "description": "Customer's state"
+                    },
+                    "zip_code": {
+                      "type": "string",
+                      "description": "Customer's ZIP code"
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Customer's country"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/customers/{customerId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/customers/{customerId}",
+          "identifierParam": "customerId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the customer"
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "description": "Customer's first name"
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "description": "Customer's last name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer's email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer's phone number"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Customer's address"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Customer's city"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Customer's state"
+                  },
+                  "zip_code": {
+                    "type": "string",
+                    "description": "Customer's ZIP code"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Customer's country"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/customers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/customers",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "first_name",
+              "last_name",
+              "email",
+              "phone",
+              "address",
+              "city",
+              "state",
+              "zip_code",
+              "country"
+            ],
+            "properties": {
+              "first_name": {
+                "type": "string",
+                "description": "Customer's first name"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "Customer's last name"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Customer's email address"
+              },
+              "phone": {
+                "type": "string",
+                "description": "Customer's phone number"
+              },
+              "address": {
+                "type": "string",
+                "description": "Customer's address"
+              },
+              "city": {
+                "type": "string",
+                "description": "Customer's city"
+              },
+              "state": {
+                "type": "string",
+                "description": "Customer's state"
+              },
+              "zip_code": {
+                "type": "string",
+                "description": "Customer's ZIP code"
+              },
+              "country": {
+                "type": "string",
+                "description": "Customer's country"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the customer"
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "description": "Customer's first name"
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "description": "Customer's last name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer's email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer's phone number"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Customer's address"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Customer's city"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Customer's state"
+                  },
+                  "zip_code": {
+                    "type": "string",
+                    "description": "Customer's ZIP code"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Customer's country"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/customers/{customerId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/customers/{customerId}",
+          "identifierParam": "customerId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "first_name": {
+                "type": "string",
+                "description": "Customer's first name"
+              },
+              "last_name": {
+                "type": "string",
+                "description": "Customer's last name"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Customer's email address"
+              },
+              "phone": {
+                "type": "string",
+                "description": "Customer's phone number"
+              },
+              "address": {
+                "type": "string",
+                "description": "Customer's address"
+              },
+              "city": {
+                "type": "string",
+                "description": "Customer's city"
+              },
+              "state": {
+                "type": "string",
+                "description": "Customer's state"
+              },
+              "zip_code": {
+                "type": "string",
+                "description": "Customer's ZIP code"
+              },
+              "country": {
+                "type": "string",
+                "description": "Customer's country"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "customer_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the customer"
+                  },
+                  "first_name": {
+                    "type": "string",
+                    "description": "Customer's first name"
+                  },
+                  "last_name": {
+                    "type": "string",
+                    "description": "Customer's last name"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer's email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer's phone number"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Customer's address"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Customer's city"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Customer's state"
+                  },
+                  "zip_code": {
+                    "type": "string",
+                    "description": "Customer's ZIP code"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Customer's country"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/customers/{customerId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/customers/{customerId}",
+          "identifierParam": "customerId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "order_id": {
+                      "type": "integer",
+                      "description": "Unique identifier for the order"
+                    },
+                    "cart_id": {
+                      "type": "integer",
+                      "description": "ID of the cart used for the order"
+                    },
+                    "total_amount": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "Total amount of the order"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "COMPLETED",
+                        "CANCELLED"
+                      ],
+                      "description": "Current status of the order"
+                    },
+                    "order_date": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When the order was placed"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/orders/{orderId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the order"
+                  },
+                  "cart_id": {
+                    "type": "integer",
+                    "description": "ID of the cart used for the order"
+                  },
+                  "total_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Total amount of the order"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PROCESSING",
+                      "COMPLETED",
+                      "CANCELLED"
+                    ],
+                    "description": "Current status of the order"
+                  },
+                  "order_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the order was placed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "cart_id"
+            ],
+            "properties": {
+              "cart_id": {
+                "type": "integer",
+                "description": "ID of the cart to convert to order"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the order"
+                  },
+                  "cart_id": {
+                    "type": "integer",
+                    "description": "ID of the cart used for the order"
+                  },
+                  "total_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Total amount of the order"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PROCESSING",
+                      "COMPLETED",
+                      "CANCELLED"
+                    ],
+                    "description": "Current status of the order"
+                  },
+                  "order_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the order was placed"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/orders/{orderId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PROCESSING",
+                  "COMPLETED",
+                  "CANCELLED"
+                ],
+                "description": "New status for the order"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "order_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the order"
+                  },
+                  "cart_id": {
+                    "type": "integer",
+                    "description": "ID of the cart used for the order"
+                  },
+                  "total_amount": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Total amount of the order"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "PROCESSING",
+                      "COMPLETED",
+                      "CANCELLED"
+                    ],
+                    "description": "Current status of the order"
+                  },
+                  "order_date": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the order was placed"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "integer",
+                      "description": "Unique identifier for the product"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Name of the product"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Product description"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float",
+                      "description": "Product price"
+                    },
+                    "stock_quantity": {
+                      "type": "integer",
+                      "description": "Available stock quantity"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{productId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "product_id": {
+                    "type": "integer",
+                    "description": "Unique identifier for the product"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Name of the product"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Product description"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Product price"
+                  },
+                  "stock_quantity": {
+                    "type": "integer",
+                    "description": "Available stock quantity"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

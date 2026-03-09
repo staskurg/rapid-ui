@@ -1,0 +1,333 @@
+openapi: 3.0.3
+info:
+  title: To7fa User State & Authorization API
+  version: 1.0.0
+  description: |
+    API endpoints for user state management, OTP verification, and cart operations.
+    Part of feature 001-user-state-logic.
+
+servers:
+  - url: /api/v1
+    description: API version 1
+
+paths:
+  /auth/send-otp/:
+    post:
+      summary: Send OTP to mobile number
+      description: |
+        Sends a 6-digit OTP to the user's mobile number for verification.
+        Requires authentication. Subject to 60-second cooldown between requests.
+      operationId: sendOtp
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - mobile_number
+              properties:
+                mobile_number:
+                  type: string
+                  description: Mobile number to verify
+                  example: "+201234567890"
+      responses:
+        '200':
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "OTP sent successfully"
+                      expires_in:
+                        type: integer
+                        description: Seconds until OTP expires
+                        example: 300
+        '400':
+          description: Cooldown active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "OTP_COOLDOWN"
+                message: "Please wait 60 seconds before requesting new OTP"
+                details:
+                  wait_seconds: 45
+        '403':
+          description: User is blocked from OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "OTP_BLOCKED"
+                message: "OTP verification blocked. Contact support."
+                details: {}
+
+  /auth/verify-otp/:
+    post:
+      summary: Verify OTP code
+      description: |
+        Validates OTP code and marks mobile as verified.
+        After 3 failed attempts, user is permanently blocked from OTP.
+      operationId: verifyOtp
+      tags:
+        - Authentication
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - otp_code
+              properties:
+                otp_code:
+                  type: string
+                  description: 6-digit OTP code
+                  pattern: '^\d{6}$'
+                  example: "123456"
+      responses:
+        '200':
+          description: Verification successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Mobile verified successfully"
+                      is_mobile_verified:
+                        type: boolean
+                        example: true
+        '400':
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                expired:
+                  value:
+                    error: "OTP_EXPIRED"
+                    message: "OTP has expired. Please request a new one."
+                    details:
+                      wait_seconds: 60
+                invalid:
+                  value:
+                    error: "OTP_INVALID"
+                    message: "Invalid OTP code"
+                    details:
+                      attempts_remaining: 2
+        '403':
+          description: User blocked from OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "OTP_BLOCKED"
+                message: "OTP verification blocked. Contact support."
+                details: {}
+
+  /cart/merge/:
+    post:
+      summary: Merge guest cart into user cart
+      description: |
+        Merges items from a guest cart (identified by session_id) into the 
+        authenticated user's cart. For duplicate products, user cart quantity wins.
+      operationId: mergeCart
+      tags:
+        - Cart
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - session_id
+              properties:
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Guest session ID
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Cart merged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Cart merged successfully"
+                      items_added:
+                        type: integer
+                        description: Number of new items added
+                        example: 3
+                      items_skipped:
+                        type: integer
+                        description: Duplicates that were skipped
+                        example: 1
+        '404':
+          description: Guest cart not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "CART_NOT_FOUND"
+                message: "No guest cart found for this session"
+                details: {}
+
+  /auth/login/:
+    post:
+      summary: User login
+      description: |
+        Authenticates user with email and password.
+        Returns JWT tokens and complete user state.
+        Optionally merges guest cart if session_id provided.
+      operationId: login
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                session_id:
+                  type: string
+                  format: uuid
+                  description: Optional guest session for cart merge
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/UserState'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: User is locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "USER_LOCKED"
+                message: "You are banned"
+                details: {}
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+        message:
+          type: string
+          description: Human-readable message
+        details:
+          type: object
+          description: Additional context
+
+    UserState:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          type: string
+          format: email
+        phone_number:
+          type: string
+        is_mobile_verified:
+          type: boolean
+        is_locked:
+          type: boolean
+        is_blocked:
+          type: boolean
+        blocked_capabilities:
+          type: array
+          items:
+            type: string
+            enum:
+              - SELL
+              - WITHDRAW
+              - CREATE_PRODUCT
+              - MANAGE_ORDERS
+        user_type:
+          type: string
+          enum:
+            - customer
+            - artist
+            - store
+        roles:
+          type: array
+          items:
+            type: string
+
+tags:
+  - name: Authentication
+    description: User authentication and verification
+  - name: Cart
+    description: Shopping cart operations

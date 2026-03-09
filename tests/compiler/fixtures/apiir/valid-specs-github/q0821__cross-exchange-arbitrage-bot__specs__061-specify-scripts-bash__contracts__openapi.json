@@ -1,0 +1,215 @@
+{
+  "api": {
+    "title": "Password Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "GET:/auth/validate-reset-token",
+          "method": "GET",
+          "kind": "list",
+          "path": "/auth/validate-reset-token",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "valid": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "expiresAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Token 過期時間"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/change-password",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/change-password",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "currentPassword",
+              "newPassword",
+              "confirmPassword"
+            ],
+            "properties": {
+              "currentPassword": {
+                "type": "string",
+                "minLength": 1,
+                "description": "目前密碼"
+              },
+              "newPassword": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 128,
+                "description": "新密碼（至少 8 字元，包含大小寫字母和數字）"
+              },
+              "confirmPassword": {
+                "type": "string",
+                "description": "確認新密碼（必須與 newPassword 相同）"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/forgot-password",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/forgot-password",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "註冊時使用的電子郵件"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "如果該電子郵件已註冊，您將收到密碼重設郵件"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/password-strength",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/password-strength",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "password"
+            ],
+            "properties": {
+              "password": {
+                "type": "string",
+                "description": "要檢查的密碼"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "strength": {
+                    "type": "string",
+                    "enum": [
+                      "weak",
+                      "medium",
+                      "strong"
+                    ],
+                    "description": "密碼強度"
+                  },
+                  "score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100,
+                    "description": "密碼分數"
+                  },
+                  "suggestions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "改善建議"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/reset-password",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/reset-password",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "token",
+              "newPassword",
+              "confirmPassword"
+            ],
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "密碼重設 token（從郵件連結取得）"
+              },
+              "newPassword": {
+                "type": "string",
+                "minLength": 8,
+                "maxLength": 128,
+                "description": "新密碼"
+              },
+              "confirmPassword": {
+                "type": "string",
+                "description": "確認新密碼"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

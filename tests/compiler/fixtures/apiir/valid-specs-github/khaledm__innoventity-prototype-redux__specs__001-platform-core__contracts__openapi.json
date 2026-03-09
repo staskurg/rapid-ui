@@ -1,0 +1,473 @@
+{
+  "api": {
+    "title": "Innoventity Platform API",
+    "version": "1.0.0-phase0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "activateAccount",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/activate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "activationToken"
+            ],
+            "properties": {
+              "activationToken": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Activation token from registration email",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "message",
+              "accountStatus"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Account activated successfully. You can now log in."
+              },
+              "accountStatus": {
+                "type": "string",
+                "enum": [
+                  "PendingActivation",
+                  "Active",
+                  "Suspended"
+                ],
+                "description": "Actor account status:\n- **PendingActivation**: Awaiting email activation (R1.1)\n- **Active**: Account fully activated, can log in\n- **Suspended**: Account suspended (admin action)\n",
+                "example": "Active"
+              }
+            }
+          }
+        },
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "actorType",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Actor's registered email",
+                "example": "maria.silva@university.edu"
+              },
+              "actorType": {
+                "type": "string",
+                "enum": [
+                  "IdeaGenerator",
+                  "RD",
+                  "Manufacturing",
+                  "SalesMarketing",
+                  "Investor"
+                ],
+                "description": "Actor type (TPH discriminator):\n- **IdeaGenerator**: Research-based innovation originator\n- **RD**: Research & Development organization\n- **Manufacturing**: Manufacturing partner\n- **SalesMarketing**: Sales & Marketing partner\n- **Investor**: Financial investor\n",
+                "example": "IdeaGenerator"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "SecurePass123!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "refreshToken",
+              "expiresIn",
+              "tokenType",
+              "actor"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "description": "JWT access token (valid for 1 hour)",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refreshToken": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Refresh token (valid for 7 days)",
+                "example": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "Access token lifetime in seconds",
+                "example": 3600
+              },
+              "tokenType": {
+                "type": "string",
+                "enum": [
+                  "Bearer"
+                ],
+                "example": "Bearer"
+              },
+              "actor": {
+                "type": "object",
+                "required": [
+                  "actorId",
+                  "fullName",
+                  "actorType"
+                ],
+                "properties": {
+                  "actorId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique identifier for the actor"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "description": "Actor's full name or organization name",
+                    "example": "Dr. Maria Silva"
+                  },
+                  "actorType": {
+                    "type": "string",
+                    "enum": [
+                      "IdeaGenerator",
+                      "RD",
+                      "Manufacturing",
+                      "SalesMarketing",
+                      "Investor"
+                    ],
+                    "description": "Actor type (TPH discriminator):\n- **IdeaGenerator**: Research-based innovation originator\n- **RD**: Research & Development organization\n- **Manufacturing**: Manufacturing partner\n- **SalesMarketing**: Sales & Marketing partner\n- **Investor**: Financial investor\n",
+                    "example": "IdeaGenerator"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/refresh-token",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refreshToken"
+            ],
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Valid refresh token from previous login",
+                "example": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "accessToken",
+              "expiresIn",
+              "tokenType"
+            ],
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "description": "New JWT access token (valid for 1 hour)",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "expiresIn": {
+                "type": "integer",
+                "description": "Access token lifetime in seconds",
+                "example": 3600
+              },
+              "tokenType": {
+                "type": "string",
+                "enum": [
+                  "Bearer"
+                ],
+                "example": "Bearer"
+              }
+            }
+          }
+        },
+        {
+          "id": "registerActor",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "fullName",
+              "contactAddress",
+              "actorType",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "maxLength": 255,
+                "description": "Actor's email address (unique per ActorType per R1.3)",
+                "example": "maria.silva@university.edu"
+              },
+              "fullName": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 200,
+                "description": "Actor's full name or organization name",
+                "example": "Dr. Maria Silva"
+              },
+              "contactAddress": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 500,
+                "description": "Physical contact address",
+                "example": "University Research Park, Building 3"
+              },
+              "actorType": {
+                "type": "string",
+                "enum": [
+                  "IdeaGenerator",
+                  "RD",
+                  "Manufacturing",
+                  "SalesMarketing",
+                  "Investor"
+                ],
+                "description": "Actor type (TPH discriminator):\n- **IdeaGenerator**: Research-based innovation originator\n- **RD**: Research & Development organization\n- **Manufacturing**: Manufacturing partner\n- **SalesMarketing**: Sales & Marketing partner\n- **Investor**: Financial investor\n",
+                "example": "IdeaGenerator"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "maxLength": 100,
+                "description": "Password meeting complexity requirements (R8.4)",
+                "example": "SecurePass123!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "actorId",
+              "email",
+              "fullName",
+              "actorType",
+              "accountStatus",
+              "activationRequired",
+              "message"
+            ],
+            "properties": {
+              "actorId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the created actor"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "fullName": {
+                "type": "string"
+              },
+              "actorType": {
+                "type": "string",
+                "enum": [
+                  "IdeaGenerator",
+                  "RD",
+                  "Manufacturing",
+                  "SalesMarketing",
+                  "Investor"
+                ],
+                "description": "Actor type (TPH discriminator):\n- **IdeaGenerator**: Research-based innovation originator\n- **RD**: Research & Development organization\n- **Manufacturing**: Manufacturing partner\n- **SalesMarketing**: Sales & Marketing partner\n- **Investor**: Financial investor\n",
+                "example": "IdeaGenerator"
+              },
+              "accountStatus": {
+                "type": "string",
+                "enum": [
+                  "PendingActivation",
+                  "Active",
+                  "Suspended"
+                ],
+                "description": "Actor account status:\n- **PendingActivation**: Awaiting email activation (R1.1)\n- **Active**: Account fully activated, can log in\n- **Suspended**: Account suspended (admin action)\n",
+                "example": "Active"
+              },
+              "activationRequired": {
+                "type": "boolean",
+                "description": "Always true for Phase 0 (email activation required)",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Registration successful. Please check your email to activate your account."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Innovations",
+      "key": "innovations",
+      "operations": [
+        {
+          "id": "getInnovationById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/innovations/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "innovationId",
+              "title",
+              "status",
+              "createdAt",
+              "owner",
+              "ideaSummary"
+            ],
+            "properties": {
+              "innovationId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the innovation"
+              },
+              "title": {
+                "type": "string",
+                "description": "Innovation title (from IdeaSummary.Title)",
+                "example": "Eco-Friendly Packaging from Agricultural Waste"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "Draft",
+                  "AwaitingBids",
+                  "ReceivingBids",
+                  "SufficientBids",
+                  "PartnersSelected",
+                  "BusinessPlanInProgress",
+                  "BusinessPlanComplete"
+                ],
+                "description": "Innovation lifecycle status (state machine per R2.2):\n- **Draft**: Being created by owner\n- **AwaitingBids**: Submitted, waiting for first bid\n- **ReceivingBids**: At least one bid received\n- **SufficientBids**: All required actor types have bids (R5.1 - manual check in v1.0)\n- **PartnersSelected**: Owner accepted bids (R6.1)\n- **BusinessPlanInProgress**: Collaboration in progress (R7.1)\n- **BusinessPlanComplete**: Business plan finalized (R7.3)\n",
+                "example": "AwaitingBids"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Innovation creation timestamp"
+              },
+              "submittedAt": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "When innovation was submitted for bidding (null if Draft)"
+              },
+              "owner": {
+                "type": "object",
+                "required": [
+                  "actorId",
+                  "fullName",
+                  "actorType"
+                ],
+                "properties": {
+                  "actorId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Unique identifier for the actor"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "description": "Actor's full name or organization name",
+                    "example": "Dr. Maria Silva"
+                  },
+                  "actorType": {
+                    "type": "string",
+                    "enum": [
+                      "IdeaGenerator",
+                      "RD",
+                      "Manufacturing",
+                      "SalesMarketing",
+                      "Investor"
+                    ],
+                    "description": "Actor type (TPH discriminator):\n- **IdeaGenerator**: Research-based innovation originator\n- **RD**: Research & Development organization\n- **Manufacturing**: Manufacturing partner\n- **SalesMarketing**: Sales & Marketing partner\n- **Investor**: Financial investor\n",
+                    "example": "IdeaGenerator"
+                  }
+                }
+              },
+              "ideaSummary": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "productType",
+                  "researchBackground",
+                  "researchCategory",
+                  "hasIPR"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 10,
+                    "maxLength": 200,
+                    "description": "Innovation title (R2.1 - cannot be \"Default Innovation Title\")",
+                    "example": "Biodegradable Packaging from Rice Husks"
+                  },
+                  "productType": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "description": "Product or service type resulting from research",
+                    "example": "Sustainable packaging material"
+                  },
+                  "researchBackground": {
+                    "type": "string",
+                    "minLength": 50,
+                    "maxLength": 2000,
+                    "description": "Research basis for the innovation (min 50 chars per R2.1)",
+                    "example": "Based on 3 years of materials science research at University lab..."
+                  },
+                  "researchCategory": {
+                    "type": "string",
+                    "enum": [
+                      "Management",
+                      "Engineering",
+                      "NaturalScience"
+                    ],
+                    "description": "Research category for innovation classification:\n- **Management**: Business, economics, management research\n- **Engineering**: Engineering, technology, applied sciences\n- **NaturalScience**: Pure sciences (physics, chemistry, biology)\n",
+                    "example": "Engineering"
+                  },
+                  "hasIPR": {
+                    "type": "boolean",
+                    "description": "Whether innovation has intellectual property rights",
+                    "example": true
+                  },
+                  "iprDetails": {
+                    "type": "string",
+                    "maxLength": 1000,
+                    "nullable": true,
+                    "description": "IPR details if hasIPR is true",
+                    "example": "Provisional patent filed (Application #2025-123456)"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

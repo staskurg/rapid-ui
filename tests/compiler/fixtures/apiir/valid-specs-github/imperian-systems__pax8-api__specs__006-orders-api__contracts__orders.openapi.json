@@ -1,0 +1,603 @@
+{
+  "api": {
+    "title": "Pax8 Orders API - Client Contract",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "listOrders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "companyId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "orderedBy": {
+                      "type": "string",
+                      "enum": [
+                        "Pax8 Partner",
+                        "Customer",
+                        "Pax8"
+                      ]
+                    },
+                    "orderedByUserId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "orderedByUserEmail": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "isScheduled": {
+                      "type": "boolean"
+                    },
+                    "lineItems": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "productId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "subscriptionId": {
+                            "type": "string",
+                            "format": "uuid",
+                            "nullable": true
+                          },
+                          "commitmentTermId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "provisionStartDate": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "lineItemNumber": {
+                            "type": "number"
+                          },
+                          "billingTerm": {
+                            "type": "string",
+                            "enum": [
+                              "Monthly",
+                              "Annual",
+                              "2-Year",
+                              "3-Year",
+                              "One-Time",
+                              "Trial",
+                              "Activation"
+                            ]
+                          },
+                          "parentSubscriptionId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "parentLineItemNumber": {
+                            "type": "number"
+                          },
+                          "quantity": {
+                            "type": "number"
+                          },
+                          "provisioningDetails": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string"
+                                },
+                                "key": {
+                                  "type": "string"
+                                },
+                                "values": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                "description": {
+                                  "type": "string"
+                                },
+                                "valueType": {
+                                  "type": "string",
+                                  "enum": [
+                                    "Input",
+                                    "Single-Value",
+                                    "Multi-Value"
+                                  ]
+                                },
+                                "possibleValues": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "productId",
+                          "quantity",
+                          "billingTerm"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "companyId",
+                    "createdDate",
+                    "orderedBy",
+                    "lineItems"
+                  ]
+                }
+              },
+              "page": {
+                "type": "object",
+                "properties": {
+                  "size": {
+                    "type": "integer"
+                  },
+                  "totalElements": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  },
+                  "number": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "size",
+                  "totalElements",
+                  "totalPages",
+                  "number"
+                ]
+              }
+            },
+            "required": [
+              "content",
+              "page"
+            ]
+          }
+        },
+        {
+          "id": "getOrder",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "companyId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "createdDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "orderedBy": {
+                "type": "string",
+                "enum": [
+                  "Pax8 Partner",
+                  "Customer",
+                  "Pax8"
+                ]
+              },
+              "orderedByUserId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "orderedByUserEmail": {
+                "type": "string",
+                "format": "email"
+              },
+              "isScheduled": {
+                "type": "boolean"
+              },
+              "lineItems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "commitmentTermId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "provisionStartDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "lineItemNumber": {
+                      "type": "number"
+                    },
+                    "billingTerm": {
+                      "type": "string",
+                      "enum": [
+                        "Monthly",
+                        "Annual",
+                        "2-Year",
+                        "3-Year",
+                        "One-Time",
+                        "Trial",
+                        "Activation"
+                      ]
+                    },
+                    "parentSubscriptionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "parentLineItemNumber": {
+                      "type": "number"
+                    },
+                    "quantity": {
+                      "type": "number"
+                    },
+                    "provisioningDetails": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "valueType": {
+                            "type": "string",
+                            "enum": [
+                              "Input",
+                              "Single-Value",
+                              "Multi-Value"
+                            ]
+                          },
+                          "possibleValues": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "productId",
+                    "quantity",
+                    "billingTerm"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "companyId",
+              "createdDate",
+              "orderedBy",
+              "lineItems"
+            ]
+          }
+        },
+        {
+          "id": "createOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "companyId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "lineItems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "quantity": {
+                      "type": "number"
+                    },
+                    "billingTerm": {
+                      "type": "string",
+                      "enum": [
+                        "Monthly",
+                        "Annual",
+                        "2-Year",
+                        "3-Year",
+                        "One-Time",
+                        "Trial",
+                        "Activation"
+                      ]
+                    },
+                    "lineItemNumber": {
+                      "type": "number"
+                    },
+                    "commitmentTermId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "provisionStartDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "parentSubscriptionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "parentLineItemNumber": {
+                      "type": "number"
+                    },
+                    "provisioningDetails": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "valueType": {
+                            "type": "string",
+                            "enum": [
+                              "Input",
+                              "Single-Value",
+                              "Multi-Value"
+                            ]
+                          },
+                          "possibleValues": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "billingTerm",
+                    "lineItemNumber"
+                  ]
+                }
+              },
+              "orderedBy": {
+                "type": "string",
+                "enum": [
+                  "Pax8 Partner",
+                  "Customer",
+                  "Pax8"
+                ]
+              },
+              "orderedByUserEmail": {
+                "type": "string",
+                "format": "email"
+              }
+            },
+            "required": [
+              "companyId",
+              "lineItems"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "companyId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "createdDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "orderedBy": {
+                "type": "string",
+                "enum": [
+                  "Pax8 Partner",
+                  "Customer",
+                  "Pax8"
+                ]
+              },
+              "orderedByUserId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "orderedByUserEmail": {
+                "type": "string",
+                "format": "email"
+              },
+              "isScheduled": {
+                "type": "boolean"
+              },
+              "lineItems": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "subscriptionId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "nullable": true
+                    },
+                    "commitmentTermId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "provisionStartDate": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "lineItemNumber": {
+                      "type": "number"
+                    },
+                    "billingTerm": {
+                      "type": "string",
+                      "enum": [
+                        "Monthly",
+                        "Annual",
+                        "2-Year",
+                        "3-Year",
+                        "One-Time",
+                        "Trial",
+                        "Activation"
+                      ]
+                    },
+                    "parentSubscriptionId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "parentLineItemNumber": {
+                      "type": "number"
+                    },
+                    "quantity": {
+                      "type": "number"
+                    },
+                    "provisioningDetails": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "key": {
+                            "type": "string"
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "description": {
+                            "type": "string"
+                          },
+                          "valueType": {
+                            "type": "string",
+                            "enum": [
+                              "Input",
+                              "Single-Value",
+                              "Multi-Value"
+                            ]
+                          },
+                          "possibleValues": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "productId",
+                    "quantity",
+                    "billingTerm"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "id",
+              "companyId",
+              "createdDate",
+              "orderedBy",
+              "lineItems"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

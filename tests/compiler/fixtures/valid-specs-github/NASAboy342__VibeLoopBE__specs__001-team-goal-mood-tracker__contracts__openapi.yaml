@@ -1,0 +1,422 @@
+openapi: 3.0.3
+info:
+  title: Team Daily Goal Tracker with Mood Sync API
+  description: Backend API for small teams to track daily goals and monitor team morale with mood tracking
+  version: 1.0.0
+  contact:
+    name: VibeLoopBE Team
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: https://localhost:5001
+    description: Local development server (HTTPS)
+
+paths:
+  /api/members:
+    get:
+      summary: Get all team members with their goals and moods
+      description: Returns all team members with their current mood status and all their goals (for any date)
+      operationId: getMembers
+      tags:
+        - Members
+      responses:
+        '200':
+          description: Successfully retrieved all team members
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberResponse'
+              examples:
+                withMembers:
+                  summary: Team with members
+                  value:
+                    - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                      name: "Alice Johnson"
+                      mood: "great"
+                      moodUpdatedAt: "2025-11-24T08:30:00.000Z"
+                      goals:
+                        - id: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+                          memberId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                          description: "Complete API documentation"
+                          completed: false
+                          createdAt: "2025-11-24T07:00:00.000Z"
+                          date: "2025-11-24"
+                    - id: "b2c3d4e5-f6g7-8901-bcde-fg2345678901"
+                      name: "Bob Smith"
+                      mood: null
+                      moodUpdatedAt: null
+                      goals: []
+                empty:
+                  summary: Empty system
+                  value: []
+
+  /api/members/mood:
+    post:
+      summary: Update a team member's mood
+      description: Updates the mood status for a team member. Uses last-write-wins strategy for concurrent updates based on timestamp.
+      operationId: updateMemberMood
+      tags:
+        - Members
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMoodRequest'
+            examples:
+              setStressed:
+                summary: Set mood to stressed
+                value:
+                  memberId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  mood: "stressed"
+                  timestamp: "2025-11-24T14:30:00.000Z"
+      responses:
+        '200':
+          description: Mood successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidMood:
+                  summary: Invalid mood value
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Mood must be one of: 'great', 'good', 'neutral', 'low', 'stressed'"
+                missingField:
+                  summary: Missing required field
+                  value:
+                    error: "INVALID_REQUEST"
+                    message: "MemberId is required"
+        '404':
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Member does not exist
+                  value:
+                    error: "NOT_FOUND"
+                    message: "Team member not found"
+
+  /api/goals:
+    post:
+      summary: Create a new goal for a team member
+      description: Creates a new goal with the specified description and target date. Goal is created with completed=false by default.
+      operationId: createGoal
+      tags:
+        - Goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGoalRequest'
+            examples:
+              todayGoal:
+                summary: Create goal for today
+                value:
+                  memberId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  description: "Complete API documentation"
+                  date: "2025-11-24"
+      responses:
+        '200':
+          description: Goal successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                tooShort:
+                  summary: Description too short
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Goal description must be at least 3 characters"
+                tooLong:
+                  summary: Description too long
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Goal description must not exceed 200 characters"
+                invalidDate:
+                  summary: Invalid date format
+                  value:
+                    error: "VALIDATION_ERROR"
+                    message: "Date must be in YYYY-MM-DD format"
+        '404':
+          description: Member not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/goals/update:
+    post:
+      summary: Update goal completion status
+      description: Marks a goal as completed or incomplete. Only the completion status can be modified.
+      operationId: updateGoal
+      tags:
+        - Goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateGoalRequest'
+            examples:
+              markComplete:
+                summary: Mark goal as complete
+                value:
+                  goalId: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+                  completed: true
+              markIncomplete:
+                summary: Mark goal as incomplete
+                value:
+                  goalId: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+                  completed: false
+      responses:
+        '200':
+          description: Goal successfully updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoalResponse'
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Goal does not exist
+                  value:
+                    error: "NOT_FOUND"
+                    message: "Goal not found"
+
+  /api/goals/delete:
+    post:
+      summary: Delete a goal
+      description: Permanently removes a goal from the system. This action cannot be undone.
+      operationId: deleteGoal
+      tags:
+        - Goals
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeleteGoalRequest'
+            examples:
+              deleteGoal:
+                summary: Delete a goal
+                value:
+                  goalId: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+      responses:
+        '200':
+          description: Goal successfully deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+        '404':
+          description: Goal not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    MemberResponse:
+      type: object
+      required:
+        - id
+        - name
+        - goals
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the team member
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        name:
+          type: string
+          description: Display name of the team member
+          example: "Alice Johnson"
+        mood:
+          type: string
+          nullable: true
+          enum: [great, good, neutral, low, stressed]
+          description: Current mood status, null if never set
+          example: "great"
+        moodUpdatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: ISO 8601 timestamp of last mood update, null if never set
+          example: "2025-11-24T08:30:00.000Z"
+        goals:
+          type: array
+          description: All goals for this member (any date)
+          items:
+            $ref: '#/components/schemas/GoalResponse'
+
+    GoalResponse:
+      type: object
+      required:
+        - id
+        - memberId
+        - description
+        - completed
+        - createdAt
+        - date
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the goal
+          example: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+        memberId:
+          type: string
+          format: uuid
+          description: Reference to the owning team member
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        description:
+          type: string
+          minLength: 3
+          maxLength: 200
+          description: Goal description text
+          example: "Complete API documentation"
+        completed:
+          type: boolean
+          description: Whether the goal is completed
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when goal was created
+          example: "2025-11-24T07:00:00.000Z"
+        date:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Target date in YYYY-MM-DD format
+          example: "2025-11-24"
+
+    UpdateMoodRequest:
+      type: object
+      required:
+        - memberId
+        - mood
+        - timestamp
+      properties:
+        memberId:
+          type: string
+          format: uuid
+          description: ID of the team member to update
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        mood:
+          type: string
+          enum: [great, good, neutral, low, stressed]
+          description: New mood value
+          example: "stressed"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of when mood was recorded
+          example: "2025-11-24T14:30:00.000Z"
+
+    CreateGoalRequest:
+      type: object
+      required:
+        - memberId
+        - description
+        - date
+      properties:
+        memberId:
+          type: string
+          format: uuid
+          description: ID of the team member who owns this goal
+          example: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        description:
+          type: string
+          minLength: 3
+          maxLength: 200
+          description: Goal description text (3-200 characters)
+          example: "Complete API documentation"
+        date:
+          type: string
+          format: date
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Target date in YYYY-MM-DD format
+          example: "2025-11-24"
+
+    UpdateGoalRequest:
+      type: object
+      required:
+        - goalId
+        - completed
+      properties:
+        goalId:
+          type: string
+          format: uuid
+          description: ID of the goal to update
+          example: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+        completed:
+          type: boolean
+          description: New completion status
+          example: true
+
+    DeleteGoalRequest:
+      type: object
+      required:
+        - goalId
+      properties:
+        goalId:
+          type: string
+          format: uuid
+          description: ID of the goal to delete
+          example: "g1h2i3j4-k5l6-7890-mnop-qr1234567890"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          enum: [VALIDATION_ERROR, NOT_FOUND, INVALID_REQUEST]
+          description: Error code for programmatic handling
+          example: "VALIDATION_ERROR"
+        message:
+          type: string
+          description: Human-readable error description
+          example: "Goal description must be at least 3 characters"
+
+tags:
+  - name: Members
+    description: Team member and mood management endpoints
+  - name: Goals
+    description: Goal creation, update, and deletion endpoints

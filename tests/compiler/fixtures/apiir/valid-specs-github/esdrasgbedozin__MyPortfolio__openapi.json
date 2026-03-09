@@ -1,0 +1,174 @@
+{
+  "api": {
+    "title": "Portfolio Professionnel - API Specification",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Contact",
+      "key": "contact",
+      "operations": [
+        {
+          "id": "submitContactForm",
+          "method": "POST",
+          "kind": "create",
+          "path": "/contact",
+          "requestSchema": {
+            "type": "object",
+            "description": "Données soumises via le formulaire de contact",
+            "required": [
+              "name",
+              "email",
+              "message",
+              "turnstileToken"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nom complet du visiteur",
+                "example": "Jean Dupont",
+                "minLength": 2,
+                "maxLength": 100
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Email du visiteur",
+                "example": "jean.dupont@example.com"
+              },
+              "company": {
+                "type": "string",
+                "description": "Entreprise du visiteur (optionnel)",
+                "example": "Acme Corp",
+                "maxLength": 100
+              },
+              "phone": {
+                "type": "string",
+                "description": "Téléphone du visiteur (optionnel)",
+                "pattern": "^(\\+33|0)[1-9](\\d{8})$",
+                "example": "+33612345678"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Objet du message (optionnel)",
+                "example": "Demande de collaboration",
+                "maxLength": 150
+              },
+              "message": {
+                "type": "string",
+                "description": "Message du visiteur",
+                "example": "Bonjour, je souhaite discuter d'une opportunité...",
+                "minLength": 10,
+                "maxLength": 2000
+              },
+              "turnstileToken": {
+                "type": "string",
+                "description": "Token de validation Cloudflare Turnstile (anti-spam)",
+                "example": "0.AQAAAAAAAAA..."
+              }
+            },
+            "example": {
+              "name": "Jean Dupont",
+              "email": "jean.dupont@example.com",
+              "company": "Acme Corp",
+              "subject": "Demande de collaboration",
+              "message": "Bonjour, je souhaite échanger avec vous sur un projet web...",
+              "turnstileToken": "0.AQAAAAAAAAA..."
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Réponse de succès après soumission du formulaire",
+            "required": [
+              "success",
+              "messageId"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Indicateur de succès",
+                "example": true
+              },
+              "messageId": {
+                "type": "string",
+                "description": "Identifiant unique du message envoyé",
+                "format": "uuid",
+                "example": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+              },
+              "message": {
+                "type": "string",
+                "description": "Message de confirmation",
+                "example": "Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "description": "Réponse du health check endpoint",
+            "required": [
+              "status",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "État global du service",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ],
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp du check",
+                "example": "2026-01-17T14:30:00Z"
+              },
+              "version": {
+                "type": "string",
+                "description": "Version du déploiement",
+                "example": "1.0.0"
+              },
+              "checks": {
+                "type": "object",
+                "description": "Détails des checks individuels",
+                "properties": {
+                  "emailService": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ],
+                    "example": "healthy"
+                  },
+                  "turnstile": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ],
+                    "example": "healthy"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

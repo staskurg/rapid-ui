@@ -1,0 +1,211 @@
+openapi: 3.0.0
+info:
+  title: DSA Lab API
+  version: 0.0.0
+  description: API for DSA Lab challenge platform
+
+servers:
+  - url: https://<your-project-ref>.supabase.co/functions/v1
+    description: Production
+  - url: http://localhost:54321/functions/v1
+    description: Local development
+
+paths:
+  /modules:
+    get:
+      summary: Get available challenge modules
+      responses:
+        "200":
+          description: List of modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+
+  /projects:
+    get:
+      summary: Get user's projects
+      parameters:
+        - name: x-user-id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Anonymous user identifier from localStorage
+        - name: moduleId
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Project"
+    post:
+      summary: Create a new project
+      parameters:
+        - name: x-user-id
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Anonymous user identifier from localStorage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateProjectRequest"
+      responses:
+        "201":
+          description: Project created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+        "202":
+          description: Project created but config commit failed (needs_config status)
+
+  /submissions:
+    post:
+      summary: Submit test results
+      security:
+        - projectTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionRequest"
+      responses:
+        "201":
+          description: Submission recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResponse"
+        "401":
+          description: Invalid or missing project token
+
+components:
+  securitySchemes:
+    projectTokenAuth:
+      type: http
+      scheme: bearer
+      description: Project-scoped token from dsa.config.json
+
+  schemas:
+    Module:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        level:
+          type: string
+        summary:
+          type: string
+        subchallenges:
+          type: array
+          items:
+            type: string
+        template:
+          type: string
+
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        moduleId:
+          type: string
+        language:
+          type: string
+        githubRepoUrl:
+          type: string
+        status:
+          type: string
+        progress:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateProjectRequest:
+      type: object
+      required:
+        - moduleId
+        - language
+      properties:
+        moduleId:
+          type: string
+        language:
+          type: string
+
+    SubmissionRequest:
+      type: object
+      required:
+        - projectId
+        - details
+      properties:
+        projectId:
+          type: string
+        details:
+          $ref: "#/components/schemas/DSAReport"
+        commitSha:
+          type: string
+
+    SubmissionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        projectUpdated:
+          type: boolean
+
+    DSAReport:
+      type: object
+      required:
+        - moduleId
+        - summary
+        - pass
+        - cases
+      properties:
+        moduleId:
+          type: string
+        summary:
+          type: string
+        pass:
+          type: boolean
+        cases:
+          type: array
+          items:
+            $ref: "#/components/schemas/TestCase"
+
+    TestCase:
+      type: object
+      required:
+        - subchallengeId
+        - passed
+      properties:
+        subchallengeId:
+          type: string
+        passed:
+          type: boolean
+        message:
+          type: string

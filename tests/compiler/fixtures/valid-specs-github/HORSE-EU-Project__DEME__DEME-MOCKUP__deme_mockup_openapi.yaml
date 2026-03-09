@@ -1,0 +1,333 @@
+openapi: 3.1.0
+info:
+  title: FastAPI
+  description: deme_mockup
+  version: 0.1.0
+paths:
+  /is_ok:
+    get:
+      summary: Is Deme Mockup Ok
+      description: 'This endpoint verifies DEME mockup is up and running.
+
+
+        Returns:
+
+        - JSON response IsOK.'
+      operationId: is_deme_mockup_ok_is_ok_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IsOK'
+  /deme_mockup_configure:
+    post:
+      summary: Mockup Configure
+      description: 'This POST prepare mocked attacks confidence for each network instance
+        and network feature passed within the parameter.
+
+        These mocked attacks confidence will be returned to each GET/detection invoked.
+
+        These mocked attacks confidence will be mockup_periodicity   each mockup_periodicity
+        to each GET/detection invoked.
+
+        For the feature and the instance where attack_simulation is False the attacks
+        confidences will be always very low.
+
+        For the feature and the instance where attack_simulation is True the attacks
+        confidences will be 0.9 near the .
+
+        The mocked attacks confidence will be different for the first mockup_periodicity
+        GET/detection invoked than will be the same.
+
+
+        Request Body:
+
+        - A MockupConfiguration object
+
+
+        Returns:
+
+        - JSON response DoneResponse if mockup_periodicity is less than 20
+
+        - JSON response ErrorConfigResponse otherwise'
+      operationId: mockup_configure_deme_mockup_configure_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MockupConfiguration'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoneResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /estimate:
+    post:
+      summary: Mockup Estimate
+      description: 'This mocked post just execute a syntax checking on the input parameters.
+
+
+        Request Body:
+
+        - A list of Estimate object
+
+
+        Returns:
+
+        - JSON response DoneResponse.'
+      operationId: mockup_estimate_estimate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: '#/components/schemas/Estimate'
+              type: array
+              title: Estimate
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DoneResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /detection:
+    get:
+      summary: Mockup Detection
+      description: 'Returns the mocked confidence of an attack for each network instance
+        and network feature passed within the last deme_mockup_configure POST.
+
+
+        Returns:
+
+        - A list of Detection objects.'
+      operationId: mockup_detection_detection_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Detection'
+                type: array
+                title: Response Mockup Detection Detection Get
+components:
+  schemas:
+    Attack:
+      properties:
+        attack:
+          type: string
+          title: Attack
+          description: The type of attack
+          example: NTP
+        accuracy:
+          type: number
+          title: Accuracy
+          description: The accuracy of the prediction of the attack
+          example: 0.5
+      type: object
+      required:
+      - attack
+      - accuracy
+      title: Attack
+    AttackConfiguration:
+      properties:
+        instance:
+          type: string
+          title: Instance
+          description: The network instance name
+          example: Test_Instance
+        attack_configuration:
+          items:
+            $ref: '#/components/schemas/AttackSimulationConfiguration'
+          type: array
+          title: Attack Configuration
+          description: List of AttackSimulationConfiguration objects (feature name
+            and related attack simulation info)
+          example: '[{"feature": "NTP","attack_simulation": True},{"feature": "DNS","attack_simulation":
+            False},{"feature": "PFCP","attack_simulation": False}]}]'
+      type: object
+      required:
+      - instance
+      - attack_configuration
+      title: AttackConfiguration
+    AttackSimulationConfiguration:
+      properties:
+        feature:
+          type: string
+          title: Feature
+          description: The type of network feature
+          example: NTP
+        attack_simulation:
+          type: boolean
+          title: Attack Simulation
+          description: A boolean indicating the attack simulation
+          example: true
+      type: object
+      required:
+      - feature
+      - attack_simulation
+      title: AttackSimulationConfiguration
+    Detection:
+      properties:
+        instance:
+          type: string
+          title: Instance
+          description: The instance name
+          example: Test_Instance
+        detection:
+          items:
+            $ref: '#/components/schemas/Attack'
+          type: array
+          title: Detection
+          description: List of Attack objects (attacks and related accuracies)
+          example: '[{"attack":"NTP","accuracy":0.5}]'
+      type: object
+      required:
+      - instance
+      - detection
+      title: Detection
+    DoneResponse:
+      properties:
+        value:
+          type: string
+          title: Value
+          default: done
+      type: object
+      title: DoneResponse
+    Estimate:
+      properties:
+        timestamp:
+          type: string
+          title: Timestamp
+          description: The timestamp in Unix epoch format
+          example: '1713303373'
+        instances:
+          items:
+            $ref: '#/components/schemas/Instance'
+          type: array
+          title: Instances
+          description: List of Instance objects (instances name and related features).
+          example: '[{"instance": "Test_Instance","features": [{"feature": "NTP","value":
+            141.0},{"feature": "DNS","value": 125.0},{"feature": "PFCP","value": 138.0}]}]'
+      type: object
+      required:
+      - timestamp
+      - instances
+      title: Estimate
+    Feature:
+      properties:
+        feature:
+          type: string
+          title: Feature
+          description: The type of network feature
+          example: NTP
+        value:
+          type: number
+          title: Value
+          description: The value associated to a network feature at a specific instant
+          example: 141.0
+      type: object
+      required:
+      - feature
+      - value
+      title: Feature
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Instance:
+      properties:
+        instance:
+          type: string
+          title: Instance
+          description: The instance name
+          example: Test_Instance
+        features:
+          items:
+            $ref: '#/components/schemas/Feature'
+          type: array
+          title: Features
+          description: List of Feature objects (network features and related values)
+          example: '[{"feature": "NTP","value": 141.0},{"feature": "DNS","value":
+            125.0},{"feature": "PFCP","value": 138.0}]}]'
+      type: object
+      required:
+      - instance
+      - features
+      title: Instance
+    IsOK:
+      properties:
+        message:
+          type: string
+          title: Message
+          default: ok
+      type: object
+      title: IsOK
+    MockupConfiguration:
+      properties:
+        mockup_periodicity:
+          type: integer
+          title: Mockup Periodicity
+          description: number of GET/detection cycles
+          example: 10
+        attacks_configuration:
+          items:
+            $ref: '#/components/schemas/AttackConfiguration'
+          type: array
+          title: Attacks Configuration
+          description: List of AttackConfiguration objects (instance name and related
+            features)
+          example: '[{"instance": "Test_Instance","attack_configuration": [{"feature":
+            "NTP","attack_simulation":"True"},{"feature": "DNS","attack_simulation":
+            "False"},{"feature": "PFCP","attack_simulation": "False"}]}]'
+      type: object
+      required:
+      - mockup_periodicity
+      - attacks_configuration
+      title: MockupConfiguration
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

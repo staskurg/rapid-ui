@@ -2,14 +2,17 @@
 /**
  * Phase 4 corpus report: generate markdown report from raw corpus run output.
  *
- * Usage: npm run corpus:report -- scripts/corpus-data/reports/raw-{name}-{timestamp}.json
+ * Usage: npm run corpus:report -- [--repo REPO] [path-to-raw-output.json]
+ *   --repo REPO: api-guru | github — auto-finds latest raw-{repo}-*.json if path omitted
+ *   path: explicit path to raw output JSON
+ *
  * Output: scripts/corpus-data/reports/report-{name}-{timestamp}.md
  *
  * Language Analysis: For passing specs, re-compiles to ApiIR and reports
  * resource shape, CRUD pattern, grouping strategy, spec complexity.
  */
 
-import { readFileSync, existsSync, writeFileSync } from "fs";
+import { readFileSync, existsSync, writeFileSync, readdirSync } from "fs";
 import { join, dirname } from "path";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
@@ -183,15 +186,53 @@ function collectAllErrors(results: CorpusResult[]): Array<{ code: string; messag
   return out;
 }
 
+function findLatestRawForRepo(reportsDir: string, repo: string): string | null {
+  const prefix = `raw-${repo}-`;
+  const files = readdirSync(reportsDir)
+    .filter((f) => f.startsWith(prefix) && f.endsWith(".json"))
+    .sort()
+    .reverse();
+  return files.length > 0 ? join(reportsDir, files[0]) : null;
+}
+
 function main(): number {
-  const rawPath = process.argv[2];
+  const args = process.argv.slice(2);
+  let rawPath: string | null = null;
+  let repo: string | null = null;
+
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === "--repo" && args[i + 1]) {
+      repo = args[++i];
+    } else if (!args[i].startsWith("-")) {
+      rawPath = args[i];
+      break;
+    }
+  }
+
+  if (!rawPath && repo) {
+    const reportsDir = join(process.cwd(), "scripts", "corpus-data", "reports");
+    if (!existsSync(reportsDir)) {
+      console.error(`Reports directory not found: ${reportsDir}`);
+      return 1;
+    }
+    const found = findLatestRawForRepo(reportsDir, repo);
+    if (!found) {
+      console.error(`No raw-${repo}-*.json files found in ${reportsDir}`);
+      return 1;
+    }
+    rawPath = found;
+    console.log(`Using latest: ${rawPath}`);
+  }
+
   if (!rawPath) {
-    console.error("Usage: npm run corpus:report -- <path-to-raw-output.json>");
+    console.error("Usage: npm run corpus:report -- [--repo REPO] [path-to-raw-output.json]");
+    console.error("  REPO: api-guru | github");
+    console.error("Example: npm run corpus:report -- --repo api-guru");
     console.error("Example: npm run corpus:report -- scripts/corpus-data/reports/raw-api-guru-2026-03-04T12-30-45.json");
     return 1;
   }
 
-  const absPath = join(process.cwd(), rawPath);
+  const absPath = rawPath.startsWith("/") ? rawPath : join(process.cwd(), rawPath);
   if (!existsSync(absPath)) {
     console.error(`File not found: ${absPath}`);
     return 1;

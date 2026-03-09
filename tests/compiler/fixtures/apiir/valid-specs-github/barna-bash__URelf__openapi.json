@@ -1,0 +1,345 @@
+{
+  "api": {
+    "title": "URELf API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics",
+      "key": "analytics",
+      "operations": [
+        {
+          "id": "GET:/analytics/{alias}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/analytics/{alias}",
+          "identifierParam": "alias",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "totalRedirects": {
+                "type": "integer",
+                "description": "Total number of redirects for the URL"
+              },
+              "lastRedirects": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "description": "Timestamps of the last redirects"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "userName"
+            ],
+            "properties": {
+              "userName": {
+                "type": "string",
+                "description": "Unique username for the user"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Optional email address for the user",
+                "nullable": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "apiKey": {
+                "type": "string",
+                "description": "The generated API key to be used for authenticated requests"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Urls",
+      "key": "urls",
+      "operations": [
+        {
+          "id": "GET:/urls",
+          "method": "GET",
+          "kind": "list",
+          "path": "/urls",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "format": "objectid"
+                },
+                "originalUrl": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "customAlias": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "usage": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "userId": {
+                  "type": "string",
+                  "format": "objectid"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/urls/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/urls/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "objectid"
+              },
+              "originalUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "customAlias": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usage": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "userId": {
+                "type": "string",
+                "format": "objectid"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/urls",
+          "method": "POST",
+          "kind": "create",
+          "path": "/urls",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "originalUrl",
+              "customAlias"
+            ],
+            "properties": {
+              "originalUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "The original URL to be shortened"
+              },
+              "customAlias": {
+                "type": "string",
+                "description": "Custom customAlias for the shortened URL"
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional description of the URL"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Expiration date for the URL, defaults to 7 days if not provided"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "objectid"
+              },
+              "originalUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "customAlias": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usage": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "userId": {
+                "type": "string",
+                "format": "objectid"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/urls/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/urls/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "originalUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "The original URL to be shortened"
+              },
+              "customAlias": {
+                "type": "string",
+                "description": "Custom customAlias for the shortened URL"
+              },
+              "description": {
+                "type": "string",
+                "description": "Optional description of the URL"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Expiration date for the URL"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "format": "objectid"
+              },
+              "originalUrl": {
+                "type": "string",
+                "format": "uri"
+              },
+              "customAlias": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "usage": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "userId": {
+                "type": "string",
+                "format": "objectid"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/urls/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/urls/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

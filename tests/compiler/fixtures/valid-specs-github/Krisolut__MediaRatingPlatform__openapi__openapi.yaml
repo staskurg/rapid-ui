@@ -1,0 +1,271 @@
+# path: openapi/openapi.yaml
+openapi: 3.0.3
+info:
+  title: RateIt Media Ratings Platform API
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+paths:
+  /users/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /users/login:
+    post:
+      tags: [Auth]
+      summary: Login an existing user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCredentials'
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                required: [token]
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /media:
+    get:
+      tags: [Media]
+      summary: List all media entries
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Media list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Media'
+    post:
+      tags: [Media]
+      summary: Create a media entry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MediaInput'
+      responses:
+        '201':
+          description: Media created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Media'
+        '400':
+          description: Invalid media data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /ratings:
+    get:
+      tags: [Rating]
+      summary: List ratings for a media item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mediaId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Ratings for the media
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Rating'
+        '400':
+          description: Missing mediaId
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    post:
+      tags: [Rating]
+      summary: Create a rating
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingInput'
+      responses:
+        '201':
+          description: Rating created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Rating'
+        '400':
+          description: Invalid rating data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Media not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Duplicate rating
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    UserCredentials:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required: [username, password]
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        username:
+          type: string
+        displayName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, username, createdAt]
+    Media:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        type:
+          type: string
+          enum: [MOVIE, SERIES, BOOK, ALBUM, GAME]
+        releaseYear:
+          type: integer
+          nullable: true
+        ageRestriction:
+          type: integer
+          nullable: true
+        createdByUserId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, title, type, createdByUserId, createdAt]
+    MediaInput:
+      type: object
+      properties:
+        title:
+          type: string
+        type:
+          type: string
+          enum: [MOVIE, SERIES, BOOK, ALBUM, GAME]
+        releaseYear:
+          type: integer
+        ageRestriction:
+          type: integer
+      required: [title, type]
+    Rating:
+      type: object
+      properties:
+        id:
+          type: string
+        mediaId:
+          type: string
+        userId:
+          type: string
+        stars:
+          type: integer
+        comment:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, mediaId, userId, stars, createdAt]
+    RatingInput:
+      type: object
+      properties:
+        mediaId:
+          type: string
+        stars:
+          type: integer
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+      required: [mediaId, stars]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        code:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required: [error, code, timestamp]

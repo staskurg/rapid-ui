@@ -1,0 +1,453 @@
+openapi: 3.0.3
+info:
+  title: CAP.BSP.DSP - Déclaration du Sinistre API
+  version: 1.0.0
+  description: |
+    HTTP API for Claims Declaration capability (CAP.BSP.DSP.000).
+    
+    Provides command (write) and query (read) endpoints for claim declarations.
+    Implements CQRS pattern with event sourcing on write side and MongoDB projections on read side.
+    
+    **Technology Stack**: .NET 8 Azure Functions (Premium Plan), EventStoreDB, MongoDB, RabbitMQ
+    
+  contact:
+    name: Foodaroo BCM Team
+    email: bcm-support@foodaroo.com
+  license:
+    name: Proprietary
+    url: https://foodaroo.com/legal/terms
+
+servers:
+  - url: http://localhost:7071/api/v1
+    description: Local development (Azure Functions runtime)
+  - url: https://cap-bsp-dsp-dev.azurewebsites.net/api/v1
+    description: Development environment (Azure Functions Premium)
+  - url: https://cap-bsp-dsp-prod.azurewebsites.net/api/v1
+    description: Production environment (Azure Functions Premium)
+
+tags:
+  - name: Commands
+    description: Write operations (CQRS command side) - mutate state and emit events
+  - name: Queries
+    description: Read operations (CQRS query side) - read from MongoDB projections
+  - name: Health
+    description: Health checks and diagnostics
+
+paths:
+  /declarations:
+    post:
+      tags:
+        - Commands
+      operationId: declarerSinistre
+      summary: Declare a new insurance claim
+      description: |
+        Submit a claim declaration command. The system will:
+        1. Validate command (required fields, dateSurvenance <= today)
+        2. Validate typeSinistre against reference database
+        3. Generate unique identifiantSinistre (SIN-YYYY-NNNNNN format)
+        4. Set dateDeclaration to server timestamp
+        5. Emit SinistreDéclaré event to EventStoreDB and RabbitMQ
+        6. Return generated identifiantSinistre and dateDeclaration
+        
+        **Latency SLA**: p95 < 500ms
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeclarerSinistreCommand'
+            examples:
+              validAccidentCorporel:
+                summary: Valid bodily injury claim
+                value:
+                  identifiantContrat: "CONTRAT-2026-001"
+                  typeSinistre: "ACCIDENT_CORPOREL"
+                  dateSurvenance: "2026-01-20"
+              validDegatsMateriels:
+                summary: Valid property damage claim
+                value:
+                  identifiantContrat: "CONTRAT-2026-042"
+                  typeSinistre: "DEGATS_MATERIELS"
+                  dateSurvenance: "2026-01-15"
+      responses:
+        '201':
+          description: Claim successfully declared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeclarationResult'
+              examples:
+                success:
+                  value:
+                    identifiantSinistre: "SIN-2026-000001"
+                    dateDeclaration: "2026-01-27T14:30:00.000Z"
+        '400':
+          description: Validation failed (missing fields, invalid format, future date)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingIdentifiantContrat:
+                  value:
+                    errorCode: "VALIDATION_FAILED"
+                    message: "IdentifiantContrat obligatoire"
+                    timestamp: "2026-01-27T14:30:00.000Z"
+                futureDate:
+                  value:
+                    errorCode: "VALIDATION_FAILED"
+                    message: "DateSurvenance ne peut pas être dans le futur"
+                    timestamp: "2026-01-27T14:30:00.000Z"
+        '404':
+          description: TypeSinistre does not exist in reference database
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidTypeSinistre:
+                  value:
+                    errorCode: "TYPE_SINISTRE_INVALIDE"
+                    message: "TypeSinistre 'INVALID_TYPE' n'existe pas dans la base de référence"
+                    timestamp: "2026-01-27T14:30:00.000Z"
+        '503':
+          description: TypeSinistre validation service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                circuitBreakerOpen:
+                  value:
+                    errorCode: "VALIDATION_SERVICE_UNAVAILABLE"
+                    message: "Service de validation des types de sinistre temporairement indisponible. Veuillez réessayer ultérieurement."
+                    timestamp: "2026-01-27T14:30:00.000Z"
+      security:
+        - bearerAuth: []
+
+    get:
+      tags:
+        - Queries
+      operationId: listDeclarations
+      summary: List claim declarations with filtering and pagination
+      description: |
+        Query claim declarations from MongoDB read model projection.
+        Supports filtering by contract and status, sorted by declaration date (most recent first).
+        
+        **Latency SLA**: p95 < 200ms (read-optimized)
+      parameters:
+        - name: identifiantContrat
+          in: query
+          description: Filter by contract identifier
+          required: false
+          schema:
+            type: string
+            example: "CONTRAT-2026-001"
+        - name: statut
+          in: query
+          description: Filter by declaration status
+          required: false
+          schema:
+            type: string
+            enum: [DECLARE, VALIDE, ANNULE]
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of results to skip (for pagination)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: List of declarations matching query criteria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeclarationListResponse'
+              examples:
+                twoResults:
+                  value:
+                    items:
+                      - identifiantSinistre: "SIN-2026-000002"
+                        identifiantContrat: "CONTRAT-2026-001"
+                        typeSinistre: "DEGATS_MATERIELS"
+                        typeSinistreLibelle: "Dégâts matériels"
+                        dateSurvenance: "2026-01-22"
+                        dateDeclaration: "2026-01-27T16:00:00.000Z"
+                        statut: "DECLARE"
+                      - identifiantSinistre: "SIN-2026-000001"
+                        identifiantContrat: "CONTRAT-2026-001"
+                        typeSinistre: "ACCIDENT_CORPOREL"
+                        typeSinistreLibelle: "Accident corporel"
+                        dateSurvenance: "2026-01-20"
+                        dateDeclaration: "2026-01-27T14:30:00.000Z"
+                        statut: "DECLARE"
+                    total: 2
+                    limit: 20
+                    offset: 0
+      security:
+        - bearerAuth: []
+
+  /declarations/{identifiantSinistre}:
+    get:
+      tags:
+        - Queries
+      operationId: getDeclarationById
+      summary: Get single claim declaration by identifier
+      description: |
+        Retrieve a specific claim declaration from MongoDB read model projection.
+        
+        **Latency SLA**: p95 < 100ms (indexed lookup)
+      parameters:
+        - name: identifiantSinistre
+          in: path
+          description: Unique claim identifier (format SIN-YYYY-NNNNNN)
+          required: true
+          schema:
+            type: string
+            pattern: '^SIN-\d{4}-\d{6}$'
+            example: "SIN-2026-000001"
+      responses:
+        '200':
+          description: Declaration found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeclarationDetail'
+              examples:
+                success:
+                  value:
+                    identifiantSinistre: "SIN-2026-000001"
+                    identifiantContrat: "CONTRAT-2026-001"
+                    typeSinistre: "ACCIDENT_CORPOREL"
+                    typeSinistreLibelle: "Accident corporel"
+                    dateSurvenance: "2026-01-20"
+                    dateDeclaration: "2026-01-27T14:30:00.000Z"
+                    statut: "DECLARE"
+                    version: 1
+        '404':
+          description: Declaration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    errorCode: "DECLARATION_NOT_FOUND"
+                    message: "Déclaration 'SIN-2026-999999' introuvable"
+                    timestamp: "2026-01-27T14:30:00.000Z"
+      security:
+        - bearerAuth: []
+
+  /health/liveness:
+    get:
+      tags:
+        - Health
+      operationId: getLiveness
+      summary: Liveness probe (Kubernetes/Azure health check)
+      description: |
+        Returns 200 OK if the Azure Function app is running.
+        Does NOT check external dependencies (EventStoreDB, MongoDB, RabbitMQ).
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "UP"
+
+  /health/readiness:
+    get:
+      tags:
+        - Health
+      operationId: getReadiness
+      summary: Readiness probe (checks external dependencies)
+      description: |
+        Returns 200 OK if the service is ready to accept traffic.
+        Checks connectivity to:
+        - EventStoreDB (write model)
+        - MongoDB (read model + reference data)
+        - RabbitMQ (event bus)
+      responses:
+        '200':
+          description: Service is ready (all dependencies healthy)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "UP"
+                  checks:
+                    type: object
+                    properties:
+                      eventStoreDb:
+                        type: string
+                        example: "UP"
+                      mongoDb:
+                        type: string
+                        example: "UP"
+                      rabbitMq:
+                        type: string
+                        example: "UP"
+        '503':
+          description: Service not ready (at least one dependency unhealthy)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "DOWN"
+                  checks:
+                    type: object
+                    properties:
+                      eventStoreDb:
+                        type: string
+                        example: "DOWN"
+                      mongoDb:
+                        type: string
+                        example: "UP"
+                      rabbitMq:
+                        type: string
+                        example: "UP"
+
+components:
+  schemas:
+    DeclarerSinistreCommand:
+      type: object
+      required:
+        - identifiantContrat
+        - typeSinistre
+        - dateSurvenance
+      properties:
+        identifiantContrat:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Insurance contract identifier (REQUIRED)
+          example: "CONTRAT-2026-001"
+        typeSinistre:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Claim type code (REQUIRED, validated against reference database)
+          example: "ACCIDENT_CORPOREL"
+        dateSurvenance:
+          type: string
+          format: date
+          description: Date when insured event occurred (REQUIRED, must be <= today)
+          example: "2026-01-20"
+
+    DeclarationResult:
+      type: object
+      properties:
+        identifiantSinistre:
+          type: string
+          pattern: '^SIN-\d{4}-\d{6}$'
+          description: Auto-generated unique claim identifier
+          example: "SIN-2026-000001"
+        dateDeclaration:
+          type: string
+          format: date-time
+          description: Server timestamp when claim was declared (UTC)
+          example: "2026-01-27T14:30:00.000Z"
+
+    DeclarationDetail:
+      type: object
+      properties:
+        identifiantSinistre:
+          type: string
+          pattern: '^SIN-\d{4}-\d{6}$'
+          example: "SIN-2026-000001"
+        identifiantContrat:
+          type: string
+          example: "CONTRAT-2026-001"
+        typeSinistre:
+          type: string
+          example: "ACCIDENT_CORPOREL"
+        typeSinistreLibelle:
+          type: string
+          description: Human-readable label for claim type (from reference database)
+          example: "Accident corporel"
+        dateSurvenance:
+          type: string
+          format: date
+          example: "2026-01-20"
+        dateDeclaration:
+          type: string
+          format: date-time
+          example: "2026-01-27T14:30:00.000Z"
+        statut:
+          type: string
+          enum: [DECLARE, VALIDE, ANNULE]
+          example: "DECLARE"
+        version:
+          type: integer
+          description: Event stream version (for optimistic concurrency)
+          example: 1
+
+    DeclarationListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeclarationDetail'
+        total:
+          type: integer
+          description: Total number of results matching query (without pagination)
+          example: 42
+        limit:
+          type: integer
+          example: 20
+        offset:
+          type: integer
+          example: 0
+
+    ErrorResponse:
+      type: object
+      properties:
+        errorCode:
+          type: string
+          description: Machine-readable error code
+          example: "VALIDATION_FAILED"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "IdentifiantContrat obligatoire"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-01-27T14:30:00.000Z"
+        correlationId:
+          type: string
+          format: uuid
+          description: Request correlation ID for troubleshooting
+          example: "7c9e6679-7425-40de-944b-e07fc1f90ae7"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Azure AD B2C JWT token for authentication.
+        Include in Authorization header: `Authorization: Bearer <token>`

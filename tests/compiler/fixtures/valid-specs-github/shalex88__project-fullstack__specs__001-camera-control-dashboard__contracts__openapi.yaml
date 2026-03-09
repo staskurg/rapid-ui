@@ -1,0 +1,226 @@
+openapi: 3.1.0
+info:
+  title: Camera Control API
+  version: 0.1.0
+  description: HTTP facade for controlling camera via gRPC and exposing stream URL.
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+  /api/stream/url:
+    get:
+      summary: Get HLS stream URL for the camera
+      responses:
+        '200':
+          description: Stream URL
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    example: http://localhost:8888/camera1/index.m3u8
+  /api/camera/info:
+    get:
+      summary: Get camera info (via gRPC)
+      responses:
+        '200':
+          description: Info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  info:
+                    type: string
+  /api/camera/zoom:
+    get:
+      summary: Get current zoom
+      responses:
+        '200':
+          description: Zoom value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zoom:
+                    type: integer
+    post:
+      summary: Set zoom
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                zoom:
+                  type: integer
+              required: [zoom]
+      responses:
+        '200':
+          description: Zoom set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  zoom:
+                    type: integer
+  /api/camera/focus:
+    get:
+      summary: Get current focus
+      responses:
+        '200':
+          description: Focus value
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  focus:
+                    type: integer
+        '503':
+          description: Focus unavailable (e.g., autofocus is enabled)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+    post:
+      summary: Set focus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                focus:
+                  type: integer
+              required: [focus]
+      responses:
+        '200':
+          description: Focus set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  focus:
+                    type: integer
+        '503':
+          description: Focus unavailable (e.g., autofocus is enabled)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+  /api/camera/autofocus:
+    post:
+      summary: Enable/disable autofocus
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enable:
+                  type: boolean
+              required: [enable]
+      responses:
+        '200':
+          description: Autofocus set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enable:
+                    type: boolean
+  /api/camera/stabilization:
+    post:
+      summary: Enable/disable camera stabilization (legacy endpoint)
+      description: Note - stabilization is now handled by the video service at /api/video/stabilization
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enable:
+                  type: boolean
+              required: [enable]
+      responses:
+        '200':
+          description: Stabilization set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enable:
+                    type: boolean
+  /api/video/stabilization:
+    post:
+      summary: Enable/disable video stabilization
+      description: Controls video stabilization via gRPC video service (EnableOptionalElement/DisableOptionalElement with element="myf2f")
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enable:
+                  type: boolean
+              required: [enable]
+      responses:
+        '200':
+          description: Video stabilization set
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  enable:
+                    type: boolean
+        '503':
+          description: Service unavailable or not implemented
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  message:
+                    type: string
+components:
+  schemas: {}

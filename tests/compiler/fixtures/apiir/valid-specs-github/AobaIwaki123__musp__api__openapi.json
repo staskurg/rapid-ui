@@ -1,0 +1,219 @@
+{
+  "api": {
+    "title": "MuSP API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "GET",
+      "key": "get",
+      "operations": [
+        {
+          "id": "GET:/{user_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/{user_id}",
+          "identifierParam": "user_id",
+          "responseSchema": {
+            "additionalProperties": false,
+            "example": {
+              "status_code": 200,
+              "status_message": "Retrieved the list of YouTube IDs and Wav URLs for the user",
+              "data": [
+                {
+                  "youtube_id": "57Q4Hp46oXc",
+                  "vocal_wav_url": "http://localhost:8000/57Q4Hp46oXc/vocal.wav",
+                  "inst_wav_url": "http://localhost:8000/57Q4Hp46oXc/instrumental.wav"
+                },
+                {
+                  "youtube_id": "57Q4Hp46oXc",
+                  "vocal_wav_url": "http://localhost:8000/57Q4Hp46oXc/vocal.wav",
+                  "inst_wav_url": "http://localhost:8000/57Q4Hp46oXc/instrumental.wav"
+                }
+              ]
+            },
+            "properties": {
+              "status_code": {
+                "description": "Status code",
+                "type": "integer"
+              },
+              "status_message": {
+                "description": "Status message",
+                "maximum": 500,
+                "type": "string"
+              },
+              "data": {
+                "items": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "youtube_id": {
+                      "description": "YouTube video ID",
+                      "maximum": 11,
+                      "pattern": "^[a-zA-Z0-9_-]{11}$",
+                      "title": "youtube_id",
+                      "type": "string"
+                    },
+                    "vocal_wav_url": {
+                      "description": "Separated audio file URL",
+                      "format": "uri",
+                      "maximum": 200,
+                      "title": "vocal_wav_url",
+                      "type": "string"
+                    },
+                    "inst_wav_url": {
+                      "description": "Separated instrumental file URL",
+                      "format": "uri",
+                      "maximum": 200,
+                      "title": "inst_wav_url",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "inst_wav_url",
+                    "vocal_wav_url",
+                    "youtube_id"
+                  ],
+                  "title": "VideoIDAndWavURL",
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "data",
+              "status_code",
+              "status_message"
+            ],
+            "title": "GetVideoIDAndWavURLResponse",
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST",
+      "key": "post",
+      "operations": [
+        {
+          "id": "POST:/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "additionalProperties": false,
+            "example": {
+              "google_id": "testGoogleID"
+            },
+            "properties": {
+              "google_id": {
+                "description": "Google user ID",
+                "maximum": 100,
+                "type": "string"
+              }
+            },
+            "required": [
+              "google_id"
+            ],
+            "title": "PostUserRequest",
+            "type": "object"
+          },
+          "responseSchema": {
+            "additionalProperties": false,
+            "example": {
+              "status_code": 200,
+              "status_message": "User already exists",
+              "user_id": "testUser"
+            },
+            "properties": {
+              "status_code": {
+                "description": "Status code",
+                "type": "integer"
+              },
+              "status_message": {
+                "description": "Status message",
+                "maximum": 500,
+                "type": "string"
+              },
+              "user_id": {
+                "description": "User ID",
+                "maximum": 100,
+                "type": "string"
+              }
+            },
+            "required": [
+              "status_code",
+              "status_message",
+              "user_id"
+            ],
+            "title": "PostUserResponse",
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/video",
+          "method": "POST",
+          "kind": "create",
+          "path": "/video",
+          "requestSchema": {
+            "additionalProperties": false,
+            "example": {
+              "user_id": "testUser",
+              "youtube_url": "https://www.youtube.com/watch?v=57Q4Hp46oXc"
+            },
+            "properties": {
+              "user_id": {
+                "description": "User ID",
+                "maximum": 100,
+                "type": "string"
+              },
+              "youtube_url": {
+                "description": "YouTube video link",
+                "maximum": 100,
+                "pattern": "/^(?:https?://)?(?:www\\.)?(?:youtube\\.com/(?:watch\\?.*v=|embed/|v/)|youtu\\.be/)([a-zA-Z0-9_-]{11})/",
+                "type": "string"
+              }
+            },
+            "required": [
+              "user_id",
+              "youtube_url"
+            ],
+            "title": "PostVideoRequest",
+            "type": "object"
+          },
+          "responseSchema": {
+            "additionalProperties": false,
+            "example": {
+              "status_code": 200,
+              "status_message": "The video is already registered",
+              "youtube_id": "57Q4Hp46oXc"
+            },
+            "properties": {
+              "status_code": {
+                "description": "Status code",
+                "type": "integer"
+              },
+              "status_message": {
+                "description": "Status message",
+                "maximum": 500,
+                "type": "string"
+              },
+              "youtube_id": {
+                "description": "YouTube video ID",
+                "maximum": 11,
+                "pattern": "^[a-zA-Z0-9_-]{11}$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "status_code",
+              "status_message",
+              "youtube_id"
+            ],
+            "title": "PostVideoResponse",
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

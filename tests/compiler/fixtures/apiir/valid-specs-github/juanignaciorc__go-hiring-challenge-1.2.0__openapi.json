@@ -1,0 +1,224 @@
+{
+  "api": {
+    "title": "Mytheresa Catalog API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Catalog",
+      "key": "catalog",
+      "operations": [
+        {
+          "id": "GET:/catalog",
+          "method": "GET",
+          "kind": "list",
+          "path": "/catalog",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "code": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "category": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "name"
+                      ]
+                    },
+                    "variants": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "sku": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "number",
+                            "format": "float"
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "sku",
+                          "price"
+                        ],
+                        "description": "A specific product option. If a variant has no specific price in the DB, the product price applies; responses always return a numeric price."
+                      },
+                      "description": "Optional list of variants. Empty or omitted when product has no variants."
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "price",
+                    "category"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "total",
+              "products"
+            ]
+          }
+        },
+        {
+          "id": "GET:/catalog/{code}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/catalog/{code}",
+          "identifierParam": "code",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "price": {
+                "type": "number",
+                "format": "float"
+              },
+              "category": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "code",
+                  "name"
+                ]
+              },
+              "variants": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "sku": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "sku",
+                    "price"
+                  ],
+                  "description": "A specific product option. If a variant has no specific price in the DB, the product price applies; responses always return a numeric price."
+                },
+                "description": "Optional list of variants. Empty or omitted when product has no variants."
+              }
+            },
+            "required": [
+              "code",
+              "price",
+              "category"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Categories",
+      "key": "categories",
+      "operations": [
+        {
+          "id": "GET:/categories",
+          "method": "GET",
+          "kind": "list",
+          "path": "/categories",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code",
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "id": "POST:/categories",
+          "method": "POST",
+          "kind": "create",
+          "path": "/categories",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "name"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "name"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

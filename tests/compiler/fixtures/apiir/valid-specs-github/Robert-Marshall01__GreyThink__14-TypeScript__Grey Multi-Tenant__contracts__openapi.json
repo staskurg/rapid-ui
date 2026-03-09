@@ -1,0 +1,633 @@
+{
+  "api": {
+    "title": "Grey Multi-Tenant API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "description": "Login credentials",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "description": "User's password",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "Authentication session with tokens",
+                "required": [
+                  "access_token",
+                  "refresh_token",
+                  "expires_in"
+                ],
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "description": "JWT access token for API authorization",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Refresh token for obtaining new access tokens",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "expires_in": {
+                    "type": "integer",
+                    "description": "Number of seconds until the access token expires",
+                    "example": 900
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/refresh",
+          "requestSchema": {
+            "type": "object",
+            "description": "Refresh token request",
+            "required": [
+              "refresh_token"
+            ],
+            "properties": {
+              "refresh_token": {
+                "type": "string",
+                "description": "Refresh token obtained from login",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "Authentication session with tokens",
+                "required": [
+                  "access_token",
+                  "refresh_token",
+                  "expires_in"
+                ],
+                "properties": {
+                  "access_token": {
+                    "type": "string",
+                    "description": "JWT access token for API authorization",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  },
+                  "refresh_token": {
+                    "type": "string",
+                    "description": "Refresh token for obtaining new access tokens",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "expires_in": {
+                    "type": "integer",
+                    "description": "Number of seconds until the access token expires",
+                    "example": 900
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "key": "organizations",
+      "operations": [
+        {
+          "id": "getOrganization",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/organizations/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "An organization (tenant) in the system",
+                "required": [
+                  "id",
+                  "name",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Organization's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Organization display name",
+                    "example": "Acme Corporation"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the organization was created",
+                    "example": "2026-01-01T00:00:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the organization was last updated",
+                    "example": "2026-01-15T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createOrganization",
+          "method": "POST",
+          "kind": "create",
+          "path": "/organizations",
+          "requestSchema": {
+            "type": "object",
+            "description": "Request to create a new organization",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 255,
+                "description": "Organization display name",
+                "example": "Acme Corporation"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "An organization (tenant) in the system",
+                "required": [
+                  "id",
+                  "name",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Organization's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Organization display name",
+                    "example": "Acme Corporation"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the organization was created",
+                    "example": "2026-01-01T00:00:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the organization was last updated",
+                    "example": "2026-01-15T12:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "listProjects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/projects",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "A project within an organization",
+                  "required": [
+                    "id",
+                    "organization_id",
+                    "name",
+                    "created_at",
+                    "updated_at"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Project's unique identifier",
+                      "example": "550e8400-e29b-41d4-a716-446655440002"
+                    },
+                    "organization_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "ID of the organization this project belongs to",
+                      "example": "550e8400-e29b-41d4-a716-446655440001"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Project name",
+                      "example": "Website Redesign"
+                    },
+                    "description": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Project description",
+                      "example": "Complete overhaul of the company website"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp when the project was created",
+                      "example": "2026-01-10T09:00:00Z"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Timestamp when the project was last updated",
+                      "example": "2026-01-20T16:30:00Z"
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "description": "Pagination metadata",
+                "required": [
+                  "page",
+                  "page_size",
+                  "total"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "description": "Current page number (1-indexed)",
+                    "example": 1
+                  },
+                  "page_size": {
+                    "type": "integer",
+                    "description": "Number of items per page",
+                    "example": 20
+                  },
+                  "total": {
+                    "type": "integer",
+                    "description": "Total number of items across all pages",
+                    "example": 42
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getProject",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/projects/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "A project within an organization",
+                "required": [
+                  "id",
+                  "organization_id",
+                  "name",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Project's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440002"
+                  },
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the organization this project belongs to",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Project name",
+                    "example": "Website Redesign"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Project description",
+                    "example": "Complete overhaul of the company website"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the project was created",
+                    "example": "2026-01-10T09:00:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the project was last updated",
+                    "example": "2026-01-20T16:30:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createProject",
+          "method": "POST",
+          "kind": "create",
+          "path": "/projects",
+          "requestSchema": {
+            "type": "object",
+            "description": "Request to create a new project",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 255,
+                "description": "Project name",
+                "example": "Website Redesign"
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 2000,
+                "description": "Project description",
+                "example": "Complete overhaul of the company website"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "A project within an organization",
+                "required": [
+                  "id",
+                  "organization_id",
+                  "name",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Project's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440002"
+                  },
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the organization this project belongs to",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Project name",
+                    "example": "Website Redesign"
+                  },
+                  "description": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Project description",
+                    "example": "Complete overhaul of the company website"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the project was created",
+                    "example": "2026-01-10T09:00:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the project was last updated",
+                    "example": "2026-01-20T16:30:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "getCurrentUser",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "A user within the multi-tenant system",
+                "required": [
+                  "id",
+                  "email",
+                  "name",
+                  "organization_id",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "User's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address",
+                    "example": "user@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "User's display name",
+                    "example": "John Doe"
+                  },
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the organization this user belongs to",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the user was created",
+                    "example": "2026-01-15T10:30:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the user was last updated",
+                    "example": "2026-01-20T14:45:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users",
+          "requestSchema": {
+            "type": "object",
+            "description": "Request to create a new user",
+            "required": [
+              "email",
+              "name",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "newuser@example.com"
+              },
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 255,
+                "description": "User's display name",
+                "example": "Jane Smith"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "description": "User's password",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "description": "A user within the multi-tenant system",
+                "required": [
+                  "id",
+                  "email",
+                  "name",
+                  "organization_id",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "User's unique identifier",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "User's email address",
+                    "example": "user@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "User's display name",
+                    "example": "John Doe"
+                  },
+                  "organization_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "ID of the organization this user belongs to",
+                    "example": "550e8400-e29b-41d4-a716-446655440001"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the user was created",
+                    "example": "2026-01-15T10:30:00Z"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Timestamp when the user was last updated",
+                    "example": "2026-01-20T14:45:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

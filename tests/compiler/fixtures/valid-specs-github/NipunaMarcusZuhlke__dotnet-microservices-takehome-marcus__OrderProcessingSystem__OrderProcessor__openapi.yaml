@@ -1,0 +1,228 @@
+x-generator: NSwag v14.6.2.0 (NJsonSchema v11.5.2.0 (Newtonsoft.Json v13.0.0.0))
+openapi: 3.1.0
+info:
+  title: Order processing system
+  description: The Order processing system that handles order creation, payment and notification
+  version: v1
+paths:
+  /api/payments:
+    get:
+      tags:
+      - Payments
+      operationId: Payments_GetAllProcessedPayments
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponseDto'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/orders:
+    post:
+      tags:
+      - Orders
+      operationId: Orders_CreateOrder
+      requestBody:
+        x-name: createOrderRequestDto
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequestDto'
+        required: true
+        x-position: 1
+      responses:
+        201:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponseDto'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+    get:
+      tags:
+      - Orders
+      operationId: Orders_GetAllOrders
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponseDto'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/orders/{orderId}:
+    get:
+      tags:
+      - Orders
+      operationId: Orders_GetOrderById
+      parameters:
+      - name: orderId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: guid
+        x-position: 1
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponseDto'
+        400:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetails'
+        404:
+          description: ''
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderResponseDto'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+  /api/notifications:
+    get:
+      tags:
+      - Notifications
+      operationId: Notifications_GetAllNotifications
+      responses:
+        200:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationResponseDto'
+        500:
+          description: ''
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+components:
+  schemas:
+    PaymentResponseDto:
+      type: object
+      additionalProperties: false
+      properties:
+        orderId:
+          type: string
+          format: guid
+        paymentId:
+          type: string
+          format: guid
+        amount:
+          type: number
+          format: decimal
+        timestamp:
+          type: string
+          format: date-time
+    ApiError:
+      type: object
+      additionalProperties: false
+      properties:
+        errorCode:
+          type: string
+        message:
+          type: string
+    OrderResponseDto:
+      type: object
+      additionalProperties: false
+      properties:
+        orderId:
+          type: string
+          format: guid
+        amount:
+          type: number
+          format: decimal
+        customerEmail:
+          type: string
+        timeStamp:
+          type: string
+          format: date-time
+    ProblemDetails:
+      type: object
+      additionalProperties:
+        nullable: true
+      properties:
+        type:
+          type: string
+          nullable: true
+        title:
+          type: string
+          nullable: true
+        status:
+          type: integer
+          format: int32
+          nullable: true
+        detail:
+          type: string
+          nullable: true
+        instance:
+          type: string
+          nullable: true
+    CreateOrderRequestDto:
+      type: object
+      additionalProperties: false
+      properties:
+        amount:
+          type: number
+          format: decimal
+        customerEmail:
+          type: string
+    NotificationResponseDto:
+      type: object
+      additionalProperties: false
+      properties:
+        notificationId:
+          type: string
+          format: guid
+        orderId:
+          type: string
+          format: guid
+        paymentId:
+          type: string
+          format: guid
+        amount:
+          type: number
+          format: decimal
+        customerEmail:
+          type: string
+        timestamp:
+          type: string
+          format: date-time

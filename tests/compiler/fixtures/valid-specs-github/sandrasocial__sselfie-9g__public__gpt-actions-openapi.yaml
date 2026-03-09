@@ -1,0 +1,376 @@
+openapi: 3.1.0
+info:
+  title: SSELFIE GPT Actions API
+  version: 1.0.0
+  description: |
+    Secure file access API for ChatGPT Codex Connector integration.
+    Allows reading files, listing directories, and getting file metadata from the SSELFIE repository.
+    
+    **Security:** All requests require the `x-gpt-actions-key` header with a valid API key.
+    **Limitations:** 
+    - Maximum file size: 200 KB
+    - Denied paths: .env*, node_modules, .git, .next, dist, build
+    
+servers:
+  - url: https://sselfie.ai
+    description: Production server
+  - url: http://localhost:3000
+    description: Local development server
+
+components:
+  securitySchemes:
+    GPTActionsKey:
+      type: apiKey
+      in: header
+      name: x-gpt-actions-key
+      description: |
+        Your GPT Actions API key. This must match the GPT_ACTIONS_API_KEY environment variable.
+        
+        **How to get your key:**
+        1. Generate a secure random key: `openssl rand -hex 32`
+        2. Add it to your `.env.local` file: `GPT_ACTIONS_API_KEY=your-key-here`
+        3. Add it to Vercel environment variables for production
+        4. Use the same key as the header value: `x-gpt-actions-key: your-key-here`
+    
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message describing what went wrong
+        fileSize:
+          type: integer
+          description: File size in bytes (only for 413 errors)
+        maxSize:
+          type: integer
+          description: Maximum allowed file size in bytes (only for 413 errors)
+    
+    ReadFileRequest:
+      type: object
+      required:
+        - filePath
+      properties:
+        filePath:
+          type: string
+          description: Path to the file to read (relative to project root)
+          example: "app/components/my-component.tsx"
+    
+    ReadFileResponse:
+      type: object
+      required:
+        - success
+        - filePath
+        - content
+        - size
+      properties:
+        success:
+          type: boolean
+          example: true
+        filePath:
+          type: string
+          description: Relative path to the file that was read
+          example: "app/components/my-component.tsx"
+        content:
+          type: string
+          description: File contents as UTF-8 text
+        size:
+          type: integer
+          description: File size in bytes
+          example: 1234
+    
+    ListFilesRequest:
+      type: object
+      properties:
+        directoryPath:
+          type: string
+          description: Path to the directory to list (relative to project root). Defaults to "." (project root)
+          default: "."
+          example: "app/components"
+    
+    FileEntry:
+      type: object
+      required:
+        - name
+        - type
+        - path
+      properties:
+        name:
+          type: string
+          description: File or directory name
+          example: "my-component.tsx"
+        type:
+          type: string
+          enum: [file, directory]
+          description: Whether this is a file or directory
+        path:
+          type: string
+          description: Relative path to this file/directory
+          example: "app/components/my-component.tsx"
+    
+    ListFilesResponse:
+      type: object
+      required:
+        - success
+        - directoryPath
+        - files
+        - count
+      properties:
+        success:
+          type: boolean
+          example: true
+        directoryPath:
+          type: string
+          description: Relative path to the directory that was listed
+          example: "app/components"
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileEntry'
+          description: Array of files and directories in the requested directory
+        count:
+          type: integer
+          description: Number of files/directories returned
+          example: 15
+    
+    FileStatRequest:
+      type: object
+      required:
+        - filePath
+      properties:
+        filePath:
+          type: string
+          description: Path to the file or directory (relative to project root)
+          example: "package.json"
+    
+    FileStatResponse:
+      type: object
+      required:
+        - success
+        - filePath
+        - isFile
+        - isDirectory
+        - size
+        - modifiedAt
+        - createdAt
+        - readable
+      properties:
+        success:
+          type: boolean
+          example: true
+        filePath:
+          type: string
+          description: Relative path to the file or directory
+          example: "package.json"
+        isFile:
+          type: boolean
+          description: Whether the path is a file
+        isDirectory:
+          type: boolean
+          description: Whether the path is a directory
+        size:
+          type: integer
+          description: Size in bytes (for files)
+          example: 1234
+        modifiedAt:
+          type: string
+          format: date-time
+          description: Last modification time (ISO 8601)
+          example: "2026-01-07T12:00:00.000Z"
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation time (ISO 8601)
+          example: "2026-01-07T12:00:00.000Z"
+        readable:
+          type: boolean
+          description: Whether the file can be read (size <= 200 KB)
+
+security:
+  - GPTActionsKey: []
+
+paths:
+  /api/gpt-actions/read_file:
+    post:
+      operationId: read_file
+      summary: Read a file from the repository
+      description: |
+        Reads the contents of a file from the repository.
+        
+        **Limitations:**
+        - Maximum file size: 200 KB
+        - Denied paths: .env*, node_modules, .git, .next, dist, build
+        - Directory traversal (../) is blocked
+        
+        **Example:** Read a component file
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReadFileRequest'
+      responses:
+        '200':
+          description: File contents successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadFileResponse'
+        '400':
+          description: Bad request (invalid filePath, path is directory, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized (invalid or missing API key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (access denied to this path)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '413':
+          description: File too large (exceeds 200 KB limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/gpt-actions/list_files:
+    post:
+      operationId: list_files
+      summary: List files and directories in a directory
+      description: |
+        Lists all files and directories in the specified directory.
+        
+        **Limitations:**
+        - Denied paths are automatically filtered out
+        - Returns both files and directories with their types
+        
+        **Example:** List all files in app/components
+      tags:
+        - Files
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListFilesRequest'
+      responses:
+        '200':
+          description: Directory listing successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListFilesResponse'
+        '400':
+          description: Bad request (invalid directoryPath, path is file, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized (invalid or missing API key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (access denied to this path)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Directory not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/gpt-actions/file_stat:
+    post:
+      operationId: file_stat
+      summary: Get metadata about a file or directory
+      description: |
+        Returns metadata about a file or directory including size, modification time, and whether it's readable.
+        
+        **Use this to:**
+        - Check if a path exists before reading
+        - Verify file size before reading
+        - Check if a path is a file or directory
+        
+        **Example:** Get metadata for package.json
+      tags:
+        - Files
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileStatRequest'
+      responses:
+        '200':
+          description: File metadata successfully retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileStatResponse'
+        '400':
+          description: Bad request (invalid filePath)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized (invalid or missing API key)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (access denied to this path)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: File or directory not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+

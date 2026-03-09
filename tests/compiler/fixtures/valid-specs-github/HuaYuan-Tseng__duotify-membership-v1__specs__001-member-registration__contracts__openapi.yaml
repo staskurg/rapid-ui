@@ -1,0 +1,608 @@
+openapi: 3.0.3
+info:
+  title: Duotify Membership API - 會員註冊流程
+  description: |
+    ASP.NET Core 8.0 Web API for member registration and email verification.
+    
+    **功能**: 會員註冊流程 - 讓新使用者能透過簡單、安全的流程順利註冊帳號並完成 E-Mail 驗證
+    
+    **技術堆疊**:
+    - ASP.NET Core 8.0 Web API (Controller-based)
+    - SQL Server + EF Core Code First
+    - Traditional repository pattern with DI
+    - Manual POCO mapping (no AutoMapper)
+    - BCrypt password hashing
+    - MailKit SMTP for email delivery
+  version: 1.0.0
+  contact:
+    name: Duotify Development Team
+servers:
+  - url: https://api.duotify.com/v1
+    description: Production server
+  - url: https://api-staging.duotify.com/v1
+    description: Staging server
+  - url: http://localhost:5000/v1
+    description: Local development server
+
+tags:
+  - name: Users
+    description: 使用者帳號管理 API
+  - name: Verification
+    description: E-Mail 驗證碼管理 API
+
+paths:
+  /api/users/register:
+    post:
+      tags:
+        - Users
+      summary: 註冊新使用者帳號
+      description: |
+        使用者填寫身分證字號、姓名、E-Mail 和密碼註冊新帳號。
+        註冊成功後系統會自動發送包含 6 位數驗證碼的 E-Mail 至使用者信箱。
+        
+        **驗證規則**:
+        - 身分證字號: 必須符合台灣身分證字號格式,且未被註冊過
+        - E-Mail: 必須符合標準格式,且未被註冊過
+        - 密碼: 長度 8-20 碼,必須包含英文大寫、小寫及數字
+        
+        **錯誤處理**:
+        - 若 E-Mail 寄送失敗,註冊將失敗且不建立帳號資料
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterUserRequest'
+            examples:
+              valid:
+                summary: 有效的註冊請求
+                value:
+                  nationalId: "A123456789"
+                  fullName: "王小明"
+                  email: "wang@example.com"
+                  password: "Test123456"
+      responses:
+        '200':
+          description: 註冊成功,驗證碼已寄送至 E-Mail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterUserResponse'
+              example:
+                success: true
+                message: "註冊成功,驗證碼已寄送至您的信箱"
+                data:
+                  userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  email: "wang@example.com"
+                  isEmailVerified: false
+        '400':
+          description: 驗證失敗或輸入資料錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicateNationalId:
+                  summary: 身分證字號已被註冊
+                  value:
+                    success: false
+                    errorCode: "DUPLICATE_NATIONAL_ID"
+                    message: "此身分證字號已註冊"
+                    errors: []
+                duplicateEmail:
+                  summary: E-Mail 已被註冊
+                  value:
+                    success: false
+                    errorCode: "DUPLICATE_EMAIL"
+                    message: "此 E-Mail 已被註冊"
+                    errors: []
+                validationError:
+                  summary: 輸入驗證失敗
+                  value:
+                    success: false
+                    errorCode: "VALIDATION_ERROR"
+                    message: "輸入資料驗證失敗"
+                    errors:
+                      - field: "Password"
+                        message: "密碼長度須為 8-20 碼"
+                      - field: "Password"
+                        message: "密碼須包含英文大寫、小寫及數字"
+        '500':
+          description: E-Mail 寄送失敗或伺服器內部錯誤
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                errorCode: "EMAIL_SEND_FAILED"
+                message: "郵件寄送失敗,請稍後再試"
+                errors: []
+
+  /api/users/{userId}:
+    get:
+      tags:
+        - Users
+      summary: 取得使用者資料
+      description: |
+        查詢指定使用者的基本資料 (不包含密碼)。
+        
+        **權限**: 僅限使用者本人或管理員存取
+      operationId: getUserById
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: 使用者唯一識別碼 (UUID)
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      responses:
+        '200':
+          description: 成功取得使用者資料
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserResponse'
+              example:
+                success: true
+                data:
+                  userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  fullName: "王小明"
+                  email: "wang@example.com"
+                  isEmailVerified: true
+                  createdAt: "2025-01-21T10:30:00Z"
+                  lastLoginAt: "2025-01-21T14:20:00Z"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          description: 使用者不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                errorCode: "USER_NOT_FOUND"
+                message: "使用者不存在"
+                errors: []
+
+  /api/verification/verify:
+    post:
+      tags:
+        - Verification
+      summary: 驗證 E-Mail 驗證碼
+      description: |
+        使用者輸入收到的 6 位數驗證碼以完成 E-Mail 驗證。
+        
+        **驗證規則**:
+        - 驗證碼必須為 6 位數字
+        - 驗證碼必須在有效期限內 (5 分鐘)
+        - 驗證碼狀態必須為「有效」(未使用、未過期、未失效)
+        - 連續錯誤 3 次後驗證碼自動失效
+        
+        **成功後**:
+        - 使用者帳號的 IsEmailVerified 設為 true
+        - 驗證碼狀態設為「已使用」
+      operationId: verifyEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyEmailRequest'
+            example:
+              userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              code: "845621"
+      responses:
+        '200':
+          description: 驗證成功,帳號已完全啟用
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyEmailResponse'
+              example:
+                success: true
+                message: "驗證成功,您的帳號已完全啟用"
+                data:
+                  userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  isEmailVerified: true
+                  verifiedAt: "2025-01-21T10:35:00Z"
+        '400':
+          description: 驗證碼錯誤、已過期或已失效
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                incorrectCode:
+                  summary: 驗證碼錯誤
+                  value:
+                    success: false
+                    errorCode: "INCORRECT_VERIFICATION_CODE"
+                    message: "驗證碼錯誤,請重新輸入(剩餘 2 次機會)"
+                    errors: []
+                expiredCode:
+                  summary: 驗證碼已過期
+                  value:
+                    success: false
+                    errorCode: "VERIFICATION_CODE_EXPIRED"
+                    message: "驗證碼已過期"
+                    errors: []
+                invalidatedCode:
+                  summary: 驗證碼已失效
+                  value:
+                    success: false
+                    errorCode: "VERIFICATION_CODE_INVALIDATED"
+                    message: "驗證碼已失效,請重新取得新驗證碼"
+                    errors: []
+        '404':
+          description: 使用者或驗證碼不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                errorCode: "VERIFICATION_CODE_NOT_FOUND"
+                message: "找不到有效的驗證碼"
+                errors: []
+
+  /api/verification/resend:
+    post:
+      tags:
+        - Verification
+      summary: 重新發送驗證碼
+      description: |
+        使用者請求重新發送 E-Mail 驗證碼。
+        
+        **頻率限制**:
+        - 同一帳號每 60 秒最多發送 1 次
+        - 同一帳號 24 小時內最多發送 5 次
+        
+        **行為**:
+        - 產生新的 6 位數驗證碼
+        - 使舊驗證碼立即失效
+        - 發送新驗證碼至使用者 E-Mail
+      operationId: resendVerificationCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationCodeRequest'
+            example:
+              userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      responses:
+        '200':
+          description: 驗證碼已重新發送
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResendVerificationCodeResponse'
+              example:
+                success: true
+                message: "驗證碼已重新發送至您的信箱"
+                data:
+                  userId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  sentAt: "2025-01-21T10:40:00Z"
+        '400':
+          description: 違反頻率限制或使用者已驗證
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: 違反 60 秒限制
+                  value:
+                    success: false
+                    errorCode: "RATE_LIMIT_EXCEEDED"
+                    message: "請稍後再試,每 60 秒限發送 1 次"
+                    errors: []
+                dailyLimitExceeded:
+                  summary: 違反 24 小時限制
+                  value:
+                    success: false
+                    errorCode: "DAILY_LIMIT_EXCEEDED"
+                    message: "已達每日發送上限,請明日再試"
+                    errors: []
+                alreadyVerified:
+                  summary: 使用者已完成驗證
+                  value:
+                    success: false
+                    errorCode: "ALREADY_VERIFIED"
+                    message: "您的帳號已完成 E-Mail 驗證"
+                    errors: []
+        '404':
+          description: 使用者不存在
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                errorCode: "USER_NOT_FOUND"
+                message: "使用者不存在"
+                errors: []
+        '500':
+          description: E-Mail 寄送失敗
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                errorCode: "EMAIL_SEND_FAILED"
+                message: "郵件寄送失敗,請稍後再試"
+                errors: []
+
+components:
+  schemas:
+    RegisterUserRequest:
+      type: object
+      required:
+        - nationalId
+        - fullName
+        - email
+        - password
+      properties:
+        nationalId:
+          type: string
+          minLength: 10
+          maxLength: 10
+          pattern: '^[A-Z][0-9]{9}$'
+          description: 台灣身分證字號 (首碼英文字母 + 9 位數字)
+          example: "A123456789"
+        fullName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: 使用者真實姓名
+          example: "王小明"
+        email:
+          type: string
+          format: email
+          minLength: 5
+          maxLength: 255
+          description: 使用者 E-Mail 地址
+          example: "wang@example.com"
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 20
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$'
+          description: 密碼 (8-20 碼,須包含英文大寫、小寫及數字)
+          example: "Test123456"
+
+    RegisterUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "註冊成功,驗證碼已寄送至您的信箱"
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              description: 使用者唯一識別碼
+              example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            email:
+              type: string
+              format: email
+              example: "wang@example.com"
+            isEmailVerified:
+              type: boolean
+              example: false
+
+    UserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            fullName:
+              type: string
+              example: "王小明"
+            email:
+              type: string
+              format: email
+              example: "wang@example.com"
+            isEmailVerified:
+              type: boolean
+              example: true
+            createdAt:
+              type: string
+              format: date-time
+              description: 帳號建立時間 (UTC)
+              example: "2025-01-21T10:30:00Z"
+            lastLoginAt:
+              type: string
+              format: date-time
+              nullable: true
+              description: 最後登入時間 (UTC)
+              example: "2025-01-21T14:20:00Z"
+
+    VerifyEmailRequest:
+      type: object
+      required:
+        - userId
+        - code
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: 使用者唯一識別碼
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        code:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: '^\d{6}$'
+          description: 6 位數驗證碼
+          example: "845621"
+
+    VerifyEmailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "驗證成功,您的帳號已完全啟用"
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            isEmailVerified:
+              type: boolean
+              example: true
+            verifiedAt:
+              type: string
+              format: date-time
+              description: 驗證成功時間 (UTC)
+              example: "2025-01-21T10:35:00Z"
+
+    ResendVerificationCodeRequest:
+      type: object
+      required:
+        - userId
+      properties:
+        userId:
+          type: string
+          format: uuid
+          description: 使用者唯一識別碼
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    ResendVerificationCodeResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "驗證碼已重新發送至您的信箱"
+        data:
+          type: object
+          properties:
+            userId:
+              type: string
+              format: uuid
+              example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            sentAt:
+              type: string
+              format: date-time
+              description: 發送時間 (UTC)
+              example: "2025-01-21T10:40:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        errorCode:
+          type: string
+          description: 錯誤代碼 (用於程式化處理)
+          example: "VALIDATION_ERROR"
+          enum:
+            - VALIDATION_ERROR
+            - DUPLICATE_NATIONAL_ID
+            - DUPLICATE_EMAIL
+            - EMAIL_SEND_FAILED
+            - USER_NOT_FOUND
+            - INCORRECT_VERIFICATION_CODE
+            - VERIFICATION_CODE_EXPIRED
+            - VERIFICATION_CODE_INVALIDATED
+            - VERIFICATION_CODE_NOT_FOUND
+            - RATE_LIMIT_EXCEEDED
+            - DAILY_LIMIT_EXCEEDED
+            - ALREADY_VERIFIED
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - INTERNAL_SERVER_ERROR
+        message:
+          type: string
+          description: 使用者可讀的錯誤訊息 (繁體中文)
+          example: "輸入資料驗證失敗"
+        errors:
+          type: array
+          description: 詳細的驗證錯誤列表 (僅 VALIDATION_ERROR 時有值)
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      properties:
+        field:
+          type: string
+          description: 錯誤欄位名稱
+          example: "Password"
+        message:
+          type: string
+          description: 欄位錯誤訊息 (繁體中文)
+          example: "密碼長度須為 8-20 碼"
+
+  responses:
+    UnauthorizedError:
+      description: 未授權 - 需要登入
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            errorCode: "UNAUTHORIZED"
+            message: "您尚未登入,請先登入後再試"
+            errors: []
+
+    ForbiddenError:
+      description: 禁止存取 - 權限不足
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            errorCode: "FORBIDDEN"
+            message: "您沒有權限存取此資源"
+            errors: []
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer Token 驗證
+        
+        取得方式:
+        1. 呼叫登入 API 取得 access token
+        2. 在 Authorization header 加上 "Bearer {token}"
+        
+        範例: Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+security:
+  - BearerAuth: []
