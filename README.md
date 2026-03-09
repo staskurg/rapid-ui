@@ -163,18 +163,13 @@ rapid-ui/
 8. **Store** — Save to Postgres; list at `/`
 9. **View** — Navigate to `/u/[id]/[resource]`; SchemaRenderer + MockAdapter render CRUD UI
 
-## Supported OpenAPI Subset
+## OpenAPI Subset
 
-RapidUI supports a strict subset of OpenAPI. Unsupported features cause **compile errors**.
+RapidUI compiles a deterministic subset of OpenAPI into UI.
 
-- **Versions**: 3.0.x, 3.1.x
-- **Style**: CRUD only (GET list/detail, POST create, PUT/PATCH update, DELETE)
-- **Paths**: One path param max (e.g. `/users/{id}`)
-- **Request bodies**: `application/json` required for POST/PUT/PATCH
-- **Responses**: Single success response, `application/json`
-- **Schemas**: No `oneOf`, `anyOf`, `allOf`; local `$ref` only
+The subset is documented here: [docs/openapi-subset-v1.md](./docs/openapi-subset-v1.md)
 
-See [docs/openapi-compiler.md](./docs/openapi-compiler.md) for full details.
+**This subset is frozen for MVP v3.**
 
 ## Deployment
 

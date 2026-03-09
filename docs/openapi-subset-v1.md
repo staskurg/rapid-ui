@@ -8,6 +8,23 @@
 
 **v1.2** relaxations: response content uses `application/json` if present (do not require exactly one type); path-level parameters merged with operation parameters deterministically.
 
+**v2** relaxations: content negotiation (requestBody + responses) — if `application/json` present, use it (multiple content types allowed); `additionalProperties: false|true|schema` (map types); `$ref` + annotation keys (`nullable`, `readOnly`, `title`, `deprecated`); empty object (`type: object` without properties); annotation keywords `uniqueItems`, `minItems`, `maxItems`, `xml`, `externalDocs` (stripped).
+
+---
+
+## Normalization Rules
+
+RapidUI compiles a **deterministic subset** and normalizes common OpenAPI noise at the contract boundary. The compiler does not add flexibility—it adds deterministic normalization.
+
+| Rule | Behavior |
+|------|----------|
+| **JSON media type selection** | When multiple content types exist (e.g. `application/json` + `application/xml`), select `application/json` or types ending with `+json` (e.g. `application/vnd.api+json`). Fail if none present. |
+| **Annotation schema keywords** | `uniqueItems`, `minItems`, `maxItems`, `xml`, `externalDocs` are stripped during canonicalization. They do not affect the compiled output. |
+| **additionalProperties** | `false` → closed object; `true` → map&lt;string, unknown&gt;; schema → map&lt;string, schema&gt;. Map types compile to opaque object field in UI. |
+| **Empty object** | `type: object` without `properties` → ObjectOpaque. Rendered as single "Data" placeholder (schema-shape, not fake field). |
+
+Pipeline order: **validate** → **resolve $ref** → **canonicalize** (strip annotations) → **buildApiIR** → **lower**.
+
 ---
 
 ## 1. Supported OpenAPI Versions
@@ -56,7 +73,7 @@ Algorithmically explicit:
 - **At least one success code in {200, 201}.** Missing (zero) success response → reject
 - **Multiple success (200 and 201):** Accept; pick first deterministically (200 before 201). v1.1 relaxation.
 - No other 2xx allowed (204, 206, etc. → reject)
-- **Response content:** Use `application/json` if present; otherwise reject. v1.2: do not require exactly one content type
+- **Response content:** Use `application/json` if present; otherwise reject. v1.2: do not require exactly one content type. v2: same for requestBody.
 - **Success response must have `schema`** — empty schema or missing schema → reject
 - **Root success schema must resolve to object or array** — reject `type: string`, `type: number`, `type: boolean` at root (CRUD assumes structured data). Root-type validation must follow `$ref`
 
@@ -78,8 +95,10 @@ Algorithmically explicit:
 
 **v1.1 additions (annotation-only, ignored structurally):** `example`, `default`, `pattern`, `maxLength`, `minLength`, `title`, `exclusiveMinimum`, `exclusiveMaximum`, `multipleOf`, `deprecated`, `readOnly`, `writeOnly`
 
+**v2 additions (annotation-only, stripped during normalization):** `uniqueItems`, `minItems`, `maxItems`, `xml`, `externalDocs`
+
 - **Unknown schema keyword → compile error** (`OAS_UNSUPPORTED_SCHEMA_KEYWORD`)
-- **$ref rule:** If `$ref` exists, only `$ref` and `description` allowed. No other keys (e.g. `$ref` + `type: object` → reject)
+- **v2 $ref rule:** If `$ref` exists, only annotation keys allowed: `$ref`, `description`, `nullable`, `readOnly`, `title`, `deprecated`. Structural keys (`properties`, `type`, `items`, etc.) → reject
 
 ### Annotation-only (accepted but ignored structurally)
 
@@ -89,9 +108,11 @@ Algorithmically explicit:
 
 Internal canonical numeric type = `number`. `integer` and `number` treated equivalently in ApiIR. UI does not distinguish them structurally.
 
-### additionalProperties
+### additionalProperties (v2)
 
-Must be `false` if present. Does NOT change UI structure; accepted but ignored structurally.
+- `false` → closed object
+- `true` → map&lt;string, unknown&gt;
+- schema object → map&lt;string, schema&gt;
 
 ### Rejected (explicit)
 
@@ -101,7 +122,7 @@ Must be `false` if present. Does NOT change UI structure; accepted but ignored s
 
 - **required:** Every entry in `required` must exist in `properties`. Else → compile error
 - **array:** If `type: array` → `items` must exist and be valid schema. **Allow:** array of object, array of primitive (string, number, integer, boolean). **Reject:** array of array
-- **object:** If `type: object` → must have `properties`. Empty object without properties → reject
+- **object:** If `type: object` → `properties` optional. v2: empty object (no properties) allowed → opaque object
 - **enum:** If `enum` present → values must match declared `type` (string enum → string values; integer enum → number values). Else → compile error
 
 ---

@@ -3,7 +3,7 @@ import { z } from "zod";
 /**
  * Field type enum - supported field types for the UI spec
  */
-export const FieldTypeSchema = z.enum(["string", "number", "boolean", "enum"]);
+export const FieldTypeSchema = z.enum(["string", "number", "boolean", "enum", "object"]);
 
 /**
  * Field schema - defines a single field in the entity
@@ -82,6 +82,9 @@ export const UISpecSchema = z
       return data.fields.every((field) => {
         if (field.type === "enum") {
           return field.options && field.options.length > 0;
+        }
+        if (field.type === "object") {
+          return true; // object type has no options
         }
         return true;
       });

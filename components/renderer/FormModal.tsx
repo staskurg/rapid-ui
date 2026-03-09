@@ -239,6 +239,28 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           </SelectContent>
         </Select>
       );
+    case "object":
+      return (
+        <textarea
+          id={fieldName}
+          className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          value={
+            value != null && typeof value === "object"
+              ? JSON.stringify(value, null, 2)
+              : String(value ?? "")
+          }
+          onChange={(e) => {
+            try {
+              const parsed = JSON.parse(e.target.value || "{}");
+              form.setValue(fieldName, parsed, { shouldValidate: true });
+            } catch {
+              form.setValue(fieldName, e.target.value, { shouldValidate: true });
+            }
+          }}
+          disabled={disabled}
+          placeholder="{}"
+        />
+      );
     default:
       return (
         <Input

@@ -407,6 +407,168 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
+  it("annotation keywords uniqueItems, xml, externalDocs produce identical canonical output when present vs absent", () => {
+    const base = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        tags: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+    const withAnnotations = {
+      ...base,
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        tags: {
+                          type: "array",
+                          items: { type: "string" },
+                          uniqueItems: true,
+                          minItems: 0,
+                          maxItems: 100,
+                          xml: { name: "tag" },
+                          externalDocs: { url: "https://example.com" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(base);
+    const validateB = validateSubset(withAnnotations);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(base);
+    const resolveB = resolveRefs(withAnnotations);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const strA = canonicalStringify(resolveA.doc);
+    const strB = canonicalStringify(resolveB.doc);
+    expect(strA).toBe(strB);
+  });
+
+  it("description and deprecated produce identical canonical output when present vs absent", () => {
+    const base = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+    const withAnnotations = {
+      ...base,
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      description: "Item list",
+                      deprecated: true,
+                      properties: {
+                        id: { type: "string", description: "Item id", deprecated: false },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(base);
+    const validateB = validateSubset(withAnnotations);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(base);
+    const resolveB = resolveRefs(withAnnotations);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const strA = canonicalStringify(resolveA.doc);
+    const strB = canonicalStringify(resolveB.doc);
+    expect(strA).toBe(strB);
+  });
+
+  it("application/vnd.api+json selected when application/json absent", () => {
+    const doc = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/vnd.api+json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
   it("operations order get,post vs post,get produce identical ApiIR hash", () => {
     const specA = {
       openapi: "3.0.0",

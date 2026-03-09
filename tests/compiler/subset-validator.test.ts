@@ -65,7 +65,7 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects additionalProperties: true", () => {
+  it("accepts additionalProperties: true (v2: map type)", () => {
     const doc = {
       openapi: "3.0.0",
       paths: {
@@ -89,10 +89,33 @@ describe("subset validator", () => {
       },
     } as Record<string, unknown>;
     const result = validateSubset(doc);
-    expect(result.success).toBe(false);
-    if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_SCHEMA_SHAPE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("additionalProperties"))).toBe(true);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts additionalProperties with schema (v2: map<string,schema>)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/metadata": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      additionalProperties: { type: "string" },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
   });
 
   it("rejects required referencing non-existent property", () => {
@@ -123,6 +146,31 @@ describe("subset validator", () => {
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_INVALID_SCHEMA_SHAPE")).toBe(true);
     expect(result.errors.some((e) => e.message.includes("non-existent"))).toBe(true);
+  });
+
+  it("does not crash on schema with properties: null", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: null,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    expect(() => validateSubset(doc)).not.toThrow();
   });
 
   it("rejects empty paths", () => {
@@ -184,6 +232,43 @@ describe("subset validator", () => {
           get: {
             responses: {
               "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: { id: { type: "string" } },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts requestBody content with multiple types when application/json present (v2)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          post: {
+            requestBody: {
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: { name: { type: "string" } },
+                  },
+                },
+                "application/xml": { schema: { type: "object" } },
+              },
+            },
+            responses: {
+              "201": {
                 content: {
                   "application/json": {
                     schema: {
@@ -496,6 +581,101 @@ describe("subset validator", () => {
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_INVALID_RESPONSE_STRUCTURE")).toBe(true);
     expect(result.errors.some((e) => e.message.includes("object or array"))).toBe(true);
+  });
+
+  it("accepts type: object without properties (v2: empty/opaque object)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/config": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: { type: "object" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts $ref with annotation keys: nullable, readOnly, title, deprecated (v2)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/users/{id}": {
+          get: {
+            parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      $ref: "#/components/schemas/User",
+                      nullable: true,
+                      description: "User or null",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      components: {
+        schemas: {
+          User: {
+            type: "object",
+            properties: { id: { type: "string" }, name: { type: "string" } },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects $ref with structural keys (properties, type, items)", () => {
+    const doc = {
+      openapi: "3.0.0",
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      $ref: "#/components/schemas/Item",
+                      type: "object",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      components: {
+        schemas: {
+          Item: {
+            type: "object",
+            properties: { id: { type: "string" } },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const result = validateSubset(doc);
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.errors.some((e) => e.message.includes("structural key"))).toBe(true);
   });
 
   it("rejects query param with $ref to object schema", () => {

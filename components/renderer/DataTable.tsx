@@ -204,6 +204,13 @@ function renderCell(value: unknown, field: Field): React.ReactNode {
       );
     case "enum":
       return <Badge variant="outline">{String(value)}</Badge>;
+    case "object": {
+      const str =
+        value != null && typeof value === "object"
+          ? JSON.stringify(value).slice(0, 80) + (JSON.stringify(value).length > 80 ? "…" : "")
+          : String(value ?? "");
+      return <span title={typeof value === "object" ? JSON.stringify(value) : str}>{str}</span>;
+    }
     default:
       return <span>{String(value)}</span>;
   }

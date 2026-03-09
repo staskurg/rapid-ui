@@ -6,7 +6,18 @@
 
 import stringify from "fast-json-stable-stringify";
 
-const IGNORED_KEYS = new Set(["description", "example", "summary"]);
+const IGNORED_KEYS = new Set([
+  "description",
+  "example",
+  "summary",
+  "deprecated",
+  // v2: annotation-only schema keywords, stripped during normalization
+  "uniqueItems",
+  "minItems",
+  "maxItems",
+  "xml",
+  "externalDocs",
+]);
 const SCHEMA_PRIMITIVE_TYPES = new Set(["string", "integer", "number", "boolean", "object", "array"]);
 
 /** Normalize OAS 3.1 nullable union type: ["string","null"] → type: "string", nullable: true */

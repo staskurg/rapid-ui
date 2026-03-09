@@ -2,12 +2,14 @@
  * Map OpenAPI operations to OperationIR.
  * CRUD only: list, detail, create, update, delete.
  * Non-CRUD → compile error.
+ * Content negotiation: select application/json when present (multiple content types allowed).
  */
 
 import type { CompilerError } from "../errors";
 import { createError } from "../errors";
 import type { OperationIR, JsonSchema } from "./types";
 import type { RawOperation } from "./grouping";
+import { selectJsonContent } from "../openapi/content";
 
 const SUCCESS_CODES = ["200", "201"];
 
@@ -18,7 +20,7 @@ function extractPathParams(path: string): string[] {
 
 function getSuccessSchema(
   op: Record<string, unknown>,
-  doc: Record<string, unknown>
+  _doc: Record<string, unknown>
 ): JsonSchema | null {
   const responses = op.responses as Record<string, unknown> | undefined;
   if (!responses || typeof responses !== "object") return null;
@@ -28,29 +30,21 @@ function getSuccessSchema(
     const content = (resp as Record<string, unknown>).content as
       | Record<string, unknown>
       | undefined;
-    if (!content || typeof content !== "object") continue;
-    const jsonContent = content["application/json"];
-    if (!jsonContent || typeof jsonContent !== "object") continue;
-    const schema = (jsonContent as Record<string, unknown>).schema;
-    if (!schema || typeof schema !== "object") continue;
-    return schema as JsonSchema;
+    const selected = selectJsonContent(content);
+    if (selected) return selected.schema as JsonSchema;
   }
   return null;
 }
 
 function getRequestSchema(
   op: Record<string, unknown>,
-  doc: Record<string, unknown>
+  _doc: Record<string, unknown>
 ): JsonSchema | null {
   const body = op.requestBody as Record<string, unknown> | undefined;
   if (!body || typeof body !== "object") return null;
   const content = body.content as Record<string, unknown> | undefined;
-  if (!content || typeof content !== "object") return null;
-  const jsonContent = content["application/json"];
-  if (!jsonContent || typeof jsonContent !== "object") return null;
-  const schema = (jsonContent as Record<string, unknown>).schema;
-  if (!schema || typeof schema !== "object") return null;
-  return schema as JsonSchema;
+  const selected = selectJsonContent(content);
+  return selected ? (selected.schema as JsonSchema) : null;
 }
 
 function inferKind(

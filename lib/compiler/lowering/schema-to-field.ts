@@ -7,7 +7,7 @@
 import type { Field } from "@/lib/spec/types";
 import type { JsonSchema } from "../apiir/types";
 
-export type FieldType = "string" | "number" | "boolean" | "enum";
+export type FieldType = "string" | "number" | "boolean" | "enum" | "object";
 
 export interface FieldInfo {
   type: FieldType;
@@ -27,11 +27,31 @@ export function getObjectSchema(schema: JsonSchema): JsonSchema | null {
   return null;
 }
 
+/** Object schema shape — distinguishes fixed (properties) vs map vs opaque. */
+export type ObjectShape = "fixed" | "map" | "opaque";
+
+/**
+ * Infer object schema shape. Fixed = has properties; Map = additionalProperties only; Opaque = empty.
+ */
+export function getObjectShape(schema: JsonSchema): ObjectShape {
+  const props = schema.properties as Record<string, unknown> | undefined;
+  const hasProps = props && typeof props === "object" && Object.keys(props).length > 0;
+  const ap = schema.additionalProperties;
+
+  if (hasProps) return "fixed";
+  if (ap === true || (ap && typeof ap === "object")) return "map";
+  return "opaque";
+}
+
+/** Placeholder path for schema-shape display (opaque/map). Not a real field — UISpec requires min 1 field. $ prefix prevents collision with real backend field names. */
+export const SCHEMA_SHAPE_PLACEHOLDER = "$payload";
+
 /**
  * Extract flat map of path -> FieldInfo from JSON Schema.
  * Nested objects are flattened: profile.firstName, profile.lastName.
  * Array-of-primitive fields are excluded.
  * For array schema (list response), uses items schema.
+ * Opaque/map objects: return empty (fieldless). Lowering adds display placeholder when needed.
  */
 export function extractSchemaFields(
   schema: JsonSchema,
@@ -44,13 +64,14 @@ export function extractSchemaFields(
   const props = objSchema.properties as Record<string, JsonSchema> | undefined;
   const required = (objSchema.required as string[] | undefined) ?? requiredAtRoot;
 
-  if (!props || typeof props !== "object") return result;
-
-  for (const [key, propSchema] of Object.entries(props)) {
-    if (!propSchema || typeof propSchema !== "object") continue;
-    collectFields(propSchema, key, new Set(required), result);
+  if (props && typeof props === "object" && Object.keys(props).length > 0) {
+    for (const [key, propSchema] of Object.entries(props)) {
+      if (!propSchema || typeof propSchema !== "object") continue;
+      collectFields(propSchema, key, new Set(required), result);
+    }
   }
 
+  // Opaque/map: fieldless. No fake field — schema shape is encoded, not faked.
   return result;
 }
 
@@ -152,6 +173,7 @@ export function schemaToField(
 }
 
 function pathToLabel(path: string): string {
+  if (path === SCHEMA_SHAPE_PLACEHOLDER) return "Data"; // UI label; internal path is $payload
   const last = path.split(".").pop() ?? path;
   return last.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
 }

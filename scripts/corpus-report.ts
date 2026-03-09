@@ -186,6 +186,224 @@ function collectAllErrors(results: CorpusResult[]): Array<{ code: string; messag
   return out;
 }
 
+/** Collect errors with spec path for granular breakdown and example specs. */
+function collectAllErrorsWithPath(
+  results: CorpusResult[]
+): Array<{ code: string; message: string; category: string; location: string; specPath: string }> {
+  const out: Array<{ code: string; message: string; category: string; location: string; specPath: string }> = [];
+  for (const r of results) {
+    if (r.parseFailed || r.crashed) continue;
+    for (const e of r.errors) {
+      const cat = categorizeError(e.code, e.message);
+      const loc = getLocationFromPointer(e.jsonPointer);
+      out.push({ code: e.code, message: e.message, category: cat, location: loc, specPath: r.path });
+    }
+  }
+  return out;
+}
+
+/** Build per-category, per-message breakdown with counts and example spec paths. */
+function buildMessageBreakdown(
+  errorsWithPath: Array<{ category: string; message: string; specPath: string }>,
+  maxExamplesPerMessage = 5
+): Record<string, Array<{ message: string; count: number; pct: number; examples: string[] }>> {
+  const byCategory: Record<string, Record<string, { count: number; paths: Set<string> }>> = {};
+  for (const e of errorsWithPath) {
+    if (!byCategory[e.category]) byCategory[e.category] = {};
+    if (!byCategory[e.category][e.message]) {
+      byCategory[e.category][e.message] = { count: 0, paths: new Set() };
+    }
+    const entry = byCategory[e.category][e.message];
+    entry.count++;
+    if (entry.paths.size < maxExamplesPerMessage) entry.paths.add(e.specPath);
+  }
+  const out: Record<string, Array<{ message: string; count: number; pct: number; examples: string[] }>> = {};
+  for (const [cat, messages] of Object.entries(byCategory)) {
+    const totalInCat = Object.values(messages).reduce((s, m) => s + m.count, 0);
+    out[cat] = Object.entries(messages)
+      .map(([msg, { count, paths }]) => ({
+        message: msg,
+        count,
+        pct: totalInCat > 0 ? (count / totalInCat) * 100 : 0,
+        examples: [...paths].slice(0, maxExamplesPerMessage),
+      }))
+      .sort((a, b) => b.count - a.count);
+  }
+  return out;
+}
+
+/** Spec-level metrics for roadmap prioritization. */
+interface SpecLevelMetrics {
+  uniqueSpecsAffected: number;
+  onlyBlockerSpecs: number;
+  nearPassSpecs: number;
+  rawInstances: number;
+  top10SpecConcentrationPct: number;
+  topOffendingSpecs: Array<{ path: string; count: number }>;
+}
+
+function buildSpecLevelMetrics(
+  invalidResults: CorpusResult[],
+  categorizeError: (code: string, message: string) => string
+): Record<string, SpecLevelMetrics> {
+  const byCategory: Record<string, { specs: Set<string>; specErrorCounts: Map<string, number> }> = {};
+  const onlyBlockerByCategory: Record<string, Set<string>> = {};
+  const nearPassByCategory: Record<string, Set<string>> = {};
+
+  for (const r of invalidResults) {
+    const categoriesInSpec = new Set<string>();
+    const categoryCounts: Record<string, number> = {};
+
+    for (const e of r.errors) {
+      const cat = categorizeError(e.code, e.message);
+      categoriesInSpec.add(cat);
+      categoryCounts[cat] = (categoryCounts[cat] ?? 0) + 1;
+
+      if (!byCategory[cat]) {
+        byCategory[cat] = { specs: new Set(), specErrorCounts: new Map() };
+      }
+      byCategory[cat].specs.add(r.path);
+      const prev = byCategory[cat].specErrorCounts.get(r.path) ?? 0;
+      byCategory[cat].specErrorCounts.set(r.path, prev + 1);
+    }
+
+    for (const cat of categoriesInSpec) {
+      if (!onlyBlockerByCategory[cat]) onlyBlockerByCategory[cat] = new Set();
+      if (categoriesInSpec.size === 1) onlyBlockerByCategory[cat].add(r.path);
+
+      if (r.violationCount === 1 && categoriesInSpec.size === 1) {
+        if (!nearPassByCategory[cat]) nearPassByCategory[cat] = new Set();
+        nearPassByCategory[cat].add(r.path);
+      }
+    }
+  }
+
+  const out: Record<string, SpecLevelMetrics> = {};
+  for (const [cat, data] of Object.entries(byCategory)) {
+    const totalErrors = [...data.specErrorCounts.values()].reduce((a, b) => a + b, 0);
+    const sortedSpecs = [...data.specErrorCounts.entries()].sort((a, b) => b[1] - a[1]);
+    const top10 = sortedSpecs.slice(0, 10);
+    const top10Errors = top10.reduce((s, [, c]) => s + c, 0);
+    const top10Pct = totalErrors > 0 ? (top10Errors / totalErrors) * 100 : 0;
+
+    out[cat] = {
+      uniqueSpecsAffected: data.specs.size,
+      onlyBlockerSpecs: onlyBlockerByCategory[cat]?.size ?? 0,
+      nearPassSpecs: nearPassByCategory[cat]?.size ?? 0,
+      rawInstances: totalErrors,
+      top10SpecConcentrationPct: top10Pct,
+      topOffendingSpecs: top10.map(([path, count]) => ({ path: path.split("/").pop() ?? path, count })),
+    };
+  }
+  return out;
+}
+
+/** Normalize sub-rule message for grouping (collapse variable parts). */
+function normalizeSubRuleMessage(cat: string, message: string): string {
+  if (message.startsWith("required references non-existent property: ")) {
+    return "required references non-existent property: {name}";
+  }
+  if (message.startsWith("When $ref is present, only $ref and description are allowed; found: ")) {
+    return "When $ref is present, only $ref and description are allowed; found: {key}";
+  }
+  if (message.startsWith("Path has multiple path parameters: ")) {
+    return "Path has multiple path parameters: {params}";
+  }
+  if (message.startsWith("Unsupported schema keyword: ")) {
+    return message; // Keep keyword name for schema keywords
+  }
+  return message;
+}
+
+/** Sub-rule (message) level metrics for implementation sequencing. */
+interface SubRuleMetrics {
+  subRule: string;
+  specsAffected: number;
+  onlyBlocker: number;
+  nearPass: number;
+  top10Pct: number;
+}
+
+const TOP_CATEGORIES_FOR_SUBRULE = [
+  "schema shape / hygiene",
+  "operation structure",
+  "response content type",
+];
+
+const MAX_SUBRULES_PER_CATEGORY = 15;
+
+function buildSubRuleMetrics(
+  invalidResults: CorpusResult[],
+  categorizeError: (code: string, message: string) => string
+): Record<string, SubRuleMetrics[]> {
+  const byCatAndMsg: Record<string, Record<string, { specs: Set<string>; specErrorCounts: Map<string, number> }>> = {};
+  const onlyBlockerByCatMsg: Record<string, Record<string, Set<string>>> = {};
+  const nearPassByCatMsg: Record<string, Record<string, Set<string>>> = {};
+
+  for (const r of invalidResults) {
+    const messagesInSpec = new Set<string>();
+    const msgCounts: Record<string, number> = {};
+
+    for (const e of r.errors) {
+      const cat = categorizeError(e.code, e.message);
+      const norm = normalizeSubRuleMessage(cat, e.message);
+      const key = `${cat}\0${norm}`;
+      messagesInSpec.add(key);
+      msgCounts[key] = (msgCounts[key] ?? 0) + 1;
+
+      if (!byCatAndMsg[cat]) byCatAndMsg[cat] = {};
+      if (!byCatAndMsg[cat][norm]) {
+        byCatAndMsg[cat][norm] = { specs: new Set(), specErrorCounts: new Map() };
+      }
+      const entry = byCatAndMsg[cat][norm];
+      entry.specs.add(r.path);
+      const prev = entry.specErrorCounts.get(r.path) ?? 0;
+      entry.specErrorCounts.set(r.path, prev + 1);
+    }
+
+    for (const key of messagesInSpec) {
+      const [cat, msg] = key.split("\0");
+      if (!msg) continue;
+      if (!onlyBlockerByCatMsg[cat]) onlyBlockerByCatMsg[cat] = {};
+      if (!onlyBlockerByCatMsg[cat][msg]) onlyBlockerByCatMsg[cat][msg] = new Set();
+      if (messagesInSpec.size === 1) onlyBlockerByCatMsg[cat][msg].add(r.path);
+
+      if (r.violationCount === 1 && messagesInSpec.size === 1) {
+        if (!nearPassByCatMsg[cat]) nearPassByCatMsg[cat] = {};
+        if (!nearPassByCatMsg[cat][msg]) nearPassByCatMsg[cat][msg] = new Set();
+        nearPassByCatMsg[cat][msg].add(r.path);
+      }
+    }
+  }
+
+  const out: Record<string, SubRuleMetrics[]> = {};
+  for (const cat of TOP_CATEGORIES_FOR_SUBRULE) {
+    const messages = byCatAndMsg[cat];
+    if (!messages) {
+      out[cat] = [];
+      continue;
+    }
+    out[cat] = Object.entries(messages)
+      .map(([msg, data]) => {
+        const totalErrors = [...data.specErrorCounts.values()].reduce((a, b) => a + b, 0);
+        const sorted = [...data.specErrorCounts.entries()].sort((a, b) => b[1] - a[1]);
+        const top10 = sorted.slice(0, 10);
+        const top10Errors = top10.reduce((s, [, c]) => s + c, 0);
+        const top10Pct = totalErrors > 0 ? (top10Errors / totalErrors) * 100 : 0;
+        return {
+          subRule: msg,
+          specsAffected: data.specs.size,
+          onlyBlocker: onlyBlockerByCatMsg[cat]?.[msg]?.size ?? 0,
+          nearPass: nearPassByCatMsg[cat]?.[msg]?.size ?? 0,
+          top10Pct,
+        };
+      })
+      .sort((a, b) => b.specsAffected - a.specsAffected)
+      .slice(0, MAX_SUBRULES_PER_CATEGORY);
+  }
+  return out;
+}
+
 function findLatestRawForRepo(reportsDir: string, repo: string): string | null {
   const prefix = `raw-${repo}-`;
   const files = readdirSync(reportsDir)
@@ -260,6 +478,8 @@ function main(): number {
   const nearPassPct = total > 0 ? (singleViolation.length / total) * 100 : 0;
 
   const allErrors = collectAllErrors(results);
+  const allErrorsWithPath = collectAllErrorsWithPath(results);
+  const messageBreakdown = buildMessageBreakdown(allErrorsWithPath, 5);
   const categoryCounts: Record<string, number> = {};
   const locationCounts: Record<string, number> = {};
   const fixCostCounts: Record<FixCost, number> = { trivial: 0, medium: 0, hard: 0 };
@@ -374,6 +594,13 @@ function main(): number {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8);
 
+  const specLevelMetrics = buildSpecLevelMetrics(invalidResults, categorizeError);
+  const roadmapCategories = Object.entries(specLevelMetrics)
+    .sort((a, b) => b[1].rawInstances - a[1].rawInstances)
+    .slice(0, 14);
+
+  const subRuleMetrics = buildSubRuleMetrics(invalidResults, categorizeError);
+
   const reportDir = dirname(absPath);
   const rawBase = rawPath.split("/").pop() ?? rawPath;
   const reportBase = rawBase.replace(/^raw-/, "report-").replace(/\.json$/, ".md");
@@ -381,7 +608,7 @@ function main(): number {
 
   const lines: string[] = [];
 
-  const isGitHubBatch = typeof meta.batch === "string" && meta.batch.startsWith("github-");
+  const isGitHubBatch = typeof meta.batch === "string" && (meta.batch === "github" || meta.batch.startsWith("github-"));
   const sourceLabel = isGitHubBatch ? "GitHub" : "APIs.guru (via openapi-directory)";
 
   lines.push("# RapidUI RUS-v1 Corpus Report");
@@ -396,31 +623,148 @@ function main(): number {
   lines.push(`Total in batch: ${meta.sampleSize}`);
   lines.push(`Sample size: ${meta.sampleSize}`);
   lines.push("");
-  lines.push("## LAYER 1: COMPATIBILITY");
+  lines.push("---");
+  lines.push("");
+  lines.push("## SECTION 1: SPEC-LEVEL COMPATIBILITY");
+  lines.push("");
+  lines.push("_Product roadmap metric: which rules block the most specs?_");
   lines.push("");
   lines.push(`Total specs tested: ${total}`);
   lines.push(`Valid (RUS-v1 compliant): ${validCount}`);
   lines.push(`Pass rate: ${validCount}/${total} (${passRate.toFixed(1)}%)`);
   lines.push(`Near-pass (single violation): ${singleViolation.length} specs (${nearPassPct.toFixed(1)}%)`);
-  lines.push("Endpoint coverage: N/A (deferred to v2)");
   lines.push(`Fix cost: Low ${trivialPct.toFixed(0)}% | Medium ${mediumPct.toFixed(0)}% | High ${hardPct.toFixed(0)}%`);
   lines.push(`Natural Fit Score: pass_rate + easy_fix_rate = ${naturalFit.toFixed(1)}%`);
   lines.push("");
-  lines.push("### NEAR-PASS ANALYSIS");
+  lines.push("### Roadmap Table (spec impact vs validator workload)");
   lines.push("");
-  lines.push(`Specs failing with only one violation: ${nearPassPct.toFixed(1)}%`);
+  lines.push("| Rule | Specs affected | Near-pass | Only blocker | Raw instances | Top-10 % |");
+  lines.push("|------|---------------:|---------:|-------------:|-------------:|---------:|");
+  for (const [cat, m] of roadmapCategories) {
+    const short = cat.length > 28 ? cat.slice(0, 25) + "…" : cat;
+    lines.push(`| ${short} | ${m.uniqueSpecsAffected} | ${m.nearPassSpecs} | ${m.onlyBlockerSpecs} | ${m.rawInstances} | ${m.top10SpecConcentrationPct.toFixed(0)}% |`);
+  }
   lines.push("");
-  lines.push("Top single-failure reasons:");
+  lines.push("**Interpretation:**");
+  lines.push("- High raw + low specs affected = repetition (e.g. one giant spec, many ops)");
+  lines.push("- High specs affected + high near-pass = strong relaxation candidate");
+  lines.push("- High top-10 % = large-spec distortion; raw counts overstate impact");
+  lines.push("");
+  lines.push("### Near-pass analysis (single-failure reasons)");
+  lines.push("");
+  lines.push(`Specs that would pass if one rule were relaxed: ${singleViolation.length}`);
+  lines.push("");
   for (const [cat, count] of topSingle) {
     const pct = singleViolation.length > 0 ? (count / singleViolation.length) * 100 : 0;
     lines.push(`- ${cat}: ${count} (${pct.toFixed(0)}%)`);
   }
   lines.push("");
-  lines.push("## LAYER 2: ECOSYSTEM");
+  lines.push("### Only-blocker categories");
+  lines.push("");
+  const onlyBlockerSorted = roadmapCategories
+    .filter(([, m]) => m.onlyBlockerSpecs > 0)
+    .sort((a, b) => b[1].onlyBlockerSpecs - a[1].onlyBlockerSpecs)
+    .slice(0, 8);
+  if (onlyBlockerSorted.length > 0) {
+    for (const [cat, m] of onlyBlockerSorted) {
+      lines.push(`- ${cat}: ${m.onlyBlockerSpecs} specs would pass if this rule alone were relaxed`);
+    }
+  } else {
+    lines.push("(No specs fail on a single category only)");
+  }
+  lines.push("");
+  lines.push("### Sub-rule implementation order (top 3 categories)");
+  lines.push("");
+  lines.push("_Granular breakdown for coding decisions. Use for implementation sequencing._");
+  lines.push("");
+  for (const cat of TOP_CATEGORIES_FOR_SUBRULE) {
+    const subRules = subRuleMetrics[cat];
+    if (!subRules || subRules.length === 0) continue;
+    lines.push(`#### ${cat}`);
+    lines.push("");
+    lines.push("| Sub-rule | Specs affected | Only blocker | Near-pass | Top-10 % |");
+    lines.push("|----------|---------------:|-------------:|---------:|---------:|");
+    for (const s of subRules) {
+      const safe = s.subRule.replace(/\|/g, "\\|");
+      const short = safe.length > 52 ? safe.slice(0, 49) + "…" : safe;
+      lines.push(`| ${short} | ${s.specsAffected} | ${s.onlyBlocker} | ${s.nearPass} | ${s.top10Pct.toFixed(0)}% |`);
+    }
+    lines.push("");
+  }
+  lines.push("---");
+  lines.push("");
+  lines.push("## SECTION 2: INSTANCE-LEVEL REJECTION DENSITY");
+  lines.push("");
+  lines.push("_Validator workload: where does the validator spend its time failing?_");
+  lines.push("");
+  lines.push("**Caveat:** Raw instance counts are biased toward large, repetitive specs. Do not use for roadmap prioritization. See Section 1.");
+  lines.push("");
+  lines.push("### Rejection reasons (raw instance counts)");
+  lines.push("");
+  const totalErr = allErrors.length;
+  for (const [cat, count] of topCategories) {
+    const pct = totalErr > 0 ? (count / totalErr) * 100 : 0;
+    lines.push(`- ${cat}: ${count} (${pct.toFixed(1)}%)`);
+  }
+  lines.push("");
+  lines.push("### Top offending specs (by total errors)");
+  lines.push("");
+  const specErrorTotals = new Map<string, number>();
+  for (const r of invalidResults) {
+    const prev = specErrorTotals.get(r.path) ?? 0;
+    specErrorTotals.set(r.path, prev + r.errors.length);
+  }
+  const topOffenders = [...specErrorTotals.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10);
+  for (const [path, count] of topOffenders) {
+    const short = path.split("/").pop() ?? path;
+    lines.push(`- ${short}: ${count} errors`);
+  }
+  lines.push("");
+  lines.push("### Failure location");
+  lines.push("");
+  const locEntries = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]);
+  for (const [loc, count] of locEntries) {
+    const pct = totalErr > 0 ? (count / totalErr) * 100 : 0;
+    lines.push(`- ${loc}: ${count} (${pct.toFixed(1)}%)`);
+  }
+  lines.push("");
+  lines.push("### Rejection glossary & per-message breakdown");
+  lines.push("");
+  lines.push("See `docs/subset-v1-rejection-glossary.md`. Per-message breakdown (instance-level):");
+  lines.push("");
+  const maxCategoriesForBreakdown = 8;
+  const maxMessagesPerCategory = 15;
+  for (let i = 0; i < Math.min(maxCategoriesForBreakdown, topCategories.length); i++) {
+    const [cat] = topCategories[i];
+    const breakdown = messageBreakdown[cat];
+    if (!breakdown || breakdown.length === 0) continue;
+    lines.push(`#### ${cat}`);
+    lines.push("");
+    const toShow = breakdown.slice(0, maxMessagesPerCategory);
+    for (const { message, count: msgCount, pct: msgPct, examples } of toShow) {
+      const shortMsg = message.length > 80 ? message.slice(0, 77) + "..." : message;
+      lines.push(`- **${shortMsg}** — ${msgCount} (${msgPct.toFixed(1)}% of category)`);
+      if (examples.length > 0) {
+        const short = examples.slice(0, 3).map((p) => p.split("/").pop() ?? p);
+        lines.push(`  - Examples: ${short.join(", ")}`);
+      }
+      lines.push("");
+    }
+    if (breakdown.length > maxMessagesPerCategory) {
+      const rest = breakdown.length - maxMessagesPerCategory;
+      lines.push(`- _... and ${rest} more message variants_`);
+      lines.push("");
+    }
+  }
+  lines.push("---");
+  lines.push("");
+  lines.push("## SECTION 3: CORPUS SHAPE");
   lines.push("");
   lines.push("Schema reuse / ref graph: N/A (requires spec re-read)");
   lines.push("");
-  lines.push("### LANGUAGE ANALYSIS (passing specs)");
+  lines.push("### Language analysis (passing specs)");
   lines.push("");
   lines.push("Resource shape, CRUD coverage, grouping strategy, spec complexity — from ApiIR.");
   lines.push("");
@@ -467,34 +811,7 @@ function main(): number {
     lines.push(`- ${ver}: ${count} (${pct.toFixed(1)}%)`);
   }
   lines.push("");
-  lines.push("## LAYER 3: LANGUAGE DESIGN");
-  lines.push("");
-  lines.push("### Rejection Reasons (frequency)");
-  lines.push("");
-  const totalErr = allErrors.length;
-  for (const [cat, count] of topCategories) {
-    const pct = totalErr > 0 ? (count / totalErr) * 100 : 0;
-    lines.push(`- ${cat}: ${count} (${pct.toFixed(1)}%)`);
-  }
-  lines.push("");
-  lines.push("### Failure Location");
-  lines.push("");
-  const locEntries = Object.entries(locationCounts).sort((a, b) => b[1] - a[1]);
-  for (const [loc, count] of locEntries) {
-    const pct = totalErr > 0 ? (count / totalErr) * 100 : 0;
-    lines.push(`- ${loc}: ${count} (${pct.toFixed(1)}%)`);
-  }
-  lines.push("");
-  lines.push("### Feature Presence (valid specs)");
-  lines.push("");
-  lines.push("N/A (requires spec re-read for schema traversal)");
-  lines.push("");
-  lines.push("### Compatibility Projection");
-  lines.push("");
-  lines.push(`Current pass rate: ${passRate.toFixed(1)}%`);
-  lines.push("Projected gains if rules relaxed: (see RUS-v2 roadmap)");
-  lines.push("");
-  lines.push("## LAYER 4: SYSTEM HEALTH");
+  lines.push("### System health");
   lines.push("");
   lines.push("Determinism: Skipped for v1");
   lines.push(`Compile time: avg ${avgCompileMs.toFixed(0)} ms, max ${maxCompileMs} ms`);
@@ -506,12 +823,9 @@ function main(): number {
   lines.push(`Average resources per API: ${avgResources.toFixed(1)}`);
   lines.push(`Average fields per resource: ${avgFieldsPerResource.toFixed(1)}`);
   lines.push("");
-  lines.push("## RUS-v2 ROADMAP IMPLICATIONS");
+  lines.push("### RUS-v2 roadmap implications");
   lines.push("");
-  lines.push("Top expansion candidates (by rejection frequency):");
-  for (let i = 0; i < Math.min(5, topCategories.length); i++) {
-    lines.push(`${i + 1}. ${topCategories[i][0]}`);
-  }
+  lines.push("Prioritize by **spec impact** (Section 1 roadmap table), not raw instance counts. Strong candidates: high near-pass + high only-blocker. Avoid: high raw + high top-10 % (large-spec distortion).");
   lines.push("");
   lines.push("## EXAMPLES");
   lines.push("");

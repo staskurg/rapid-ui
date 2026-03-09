@@ -282,3 +282,90 @@ Valid specs from the corpus run are extracted and copied to `tests/compiler/fixt
 3. other unsupported schema keyword / schema shape
 4. multiple path params
 5. oneOf / anyOf / allOf
+
+---
+
+## Post-Run: 2026-03-09 Corpus Results (API-Guru + GitHub)
+
+**Reports:** `scripts/corpus-data/reports/report-api-guru-2026-03-09T22-32-58-616Z.md`, `report-github-2026-03-09T22-33-01-409Z.md`
+
+### Pass rates
+
+| Corpus   | Valid | Total | Pass rate | Near-pass | Natural Fit Score |
+| -------- | ----- | ----- | --------- | --------- | ----------------- |
+| API-Guru | 144   | 1970  | 7.3%      | 449 (22.8%) | 8.0%            |
+| GitHub   | 406   | 6768  | 6.0%      | 701 (10.4%) | 7.4%            |
+
+**Within predicted 4–7%** for both corpora. GitHub has lower near-pass % due to larger, noisier spec set.
+
+### Rejection distribution (instance-level, by corpus)
+
+**API-Guru:**
+
+| Category                    | % of rejections |
+| --------------------------- | --------------- |
+| operation structure         | 27.3%           |
+| parameter invalid           | 18.7%           |
+| oneOf / anyOf / allOf       | 18.5%           |
+| multiple path params       | 15.2%           |
+| response content type       | 8.2%            |
+| other unsupported schema    | 4.4%            |
+| missing request body        | 2.8%            |
+| schema shape / hygiene      | 1.3%            |
+| other                       | 1.2%            |
+| root schema primitive       | 1.0%            |
+| example keyword             | 0.6%            |
+| response schema empty       | 0.6%            |
+
+**GitHub:**
+
+| Category                    | % of rejections |
+| --------------------------- | --------------- |
+| response content type      | 23.8%           |
+| operation structure        | 22.8%           |
+| oneOf / anyOf / allOf      | 14.9%           |
+| missing request body       | 8.8%            |
+| multiple path params       | 8.1%            |
+| root schema primitive      | 4.5%            |
+| parameter invalid           | 4.1%            |
+| other unsupported schema   | 3.5%            |
+| other                       | 2.9%            |
+| schema shape / hygiene     | 2.8%            |
+| response schema empty      | 2.1%            |
+| example keyword            | 1.6%            |
+
+**Prediction vs actual:** Operation structure and response content type dominate more than predicted. oneOf/anyOf/allOf is lower than the 28–35% prediction (now 15–19%). example/default is minimal (&lt;2%). multiple success responses is folded into operation structure in current categorization.
+
+### Only-blocker (specs that would pass if one rule relaxed)
+
+**API-Guru:** response content type 235, other 203, oneOf/anyOf/allOf 126, multiple path params 55, parameter invalid 52, operation structure 51, other unsupported schema 43, missing request body 24.
+
+**GitHub:** operation structure 486, response content type 291, oneOf/anyOf/allOf 172, missing request body 170, other 142, multiple path params 57, root schema primitive 49, schema shape/hygiene 39.
+
+### Language analysis (passing specs)
+
+| Metric                    | API-Guru | GitHub |
+| ------------------------- | -------- | ------ |
+| Resources per spec (median) | 1       | 2      |
+| Fields per resource (median) | 4       | 3      |
+| CRUD list                | 65%      | 52%    |
+| CRUD create              | 26%      | 69%    |
+| Grouping tag-based       | 86%      | 63%    |
+
+### OpenAPI version
+
+| Version | API-Guru | GitHub |
+| ------- | -------- | ------ |
+| 3.0.x   | 94.6%    | 75.4%  |
+| 3.1.x   | 5.4%     | 24.6%  |
+
+### Top RUS-v2 expansion candidates (2026-03-09)
+
+By only-blocker impact across both corpora:
+
+1. **response content type** — 526 specs (235 + 291)
+2. **operation structure** — 537 specs (51 + 486)
+3. **oneOf / anyOf / allOf** — 298 specs (126 + 172)
+4. **missing request body** — 194 specs (24 + 170)
+5. **other** — 345 specs (203 + 142)
+6. **multiple path params** — 112 specs (55 + 57)

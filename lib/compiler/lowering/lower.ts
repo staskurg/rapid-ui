@@ -10,6 +10,9 @@ import type { UiPlanIR, ResourcePlan, FieldPlan } from "../uiplan/uiplan.schema"
 import { slugify } from "@/lib/utils/slugify";
 import {
   extractSchemaFields,
+  getObjectShape,
+  getObjectSchema,
+  SCHEMA_SHAPE_PLACEHOLDER,
   schemaToField,
   type FieldInfo,
 } from "./schema-to-field";
@@ -91,6 +94,18 @@ function lowerResource(
     fields.push(field);
   }
 
+  // Schema-shape placeholder: when resource has opaque/map shape (fieldless), add display placeholder
+  if (fields.length === 0 && hasOpaqueOrMapShape(resource)) {
+    fields.push(
+      schemaToField(
+        SCHEMA_SHAPE_PLACEHOLDER,
+        undefined,
+        { type: "object", required: false },
+        false
+      )
+    );
+  }
+
   if (fields.length === 0) {
     return {
       success: false,
@@ -145,6 +160,22 @@ function lowerResource(
   }
 
   return { success: true, spec: parsed.data };
+}
+
+function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
+  const listOp = resource.operations.find((o) => o.kind === "list");
+  const detailOp = resource.operations.find((o) => o.kind === "detail");
+  const schemas: Record<string, unknown>[] = [];
+  if (listOp?.responseSchema) schemas.push(listOp.responseSchema as Record<string, unknown>);
+  if (detailOp?.responseSchema) schemas.push(detailOp.responseSchema as Record<string, unknown>);
+  for (const schema of schemas) {
+    const objSchema = getObjectSchema(schema);
+    if (objSchema) {
+      const shape = getObjectShape(objSchema);
+      if (shape === "opaque" || shape === "map") return true;
+    }
+  }
+  return false;
 }
 
 function mergeSchemaFields(resource: ResourceIR): Map<string, FieldInfo> {

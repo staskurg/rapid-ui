@@ -6,6 +6,7 @@
 
 import type { CompilerError } from "../errors";
 import { createError } from "../errors";
+import { selectJsonContent } from "./content";
 
 const SUCCESS_CODES = ["200", "201"];
 const METHODS_REQUIRING_BODY = ["post", "put", "patch"];
@@ -38,9 +39,23 @@ const ALLOWED_SCHEMA_KEYS = new Set([
   "deprecated",
   "readOnly",
   "writeOnly",
+  // v2: annotation-only, stripped during normalization
+  "uniqueItems",
+  "minItems",
+  "maxItems",
+  "xml",
+  "externalDocs",
 ]);
 
-const REF_ONLY_KEYS = new Set(["$ref", "description"]);
+/** When $ref present, allow these annotation-only keys (no structural change). */
+const REF_ANNOTATION_KEYS = new Set([
+  "$ref",
+  "description",
+  "nullable",
+  "readOnly",
+  "title",
+  "deprecated",
+]);
 const PRIMITIVE_TYPES = new Set(["string", "integer", "number", "boolean"]);
 const PATH_PARAM_TYPES = new Set(["string", "integer"]);
 
@@ -107,11 +122,11 @@ function checkSchemaRecursive(
   // $ref rule: when $ref present, only $ref and description allowed
   if ("$ref" in schema && typeof schema.$ref === "string") {
     for (const key of Object.keys(schema)) {
-      if (!REF_ONLY_KEYS.has(key)) {
+      if (!REF_ANNOTATION_KEYS.has(key)) {
         return createError(
           "OAS_INVALID_SCHEMA_SHAPE",
           "Subset",
-          `When $ref is present, only $ref and description are allowed; found: ${key}`,
+          `When $ref is present, only annotation keys (nullable, readOnly, title, deprecated, description) are allowed; found structural key: ${key}`,
           pointer
         );
       }
@@ -140,14 +155,28 @@ function checkSchemaRecursive(
     }
   }
 
-  // additionalProperties must be false if present
+  // additionalProperties: false → closed object; true → map<string,unknown>; schema → map<string,schema>
   if ("additionalProperties" in schema) {
     const ap = schema.additionalProperties;
-    if (ap !== false) {
+    if (ap === false) {
+      // closed object — allowed
+    } else if (ap === true) {
+      // map<string, unknown> — allowed
+    } else if (ap && typeof ap === "object" && !Array.isArray(ap)) {
+      // map<string, schema> — recurse into value schema
+      const apSchema = ap as Record<string, unknown>;
+      const err = checkSchemaRecursive(
+        doc,
+        apSchema,
+        `${pointer}/additionalProperties`,
+        visited
+      );
+      if (err) return err;
+    } else {
       return createError(
         "OAS_INVALID_SCHEMA_SHAPE",
         "Subset",
-        "additionalProperties must be false if present",
+        "additionalProperties must be false, true, or a schema object",
         pointer
       );
     }
@@ -190,17 +219,8 @@ function checkSchemaRecursive(
     }
   }
 
-  // Schema hygiene: type: object → properties required
-  if (schema.type === "object" || (Array.isArray(schema.type) && (schema.type as unknown[]).includes("object"))) {
-    if (!("properties" in schema) || !schema.properties || typeof schema.properties !== "object") {
-      return createError(
-        "OAS_INVALID_SCHEMA_SHAPE",
-        "Subset",
-        "type: object requires properties",
-        pointer
-      );
-    }
-  }
+  // Schema hygiene: type: object — properties optional (empty object → opaque object)
+  // Object with no properties and no additionalProperties is allowed (opaque JSON object)
 
   // Schema hygiene: enum values must match type
   if ("enum" in schema && Array.isArray(schema.enum)) {
@@ -249,7 +269,7 @@ function checkSchemaRecursive(
   }
 
   // Recurse into properties
-  if ("properties" in schema && typeof schema.properties === "object") {
+  if ("properties" in schema && schema.properties != null && typeof schema.properties === "object") {
     const props = schema.properties as Record<string, unknown>;
     for (const [key, val] of Object.entries(props)) {
       if (val && typeof val === "object") {
@@ -506,43 +526,34 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
       }
 
       // Request body schema validation (for POST/PUT/PATCH)
+      // Content negotiation: select JSON media type (application/json, *+json); else fail
       if (METHODS_REQUIRING_BODY.includes(method) && op.requestBody) {
         const rb = op.requestBody as Record<string, unknown>;
         const content = rb?.content as Record<string, unknown> | undefined;
         if (content && typeof content === "object") {
-          const contentKeys = Object.keys(content);
-          if (contentKeys.length !== 1 || !("application/json" in content)) {
+          const selected = selectJsonContent(content);
+          if (!selected) {
+            const hasJson = "application/json" in content || Object.keys(content).some((k) => k.endsWith("+json"));
             errors.push(
               createError(
                 "OAS_INVALID_OPERATION_STRUCTURE",
                 "Subset",
-                "requestBody content must have exactly one key: application/json",
+                hasJson
+                  ? "requestBody content must have schema for application/json"
+                  : "requestBody content must include application/json or compatible JSON media type",
                 `${opPath}/requestBody`
               )
             );
           } else {
-            const jsonContent = content["application/json"] as Record<string, unknown> | undefined;
-            const schema = jsonContent?.schema;
-            if (!schema || typeof schema !== "object") {
-              errors.push(
-                createError(
-                  "OAS_INVALID_OPERATION_STRUCTURE",
-                  "Subset",
-                  "requestBody content must have schema for application/json",
-                  `${opPath}/requestBody/content/application~1json`
-                )
-              );
-            } else {
-              const schemaPointer = `${opPath}/requestBody/content/application~1json/schema`;
-              const visited = new Set<string>();
-              const err = checkSchemaRecursive(
-                doc,
-                schema as Record<string, unknown>,
-                schemaPointer,
-                visited
-              );
-              if (err) errors.push(err);
-            }
+            const schemaPointer = `${opPath}/requestBody/content/schema`;
+            const visited = new Set<string>();
+            const err = checkSchemaRecursive(
+              doc,
+              selected.schema,
+              schemaPointer,
+              visited
+            );
+            if (err) errors.push(err);
           }
         }
       }
@@ -556,80 +567,63 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
           const code = firstSuccessCode;
           const contentObj = r?.content as Record<string, unknown> | undefined;
 
-          // v1.2: Use application/json if present; otherwise reject (do not require exactly one content type)
+          // Content negotiation: select JSON media type (application/json, *+json); else reject
           if (!contentObj || typeof contentObj !== "object") {
             errors.push(
               createError(
                 "OAS_INVALID_RESPONSE_STRUCTURE",
                 "Subset",
-                "Success response must have content with application/json",
+                "Success response must have content with application/json or compatible JSON media type",
                 `${opPath}/responses/${code}`
               )
             );
-          } else if (!("application/json" in contentObj)) {
-            errors.push(
-              createError(
-                "OAS_INVALID_RESPONSE_STRUCTURE",
-                "Subset",
-                "Success response content must include application/json",
-                `${opPath}/responses/${code}/content`
-              )
-            );
           } else {
-              const content = contentObj["application/json"];
-              if (!content || typeof content !== "object") {
-                errors.push(
-                  createError(
-                    "OAS_INVALID_RESPONSE_STRUCTURE",
-                    "Subset",
-                    "Success response must have schema",
-                    `${opPath}/responses/${code}/content/application~1json`
-                  )
-                );
+            const selected = selectJsonContent(contentObj);
+            if (!selected) {
+              const hasJson =
+                "application/json" in contentObj ||
+                Object.keys(contentObj).some((k) => k.endsWith("+json"));
+              errors.push(
+                createError(
+                  "OAS_INVALID_RESPONSE_STRUCTURE",
+                  "Subset",
+                  hasJson
+                    ? "Success response must have schema"
+                    : "Success response content must include application/json or compatible JSON media type",
+                  `${opPath}/responses/${code}/content`
+                )
+              );
+            } else {
+              const schemaPointer = `${opPath}/responses/${code}/content/schema`;
+              const visited = new Set<string>();
+              const err = checkSchemaRecursive(
+                doc,
+                selected.schema,
+                schemaPointer,
+                visited
+              );
+              if (err) {
+                errors.push(err);
               } else {
-                const schema = (content as Record<string, unknown>)?.schema;
-                if (!schema || typeof schema !== "object") {
-                  errors.push(
-                    createError(
-                      "OAS_INVALID_RESPONSE_STRUCTURE",
-                      "Subset",
-                      "Success response must have schema",
-                      `${opPath}/responses/${code}/content/application~1json`
-                    )
-                  );
-                } else {
-                  const schemaPointer = `${opPath}/responses/${code}/content/application~1json/schema`;
-                  const visited = new Set<string>();
-                  const err = checkSchemaRecursive(
-                    doc,
-                    schema as Record<string, unknown>,
-                    schemaPointer,
-                    visited
-                  );
-                  if (err) {
-                    errors.push(err);
-                  } else {
-                    const concrete = resolveSchemaToConcrete(
-                      doc,
-                      schema as Record<string, unknown>,
-                      new Set<string>()
+                const concrete = resolveSchemaToConcrete(
+                  doc,
+                  selected.schema,
+                  new Set<string>()
+                );
+                if (concrete) {
+                  const primaryType = getPrimaryType(concrete);
+                  if (
+                    !primaryType ||
+                    (primaryType !== "object" && primaryType !== "array")
+                  ) {
+                    errors.push(
+                      createError(
+                        "OAS_INVALID_RESPONSE_STRUCTURE",
+                        "Subset",
+                        `Root success schema must resolve to object or array; got ${primaryType ?? "unknown"}`,
+                        schemaPointer
+                      )
                     );
-                    if (concrete) {
-                      const primaryType = getPrimaryType(concrete);
-                      if (
-                        !primaryType ||
-                        (primaryType !== "object" && primaryType !== "array")
-                      ) {
-                        errors.push(
-                          createError(
-                            "OAS_INVALID_RESPONSE_STRUCTURE",
-                            "Subset",
-                            `Root success schema must resolve to object or array; got ${primaryType ?? "unknown"}`,
-                            schemaPointer
-                          )
-                        );
-                      }
-                    }
                   }
                 }
               }
@@ -638,6 +632,7 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
         }
       }
     }
+  }
 
   // Zero operations globally
   if (validOpCount === 0) {

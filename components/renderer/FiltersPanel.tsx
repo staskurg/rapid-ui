@@ -172,6 +172,8 @@ function renderFilterInput(
           </SelectContent>
         </Select>
       );
+    case "object":
+      return null; // object type not filterable
     default:
       return (
         <Input
