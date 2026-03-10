@@ -1,0 +1,1037 @@
+openapi: 3.1.0
+info:
+  title: Islamic Open Finance (IOF) Platform API
+  version: 1.0.0
+  description: |
+    Complete OpenAPI specification for the Islamic Open Finance Platform.
+
+    The IOF Platform provides 29 specialized Rails for Shariah-compliant banking operations:
+    - Core Rails (5): Contracts, Cards, Clearing, Treasury, Shariah
+    - Access & Identity (3): IAM, Organizations, Workspaces
+    - Operations (6): Transactions, Transfers, Reconciliation, Events, Webhooks, Audit
+    - Financial (4): Ledger, Products, Pricing, Limits
+    - Governance (9): KYC/KYB, AML/CFT, Consent/Privacy, Disputes, Collections, Zakat, Impact, Observability
+    - Developer & Partner (2): Developer, Partners
+
+    All APIs follow AAOIFI standards for Islamic finance compliance.
+
+  contact:
+    name: IOF Platform Support
+    email: support@islamicopenfinance.com
+    url: https://islamicopenfinance.com
+
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+
+  termsOfService: https://islamicopenfinance.com/terms
+
+servers:
+  - url: https://api.islamicopenfinance.com
+    description: Production
+  - url: https://api.uat.islamicopenfinance.com
+    description: UAT
+  - url: https://api.sandbox.islamicopenfinance.com
+    description: Sandbox
+
+security:
+  - bearerAuth: []
+  - apiKey: []
+
+tags:
+  - name: Contracts
+    description: Islamic contract management (28 AAOIFI-compliant contract types)
+  - name: Cards
+    description: Shariah-compliant card operations (ISO 8583)
+  - name: Clearing
+    description: Multi-rail settlement and reconciliation
+  - name: Treasury
+    description: FX, hedging, liquidity management
+  - name: Shariah
+    description: Shariah compliance rules and monitoring
+  - name: IAM
+    description: Identity and access management
+  - name: Organizations
+    description: Multi-tenant organization management
+  - name: Workspaces
+    description: Environment management (sandbox, UAT, prod)
+  - name: Transactions
+    description: Transaction processing and history
+  - name: Transfers
+    description: Fund transfers (domestic, international)
+  - name: Reconciliation
+    description: Automated reconciliation workflows
+  - name: Events
+    description: Event streaming and subscriptions
+  - name: Webhooks
+    description: Webhook configuration and delivery
+  - name: Audit
+    description: Audit log access and compliance
+  - name: Ledger
+    description: Double-entry ledger (TigerBeetle)
+  - name: Products
+    description: Product catalog and SKU management
+  - name: Pricing
+    description: Profit rate and fee schedules
+  - name: Limits
+    description: Transaction and velocity limits
+  - name: KYC/KYB
+    description: Customer and business verification
+  - name: AML/CFT
+    description: Anti-money laundering and screening
+  - name: Consent
+    description: Privacy consent management (GDPR, CCPA)
+  - name: Disputes
+    description: Dispute and chargeback handling
+  - name: Collections
+    description: Collections and recovery
+  - name: Zakat
+    description: Zakat calculation and distribution
+  - name: Impact
+    description: Social impact and ESG tracking
+  - name: Observability
+    description: Metrics, traces, and health checks
+  - name: Developer
+    description: API keys, rate limits, analytics
+  - name: Partners
+    description: Embedded finance and partner management
+  - name: Metadata
+    description: Entity registry, lineage, classification
+  - name: Taxonomy
+    description: Controlled vocabularies and term management
+
+paths:
+  # Contracts Rail
+  /api/v1/contracts/murabaha:
+    post:
+      tags: [Contracts]
+      summary: Create Murabaha contract
+      description: Create a cost-plus financing contract (AAOIFI FAS-2 compliant)
+      operationId: createMurabahaContract
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMurabahaRequest"
+      responses:
+        "201":
+          description: Contract created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MurabahaContract"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ShariahBreach"
+
+    get:
+      tags: [Contracts]
+      summary: List Murabaha contracts
+      operationId: listMurabahaContracts
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum:
+              [
+                DRAFT,
+                PENDING_ASSET_PURCHASE,
+                ASSET_PURCHASED,
+                ACTIVE,
+                COMPLETED,
+                CANCELLED,
+              ]
+      responses:
+        "200":
+          description: List of contracts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedMurabahaContracts"
+
+  /api/v1/contracts/murabaha/{id}:
+    get:
+      tags: [Contracts]
+      summary: Get Murabaha contract
+      operationId: getMurabahaContract
+      parameters:
+        - $ref: "#/components/parameters/ContractId"
+      responses:
+        "200":
+          description: Contract details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MurabahaContract"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # Cards Rail
+  /api/v1/cards:
+    post:
+      tags: [Cards]
+      summary: Issue card
+      description: Issue a new Shariah-compliant debit/credit card
+      operationId: issueCard
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IssueCardRequest"
+      responses:
+        "201":
+          description: Card issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Card"
+
+    get:
+      tags: [Cards]
+      summary: List cards
+      operationId: listCards
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [ACTIVE, BLOCKED, EXPIRED, CANCELLED]
+      responses:
+        "200":
+          description: List of cards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedCards"
+
+  /api/v1/cards/{id}/authorizations:
+    get:
+      tags: [Cards]
+      summary: Get card authorizations
+      operationId: getCardAuthorizations
+      parameters:
+        - $ref: "#/components/parameters/CardId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Authorization history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedAuthorizations"
+
+  # Shariah Rail
+  /api/v1/shariah/rules:
+    get:
+      tags: [Shariah]
+      summary: List Shariah rules
+      operationId: listShariahRules
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: category
+          schema:
+            type: string
+            enum: [CONTRACTS, PAYMENTS, INVESTMENTS, FEES]
+      responses:
+        "200":
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedShariahRules"
+
+  /api/v1/shariah/evaluations:
+    post:
+      tags: [Shariah]
+      summary: Evaluate Shariah compliance
+      operationId: evaluateShariahCompliance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ShariahEvaluationRequest"
+      responses:
+        "200":
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ShariahEvaluation"
+
+  # AML Rail
+  /api/v1/aml/screening:
+    post:
+      tags: [AML/CFT]
+      summary: Create AML screening
+      operationId: createAMLScreening
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AMLScreeningRequest"
+      responses:
+        "201":
+          description: Screening created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AMLScreening"
+
+  /api/v1/aml/alerts:
+    get:
+      tags: [AML/CFT]
+      summary: List AML alerts
+      operationId: listAMLAlerts
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: severity
+          schema:
+            type: string
+            enum: [LOW, MEDIUM, HIGH, CRITICAL]
+      responses:
+        "200":
+          description: List of alerts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedAMLAlerts"
+
+  # Metadata Rail
+  /api/v1/metadata/entities:
+    post:
+      tags: [Metadata]
+      summary: Create entity metadata
+      operationId: createEntityMetadata
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMetadataRequest"
+      responses:
+        "201":
+          description: Metadata created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EntityMetadata"
+
+    get:
+      tags: [Metadata]
+      summary: Search entity metadata
+      operationId: searchEntityMetadata
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - in: query
+          name: rail
+          schema:
+            type: string
+        - in: query
+          name: entity_type
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedEntityMetadata"
+
+  /api/v1/metadata/lineage:
+    get:
+      tags: [Metadata]
+      summary: Get entity lineage
+      operationId: getEntityLineage
+      parameters:
+        - in: query
+          name: rail
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: entity_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: depth
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 3
+      responses:
+        "200":
+          description: Lineage graph
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LineageGraph"
+
+  # Taxonomy Rail
+  /api/v1/taxonomy/taxonomies:
+    post:
+      tags: [Taxonomy]
+      summary: Create taxonomy
+      operationId: createTaxonomy
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTaxonomyRequest"
+      responses:
+        "201":
+          description: Taxonomy created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Taxonomy"
+
+  /api/v1/taxonomy/terms:
+    post:
+      tags: [Taxonomy]
+      summary: Create term
+      operationId: createTerm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTermRequest"
+      responses:
+        "201":
+          description: Term created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Term"
+
+    get:
+      tags: [Taxonomy]
+      summary: Search terms
+      operationId: searchTerms
+      parameters:
+        - in: query
+          name: taxonomy_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedTerms"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token (RS256)
+
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for service-to-service authentication
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    Limit:
+      name: limit
+      in: query
+      description: Items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+    ContractId:
+      name: id
+      in: path
+      required: true
+      description: Contract ID
+      schema:
+        type: string
+        pattern: "^CNT-[A-Z0-9]+$"
+
+    CardId:
+      name: id
+      in: path
+      required: true
+      description: Card ID
+      schema:
+        type: string
+        pattern: "^CRD-[A-Z0-9]+$"
+
+  schemas:
+    # Common schemas
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+        total_pages:
+          type: integer
+          minimum: 0
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+            trace_id:
+              type: string
+              format: uuid
+
+    # Contract schemas
+    CreateMurabahaRequest:
+      type: object
+      required:
+        [
+          customer_id,
+          asset_description,
+          cost_price,
+          profit_amount,
+          installment_count,
+        ]
+      properties:
+        customer_id:
+          type: string
+        asset_description:
+          type: string
+        asset_category:
+          type: string
+          enum: [REAL_ESTATE, VEHICLE, EQUIPMENT, COMMODITY]
+        cost_price:
+          type: number
+          minimum: 0
+        profit_amount:
+          type: number
+          minimum: 0
+        installment_count:
+          type: integer
+          minimum: 1
+          maximum: 360
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          pattern: "^[A-Z]{3}$"
+
+    MurabahaContract:
+      type: object
+      properties:
+        id:
+          type: string
+        tenant_id:
+          type: string
+        workspace_id:
+          type: string
+        customer_id:
+          type: string
+        asset_description:
+          type: string
+        cost_price:
+          type: number
+        profit_amount:
+          type: number
+        total_amount:
+          type: number
+        installment_count:
+          type: integer
+        status:
+          type: string
+          enum:
+            [
+              DRAFT,
+              PENDING_ASSET_PURCHASE,
+              ASSET_PURCHASED,
+              ACTIVE,
+              COMPLETED,
+              CANCELLED,
+            ]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    PaginatedMurabahaContracts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/MurabahaContract"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    # Card schemas
+    IssueCardRequest:
+      type: object
+      required: [customer_id, card_type, account_id]
+      properties:
+        customer_id:
+          type: string
+        card_type:
+          type: string
+          enum: [DEBIT, CHARGE]
+        account_id:
+          type: string
+        embossed_name:
+          type: string
+        limits:
+          type: object
+          properties:
+            single_transaction:
+              type: number
+            daily_limit:
+              type: number
+            monthly_limit:
+              type: number
+
+    Card:
+      type: object
+      properties:
+        id:
+          type: string
+        customer_id:
+          type: string
+        card_type:
+          type: string
+        masked_pan:
+          type: string
+          pattern: '^\\d{4}\\s\\*{4}\\s\\*{4}\\s\\d{4}$'
+        expiry_date:
+          type: string
+          pattern: '^\\d{2}/\\d{2}$'
+        status:
+          type: string
+          enum: [ACTIVE, BLOCKED, EXPIRED, CANCELLED]
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedCards:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Card"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    PaginatedAuthorizations:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              auth_id:
+                type: string
+              amount:
+                type: number
+              merchant:
+                type: string
+              mcc:
+                type: string
+              status:
+                type: string
+                enum: [PENDING, APPROVED, DECLINED, SETTLED]
+              created_at:
+                type: string
+                format: date-time
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    # Shariah schemas
+    ShariahEvaluationRequest:
+      type: object
+      required: [entity_type, entity_data]
+      properties:
+        entity_type:
+          type: string
+          enum: [CONTRACT, TRANSACTION, INVESTMENT, FEE]
+        entity_data:
+          type: object
+
+    ShariahEvaluation:
+      type: object
+      properties:
+        evaluation_id:
+          type: string
+        entity_type:
+          type: string
+        compliant:
+          type: boolean
+        rules_evaluated:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id:
+                type: string
+              rule_name:
+                type: string
+              result:
+                type: string
+                enum: [PASS, FAIL]
+        breaches:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id:
+                type: string
+              severity:
+                type: string
+                enum: [LOW, MEDIUM, HIGH, CRITICAL]
+              message:
+                type: string
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedShariahRules:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              rule_id:
+                type: string
+              name:
+                type: string
+              category:
+                type: string
+              description:
+                type: string
+              status:
+                type: string
+                enum: [ACTIVE, DEPRECATED]
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    # AML schemas
+    AMLScreeningRequest:
+      type: object
+      required: [entity_type, entity_id]
+      properties:
+        entity_type:
+          type: string
+          enum: [CUSTOMER, TRANSACTION, MERCHANT]
+        entity_id:
+          type: string
+        screening_type:
+          type: string
+          enum: [SANCTIONS, PEP, ADVERSE_MEDIA]
+
+    AMLScreening:
+      type: object
+      properties:
+        screening_id:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+        status:
+          type: string
+          enum: [PENDING, PASSED, FAILED, REVIEW_REQUIRED]
+        matches:
+          type: array
+          items:
+            type: object
+            properties:
+              match_type:
+                type: string
+              confidence_score:
+                type: number
+                minimum: 0
+                maximum: 1
+              details:
+                type: object
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedAMLAlerts:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              alert_id:
+                type: string
+              severity:
+                type: string
+                enum: [LOW, MEDIUM, HIGH, CRITICAL]
+              alert_type:
+                type: string
+              entity_id:
+                type: string
+              status:
+                type: string
+                enum: [OPEN, INVESTIGATING, RESOLVED, FALSE_POSITIVE]
+              created_at:
+                type: string
+                format: date-time
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    # Metadata schemas
+    CreateMetadataRequest:
+      type: object
+      required: [entity, classification, provenance]
+      properties:
+        entity:
+          type: object
+          required: [tenant_id, workspace_id, rail, entity_type, entity_id]
+          properties:
+            tenant_id:
+              type: string
+            workspace_id:
+              type: string
+            rail:
+              type: string
+            entity_type:
+              type: string
+            entity_id:
+              type: string
+        classification:
+          type: object
+          required: [confidentiality, pii, secrecy_tier]
+          properties:
+            confidentiality:
+              type: string
+              enum: [PUBLIC, INTERNAL, CONFIDENTIAL, RESTRICTED]
+            pii:
+              type: string
+              enum: [NONE, LOW, MODERATE, HIGH]
+            secrecy_tier:
+              type: string
+              enum: [T0, T1, T2, T3]
+        provenance:
+          type: object
+          required: [producer, trace_id]
+          properties:
+            producer:
+              type: string
+            trace_id:
+              type: string
+            source_system:
+              type: string
+
+    EntityMetadata:
+      type: object
+      properties:
+        entity:
+          type: object
+        version:
+          type: integer
+        tags:
+          type: object
+        labels:
+          type: array
+          items:
+            type: string
+        classification:
+          type: object
+        provenance:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedEntityMetadata:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/EntityMetadata"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+    LineageGraph:
+      type: object
+      properties:
+        root_entity:
+          type: object
+        edges:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                type: object
+              derived:
+                type: object
+              edge_type:
+                type: string
+                enum: [DERIVED_FROM, SETTLED_BY, EVIDENCED_BY, POSTED_TO_LEDGER]
+              created_at:
+                type: string
+                format: date-time
+
+    # Taxonomy schemas
+    CreateTaxonomyRequest:
+      type: object
+      required: [taxonomy_id, name]
+      properties:
+        taxonomy_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+
+    Taxonomy:
+      type: object
+      properties:
+        taxonomy_id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, DEPRECATED]
+        created_at:
+          type: string
+          format: date-time
+
+    CreateTermRequest:
+      type: object
+      required: [taxonomy_id, term_id, label]
+      properties:
+        taxonomy_id:
+          type: string
+        term_id:
+          type: string
+        label:
+          type: string
+        definition:
+          type: string
+        parent_id:
+          type: string
+
+    Term:
+      type: object
+      properties:
+        term_id:
+          type: string
+        taxonomy_id:
+          type: string
+        label:
+          type: string
+        definition:
+          type: string
+        parent_id:
+          type: string
+        status:
+          type: string
+          enum: [ACTIVE, DEPRECATED]
+        created_at:
+          type: string
+          format: date-time
+
+    PaginatedTerms:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Term"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    ShariahBreach:
+      description: Shariah compliance violation
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error:
+              code: SHARIAH_BREACH
+              message: Contract violates Shariah rules
+              details:
+                - rule_id: MUR_ASSET_HALAL
+                  rule_name: Asset Must Be Halal
+                  breach: Asset category 'ALCOHOL' is forbidden

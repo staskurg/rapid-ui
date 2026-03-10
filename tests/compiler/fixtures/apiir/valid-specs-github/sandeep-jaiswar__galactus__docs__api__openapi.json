@@ -1,0 +1,709 @@
+{
+  "api": {
+    "title": "Galactus Intent Inference API",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Intent Computation",
+      "key": "intent-computation",
+      "operations": [
+        {
+          "id": "computeIntent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/intent",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "signals",
+              "client_id"
+            ],
+            "properties": {
+              "signals": {
+                "type": "array",
+                "description": "Input signals for intent computation",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "value",
+                    "confidence",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "Signal identifier",
+                      "example": "oi_decay"
+                    },
+                    "value": {
+                      "type": "number",
+                      "format": "double",
+                      "description": "Signal value",
+                      "minimum": -1,
+                      "maximum": 1,
+                      "example": -0.4
+                    },
+                    "confidence": {
+                      "type": "number",
+                      "format": "double",
+                      "description": "Signal confidence",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "example": 0.85
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Signal timestamp (Unix epoch)",
+                      "example": 1703123456
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Signal-specific metadata",
+                      "additionalProperties": true
+                    }
+                  }
+                },
+                "minItems": 1,
+                "maxItems": 10
+              },
+              "client_id": {
+                "type": "string",
+                "description": "Client identifier for tracking",
+                "example": "client_123"
+              },
+              "context": {
+                "type": "object",
+                "description": "Additional context data",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Request metadata",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "result",
+              "timestamp"
+            ],
+            "properties": {
+              "result": {
+                "type": "object",
+                "required": [
+                  "intent"
+                ],
+                "properties": {
+                  "intent": {
+                    "type": "object",
+                    "required": [
+                      "pressure",
+                      "confidence",
+                      "timestamp"
+                    ],
+                    "properties": {
+                      "pressure": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Capital pressure direction",
+                        "minimum": -1,
+                        "maximum": 1,
+                        "example": -0.25
+                      },
+                      "confidence": {
+                        "type": "number",
+                        "format": "double",
+                        "description": "Confidence in inference",
+                        "minimum": 0,
+                        "maximum": 1,
+                        "example": 0.82
+                      },
+                      "regime": {
+                        "type": "string",
+                        "description": "Market regime classification",
+                        "enum": [
+                          "bull",
+                          "bear",
+                          "neutral",
+                          "transition"
+                        ],
+                        "example": "bear"
+                      },
+                      "signals": {
+                        "type": "object",
+                        "description": "Contributing signals",
+                        "additionalProperties": {
+                          "type": "object",
+                          "required": [
+                            "value",
+                            "weight",
+                            "confidence"
+                          ],
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "format": "double",
+                              "description": "Signal value",
+                              "minimum": -1,
+                              "maximum": 1
+                            },
+                            "weight": {
+                              "type": "number",
+                              "format": "double",
+                              "description": "Signal weight in aggregation",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "confidence": {
+                              "type": "number",
+                              "format": "double",
+                              "description": "Signal confidence",
+                              "minimum": 0,
+                              "maximum": 1
+                            },
+                            "metadata": {
+                              "type": "object",
+                              "additionalProperties": true
+                            }
+                          }
+                        }
+                      },
+                      "timestamp": {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Computation timestamp (Unix epoch)"
+                      }
+                    }
+                  },
+                  "alternatives": {
+                    "type": "array",
+                    "description": "Alternative intent interpretations",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "pressure",
+                        "confidence",
+                        "timestamp"
+                      ],
+                      "properties": {
+                        "pressure": {
+                          "type": "number",
+                          "format": "double",
+                          "description": "Capital pressure direction",
+                          "minimum": -1,
+                          "maximum": 1,
+                          "example": -0.25
+                        },
+                        "confidence": {
+                          "type": "number",
+                          "format": "double",
+                          "description": "Confidence in inference",
+                          "minimum": 0,
+                          "maximum": 1,
+                          "example": 0.82
+                        },
+                        "regime": {
+                          "type": "string",
+                          "description": "Market regime classification",
+                          "enum": [
+                            "bull",
+                            "bear",
+                            "neutral",
+                            "transition"
+                          ],
+                          "example": "bear"
+                        },
+                        "signals": {
+                          "type": "object",
+                          "description": "Contributing signals",
+                          "additionalProperties": {
+                            "type": "object",
+                            "required": [
+                              "value",
+                              "weight",
+                              "confidence"
+                            ],
+                            "properties": {
+                              "value": {
+                                "type": "number",
+                                "format": "double",
+                                "description": "Signal value",
+                                "minimum": -1,
+                                "maximum": 1
+                              },
+                              "weight": {
+                                "type": "number",
+                                "format": "double",
+                                "description": "Signal weight in aggregation",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "format": "double",
+                                "description": "Signal confidence",
+                                "minimum": 0,
+                                "maximum": 1
+                              },
+                              "metadata": {
+                                "type": "object",
+                                "additionalProperties": true
+                              }
+                            }
+                          }
+                        },
+                        "timestamp": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Computation timestamp (Unix epoch)"
+                        }
+                      }
+                    }
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "processing_time_ns": {
+                    "type": "integer",
+                    "format": "int64",
+                    "description": "Processing time in nanoseconds"
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Response metadata",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "timestamp": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Response timestamp (Unix epoch)"
+              }
+            }
+          }
+        },
+        {
+          "id": "batchComputeIntent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/intent/batch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "requests"
+            ],
+            "properties": {
+              "requests": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "signals",
+                    "client_id"
+                  ],
+                  "properties": {
+                    "signals": {
+                      "type": "array",
+                      "description": "Input signals for intent computation",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "value",
+                          "confidence",
+                          "timestamp"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "description": "Signal identifier",
+                            "example": "oi_decay"
+                          },
+                          "value": {
+                            "type": "number",
+                            "format": "double",
+                            "description": "Signal value",
+                            "minimum": -1,
+                            "maximum": 1,
+                            "example": -0.4
+                          },
+                          "confidence": {
+                            "type": "number",
+                            "format": "double",
+                            "description": "Signal confidence",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "example": 0.85
+                          },
+                          "timestamp": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "Signal timestamp (Unix epoch)",
+                            "example": 1703123456
+                          },
+                          "metadata": {
+                            "type": "object",
+                            "description": "Signal-specific metadata",
+                            "additionalProperties": true
+                          }
+                        }
+                      },
+                      "minItems": 1,
+                      "maxItems": 10
+                    },
+                    "client_id": {
+                      "type": "string",
+                      "description": "Client identifier for tracking",
+                      "example": "client_123"
+                    },
+                    "context": {
+                      "type": "object",
+                      "description": "Additional context data",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Request metadata",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "minItems": 1,
+                "maxItems": 100
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "responses"
+            ],
+            "properties": {
+              "responses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "result",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "result": {
+                      "type": "object",
+                      "required": [
+                        "intent"
+                      ],
+                      "properties": {
+                        "intent": {
+                          "type": "object",
+                          "required": [
+                            "pressure",
+                            "confidence",
+                            "timestamp"
+                          ],
+                          "properties": {
+                            "pressure": {
+                              "type": "number",
+                              "format": "double",
+                              "description": "Capital pressure direction",
+                              "minimum": -1,
+                              "maximum": 1,
+                              "example": -0.25
+                            },
+                            "confidence": {
+                              "type": "number",
+                              "format": "double",
+                              "description": "Confidence in inference",
+                              "minimum": 0,
+                              "maximum": 1,
+                              "example": 0.82
+                            },
+                            "regime": {
+                              "type": "string",
+                              "description": "Market regime classification",
+                              "enum": [
+                                "bull",
+                                "bear",
+                                "neutral",
+                                "transition"
+                              ],
+                              "example": "bear"
+                            },
+                            "signals": {
+                              "type": "object",
+                              "description": "Contributing signals",
+                              "additionalProperties": {
+                                "type": "object",
+                                "required": [
+                                  "value",
+                                  "weight",
+                                  "confidence"
+                                ],
+                                "properties": {
+                                  "value": {
+                                    "type": "number",
+                                    "format": "double",
+                                    "description": "Signal value",
+                                    "minimum": -1,
+                                    "maximum": 1
+                                  },
+                                  "weight": {
+                                    "type": "number",
+                                    "format": "double",
+                                    "description": "Signal weight in aggregation",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "confidence": {
+                                    "type": "number",
+                                    "format": "double",
+                                    "description": "Signal confidence",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                  },
+                                  "metadata": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                  }
+                                }
+                              }
+                            },
+                            "timestamp": {
+                              "type": "integer",
+                              "format": "int64",
+                              "description": "Computation timestamp (Unix epoch)"
+                            }
+                          }
+                        },
+                        "alternatives": {
+                          "type": "array",
+                          "description": "Alternative intent interpretations",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "pressure",
+                              "confidence",
+                              "timestamp"
+                            ],
+                            "properties": {
+                              "pressure": {
+                                "type": "number",
+                                "format": "double",
+                                "description": "Capital pressure direction",
+                                "minimum": -1,
+                                "maximum": 1,
+                                "example": -0.25
+                              },
+                              "confidence": {
+                                "type": "number",
+                                "format": "double",
+                                "description": "Confidence in inference",
+                                "minimum": 0,
+                                "maximum": 1,
+                                "example": 0.82
+                              },
+                              "regime": {
+                                "type": "string",
+                                "description": "Market regime classification",
+                                "enum": [
+                                  "bull",
+                                  "bear",
+                                  "neutral",
+                                  "transition"
+                                ],
+                                "example": "bear"
+                              },
+                              "signals": {
+                                "type": "object",
+                                "description": "Contributing signals",
+                                "additionalProperties": {
+                                  "type": "object",
+                                  "required": [
+                                    "value",
+                                    "weight",
+                                    "confidence"
+                                  ],
+                                  "properties": {
+                                    "value": {
+                                      "type": "number",
+                                      "format": "double",
+                                      "description": "Signal value",
+                                      "minimum": -1,
+                                      "maximum": 1
+                                    },
+                                    "weight": {
+                                      "type": "number",
+                                      "format": "double",
+                                      "description": "Signal weight in aggregation",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "confidence": {
+                                      "type": "number",
+                                      "format": "double",
+                                      "description": "Signal confidence",
+                                      "minimum": 0,
+                                      "maximum": 1
+                                    },
+                                    "metadata": {
+                                      "type": "object",
+                                      "additionalProperties": true
+                                    }
+                                  }
+                                }
+                              },
+                              "timestamp": {
+                                "type": "integer",
+                                "format": "int64",
+                                "description": "Computation timestamp (Unix epoch)"
+                              }
+                            }
+                          }
+                        },
+                        "metadata": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "processing_time_ns": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Processing time in nanoseconds"
+                        }
+                      }
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Response metadata",
+                      "additionalProperties": {
+                        "type": "string"
+                      }
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Response timestamp (Unix epoch)"
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "timestamp": {
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Monitoring",
+      "key": "monitoring",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "version"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy",
+                  "degraded"
+                ]
+              },
+              "version": {
+                "type": "string",
+                "example": "0.1.0"
+              },
+              "uptime_seconds": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message if unhealthy"
+              }
+            }
+          }
+        },
+        {
+          "id": "getMetrics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/metrics",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "requests_total": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "requests_per_second": {
+                "type": "number",
+                "format": "double"
+              },
+              "average_latency_ms": {
+                "type": "number",
+                "format": "double"
+              },
+              "error_rate": {
+                "type": "number",
+                "format": "double"
+              },
+              "active_connections": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

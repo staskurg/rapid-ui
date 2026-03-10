@@ -1,0 +1,74 @@
+{
+  "api": {
+    "title": "Notion ChatGPT Connector API",
+    "version": "v0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Notion API",
+      "key": "notion-api",
+      "operations": [
+        {
+          "id": "getCurrentNotionUser",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/users/me",
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "getNotionPageContent",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/pages/{page_id}/content",
+          "identifierParam": "page_id",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "searchNotionContent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/search",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "The search term."
+              },
+              "filter_type": {
+                "type": "string",
+                "enum": [
+                  "page",
+                  "database"
+                ],
+                "nullable": true,
+                "description": "Filter results to only pages or databases."
+              },
+              "start_cursor": {
+                "type": "string",
+                "nullable": true,
+                "description": "Cursor for pagination."
+              },
+              "page_size": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Number of results per page."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

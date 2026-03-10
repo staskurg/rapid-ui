@@ -1,0 +1,891 @@
+{
+  "api": {
+    "title": "Sophia Cognitive Core API",
+    "version": "0.2.0"
+  },
+  "resources": [
+    {
+      "name": "Execution",
+      "key": "execution",
+      "operations": [
+        {
+          "id": "executeStep",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/executor/step",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "plan_id",
+              "step_index"
+            ],
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "description": "Plan ID"
+              },
+              "step_index": {
+                "type": "integer",
+                "description": "Step index to execute"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "execution_id": {
+                "type": "string",
+                "description": "Execution identifier"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure"
+                ]
+              },
+              "result": {
+                "type": "object",
+                "description": "Execution result",
+                "additionalProperties": true
+              },
+              "duration_ms": {
+                "type": "integer",
+                "description": "Execution duration in milliseconds"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Goals",
+      "key": "goals",
+      "operations": [
+        {
+          "id": "createGoal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/goals",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "goal"
+            ],
+            "properties": {
+              "goal": {
+                "type": "string",
+                "description": "Goal description"
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Optional metadata",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "goal_id": {
+                "type": "string",
+                "description": "Created goal ID"
+              },
+              "goal": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "description"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Goal identifier"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Goal description"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "active",
+                      "completed",
+                      "failed"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "normal",
+                      "high"
+                    ]
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "version": {
+                "type": "string",
+                "example": "0.2.0"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ingestion",
+      "key": "ingestion",
+      "operations": [
+        {
+          "id": "ingestHermesProposal",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ingest/hermes_proposal",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "proposal_id",
+              "llm_provider",
+              "model",
+              "generated_at",
+              "confidence"
+            ],
+            "properties": {
+              "proposal_id": {
+                "type": "string",
+                "description": "Unique identifier for this proposal",
+                "example": "hermes_20251123_abc123"
+              },
+              "source_service": {
+                "type": "string",
+                "description": "Source service (typically 'hermes')",
+                "default": "hermes"
+              },
+              "llm_provider": {
+                "type": "string",
+                "description": "LLM provider name",
+                "example": "openai",
+                "enum": [
+                  "openai",
+                  "anthropic",
+                  "azure",
+                  "google",
+                  "local"
+                ]
+              },
+              "model": {
+                "type": "string",
+                "description": "Model identifier",
+                "example": "gpt-4"
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO timestamp when proposal was generated",
+                "example": "2025-11-23T12:00:00Z"
+              },
+              "confidence": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence score for this proposal",
+                "example": 0.85
+              },
+              "raw_text": {
+                "type": "string",
+                "description": "Raw LLM response text"
+              },
+              "plan_steps": {
+                "type": "array",
+                "description": "Structured plan steps from the LLM",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "action": {
+                      "type": "string"
+                    },
+                    "target": {
+                      "type": "string"
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "imagined_states": {
+                "type": "array",
+                "description": "Imagined future states from the LLM",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "state_id": {
+                      "type": "string"
+                    },
+                    "entities": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "diagnostics": {
+                "type": "object",
+                "description": "Diagnostic information from the LLM",
+                "additionalProperties": true
+              },
+              "tool_calls": {
+                "type": "array",
+                "description": "Tool calls requested by the LLM",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "tool": {
+                      "type": "string"
+                    },
+                    "parameters": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  },
+                  "additionalProperties": true
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Additional metadata for provenance tracking",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "proposal_id",
+              "stored_node_ids",
+              "status",
+              "created_at"
+            ],
+            "properties": {
+              "proposal_id": {
+                "type": "string",
+                "description": "The ingested proposal identifier"
+              },
+              "stored_node_ids": {
+                "type": "array",
+                "description": "Node IDs created in Neo4j for this proposal",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "status": {
+                "type": "string",
+                "description": "Ingestion status",
+                "example": "accepted",
+                "enum": [
+                  "accepted",
+                  "rejected",
+                  "partial"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO timestamp of ingestion"
+              },
+              "validation_results": {
+                "type": "object",
+                "description": "SHACL validation results if applicable",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Planning",
+      "key": "planning",
+      "operations": [
+        {
+          "id": "getPlans",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/plans",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "plans": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "goal_id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Plan identifier"
+                    },
+                    "goal_id": {
+                      "type": "string",
+                      "description": "Associated goal ID"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "steps": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "index",
+                          "action"
+                        ],
+                        "properties": {
+                          "index": {
+                            "type": "integer",
+                            "description": "Step index"
+                          },
+                          "action": {
+                            "type": "string",
+                            "description": "Action to perform"
+                          },
+                          "parameters": {
+                            "type": "object",
+                            "description": "Action parameters",
+                            "additionalProperties": true
+                          },
+                          "expected_duration": {
+                            "type": "integer",
+                            "description": "Expected duration in seconds"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "pending",
+                              "in_progress",
+                              "completed",
+                              "failed"
+                            ]
+                          }
+                        }
+                      }
+                    },
+                    "estimated_duration": {
+                      "type": "integer",
+                      "description": "Estimated duration in seconds"
+                    },
+                    "confidence": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createPlan",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/plan",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "goal_id"
+            ],
+            "properties": {
+              "goal_id": {
+                "type": "string",
+                "description": "Goal ID to plan for"
+              },
+              "context": {
+                "type": "object",
+                "description": "Additional context",
+                "additionalProperties": true
+              },
+              "constraints": {
+                "type": "array",
+                "description": "Planning constraints",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "description": "Generated plan ID"
+              },
+              "plan": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "goal_id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Plan identifier"
+                  },
+                  "goal_id": {
+                    "type": "string",
+                    "description": "Associated goal ID"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "failed"
+                    ]
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "index",
+                        "action"
+                      ],
+                      "properties": {
+                        "index": {
+                          "type": "integer",
+                          "description": "Step index"
+                        },
+                        "action": {
+                          "type": "string",
+                          "description": "Action to perform"
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "description": "Action parameters",
+                          "additionalProperties": true
+                        },
+                        "expected_duration": {
+                          "type": "integer",
+                          "description": "Expected duration in seconds"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "failed"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "estimated_duration": {
+                    "type": "integer",
+                    "description": "Estimated duration in seconds"
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "invokePlanner",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/planner/invoke",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "goal_id"
+            ],
+            "properties": {
+              "goal_id": {
+                "type": "string",
+                "description": "Goal ID to plan for"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "description": "Generated plan ID"
+              },
+              "plan": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "goal_id"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Plan identifier"
+                  },
+                  "goal_id": {
+                    "type": "string",
+                    "description": "Associated goal ID"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "failed"
+                    ]
+                  },
+                  "steps": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "index",
+                        "action"
+                      ],
+                      "properties": {
+                        "index": {
+                          "type": "integer",
+                          "description": "Step index"
+                        },
+                        "action": {
+                          "type": "string",
+                          "description": "Action to perform"
+                        },
+                        "parameters": {
+                          "type": "object",
+                          "description": "Action parameters",
+                          "additionalProperties": true
+                        },
+                        "expected_duration": {
+                          "type": "integer",
+                          "description": "Expected duration in seconds"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "failed"
+                          ]
+                        }
+                      }
+                    }
+                  },
+                  "estimated_duration": {
+                    "type": "integer",
+                    "description": "Estimated duration in seconds"
+                  },
+                  "confidence": {
+                    "type": "number",
+                    "format": "float",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Simulation",
+      "key": "simulation",
+      "operations": [
+        {
+          "id": "simulatePlan",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/simulate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "plan_id"
+            ],
+            "properties": {
+              "plan_id": {
+                "type": "string",
+                "description": "Plan ID to simulate"
+              },
+              "initial_state": {
+                "type": "object",
+                "description": "Initial state for simulation",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "simulation_id": {
+                "type": "string",
+                "description": "Simulation identifier"
+              },
+              "predicted_outcome": {
+                "type": "object",
+                "description": "Predicted outcome",
+                "additionalProperties": true
+              },
+              "confidence": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "issues": {
+                "type": "array",
+                "description": "Potential issues identified",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "duration_ms": {
+                "type": "integer",
+                "description": "Simulation duration in milliseconds"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "State",
+      "key": "state",
+      "operations": [
+        {
+          "id": "getState",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/state",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "agent_id": {
+                "type": "string",
+                "description": "Agent identifier"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "State timestamp"
+              },
+              "beliefs": {
+                "type": "object",
+                "description": "Agent beliefs",
+                "additionalProperties": true
+              },
+              "goals": {
+                "type": "array",
+                "description": "Active goals",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "description"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Goal identifier"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Goal description"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "active",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "normal",
+                        "high"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              },
+              "graph": {
+                "type": "object",
+                "properties": {
+                  "nodes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "id",
+                        "type"
+                      ],
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "label": {
+                          "type": "string"
+                        },
+                        "properties": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  },
+                  "edges": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "source",
+                        "target",
+                        "type"
+                      ],
+                      "properties": {
+                        "source": {
+                          "type": "string"
+                        },
+                        "target": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "properties": {
+                          "type": "object",
+                          "additionalProperties": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "sendCommand",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/command",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "command"
+            ],
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "Natural language command"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "Response message"
+              },
+              "data": {
+                "type": "object",
+                "description": "Response data",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

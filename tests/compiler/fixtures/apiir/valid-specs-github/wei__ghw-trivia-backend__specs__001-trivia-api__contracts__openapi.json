@@ -1,0 +1,376 @@
+{
+  "api": {
+    "title": "Trivia API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Answers",
+      "key": "answers",
+      "operations": [
+        {
+          "id": "submitAnswer",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/trivia/answer",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "answer"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Username of the participant (case-sensitive for identity)",
+                "example": "john_doe"
+              },
+              "answer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "The answer being submitted (case-insensitive matching)",
+                "example": "Paris"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "is_correct",
+              "message"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "is_correct": {
+                "type": "boolean",
+                "description": "Whether the answer is correct",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "description": "User-friendly feedback message",
+                "example": "Correct!"
+              },
+              "score": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0,
+                "description": "Updated cumulative score (only included for correct answers)",
+                "example": 5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attempts",
+      "key": "attempts",
+      "operations": [
+        {
+          "id": "getAttempts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/trivia/attempts",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "attempts"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "attempts": {
+                "type": "array",
+                "description": "List of all answer attempts ordered chronologically (newest first)",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "username",
+                    "is_correct",
+                    "timestamp"
+                  ],
+                  "properties": {
+                    "username": {
+                      "type": "string",
+                      "description": "Username who made the attempt",
+                      "example": "john_doe"
+                    },
+                    "is_correct": {
+                      "type": "boolean",
+                      "description": "Whether the submitted answer was correct",
+                      "example": true
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "ISO 8601 UTC timestamp when answer was submitted",
+                      "example": "2025-11-11T14:30:45Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leaderboard",
+      "key": "leaderboard",
+      "operations": [
+        {
+          "id": "getLeaderboard",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/trivia/leaderboard",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "leaderboard"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "leaderboard": {
+                "type": "array",
+                "description": "Ranked list of top scorers",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "rank",
+                    "username",
+                    "score"
+                  ],
+                  "properties": {
+                    "rank": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Position on leaderboard (1-indexed)",
+                      "example": 1
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Username of leaderboard entry",
+                      "example": "john_doe"
+                    },
+                    "score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Cumulative score across all sessions",
+                      "example": 15
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Questions",
+      "key": "questions",
+      "operations": [
+        {
+          "id": "getCurrentQuestion",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/trivia/question",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "question",
+              "session_id",
+              "is_active"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "question": {
+                "type": "string",
+                "nullable": true,
+                "description": "Question text or null if no session exists",
+                "example": "What is the capital of France?"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "nullable": true,
+                "description": "UUID of current session",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "is_active": {
+                "type": "boolean",
+                "description": "Whether session is currently active",
+                "example": true
+              },
+              "correct_answer": {
+                "type": "string",
+                "nullable": true,
+                "description": "Correct answer only included if session has ended",
+                "example": "Paris"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Message if no session exists",
+                "example": "No active trivia session"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Session Management",
+      "key": "session-management",
+      "operations": [
+        {
+          "id": "endTriviaSession",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/trivia/session/end",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "message",
+              "correct_answer",
+              "successful_attempts"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "message": {
+                "type": "string",
+                "example": "Trivia session ended"
+              },
+              "correct_answer": {
+                "type": "string",
+                "description": "The correct answer now revealed",
+                "example": "Paris"
+              },
+              "successful_attempts": {
+                "type": "array",
+                "description": "List of usernames who answered correctly in this session",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "john_doe",
+                  "alice_smith"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "startTriviaSession",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/trivia/session/start",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question",
+              "correct_answer"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "The trivia question text",
+                "example": "What is the capital of France?"
+              },
+              "correct_answer": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 200,
+                "description": "The correct answer (case will be normalized to lowercase for matching)",
+                "example": "Paris"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "session_id",
+              "message",
+              "question"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "example": "success"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Unique identifier for the trivia session",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "message": {
+                "type": "string",
+                "example": "Trivia session started"
+              },
+              "question": {
+                "type": "string",
+                "description": "The question text for confirmation",
+                "example": "What is the capital of France?"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,727 @@
+{
+  "api": {
+    "title": "Inbox Zen Email Parsing MCP Server API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics",
+      "key": "analytics",
+      "operations": [
+        {
+          "id": "getAnalytics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/analytics",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "total_emails": {
+                    "type": "integer"
+                  },
+                  "timespan_days": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "urgency_distribution": {
+                "type": "object",
+                "properties": {
+                  "low": {
+                    "type": "integer"
+                  },
+                  "medium": {
+                    "type": "integer"
+                  },
+                  "high": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "sentiment_distribution": {
+                "type": "object",
+                "properties": {
+                  "positive": {
+                    "type": "integer"
+                  },
+                  "negative": {
+                    "type": "integer"
+                  },
+                  "neutral": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "time_series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "hourly_distribution": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                }
+              },
+              "top_keywords": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "keyword": {
+                      "type": "string"
+                    },
+                    "count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "avg_urgency_score": {
+                "type": "number"
+              },
+              "avg_sentiment_score": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "id": "getStats",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/stats",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "total_emails": {
+                "type": "integer"
+              },
+              "emails_today": {
+                "type": "integer"
+              },
+              "avg_processing_time": {
+                "type": "number",
+                "description": "Average processing time in seconds"
+              },
+              "server_uptime": {
+                "type": "number",
+                "description": "Server uptime in seconds"
+              },
+              "memory_usage": {
+                "type": "object",
+                "properties": {
+                  "used_mb": {
+                    "type": "number"
+                  },
+                  "total_mb": {
+                    "type": "number"
+                  }
+                }
+              },
+              "last_email_processed": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Emails",
+      "key": "emails",
+      "operations": [
+        {
+          "id": "getEmails",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/emails",
+          "queryParamCount": 5,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique email identifier"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "sender": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "received_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "urgency_level": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                          ]
+                        },
+                        "urgency_score": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "sentiment": {
+                          "type": "string",
+                          "enum": [
+                            "positive",
+                            "negative",
+                            "neutral"
+                          ]
+                        },
+                        "sentiment_score": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "keywords": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              },
+                              "confidence": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "number"
+                              },
+                              "deadline": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "pagination": {
+                "type": "object",
+                "properties": {
+                  "skip": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "has_more": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getRecentEmails",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/emails/recent",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique email identifier"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "sender": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "recipient": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "received_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "properties": {
+                        "urgency_level": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                          ]
+                        },
+                        "urgency_score": {
+                          "type": "number",
+                          "minimum": 0,
+                          "maximum": 100
+                        },
+                        "sentiment": {
+                          "type": "string",
+                          "enum": [
+                            "positive",
+                            "negative",
+                            "neutral"
+                          ]
+                        },
+                        "sentiment_score": {
+                          "type": "number",
+                          "minimum": -1,
+                          "maximum": 1
+                        },
+                        "keywords": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "entities": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "string"
+                              },
+                              "confidence": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "number"
+                              },
+                              "deadline": {
+                                "type": "string",
+                                "format": "date-time",
+                                "nullable": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "count": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getEmailById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/emails/{email_id}",
+          "identifierParam": "email_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique email identifier"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "sender": {
+                "type": "string",
+                "format": "email"
+              },
+              "recipient": {
+                "type": "string",
+                "format": "email"
+              },
+              "content": {
+                "type": "string"
+              },
+              "received_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "urgency_level": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "urgency_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "sentiment": {
+                    "type": "string",
+                    "enum": [
+                      "positive",
+                      "negative",
+                      "neutral"
+                    ]
+                  },
+                  "sentiment_score": {
+                    "type": "number",
+                    "minimum": -1,
+                    "maximum": 1
+                  },
+                  "keywords": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "entities": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        },
+                        "confidence": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "urgency": {
+                          "type": "number"
+                        },
+                        "deadline": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "searchEmails",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/search",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "email": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique email identifier"
+                        },
+                        "subject": {
+                          "type": "string"
+                        },
+                        "sender": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "recipient": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "content": {
+                          "type": "string"
+                        },
+                        "received_at": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "metadata": {
+                          "type": "object",
+                          "properties": {
+                            "urgency_level": {
+                              "type": "string",
+                              "enum": [
+                                "low",
+                                "medium",
+                                "high"
+                              ]
+                            },
+                            "urgency_score": {
+                              "type": "number",
+                              "minimum": 0,
+                              "maximum": 100
+                            },
+                            "sentiment": {
+                              "type": "string",
+                              "enum": [
+                                "positive",
+                                "negative",
+                                "neutral"
+                              ]
+                            },
+                            "sentiment_score": {
+                              "type": "number",
+                              "minimum": -1,
+                              "maximum": 1
+                            },
+                            "keywords": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            },
+                            "entities": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "value": {
+                                    "type": "string"
+                                  },
+                                  "confidence": {
+                                    "type": "number"
+                                  }
+                                }
+                              }
+                            },
+                            "tasks": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "description": {
+                                    "type": "string"
+                                  },
+                                  "urgency": {
+                                    "type": "number"
+                                  },
+                                  "deadline": {
+                                    "type": "string",
+                                    "format": "date-time",
+                                    "nullable": true
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "score": {
+                      "type": "number",
+                      "description": "Relevance score (0-1)"
+                    }
+                  }
+                }
+              },
+              "query": {
+                "type": "string"
+              },
+              "total_results": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "key": "webhooks",
+      "operations": [
+        {
+          "id": "postmarkWebhook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhooks/postmark",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "From": {
+                "type": "string",
+                "format": "email"
+              },
+              "To": {
+                "type": "string",
+                "format": "email"
+              },
+              "Subject": {
+                "type": "string"
+              },
+              "TextBody": {
+                "type": "string"
+              },
+              "HtmlBody": {
+                "type": "string"
+              },
+              "Date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "MessageID": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "processed"
+              },
+              "email_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

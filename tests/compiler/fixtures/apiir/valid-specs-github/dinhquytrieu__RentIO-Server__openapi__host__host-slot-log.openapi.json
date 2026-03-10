@@ -1,0 +1,599 @@
+{
+  "api": {
+    "title": "RentIO Host Slot Log API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Host Slot Logs",
+      "key": "host-slot-logs",
+      "operations": [
+        {
+          "id": "GET:/host/slot-log/contract/{contractId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/host/slot-log/contract/{contractId}",
+          "identifierParam": "contractId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "contractId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "subSpaceId": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "slotId": {
+                  "type": "integer"
+                },
+                "renterId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "hostId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "checkinTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "checkoutTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "CHECKED_IN",
+                    "CHECKED_OUT",
+                    "EXPIRED",
+                    "CANCELLED"
+                  ],
+                  "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "nullable": true
+                },
+                "createdDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lastUpdated": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedDate": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/host/slot-log/space/{spaceId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/host/slot-log/space/{spaceId}",
+          "identifierParam": "spaceId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "contractId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "subSpaceId": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "slotId": {
+                  "type": "integer"
+                },
+                "renterId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "hostId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "checkinTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "checkoutTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "CHECKED_IN",
+                    "CHECKED_OUT",
+                    "EXPIRED",
+                    "CANCELLED"
+                  ],
+                  "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "nullable": true
+                },
+                "createdDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lastUpdated": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedDate": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/host/slot-log/status/{slotLogId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/host/slot-log/status/{slotLogId}",
+          "identifierParam": "slotLogId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "CHECKED_IN",
+                  "CHECKED_OUT",
+                  "EXPIRED",
+                  "CANCELLED"
+                ],
+                "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+              },
+              "slotLog": {
+                "type": "object",
+                "properties": {
+                  "_id": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId"
+                  },
+                  "contractId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "subSpaceId": {
+                    "type": "string",
+                    "description": "MongoDB ObjectId"
+                  },
+                  "slotId": {
+                    "type": "integer"
+                  },
+                  "renterId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "hostId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "startTime": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "endTime": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "checkinTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "checkoutTime": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "PENDING",
+                      "CHECKED_IN",
+                      "CHECKED_OUT",
+                      "EXPIRED",
+                      "CANCELLED"
+                    ],
+                    "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+                  },
+                  "notes": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "metadata": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "nullable": true
+                  },
+                  "createdDate": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "lastUpdated": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "deletedDate": {
+                    "type": "string",
+                    "format": "date-time",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/host/slot-log/space-slot",
+          "method": "POST",
+          "kind": "create",
+          "path": "/host/slot-log/space-slot",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "contractId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "contractId"
+            ]
+          },
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "subSpaceId": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "slotId": {
+                  "type": "integer"
+                },
+                "slotName": {
+                  "type": "string"
+                },
+                "slotType": {
+                  "type": "string",
+                  "enum": [
+                    "STANDARD",
+                    "PREMIUM",
+                    "ECONOMY"
+                  ]
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "AVAILABLE",
+                    "OCCUPIED",
+                    "RESERVED",
+                    "MAINTENANCE"
+                  ]
+                },
+                "dimensions": {
+                  "type": "object",
+                  "properties": {
+                    "width": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "length": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "height": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "unit": {
+                      "type": "string",
+                      "enum": [
+                        "meters",
+                        "feet"
+                      ]
+                    }
+                  }
+                },
+                "features": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "maxWeight": {
+                  "type": "number",
+                  "format": "float",
+                  "nullable": true
+                },
+                "isActive": {
+                  "type": "boolean"
+                },
+                "createdDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lastUpdated": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedDate": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/host/slot-log/status",
+          "method": "POST",
+          "kind": "create",
+          "path": "/host/slot-log/status",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "contractId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "contractId"
+            ]
+          },
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "_id": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "contractId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "subSpaceId": {
+                  "type": "string",
+                  "description": "MongoDB ObjectId"
+                },
+                "slotId": {
+                  "type": "integer"
+                },
+                "renterId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "hostId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "startTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "endTime": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "checkinTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "checkoutTime": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "PENDING",
+                    "CHECKED_IN",
+                    "CHECKED_OUT",
+                    "EXPIRED",
+                    "CANCELLED"
+                  ],
+                  "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+                },
+                "notes": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "metadata": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "nullable": true
+                },
+                "createdDate": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "lastUpdated": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deletedDate": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/host/slot-log/update-status",
+          "method": "POST",
+          "kind": "create",
+          "path": "/host/slot-log/update-status",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "contractId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "contractId"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "_id": {
+                "type": "string",
+                "description": "MongoDB ObjectId"
+              },
+              "contractId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "subSpaceId": {
+                "type": "string",
+                "description": "MongoDB ObjectId"
+              },
+              "slotId": {
+                "type": "integer"
+              },
+              "renterId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "hostId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "startTime": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "endTime": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "checkinTime": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "checkoutTime": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "CHECKED_IN",
+                  "CHECKED_OUT",
+                  "EXPIRED",
+                  "CANCELLED"
+                ],
+                "description": "- PENDING: Booking created but not yet checked in\n- CHECKED_IN: Renter has checked in\n- CHECKED_OUT: Renter has checked out\n- EXPIRED: Booking period has passed without check-in\n- CANCELLED: Booking was cancelled\n"
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "createdDate": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "lastUpdated": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "deletedDate": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

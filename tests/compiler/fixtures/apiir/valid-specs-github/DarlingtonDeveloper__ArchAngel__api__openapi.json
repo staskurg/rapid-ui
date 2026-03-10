@@ -1,0 +1,758 @@
+{
+  "api": {
+    "title": "CodeHawk API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analysis",
+      "key": "analysis",
+      "operations": [
+        {
+          "id": "listAnalyses",
+          "method": "GET",
+          "kind": "list",
+          "path": "/analyses",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "analyses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "language": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "issue_count": {
+                      "type": "integer"
+                    },
+                    "suggestion_count": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getAnalysisById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/analysis/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Analysis ID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error",
+                  "pending"
+                ]
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language"
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for the analysis"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Issue description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "warning",
+                        "suggestion",
+                        "info"
+                      ]
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Suggestion description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "default": "suggestion"
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "analyzeCode",
+          "method": "POST",
+          "kind": "create",
+          "path": "/analyze",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "code",
+              "language"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Code to analyze"
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language"
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for the analysis"
+              },
+              "options": {
+                "type": "object",
+                "description": "Analysis options",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Analysis ID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error",
+                  "pending"
+                ]
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language"
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for the analysis"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Issue description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "warning",
+                        "suggestion",
+                        "info"
+                      ]
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Suggestion description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "default": "suggestion"
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Issues",
+      "key": "issues",
+      "operations": [
+        {
+          "id": "getIssuesForAnalysis",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/analysis/{id}/issues",
+          "identifierParam": "id",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Issue description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "warning",
+                        "suggestion",
+                        "info"
+                      ]
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Languages",
+      "key": "languages",
+      "operations": [
+        {
+          "id": "listLanguages",
+          "method": "GET",
+          "kind": "list",
+          "path": "/languages",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "languages": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getRulesForLanguage",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/rules/{language}",
+          "identifierParam": "language",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Rule name"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Rule description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "error",
+                        "warning",
+                        "suggestion",
+                        "info"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Organizations",
+      "key": "organizations",
+      "operations": [
+        {
+          "id": "listOrganizations",
+          "method": "GET",
+          "kind": "list",
+          "path": "/organizations",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "organizations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "api_key": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createOrganization",
+          "method": "POST",
+          "kind": "create",
+          "path": "/organizations",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Organization name"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "api_key": {
+                "type": "string"
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suggestions",
+      "key": "suggestions",
+      "operations": [
+        {
+          "id": "getSuggestionsForAnalysis",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/analysis/{id}/suggestions",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "integer",
+                      "description": "Line number"
+                    },
+                    "column": {
+                      "type": "integer",
+                      "description": "Column number"
+                    },
+                    "message": {
+                      "type": "string",
+                      "description": "Suggestion description"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "default": "suggestion"
+                    },
+                    "rule_id": {
+                      "type": "string",
+                      "description": "Rule identifier"
+                    },
+                    "context": {
+                      "type": "string",
+                      "description": "Code context"
+                    },
+                    "fix": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "replacement": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "listUsers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "users": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "organization_id": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "active": {
+                      "type": "boolean"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "key": "webhooks",
+      "operations": [
+        {
+          "id": "sendWebhookNotification",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhook/notify",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "analysis_id",
+              "event"
+            ],
+            "properties": {
+              "analysis_id": {
+                "type": "string"
+              },
+              "event": {
+                "type": "string",
+                "enum": [
+                  "analysis_completed",
+                  "issues_found",
+                  "suggestions_generated"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

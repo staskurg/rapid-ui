@@ -1,0 +1,513 @@
+{
+  "api": {
+    "title": "RRHH - APP",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Autenticación",
+      "key": "autenticacin",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/user/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "test.user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Bienvenido test.user@example.com"
+              },
+              "user": {
+                "type": "string",
+                "example": "test.user@example.com"
+              },
+              "role": {
+                "type": "string",
+                "example": "authenticated"
+              },
+              "token": {
+                "type": "string",
+                "description": "Token JWT para autenticar peticiones posteriores."
+              }
+            }
+          }
+        },
+        {
+          "id": "signupUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/user/signup",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "test.user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "password123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Bienvenido test.user@example.com"
+              },
+              "user": {
+                "type": "string",
+                "example": "test.user@example.com"
+              },
+              "role": {
+                "type": "string",
+                "example": "authenticated"
+              },
+              "token": {
+                "type": "string",
+                "description": "Token JWT para autenticar peticiones posteriores."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Empleados",
+      "key": "empleados",
+      "operations": [
+        {
+          "id": "getAllEmpleados",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/empleados/all",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "Identificador único del empleado.",
+                  "example": 1
+                },
+                "nombre": {
+                  "type": "string",
+                  "example": "Juan"
+                },
+                "apellido": {
+                  "type": "string",
+                  "example": "Perez"
+                },
+                "dni": {
+                  "type": "string",
+                  "example": "12345678"
+                },
+                "correoElectronico": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "juan.perez@example.com"
+                },
+                "puesto": {
+                  "type": "string",
+                  "example": "Desarrollador Backend"
+                },
+                "capacidades": {
+                  "type": "string",
+                  "description": "Lista de habilidades separadas por comas.",
+                  "example": "Node.js, SQL, Express"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getEmpleadoById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/empleados/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identificador único del empleado.",
+                "example": 1
+              },
+              "nombre": {
+                "type": "string",
+                "example": "Juan"
+              },
+              "apellido": {
+                "type": "string",
+                "example": "Perez"
+              },
+              "dni": {
+                "type": "string",
+                "example": "12345678"
+              },
+              "correoElectronico": {
+                "type": "string",
+                "format": "email",
+                "example": "juan.perez@example.com"
+              },
+              "puesto": {
+                "type": "string",
+                "example": "Desarrollador Backend"
+              },
+              "capacidades": {
+                "type": "string",
+                "description": "Lista de habilidades separadas por comas.",
+                "example": "Node.js, SQL, Express"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "createEmpleado",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/empleados/create",
+          "requestSchema": {
+            "type": "object",
+            "description": "Campos para crear o actualizar un empleado.",
+            "required": [
+              "nombre",
+              "apellido",
+              "dni",
+              "correoElectronico",
+              "puesto"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "apellido": {
+                "type": "string"
+              },
+              "dni": {
+                "type": "string"
+              },
+              "correoElectronico": {
+                "type": "string",
+                "format": "email"
+              },
+              "puesto": {
+                "type": "string"
+              },
+              "capacidades": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identificador único del empleado.",
+                "example": 1
+              },
+              "nombre": {
+                "type": "string",
+                "example": "Juan"
+              },
+              "apellido": {
+                "type": "string",
+                "example": "Perez"
+              },
+              "dni": {
+                "type": "string",
+                "example": "12345678"
+              },
+              "correoElectronico": {
+                "type": "string",
+                "format": "email",
+                "example": "juan.perez@example.com"
+              },
+              "puesto": {
+                "type": "string",
+                "example": "Desarrollador Backend"
+              },
+              "capacidades": {
+                "type": "string",
+                "description": "Lista de habilidades separadas por comas.",
+                "example": "Node.js, SQL, Express"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateEmpleado",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/empleados/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "description": "Campos para crear o actualizar un empleado.",
+            "required": [
+              "nombre",
+              "apellido",
+              "dni",
+              "correoElectronico",
+              "puesto"
+            ],
+            "properties": {
+              "nombre": {
+                "type": "string"
+              },
+              "apellido": {
+                "type": "string"
+              },
+              "dni": {
+                "type": "string"
+              },
+              "correoElectronico": {
+                "type": "string",
+                "format": "email"
+              },
+              "puesto": {
+                "type": "string"
+              },
+              "capacidades": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identificador único del empleado.",
+                "example": 1
+              },
+              "nombre": {
+                "type": "string",
+                "example": "Juan"
+              },
+              "apellido": {
+                "type": "string",
+                "example": "Perez"
+              },
+              "dni": {
+                "type": "string",
+                "example": "12345678"
+              },
+              "correoElectronico": {
+                "type": "string",
+                "format": "email",
+                "example": "juan.perez@example.com"
+              },
+              "puesto": {
+                "type": "string",
+                "example": "Desarrollador Backend"
+              },
+              "capacidades": {
+                "type": "string",
+                "description": "Lista de habilidades separadas por comas.",
+                "example": "Node.js, SQL, Express"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteEmpleado",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/empleados/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Empleado eliminado exitosamente"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reportes y Búsquedas",
+      "key": "reportes-y-bsquedas",
+      "operations": [
+        {
+          "id": "buscarPorCapacidad",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/empleados/buscar",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "Identificador único del empleado.",
+                  "example": 1
+                },
+                "nombre": {
+                  "type": "string",
+                  "example": "Juan"
+                },
+                "apellido": {
+                  "type": "string",
+                  "example": "Perez"
+                },
+                "dni": {
+                  "type": "string",
+                  "example": "12345678"
+                },
+                "correoElectronico": {
+                  "type": "string",
+                  "format": "email",
+                  "example": "juan.perez@example.com"
+                },
+                "puesto": {
+                  "type": "string",
+                  "example": "Desarrollador Backend"
+                },
+                "capacidades": {
+                  "type": "string",
+                  "description": "Lista de habilidades separadas por comas.",
+                  "example": "Node.js, SQL, Express"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getReporteCapacidades",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/empleados/reporte/capacidades",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reporteGenerado": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "totalCapacidadesUnicas": {
+                "type": "integer"
+              },
+              "distribucion": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "cantidad": {
+                      "type": "integer"
+                    },
+                    "empleados": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Status",
+      "key": "status",
+      "operations": [
+        {
+          "id": "getWelcomeMessage",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Bienvenido a la API de RRHH"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

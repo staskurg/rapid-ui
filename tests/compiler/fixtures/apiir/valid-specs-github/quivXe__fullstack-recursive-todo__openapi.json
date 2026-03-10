@@ -1,0 +1,469 @@
+{
+  "api": {
+    "title": "My API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Collaborations",
+      "key": "collaborations",
+      "operations": [
+        {
+          "id": "POST:/api/collaborations/create",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/collaborations/create",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "password"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "CollaborationName"
+              },
+              "password": {
+                "type": "string",
+                "description": "The password for the collaboration.",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the created collaboration.",
+                "example": "CollaborationName"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/collaborations/join",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/collaborations/join",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "password"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "CollaborationName"
+              },
+              "password": {
+                "type": "string",
+                "description": "The password for the collaboration.",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "The name of the collaboration the user joined.",
+                "example": "CollaborationName"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Operations",
+      "key": "operations",
+      "operations": [
+        {
+          "id": "POST:/api/operations/get",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/operations/get",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "collabName"
+            ],
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "CollaborationName"
+              },
+              "timestamp": {
+                "type": "integer",
+                "description": "An optional timestamp to filter operations performed after the given time.",
+                "example": 1609459200000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "collabName": {
+                  "type": "string",
+                  "description": "The name of the collaboration.",
+                  "example": "CollaborationName"
+                },
+                "operationType": {
+                  "type": "string",
+                  "description": "The type of operation.",
+                  "example": "add"
+                },
+                "details": {
+                  "type": "object",
+                  "description": "The details of the operation.",
+                  "example": {
+                    "taskId": 5,
+                    "parentId": 1
+                  }
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "The timestamp of the operation.",
+                  "example": "2024-11-12T12:34:56Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "The timestamp when the operation was last updated.",
+                  "example": "2024-11-12T12:34:56Z"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/operations/log",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/operations/log",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "collabName",
+              "operationType",
+              "details",
+              "operation_part",
+              "operation_max_part"
+            ],
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "CollaborationName"
+              },
+              "operationType": {
+                "type": "string",
+                "description": "The type of the operation. Valid values are 'add', 'update', 'delete', and 'init'.\n",
+                "example": "add"
+              },
+              "details": {
+                "type": "object",
+                "description": "Additional details about the operation.",
+                "example": {
+                  "taskId": 5,
+                  "parentId": 1
+                }
+              },
+              "operation_part": {
+                "type": "integer",
+                "description": "The part number of the operation if it's split into multiple parts.",
+                "example": 1
+              },
+              "operation_max_part": {
+                "type": "integer",
+                "description": "The maximum part number for the operation.",
+                "example": 3
+              },
+              "socket_id": {
+                "type": "string",
+                "description": "The socket ID to exclude from the pusher trigger.",
+                "example": "101010.101010"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "CollaborationName"
+              },
+              "operationType": {
+                "type": "string",
+                "description": "The type of the operation.",
+                "example": "add"
+              },
+              "details": {
+                "type": "object",
+                "description": "The details of the operation.",
+                "example": {
+                  "taskId": 5,
+                  "parentId": 1
+                }
+              },
+              "operation_part": {
+                "type": "integer",
+                "description": "The part number of the operation.",
+                "example": 1
+              },
+              "operation_max_part": {
+                "type": "integer",
+                "description": "The maximum part number of the operation.",
+                "example": 3
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the operation was created.",
+                "example": "2024-11-12T12:34:56Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "The timestamp when the operation was last updated.",
+                "example": "2024-11-12T12:34:56Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pusher",
+      "key": "pusher",
+      "operations": [
+        {
+          "id": "authorizeChannel",
+          "method": "POST",
+          "kind": "create",
+          "path": "/pusher/auth",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "socket_id": {
+                "type": "string",
+                "description": "The socket ID of the user attempting to connect to the channel."
+              },
+              "channel_name": {
+                "type": "string",
+                "description": "The name of the channel the user is trying to access."
+              },
+              "collabName": {
+                "type": "string",
+                "description": "The collaboration name the user is trying to access (optional, alternative to `channel_name`)."
+              }
+            },
+            "required": [
+              "socket_id",
+              "channel_name"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "auth": {
+                "type": "string",
+                "description": "The authorization token for the channel."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Version-controller",
+      "key": "version-controller",
+      "operations": [
+        {
+          "id": "POST:/api/version-controller/current-version",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/version-controller/current-version",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "project-alpha"
+              },
+              "socket_id": {
+                "type": "string",
+                "description": "The socket ID of the user making the request.",
+                "example": "abc123socketID"
+              }
+            },
+            "required": [
+              "collabName",
+              "socket_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "description": "Indicates whether a version provider is available.",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "description": "Informational message about the request status.",
+                "example": "Somone may provide current version"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/version-controller/provide",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/version-controller/provide",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "project-alpha"
+              },
+              "socket_id": {
+                "type": "string",
+                "description": "The socket ID of the user making the request.",
+                "example": "abc123socketID"
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "description": "The name of the task.",
+                      "example": "Implement UI updates"
+                    },
+                    "flexIndex": {
+                      "type": "integer",
+                      "description": "The flex position (order) of the task in its column.",
+                      "example": 2
+                    },
+                    "status": {
+                      "type": "integer",
+                      "description": "The status of the task, must match a value from TaskManager.TASK_STATUSES.",
+                      "example": 1
+                    },
+                    "parentId": {
+                      "type": "integer",
+                      "description": "The ID of the task’s parent task, if applicable.",
+                      "example": 1001
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Detailed description of the task.",
+                      "example": "This task includes updating the styles and layout for the main UI screen."
+                    },
+                    "collabName": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "The name of the collaboration (if any), defaults to null.",
+                      "example": "project-alpha"
+                    },
+                    "collabTaskId": {
+                      "type": "string",
+                      "description": "The UUID of the task in the collaboration.",
+                      "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                    },
+                    "id": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Task ID, auto-incremented.",
+                      "example": 42
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "flexIndex",
+                    "status",
+                    "parentId",
+                    "description"
+                  ]
+                }
+              },
+              "timestamp": {
+                "type": "integer",
+                "format": "int64",
+                "description": "The timestamp when the version was provided.",
+                "example": 1672531200
+              }
+            },
+            "required": [
+              "collabName",
+              "socket_id",
+              "tasks",
+              "timestamp"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/version-controller/provide/establish-connection",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/version-controller/provide/establish-connection",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "collabName": {
+                "type": "string",
+                "description": "The name of the collaboration.",
+                "example": "project-alpha"
+              },
+              "socket_id": {
+                "type": "string",
+                "description": "The socket ID of the user making the request.",
+                "example": "abc123socketID"
+              }
+            },
+            "required": [
+              "collabName",
+              "socket_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ok": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

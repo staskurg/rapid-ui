@@ -1,0 +1,517 @@
+{
+  "api": {
+    "title": "Account Service for Banking Micro-SOA System",
+    "version": "0.0.1-SNAPSHOT"
+  },
+  "resources": [
+    {
+      "name": "Transaction",
+      "key": "transaction",
+      "operations": [
+        {
+          "id": "depositMoney_1",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/transaction/deposit-money",
+          "requestSchema": {
+            "required": [
+              "amount",
+              "bankAccountId",
+              "description"
+            ],
+            "type": "object",
+            "properties": {
+              "bankAccountId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "xml": {
+              "name": "BalanceUpdateRequest"
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "amount",
+              "date",
+              "description",
+              "id",
+              "transactionCode",
+              "transactionType"
+            ],
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "transactionCode": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "transactionType": {
+                "type": "string",
+                "enum": [
+                  "DEPOSIT",
+                  "WITHDRAWAL",
+                  "TRANSFER",
+                  "BANCOMAT"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "bankAccountSender": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              },
+              "bankAccountReceiver": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              }
+            },
+            "xml": {
+              "name": "TransactionExecuteResponse"
+            }
+          }
+        },
+        {
+          "id": "executeAtmPayment_1",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/transaction/execute-atm-payment",
+          "requestSchema": {
+            "required": [
+              "amount",
+              "description",
+              "number"
+            ],
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "xml": {
+              "name": "BancomatTransactionRequest"
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "amount",
+              "bankAccountTransactionResponse",
+              "date",
+              "description",
+              "id",
+              "transactionCode"
+            ],
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "transactionCode": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "bankAccountTransactionResponse": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              }
+            },
+            "xml": {
+              "name": "BancomatTransactionRequest"
+            }
+          }
+        },
+        {
+          "id": "executeTransfer_1",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/transaction/execute-transfer",
+          "requestSchema": {
+            "required": [
+              "amount",
+              "description",
+              "receiverAccountTransferRequest",
+              "senderAccountTransferRequest"
+            ],
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "senderAccountTransferRequest": {
+                "required": [
+                  "iban",
+                  "name",
+                  "surname"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "surname": {
+                    "type": "string"
+                  },
+                  "iban": {
+                    "type": "string"
+                  }
+                },
+                "xml": {
+                  "name": "AccountTransferRequest"
+                }
+              },
+              "receiverAccountTransferRequest": {
+                "required": [
+                  "iban",
+                  "name",
+                  "surname"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "surname": {
+                    "type": "string"
+                  },
+                  "iban": {
+                    "type": "string"
+                  }
+                },
+                "xml": {
+                  "name": "AccountTransferRequest"
+                }
+              }
+            },
+            "xml": {
+              "name": "ExecuteTransferRequest"
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "amount",
+              "date",
+              "description",
+              "id",
+              "transactionCode",
+              "transactionType"
+            ],
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "transactionCode": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "transactionType": {
+                "type": "string",
+                "enum": [
+                  "DEPOSIT",
+                  "WITHDRAWAL",
+                  "TRANSFER",
+                  "BANCOMAT"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "bankAccountSender": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              },
+              "bankAccountReceiver": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              }
+            },
+            "xml": {
+              "name": "TransactionExecuteResponse"
+            }
+          }
+        },
+        {
+          "id": "withdrawMoney_1",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/transaction/withdraw-money",
+          "requestSchema": {
+            "required": [
+              "amount",
+              "bankAccountId",
+              "description"
+            ],
+            "type": "object",
+            "properties": {
+              "bankAccountId": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "xml": {
+              "name": "BalanceUpdateRequest"
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "amount",
+              "date",
+              "description",
+              "id",
+              "transactionCode",
+              "transactionType"
+            ],
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "transactionCode": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "description": {
+                "type": "string"
+              },
+              "transactionType": {
+                "type": "string",
+                "enum": [
+                  "DEPOSIT",
+                  "WITHDRAWAL",
+                  "TRANSFER",
+                  "BANCOMAT"
+                ]
+              },
+              "date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "bankAccountSender": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              },
+              "bankAccountReceiver": {
+                "required": [
+                  "accountId",
+                  "iban",
+                  "id"
+                ],
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "accountId": {
+                    "type": "integer",
+                    "format": "int64"
+                  },
+                  "iban": {
+                    "type": "string"
+                  },
+                  "balance": {
+                    "type": "number"
+                  }
+                },
+                "xml": {
+                  "name": "BankAccountTransactionResponse"
+                }
+              }
+            },
+            "xml": {
+              "name": "TransactionExecuteResponse"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

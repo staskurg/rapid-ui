@@ -1,0 +1,992 @@
+{
+  "api": {
+    "title": "任務管理系統 API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "系統",
+      "key": "resource",
+      "operations": [
+        {
+          "id": "GET:/api/projects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/projects",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Projects retrieved successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "projects": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "專案唯一識別碼",
+                          "example": "project123"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "專案名稱",
+                          "example": "任務管理系統開發"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "專案描述",
+                          "example": "開發一個完整的任務管理系統"
+                        },
+                        "ownerId": {
+                          "type": "string",
+                          "description": "專案擁有者 ID",
+                          "example": "user123"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "專案狀態",
+                          "enum": [
+                            "active",
+                            "completed",
+                            "cancelled"
+                          ],
+                          "example": "active"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "創建時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "更新時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "description",
+                        "ownerId",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "count": {
+                    "type": "integer",
+                    "example": 3
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/tasks",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Tasks retrieved successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "任務唯一識別碼",
+                          "example": "task123"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "任務標題",
+                          "example": "實作用戶登入功能"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "任務描述",
+                          "example": "開發用戶登入頁面並整合後端 API"
+                        },
+                        "projectId": {
+                          "type": "string",
+                          "description": "所屬專案 ID",
+                          "example": "project456"
+                        },
+                        "creatorId": {
+                          "type": "string",
+                          "description": "創建者 ID",
+                          "example": "user123"
+                        },
+                        "assigneeId": {
+                          "type": "string",
+                          "description": "分配對象 ID",
+                          "example": "user456"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "任務狀態",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                          ],
+                          "example": "pending"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "創建時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "更新時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "projectId",
+                        "creatorId",
+                        "assigneeId",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "count": {
+                    "type": "integer",
+                    "example": 5
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/tasks/query",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/tasks/query",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "任務唯一識別碼",
+                          "example": "task123"
+                        },
+                        "title": {
+                          "type": "string",
+                          "description": "任務標題",
+                          "example": "實作用戶登入功能"
+                        },
+                        "description": {
+                          "type": "string",
+                          "description": "任務描述",
+                          "example": "開發用戶登入頁面並整合後端 API"
+                        },
+                        "projectId": {
+                          "type": "string",
+                          "description": "所屬專案 ID",
+                          "example": "project456"
+                        },
+                        "creatorId": {
+                          "type": "string",
+                          "description": "創建者 ID",
+                          "example": "user123"
+                        },
+                        "assigneeId": {
+                          "type": "string",
+                          "description": "分配對象 ID",
+                          "example": "user456"
+                        },
+                        "status": {
+                          "type": "string",
+                          "description": "任務狀態",
+                          "enum": [
+                            "pending",
+                            "in_progress",
+                            "completed",
+                            "cancelled"
+                          ],
+                          "example": "pending"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "創建時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "更新時間",
+                          "example": "2025-07-14T12:00:00.000Z"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "title",
+                        "description",
+                        "projectId",
+                        "creatorId",
+                        "assigneeId",
+                        "status",
+                        "createdAt",
+                        "updatedAt"
+                      ]
+                    }
+                  },
+                  "statistics": {
+                    "type": "object",
+                    "properties": {
+                      "totalCount": {
+                        "type": "integer",
+                        "example": 10
+                      },
+                      "pendingCount": {
+                        "type": "integer",
+                        "example": 3
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2025-07-14T12:00:00.000Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/projects/{projectId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/projects/{projectId}",
+          "identifierParam": "projectId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Project retrieved successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "專案唯一識別碼",
+                    "example": "project123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "專案名稱",
+                    "example": "任務管理系統開發"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "專案描述",
+                    "example": "開發一個完整的任務管理系統"
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "description": "專案擁有者 ID",
+                    "example": "user123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "專案狀態",
+                    "enum": [
+                      "active",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "example": "active"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "創建時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "ownerId",
+                  "status",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/projects",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/projects",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "專案名稱",
+                "example": "任務管理系統開發",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "description": "專案描述",
+                "example": "開發一個完整的任務管理系統",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "ownerId": {
+                "type": "string",
+                "description": "專案擁有者 ID",
+                "example": "user123"
+              }
+            },
+            "required": [
+              "name",
+              "description",
+              "ownerId"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Project created successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "專案唯一識別碼",
+                    "example": "project123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "專案名稱",
+                    "example": "任務管理系統開發"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "專案描述",
+                    "example": "開發一個完整的任務管理系統"
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "description": "專案擁有者 ID",
+                    "example": "user123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "專案狀態",
+                    "enum": [
+                      "active",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "example": "active"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "創建時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "ownerId",
+                  "status",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/tasks",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "任務標題",
+                "example": "實作用戶登入功能",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "description": "任務描述",
+                "example": "開發用戶登入頁面並整合後端 API",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "projectId": {
+                "type": "string",
+                "description": "所屬專案 ID",
+                "example": "project456"
+              },
+              "creatorId": {
+                "type": "string",
+                "description": "創建者 ID",
+                "example": "user123"
+              }
+            },
+            "required": [
+              "title",
+              "description",
+              "projectId",
+              "creatorId"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "任務唯一識別碼",
+                    "example": "task123"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "任務標題",
+                    "example": "實作用戶登入功能"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "任務描述",
+                    "example": "開發用戶登入頁面並整合後端 API"
+                  },
+                  "projectId": {
+                    "type": "string",
+                    "description": "所屬專案 ID",
+                    "example": "project456"
+                  },
+                  "creatorId": {
+                    "type": "string",
+                    "description": "創建者 ID",
+                    "example": "user123"
+                  },
+                  "assigneeId": {
+                    "type": "string",
+                    "description": "分配對象 ID",
+                    "example": "user456"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "任務狀態",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "example": "pending"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "創建時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "description",
+                  "projectId",
+                  "creatorId",
+                  "assigneeId",
+                  "status",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/tasks/batch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/tasks/batch",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "operation": {
+                "type": "string",
+                "enum": [
+                  "update_status",
+                  "delete",
+                  "assign"
+                ],
+                "example": "update_status"
+              },
+              "taskIds": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "task1",
+                  "task2"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "example": "completed"
+                  },
+                  "assigneeId": {
+                    "type": "string",
+                    "example": "user456"
+                  }
+                }
+              },
+              "userId": {
+                "type": "string",
+                "example": "user123"
+              }
+            },
+            "required": [
+              "operation",
+              "taskIds",
+              "userId"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "updatedCount": {
+                "type": "integer",
+                "example": 2
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/projects/{projectId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/projects/{projectId}",
+          "identifierParam": "projectId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "專案名稱",
+                "example": "任務管理系統開發（已更新）",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "description": "專案描述",
+                "example": "開發一個完整的任務管理系統，增加更多功能",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "status": {
+                "type": "string",
+                "description": "專案狀態",
+                "enum": [
+                  "active",
+                  "completed",
+                  "cancelled"
+                ],
+                "example": "completed"
+              },
+              "updatedBy": {
+                "type": "string",
+                "description": "執行更新操作的用戶 ID",
+                "example": "user123"
+              }
+            },
+            "required": [
+              "updatedBy"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Project updated successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "專案唯一識別碼",
+                    "example": "project123"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "專案名稱",
+                    "example": "任務管理系統開發"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "專案描述",
+                    "example": "開發一個完整的任務管理系統"
+                  },
+                  "ownerId": {
+                    "type": "string",
+                    "description": "專案擁有者 ID",
+                    "example": "user123"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "專案狀態",
+                    "enum": [
+                      "active",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "example": "active"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "創建時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "description",
+                  "ownerId",
+                  "status",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/tasks/{taskId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "任務標題",
+                "example": "實作用戶登入功能（已更新）",
+                "minLength": 1,
+                "maxLength": 100
+              },
+              "description": {
+                "type": "string",
+                "description": "任務描述",
+                "example": "開發用戶登入頁面並整合後端 API，增加雙因素認證",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "updatedBy": {
+                "type": "string",
+                "description": "執行更新操作的用戶 ID",
+                "example": "user123"
+              }
+            },
+            "required": [
+              "updatedBy"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "任務唯一識別碼",
+                    "example": "task123"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "任務標題",
+                    "example": "實作用戶登入功能"
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "任務描述",
+                    "example": "開發用戶登入頁面並整合後端 API"
+                  },
+                  "projectId": {
+                    "type": "string",
+                    "description": "所屬專案 ID",
+                    "example": "project456"
+                  },
+                  "creatorId": {
+                    "type": "string",
+                    "description": "創建者 ID",
+                    "example": "user123"
+                  },
+                  "assigneeId": {
+                    "type": "string",
+                    "description": "分配對象 ID",
+                    "example": "user456"
+                  },
+                  "status": {
+                    "type": "string",
+                    "description": "任務狀態",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "example": "pending"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "創建時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新時間",
+                    "example": "2025-07-14T12:00:00.000Z"
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "description",
+                  "projectId",
+                  "creatorId",
+                  "assigneeId",
+                  "status",
+                  "createdAt",
+                  "updatedAt"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/projects/{projectId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/projects/{projectId}",
+          "identifierParam": "projectId",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Project deleted successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "projectId": {
+                    "type": "string",
+                    "example": "project123"
+                  },
+                  "deleted": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/tasks/{taskId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Task deleted successfully"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "taskId": {
+                    "type": "string",
+                    "example": "task123"
+                  },
+                  "deleted": {
+                    "type": "boolean",
+                    "example": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

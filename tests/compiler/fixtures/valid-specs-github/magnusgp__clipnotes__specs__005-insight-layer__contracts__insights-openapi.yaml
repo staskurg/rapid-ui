@@ -1,0 +1,253 @@
+openapi: 3.0.3
+info:
+  title: ClipNotes Insights API (Draft)
+  version: 0.1.0
+paths:
+  /api/insights:
+    get:
+      summary: Retrieve the aggregated insight snapshot for a rolling window.
+      operationId: getInsights
+      parameters:
+        - in: query
+          name: window
+          schema:
+            type: string
+            enum: ["24h", "7d"]
+          required: false
+          description: Defaults to `24h` when omitted.
+      responses:
+        '200':
+          description: Insight payload for the requested window.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightResponse'
+        '400':
+          description: Invalid window parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/insights/regenerate:
+    post:
+      summary: Bust the cache and regenerate an insight snapshot.
+      operationId: regenerateInsights
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightRegenerateRequest'
+      responses:
+        '200':
+          description: Freshly generated insight snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightResponse'
+        '400':
+          description: Validation error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/insights/share:
+    post:
+      summary: Create a shareable token for the latest cached insight payload.
+      operationId: createInsightShare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InsightShareRequest'
+      responses:
+        '200':
+          description: Share link metadata.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightShareResponse'
+        '400':
+          description: Invalid request payload.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: Share service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+  /api/insights/share/{token}:
+    get:
+      summary: Fetch the latest insight payload referenced by a share token.
+      operationId: getInsightShare
+      parameters:
+        - in: path
+          name: token
+          required: true
+          schema:
+            type: string
+          description: Unhashed share token value.
+        - in: query
+          name: window
+          schema:
+            type: string
+            enum: ["24h", "7d"]
+          required: false
+          description: Optional override for tokens created under a specific window; must match stored window when provided.
+      responses:
+        '200':
+          description: Read-only insight snapshot.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InsightResponse'
+        '400':
+          description: Invalid window parameter.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '404':
+          description: Unknown or expired share token.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: Share service unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+
+components:
+  schemas:
+    InsightResponse:
+      type: object
+      required: [window, generated_at, summary, summary_source, severity_totals, series]
+      properties:
+        window:
+          type: string
+          enum: ["24h", "7d"]
+        generated_at:
+          type: string
+          format: date-time
+        summary:
+          type: string
+        summary_source:
+          type: string
+          enum: ["hafnia", "fallback"]
+        severity_totals:
+          $ref: '#/components/schemas/InsightSeverityTotals'
+        series:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsightSeriesBucket'
+        top_labels:
+          type: array
+          items:
+            $ref: '#/components/schemas/InsightTopLabel'
+        delta:
+          type: object
+          additionalProperties: true
+          nullable: true
+        cache_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+    InsightSeverityTotals:
+      type: object
+      required: [low, medium, high]
+      properties:
+        low:
+          type: integer
+          minimum: 0
+        medium:
+          type: integer
+          minimum: 0
+        high:
+          type: integer
+          minimum: 0
+    InsightSeriesBucket:
+      type: object
+      required: [bucket_start, total, severity]
+      properties:
+        bucket_start:
+          type: string
+          format: date-time
+        total:
+          type: integer
+          minimum: 0
+        severity:
+          $ref: '#/components/schemas/InsightSeverityTotals'
+    InsightTopLabel:
+      type: object
+      required: [label, count]
+      properties:
+        label:
+          type: string
+          maxLength: 80
+        count:
+          type: integer
+          minimum: 0
+        avg_severity:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 2
+          nullable: true
+    InsightRegenerateRequest:
+      type: object
+      required: [window]
+      properties:
+        window:
+          type: string
+          enum: ["24h", "7d"]
+    InsightShareRequest:
+      type: object
+      required: [window]
+      properties:
+        window:
+          type: string
+          enum: ["24h", "7d"]
+    InsightShareResponse:
+      type: object
+      required: [token, url, window]
+      properties:
+        token:
+          type: string
+        url:
+          type: string
+          format: uri
+        window:
+          type: string
+          enum: ["24h", "7d"]
+        generated_at:
+          type: string
+          format: date-time
+        cache_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+    StandardError:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            detail:
+              type: string
+              nullable: true
+            remediation:
+              type: string
+              nullable: true

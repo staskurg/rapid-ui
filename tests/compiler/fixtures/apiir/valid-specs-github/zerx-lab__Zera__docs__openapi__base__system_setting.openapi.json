@@ -1,0 +1,477 @@
+{
+  "api": {
+    "title": "base",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "base.SystemSettingService",
+      "key": "basesystemsettingservice",
+      "operations": [
+        {
+          "id": "base.SystemSettingService.GetPublicSettings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.SystemSettingService/GetPublicSettings",
+          "requestSchema": {
+            "type": "object",
+            "title": "GetPublicSettingsRequest",
+            "additionalProperties": false,
+            "description": "获取公开设置请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "siteName": {
+                "type": "string",
+                "title": "site_name",
+                "description": "站点名称"
+              },
+              "siteDescription": {
+                "type": "string",
+                "title": "site_description",
+                "description": "站点描述"
+              },
+              "enableRegistration": {
+                "type": "boolean",
+                "title": "enable_registration",
+                "description": "是否启用注册"
+              },
+              "maintenanceMode": {
+                "type": "boolean",
+                "title": "maintenance_mode",
+                "description": "是否处于维护模式"
+              },
+              "siteLogoUrl": {
+                "type": "string",
+                "title": "site_logo_url",
+                "description": "Logo 访问 URL"
+              }
+            },
+            "title": "GetPublicSettingsResponse",
+            "additionalProperties": false,
+            "description": "获取公开设置响应"
+          }
+        },
+        {
+          "id": "base.SystemSettingService.GetSystemSettings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.SystemSettingService/GetSystemSettings",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "group": {
+                "type": "string",
+                "title": "group",
+                "description": "可选：指定分组筛选"
+              }
+            },
+            "title": "GetSystemSettingsRequest",
+            "additionalProperties": false,
+            "description": "获取系统设置请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "general": {
+                    "type": "object",
+                    "properties": {
+                      "siteName": {
+                        "type": "string",
+                        "title": "site_name",
+                        "description": "站点名称"
+                      },
+                      "siteDescription": {
+                        "type": "string",
+                        "title": "site_description",
+                        "description": "站点描述"
+                      },
+                      "siteLogoType": {
+                        "type": "string",
+                        "title": "site_logo_type",
+                        "description": "Logo 类型: \"default\" | \"custom\""
+                      },
+                      "siteLogoUrl": {
+                        "type": "string",
+                        "title": "site_logo_url",
+                        "description": "Logo 访问 URL（完整路径）"
+                      }
+                    },
+                    "title": "GeneralSettings",
+                    "additionalProperties": false,
+                    "description": "通用设置"
+                  },
+                  "features": {
+                    "type": "object",
+                    "properties": {
+                      "enableRegistration": {
+                        "type": "boolean",
+                        "title": "enable_registration",
+                        "description": "启用注册"
+                      },
+                      "maintenanceMode": {
+                        "type": "boolean",
+                        "title": "maintenance_mode",
+                        "description": "维护模式"
+                      },
+                      "defaultRegisterRole": {
+                        "type": "string",
+                        "title": "default_register_role",
+                        "description": "默认注册角色代码"
+                      }
+                    },
+                    "title": "FeatureSettings",
+                    "additionalProperties": false,
+                    "description": "功能开关设置"
+                  },
+                  "security": {
+                    "type": "object",
+                    "properties": {
+                      "maxLoginAttempts": {
+                        "type": "integer",
+                        "title": "max_login_attempts",
+                        "format": "int32",
+                        "description": "最大登录尝试次数"
+                      },
+                      "lockoutDuration": {
+                        "type": "integer",
+                        "title": "lockout_duration",
+                        "format": "int32",
+                        "description": "账号锁定时长（分钟）"
+                      },
+                      "sessionTimeout": {
+                        "type": "integer",
+                        "title": "session_timeout",
+                        "format": "int32",
+                        "description": "会话超时时间（分钟）"
+                      },
+                      "passwordMinLength": {
+                        "type": "integer",
+                        "title": "password_min_length",
+                        "format": "int32",
+                        "description": "密码最小长度"
+                      },
+                      "passwordRequireUppercase": {
+                        "type": "boolean",
+                        "title": "password_require_uppercase",
+                        "description": "要求包含大写字母"
+                      },
+                      "passwordRequireNumber": {
+                        "type": "boolean",
+                        "title": "password_require_number",
+                        "description": "要求包含数字"
+                      },
+                      "passwordRequireSpecial": {
+                        "type": "boolean",
+                        "title": "password_require_special",
+                        "description": "要求包含特殊字符"
+                      }
+                    },
+                    "title": "SecuritySettings",
+                    "additionalProperties": false,
+                    "description": "安全设置"
+                  }
+                },
+                "title": "SystemSettings",
+                "additionalProperties": false,
+                "description": "完整系统设置"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string",
+                      "title": "key",
+                      "description": "配置键名"
+                    },
+                    "value": {
+                      "type": "string",
+                      "title": "value",
+                      "description": "配置值"
+                    },
+                    "type": {
+                      "type": "string",
+                      "title": "type",
+                      "description": "值类型: string, bool, int, json"
+                    },
+                    "group": {
+                      "type": "string",
+                      "title": "group",
+                      "description": "配置分组: general, security, feature"
+                    },
+                    "description": {
+                      "type": "string",
+                      "title": "description",
+                      "description": "配置描述"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "title": "updated_at",
+                      "description": "更新时间"
+                    }
+                  },
+                  "title": "SystemSettingItem",
+                  "additionalProperties": false,
+                  "description": "系统设置项"
+                },
+                "title": "items",
+                "description": "原始设置列表（用于调试或高级用途）"
+              }
+            },
+            "title": "GetSystemSettingsResponse",
+            "additionalProperties": false,
+            "description": "获取系统设置响应"
+          }
+        },
+        {
+          "id": "base.SystemSettingService.UpdateSystemSettings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.SystemSettingService/UpdateSystemSettings",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "general": {
+                    "type": "object",
+                    "properties": {
+                      "siteName": {
+                        "type": "string",
+                        "title": "site_name",
+                        "description": "站点名称"
+                      },
+                      "siteDescription": {
+                        "type": "string",
+                        "title": "site_description",
+                        "description": "站点描述"
+                      },
+                      "siteLogoType": {
+                        "type": "string",
+                        "title": "site_logo_type",
+                        "description": "Logo 类型: \"default\" | \"custom\""
+                      },
+                      "siteLogoUrl": {
+                        "type": "string",
+                        "title": "site_logo_url",
+                        "description": "Logo 访问 URL（完整路径）"
+                      }
+                    },
+                    "title": "GeneralSettings",
+                    "additionalProperties": false,
+                    "description": "通用设置"
+                  },
+                  "features": {
+                    "type": "object",
+                    "properties": {
+                      "enableRegistration": {
+                        "type": "boolean",
+                        "title": "enable_registration",
+                        "description": "启用注册"
+                      },
+                      "maintenanceMode": {
+                        "type": "boolean",
+                        "title": "maintenance_mode",
+                        "description": "维护模式"
+                      },
+                      "defaultRegisterRole": {
+                        "type": "string",
+                        "title": "default_register_role",
+                        "description": "默认注册角色代码"
+                      }
+                    },
+                    "title": "FeatureSettings",
+                    "additionalProperties": false,
+                    "description": "功能开关设置"
+                  },
+                  "security": {
+                    "type": "object",
+                    "properties": {
+                      "maxLoginAttempts": {
+                        "type": "integer",
+                        "title": "max_login_attempts",
+                        "format": "int32",
+                        "description": "最大登录尝试次数"
+                      },
+                      "lockoutDuration": {
+                        "type": "integer",
+                        "title": "lockout_duration",
+                        "format": "int32",
+                        "description": "账号锁定时长（分钟）"
+                      },
+                      "sessionTimeout": {
+                        "type": "integer",
+                        "title": "session_timeout",
+                        "format": "int32",
+                        "description": "会话超时时间（分钟）"
+                      },
+                      "passwordMinLength": {
+                        "type": "integer",
+                        "title": "password_min_length",
+                        "format": "int32",
+                        "description": "密码最小长度"
+                      },
+                      "passwordRequireUppercase": {
+                        "type": "boolean",
+                        "title": "password_require_uppercase",
+                        "description": "要求包含大写字母"
+                      },
+                      "passwordRequireNumber": {
+                        "type": "boolean",
+                        "title": "password_require_number",
+                        "description": "要求包含数字"
+                      },
+                      "passwordRequireSpecial": {
+                        "type": "boolean",
+                        "title": "password_require_special",
+                        "description": "要求包含特殊字符"
+                      }
+                    },
+                    "title": "SecuritySettings",
+                    "additionalProperties": false,
+                    "description": "安全设置"
+                  }
+                },
+                "title": "SystemSettings",
+                "additionalProperties": false,
+                "description": "完整系统设置"
+              }
+            },
+            "title": "UpdateSystemSettingsRequest",
+            "required": [
+              "settings"
+            ],
+            "additionalProperties": false,
+            "description": "更新系统设置请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "title": "success",
+                "description": "是否成功"
+              },
+              "settings": {
+                "type": "object",
+                "properties": {
+                  "general": {
+                    "type": "object",
+                    "properties": {
+                      "siteName": {
+                        "type": "string",
+                        "title": "site_name",
+                        "description": "站点名称"
+                      },
+                      "siteDescription": {
+                        "type": "string",
+                        "title": "site_description",
+                        "description": "站点描述"
+                      },
+                      "siteLogoType": {
+                        "type": "string",
+                        "title": "site_logo_type",
+                        "description": "Logo 类型: \"default\" | \"custom\""
+                      },
+                      "siteLogoUrl": {
+                        "type": "string",
+                        "title": "site_logo_url",
+                        "description": "Logo 访问 URL（完整路径）"
+                      }
+                    },
+                    "title": "GeneralSettings",
+                    "additionalProperties": false,
+                    "description": "通用设置"
+                  },
+                  "features": {
+                    "type": "object",
+                    "properties": {
+                      "enableRegistration": {
+                        "type": "boolean",
+                        "title": "enable_registration",
+                        "description": "启用注册"
+                      },
+                      "maintenanceMode": {
+                        "type": "boolean",
+                        "title": "maintenance_mode",
+                        "description": "维护模式"
+                      },
+                      "defaultRegisterRole": {
+                        "type": "string",
+                        "title": "default_register_role",
+                        "description": "默认注册角色代码"
+                      }
+                    },
+                    "title": "FeatureSettings",
+                    "additionalProperties": false,
+                    "description": "功能开关设置"
+                  },
+                  "security": {
+                    "type": "object",
+                    "properties": {
+                      "maxLoginAttempts": {
+                        "type": "integer",
+                        "title": "max_login_attempts",
+                        "format": "int32",
+                        "description": "最大登录尝试次数"
+                      },
+                      "lockoutDuration": {
+                        "type": "integer",
+                        "title": "lockout_duration",
+                        "format": "int32",
+                        "description": "账号锁定时长（分钟）"
+                      },
+                      "sessionTimeout": {
+                        "type": "integer",
+                        "title": "session_timeout",
+                        "format": "int32",
+                        "description": "会话超时时间（分钟）"
+                      },
+                      "passwordMinLength": {
+                        "type": "integer",
+                        "title": "password_min_length",
+                        "format": "int32",
+                        "description": "密码最小长度"
+                      },
+                      "passwordRequireUppercase": {
+                        "type": "boolean",
+                        "title": "password_require_uppercase",
+                        "description": "要求包含大写字母"
+                      },
+                      "passwordRequireNumber": {
+                        "type": "boolean",
+                        "title": "password_require_number",
+                        "description": "要求包含数字"
+                      },
+                      "passwordRequireSpecial": {
+                        "type": "boolean",
+                        "title": "password_require_special",
+                        "description": "要求包含特殊字符"
+                      }
+                    },
+                    "title": "SecuritySettings",
+                    "additionalProperties": false,
+                    "description": "安全设置"
+                  }
+                },
+                "title": "SystemSettings",
+                "additionalProperties": false,
+                "description": "完整系统设置"
+              }
+            },
+            "title": "UpdateSystemSettingsResponse",
+            "additionalProperties": false,
+            "description": "更新系统设置响应"
+          }
+        }
+      ]
+    }
+  ]
+}

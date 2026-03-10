@@ -1,0 +1,585 @@
+openapi: 3.0.3
+info:
+  title: Odynn Multi-Tenant Travel Platform API
+  description: |
+    A multi-tenant travel search platform supporting flights and hotel search
+    with tenant-specific configurations, policies, and UX customization.
+    
+    ## Authentication
+    All requests require the `X-Tenant-Id` header to identify the tenant context.
+    
+    ## Tenant Behavior
+    Each tenant has:
+    - Enabled verticals (flights, stays)
+    - Search defaults (cabin class, sort order, filters)
+    - Business policies (preferred airlines, price caps)
+    - UX hints for frontend rendering
+  version: 1.0.0
+  contact:
+    name: Odynn Engineering
+    
+servers:
+  - url: http://localhost:5050/api
+    description: Local development server
+
+tags:
+  - name: Config
+    description: Tenant configuration endpoints
+  - name: Flights
+    description: Flight search operations
+  - name: Stays
+    description: Hotel/accommodation search operations
+
+paths:
+  /config:
+    get:
+      tags:
+        - Config
+      summary: Get tenant configuration
+      description: |
+        Returns the full tenant configuration including enabled verticals,
+        search defaults, policies, and UX hints for frontend rendering.
+      operationId: getConfig
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Tenant configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigResponse'
+              example:
+                tenant:
+                  id: saver-trips
+                  name: SaverTrips
+                  enabledVerticals:
+                    - flights
+                  flightDefaults:
+                    cabinClass: economy
+                    maxResults: 20
+                    sortOrder: price_asc
+                  uxHints:
+                    brandName: SaverTrips
+                    primaryColor: "#10B981"
+                    layout: cards
+                    priceEmphasis: high
+                locations:
+                  - id: nyc
+                    name: New York City
+                    lat: 40.7128
+                    lon: -74.006
+        '400':
+          $ref: '#/components/responses/MissingTenantId'
+        '404':
+          $ref: '#/components/responses/TenantNotFound'
+
+  /flights/search:
+    post:
+      tags:
+        - Flights
+      summary: Search for flights
+      description: |
+        Search for flight offers using Duffel API. Tenant-specific defaults
+        are applied (cabin class, max results, sorting). Each result includes
+        policy evaluation (compliance, violations, promotions).
+      operationId: searchFlights
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FlightSearchRequest'
+            example:
+              origin: JFK
+              destination: LAX
+              departureDate: "2025-01-15"
+              returnDate: "2025-01-22"
+              passengers: 2
+              cabinClass: business
+      responses:
+        '200':
+          description: Flight search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlightSearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/VerticalDisabled'
+        '404':
+          $ref: '#/components/responses/TenantNotFound'
+        '500':
+          $ref: '#/components/responses/ProviderError'
+
+  /stays/search:
+    post:
+      tags:
+        - Stays
+      summary: Search for hotels/accommodations
+      description: |
+        Search for hotel accommodations using Duffel Stays API. Tenant-specific
+        defaults are applied (min star rating, price filters, sorting). Each
+        result includes policy evaluation.
+      operationId: searchStays
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaySearchRequest'
+            example:
+              locationId: nyc
+              checkInDate: "2025-01-15"
+              checkOutDate: "2025-01-18"
+              guests: 2
+              rooms: 1
+      responses:
+        '200':
+          description: Stay search results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaySearchResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '403':
+          $ref: '#/components/responses/VerticalDisabled'
+        '404':
+          $ref: '#/components/responses/TenantNotFound'
+        '500':
+          $ref: '#/components/responses/ProviderError'
+
+components:
+  parameters:
+    TenantId:
+      name: X-Tenant-Id
+      in: header
+      required: true
+      description: Unique tenant identifier
+      schema:
+        type: string
+        enum:
+          - saver-trips
+          - apex-reserve
+          - globex-systems
+      example: saver-trips
+
+  schemas:
+    ConfigResponse:
+      type: object
+      required:
+        - tenant
+        - locations
+      properties:
+        tenant:
+          $ref: '#/components/schemas/TenantConfig'
+        locations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Location'
+
+    TenantConfig:
+      type: object
+      required:
+        - id
+        - name
+        - enabledVerticals
+        - flightDefaults
+        - uxHints
+      properties:
+        id:
+          type: string
+          description: Unique tenant identifier
+        name:
+          type: string
+          description: Display name
+        enabledVerticals:
+          type: array
+          items:
+            type: string
+            enum: [flights, stays]
+          description: Which travel verticals are enabled
+        flightDefaults:
+          $ref: '#/components/schemas/FlightDefaults'
+        stayDefaults:
+          $ref: '#/components/schemas/StayDefaults'
+        uxHints:
+          $ref: '#/components/schemas/UxHints'
+
+    FlightDefaults:
+      type: object
+      properties:
+        cabinClass:
+          type: string
+          enum: [economy, premium_economy, business, first]
+          description: Default cabin class for searches
+        maxResults:
+          type: integer
+          description: Maximum number of results to return
+        sortOrder:
+          type: string
+          enum: [price_asc, price_desc, duration_asc]
+          description: Default sort order
+        preferredAirlines:
+          type: array
+          items:
+            type: string
+          description: IATA codes of preferred airlines
+
+    StayDefaults:
+      type: object
+      properties:
+        minStarRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Minimum hotel star rating filter
+        maxNightlyPrice:
+          type: number
+          description: Maximum nightly price filter
+        sortOrder:
+          type: string
+          enum: [price_asc, price_desc, rating_desc]
+          description: Default sort order
+
+    UxHints:
+      type: object
+      description: Frontend rendering hints
+      properties:
+        brandName:
+          type: string
+          description: Brand name to display in header
+        primaryColor:
+          type: string
+          description: Primary brand color (hex)
+        layout:
+          type: string
+          enum: [cards, table]
+          description: Layout style for search results
+        priceEmphasis:
+          type: string
+          enum: [high, medium, low]
+          description: How prominently to display prices
+        showPolicyCompliance:
+          type: boolean
+          description: Whether to show policy warnings
+        highlightPreferred:
+          type: boolean
+          description: Whether to highlight preferred options
+
+    Location:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        lat:
+          type: number
+        lon:
+          type: number
+
+    FlightSearchRequest:
+      type: object
+      required:
+        - origin
+        - destination
+        - departureDate
+        - passengers
+      properties:
+        origin:
+          type: string
+          description: Origin airport IATA code
+          example: JFK
+        destination:
+          type: string
+          description: Destination airport IATA code
+          example: LAX
+        departureDate:
+          type: string
+          format: date
+          description: Departure date (YYYY-MM-DD)
+        returnDate:
+          type: string
+          format: date
+          description: Return date for round-trip (optional)
+        passengers:
+          type: integer
+          minimum: 1
+          maximum: 9
+          description: Number of passengers
+        cabinClass:
+          type: string
+          enum: [economy, premium_economy, business, first]
+          description: Cabin class (uses tenant default if omitted)
+
+    FlightSearchResponse:
+      type: object
+      properties:
+        requestId:
+          type: string
+          description: Duffel request ID
+        offers:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlightOffer'
+        metadata:
+          type: object
+          properties:
+            searchParams:
+              type: object
+            appliedDefaults:
+              type: object
+              description: Defaults that were applied from tenant config
+
+    FlightOffer:
+      type: object
+      properties:
+        id:
+          type: string
+        owner:
+          type: object
+          properties:
+            code:
+              type: string
+              description: Airline IATA code
+            name:
+              type: string
+              description: Airline name
+        price:
+          $ref: '#/components/schemas/Price'
+        slices:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlightSlice'
+        policy:
+          $ref: '#/components/schemas/PolicyEvaluation'
+
+    FlightSlice:
+      type: object
+      properties:
+        id:
+          type: string
+        origin:
+          $ref: '#/components/schemas/Airport'
+        destination:
+          $ref: '#/components/schemas/Airport'
+        departureTime:
+          type: string
+          format: date-time
+        arrivalTime:
+          type: string
+          format: date-time
+        duration:
+          type: string
+          description: ISO 8601 duration
+        segments:
+          type: array
+          items:
+            type: object
+
+    Airport:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        city:
+          type: string
+
+    Price:
+      type: object
+      properties:
+        amount:
+          type: string
+        currency:
+          type: string
+
+    StaySearchRequest:
+      type: object
+      required:
+        - locationId
+        - checkInDate
+        - checkOutDate
+        - guests
+        - rooms
+      properties:
+        locationId:
+          type: string
+          description: Location ID from /config endpoint
+        checkInDate:
+          type: string
+          format: date
+        checkOutDate:
+          type: string
+          format: date
+        guests:
+          type: integer
+          minimum: 1
+        rooms:
+          type: integer
+          minimum: 1
+
+    StaySearchResponse:
+      type: object
+      properties:
+        stays:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stay'
+        metadata:
+          type: object
+
+    Stay:
+      type: object
+      properties:
+        id:
+          type: string
+        accommodation:
+          type: object
+          properties:
+            name:
+              type: string
+            rating:
+              type: integer
+            photos:
+              type: array
+              items:
+                type: string
+        rates:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              price:
+                $ref: '#/components/schemas/Price'
+        policy:
+          $ref: '#/components/schemas/PolicyEvaluation'
+
+    PolicyEvaluation:
+      type: object
+      description: Policy evaluation result for the offer
+      properties:
+        compliant:
+          type: boolean
+          description: False if any 'error' severity violations exist
+        violations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyViolation'
+        preferred:
+          type: boolean
+          description: True if matches preferred vendor criteria
+        promotions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Promotion'
+
+    PolicyViolation:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - preferred_airline
+            - price_cap
+            - star_rating_min
+            - budget_airline_excluded
+            - role_based_cabin
+            - cashback_promotion
+            - cabin_restriction
+        message:
+          type: string
+        severity:
+          type: string
+          enum: [error, warning, info]
+          description: |
+            - error: Hard block (non-compliant)
+            - warning: Flagged but allowed
+            - info: Informational only
+
+    Promotion:
+      type: object
+      properties:
+        type:
+          type: string
+        message:
+          type: string
+        value:
+          type: number
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        statusCode:
+          type: integer
+
+  responses:
+    MissingTenantId:
+      description: Missing X-Tenant-Id header
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Bad Request
+            message: Missing X-Tenant-Id header
+            statusCode: 400
+
+    TenantNotFound:
+      description: Tenant not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Not Found
+            message: "Tenant 'invalid-tenant' not found"
+            statusCode: 404
+
+    VerticalDisabled:
+      description: Vertical not enabled for tenant
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Forbidden
+            message: "Vertical 'stays' is not enabled for tenant 'saver-trips'"
+            statusCode: 403
+
+    ValidationError:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Bad Request
+            message: "origin is required"
+            statusCode: 400
+
+    ProviderError:
+      description: External provider error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Internal Server Error
+            message: "Duffel API error: Invalid departure date"
+            statusCode: 500
+

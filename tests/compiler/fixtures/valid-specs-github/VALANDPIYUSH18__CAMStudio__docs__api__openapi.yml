@@ -1,0 +1,592 @@
+openapi: 3.0.3
+info:
+  title: Photo CRM SaaS API
+  description: Multi-tenant SaaS platform for photography studios
+  version: 1.0.0
+  contact:
+    name: Photo CRM Support
+    email: support@photocrm.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.photocrm.com/api
+    description: Production server
+  - url: http://localhost:8080/api
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and return JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh token
+      description: Refresh JWT access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid refresh token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders:
+    get:
+      tags:
+        - Orders
+      summary: Get orders
+      description: Retrieve paginated list of orders for the current tenant
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+        - name: search
+          in: query
+          description: Search term
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: Filter by status
+          schema:
+            type: string
+            enum: [CREATED, IN_PROGRESS, PHOTOS_UPLOADED, CLIENT_REVIEW, PAYMENT_PENDING, PAID, COMPLETED, CANCELLED]
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderPage'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Orders
+      summary: Create order
+      description: Create a new order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}:
+    get:
+      tags:
+        - Orders
+      summary: Get order by ID
+      description: Retrieve a specific order by ID
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Orders
+      summary: Update order
+      description: Update an existing order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateOrderRequest'
+      responses:
+        '200':
+          description: Order updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /photos/order/{orderId}:
+    get:
+      tags:
+        - Photos
+      summary: Get photos by order
+      description: Retrieve photos for a specific order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Page size
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Photos retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoPage'
+        '404':
+          description: Order not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /gallery/{orderId}/public:
+    get:
+      tags:
+        - Gallery
+      summary: Get public gallery
+      description: Retrieve public gallery for client access (no authentication required)
+      security: []
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Gallery retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicGalleryResponse'
+        '404':
+          description: Gallery not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+        - subdomain
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        password:
+          type: string
+          format: password
+          example: password123
+        subdomain:
+          type: string
+          example: mystudio
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refreshToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        tokenType:
+          type: string
+          example: Bearer
+        expiresIn:
+          type: integer
+          example: 86400
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        fullName:
+          type: string
+          example: John Doe
+        role:
+          type: string
+          enum: [ADMIN, STAFF, CLIENT]
+          example: ADMIN
+        permissions:
+          type: array
+          items:
+            type: string
+          example: ["order:create", "photo:upload", "invoice:generate"]
+        lastLoginAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    Order:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        clientId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        photographerId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174002
+        title:
+          type: string
+          example: Wedding Photography - Smith Family
+        description:
+          type: string
+          example: Full day wedding photography package
+        eventDate:
+          type: string
+          format: date
+          example: "2024-06-15"
+        status:
+          type: string
+          enum: [CREATED, IN_PROGRESS, PHOTOS_UPLOADED, CLIENT_REVIEW, PAYMENT_PENDING, PAID, COMPLETED, CANCELLED]
+          example: CREATED
+        totalAmount:
+          type: number
+          format: decimal
+          example: 2500.00
+        galleryUrl:
+          type: string
+          format: uri
+          example: "https://photocrm.com/gallery/123e4567-e89b-12d3-a456-426614174000"
+        qrCode:
+          type: string
+          example: "QR_CODE_DATA_FOR_ORDER_123e4567-e89b-12d3-a456-426614174000"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+
+    CreateOrderRequest:
+      type: object
+      required:
+        - clientId
+        - title
+      properties:
+        clientId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        title:
+          type: string
+          example: Wedding Photography - Smith Family
+        description:
+          type: string
+          example: Full day wedding photography package
+        eventDate:
+          type: string
+          format: date
+          example: "2024-06-15"
+        photographerId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174002
+
+    UpdateOrderRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: Wedding Photography - Smith Family
+        description:
+          type: string
+          example: Full day wedding photography package
+        eventDate:
+          type: string
+          format: date
+          example: "2024-06-15"
+        photographerId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174002
+
+    Photo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        orderId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174001
+        filename:
+          type: string
+          example: "IMG_001.jpg"
+        originalUrl:
+          type: string
+          format: uri
+          example: "https://s3.amazonaws.com/photocrm-photos/original/IMG_001.jpg"
+        thumbnailUrl:
+          type: string
+          format: uri
+          example: "https://s3.amazonaws.com/photocrm-photos/thumbnail/IMG_001.jpg"
+        previewUrl:
+          type: string
+          format: uri
+          example: "https://s3.amazonaws.com/photocrm-photos/preview/IMG_001.jpg"
+        fileSize:
+          type: integer
+          format: int64
+          example: 25600000
+        mimeType:
+          type: string
+          example: "image/jpeg"
+        metadata:
+          type: object
+          example: {"width": 4000, "height": 3000, "camera": "Canon EOS R5"}
+        uploadedAt:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"
+        isSelected:
+          type: boolean
+          example: false
+        selectionOrder:
+          type: integer
+          example: 1
+        price:
+          type: number
+          format: decimal
+          example: 25.00
+
+    PublicGalleryResponse:
+      type: object
+      properties:
+        orderId:
+          type: string
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        photos:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+        totalPhotos:
+          type: integer
+          example: 150
+        selectionLimit:
+          type: integer
+          example: 50
+
+    OrderPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Order'
+        totalElements:
+          type: integer
+          example: 100
+        totalPages:
+          type: integer
+          example: 5
+        size:
+          type: integer
+          example: 20
+        number:
+          type: integer
+          example: 0
+        first:
+          type: boolean
+          example: true
+        last:
+          type: boolean
+          example: false
+
+    PhotoPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+        totalElements:
+          type: integer
+          example: 50
+        totalPages:
+          type: integer
+          example: 3
+        size:
+          type: integer
+          example: 20
+        number:
+          type: integer
+          example: 0
+        first:
+          type: boolean
+          example: true
+        last:
+          type: boolean
+          example: false
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Bad Request"
+        message:
+          type: string
+          example: "Invalid request parameters"
+        path:
+          type: string
+          example: "/api/orders"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-01T00:00:00Z"

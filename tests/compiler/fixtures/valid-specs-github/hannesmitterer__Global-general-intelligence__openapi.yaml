@@ -1,0 +1,750 @@
+openapi: 3.1.0
+
+info:
+  title: Nexus API
+  description: |
+    Comprehensive API for coordinating distributed AI agents, managing tasks, 
+    collecting telemetry, and facilitating real-time communication across the 
+    Global General Intelligence (GGI) ecosystem.
+  version: 1.0.0
+  contact:
+    name: Nexus API Support
+    url: https://github.com/hannesmitterer/Global-general-intelligence
+    email: support@example.com
+  license:
+    name: ISC
+    url: https://opensource.org/licenses/ISC
+
+servers:
+  - url: https://nexus-api.onrender.com
+    description: Production server
+  - url: http://localhost:8080
+    description: Local development server
+
+tags:
+  - name: Authentication
+    description: OAuth 2.0 and API key authentication
+  - name: Telemetry
+    description: Metrics, logs, and health monitoring
+  - name: Commands
+    description: Agent command and control
+  - name: Tasks
+    description: Task creation and management
+  - name: Agents
+    description: Agent registration and discovery
+  - name: Coordination
+    description: Multi-agent collaboration
+
+security:
+  - bearerAuth: []
+  - apiKeyAuth: []
+
+paths:
+  /auth/oauth/google:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with Google OAuth 2.0
+      description: Exchange Google ID token for Nexus access token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - id_token
+              properties:
+                id_token:
+                  type: string
+                  description: Google ID token from OAuth flow
+                  example: eyJhbGciOiJSUzI1NiIsImtpZCI6IjE5...
+      responses:
+        '200':
+          description: Successfully authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /telemetry/metrics:
+    post:
+      tags:
+        - Telemetry
+      summary: Submit real-time metrics
+      description: Submit agent metrics for monitoring and analysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetricSubmission'
+      responses:
+        '200':
+          description: Metrics accepted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: accepted
+                  metric_id:
+                    type: string
+                    example: met_abc123
+                  stored_at:
+                    type: string
+                    format: date-time
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /telemetry/health:
+    get:
+      tags:
+        - Telemetry
+      summary: Get system health status
+      description: Retrieve overall system and agent health information
+      responses:
+        '200':
+          description: Health status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /commands:
+    post:
+      tags:
+        - Commands
+      summary: Issue a command to an agent
+      description: Send a command to a specific agent for execution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommandRequest'
+      responses:
+        '200':
+          description: Command queued successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /commands/{command_id}:
+    get:
+      tags:
+        - Commands
+      summary: Get command status
+      description: Retrieve the current status and result of a command
+      parameters:
+        - $ref: '#/components/parameters/CommandId'
+      responses:
+        '200':
+          description: Command status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommandStatus'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /tasks:
+    get:
+      tags:
+        - Tasks
+      summary: List tasks
+      description: Retrieve a paginated list of tasks with optional filters
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed, failed]
+          description: Filter by task status
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+          description: Filter by agent ID
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+          description: Maximum number of results
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          description: Pagination offset
+      responses:
+        '200':
+          description: Tasks retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      tags:
+        - Tasks
+      summary: Create a new task
+      description: Create and assign a new task to an agent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /tasks/{task_id}:
+    get:
+      tags:
+        - Tasks
+      summary: Get task details
+      description: Retrieve detailed information about a specific task
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      responses:
+        '200':
+          description: Task retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    patch:
+      tags:
+        - Tasks
+      summary: Update task
+      description: Update task status, progress, or other attributes
+      parameters:
+        - $ref: '#/components/parameters/TaskId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdate'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /agents:
+    get:
+      tags:
+        - Agents
+      summary: Discover agents
+      description: List all available agents with their capabilities and status
+      responses:
+        '200':
+          description: Agents retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /agents/register:
+    post:
+      tags:
+        - Agents
+      summary: Register a new agent
+      description: Register a new agent in the Nexus ecosystem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRegistration'
+      responses:
+        '201':
+          description: Agent registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Agent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from /auth/oauth/google
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: API key for service-to-service authentication
+
+  parameters:
+    TaskId:
+      name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique task identifier
+      example: task_abc123
+
+    CommandId:
+      name: command_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Unique command identifier
+      example: cmd_abc123
+
+  schemas:
+    AuthResponse:
+      type: object
+      required:
+        - access_token
+        - expires_in
+        - user
+      properties:
+        access_token:
+          type: string
+          example: nexus_at_abc123...
+        refresh_token:
+          type: string
+          example: nexus_rt_xyz789...
+        expires_in:
+          type: integer
+          example: 3600
+          description: Token expiry in seconds
+        user:
+          $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: usr_123
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        role:
+          type: string
+          enum: [seedbringer, council, agent, observer]
+          example: seedbringer
+
+    MetricSubmission:
+      type: object
+      required:
+        - agent_id
+        - timestamp
+        - metrics
+      properties:
+        agent_id:
+          type: string
+          example: agent_euystacio_001
+        timestamp:
+          type: string
+          format: date-time
+          example: '2025-11-03T01:54:29Z'
+        metrics:
+          type: object
+          additionalProperties: true
+          example:
+            cpu_usage: 45.2
+            memory_mb: 1024
+            active_tasks: 3
+        tags:
+          type: object
+          additionalProperties:
+            type: string
+          example:
+            environment: production
+            region: us-east-1
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: healthy
+        agents:
+          type: object
+          properties:
+            total:
+              type: integer
+              example: 12
+            active:
+              type: integer
+              example: 10
+            degraded:
+              type: integer
+              example: 2
+            offline:
+              type: integer
+              example: 0
+        system:
+          type: object
+          properties:
+            uptime_seconds:
+              type: integer
+              example: 86400
+            total_requests:
+              type: integer
+              example: 1234567
+            avg_response_ms:
+              type: number
+              example: 95
+
+    CommandRequest:
+      type: object
+      required:
+        - agent_id
+        - command
+      properties:
+        agent_id:
+          type: string
+          example: agent_euystacio_001
+        command:
+          type: string
+          example: execute_task
+        parameters:
+          type: object
+          additionalProperties: true
+          example:
+            task_id: task_123
+            priority: high
+        timeout_seconds:
+          type: integer
+          example: 300
+        idempotency_key:
+          type: string
+          example: cmd_unique_123
+
+    CommandResponse:
+      type: object
+      properties:
+        command_id:
+          type: string
+          example: cmd_abc123
+        status:
+          type: string
+          enum: [queued, in_progress, completed, failed, cancelled]
+          example: queued
+        created_at:
+          type: string
+          format: date-time
+        eta_seconds:
+          type: integer
+          example: 5
+
+    CommandStatus:
+      type: object
+      properties:
+        command_id:
+          type: string
+          example: cmd_abc123
+        status:
+          type: string
+          enum: [queued, in_progress, completed, failed, cancelled]
+          example: completed
+        result:
+          type: object
+          additionalProperties: true
+          example:
+            success: true
+            output: Task executed successfully
+            duration_ms: 4523
+        completed_at:
+          type: string
+          format: date-time
+
+    Task:
+      type: object
+      properties:
+        task_id:
+          type: string
+          example: task_123
+        name:
+          type: string
+          example: Process dataset XYZ
+        type:
+          type: string
+          example: data_processing
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed, cancelled]
+          example: in_progress
+        priority:
+          type: string
+          enum: [low, medium, high]
+          example: high
+        assigned_to:
+          type: string
+          example: agent_euystacio_001
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 65
+        parameters:
+          type: object
+          additionalProperties: true
+        result:
+          type: object
+          additionalProperties: true
+        timeline:
+          type: object
+          properties:
+            created_at:
+              type: string
+              format: date-time
+            started_at:
+              type: string
+              format: date-time
+            completed_at:
+              type: string
+              format: date-time
+
+    TaskRequest:
+      type: object
+      required:
+        - name
+        - type
+        - assigned_to
+      properties:
+        name:
+          type: string
+          example: Process dataset XYZ
+        type:
+          type: string
+          example: data_processing
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+        assigned_to:
+          type: string
+          example: agent_euystacio_001
+        parameters:
+          type: object
+          additionalProperties: true
+        dependencies:
+          type: array
+          items:
+            type: string
+          example: [task_abc]
+        deadline:
+          type: string
+          format: date-time
+
+    TaskUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed, cancelled]
+        progress_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        notes:
+          type: string
+
+    TaskList:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        total:
+          type: integer
+          example: 142
+        limit:
+          type: integer
+          example: 50
+        offset:
+          type: integer
+          example: 0
+
+    Agent:
+      type: object
+      properties:
+        agent_id:
+          type: string
+          example: agent_euystacio_001
+        name:
+          type: string
+          example: Euystacio
+        status:
+          type: string
+          enum: [active, degraded, offline]
+          example: active
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: [data_processing, classification]
+        load_percent:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 45
+        last_seen:
+          type: string
+          format: date-time
+
+    AgentRegistration:
+      type: object
+      required:
+        - agent_id
+        - name
+        - capabilities
+      properties:
+        agent_id:
+          type: string
+          example: agent_custom_002
+        name:
+          type: string
+          example: Custom Agent
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: [custom_task]
+        endpoint:
+          type: string
+          format: uri
+          example: https://agent.example.com/api
+        auth_token:
+          type: string
+          example: agent_token_...
+
+    AgentList:
+      type: object
+      properties:
+        agents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Agent'
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              example: invalid_request
+            message:
+              type: string
+              example: Missing required parameter
+            details:
+              type: object
+              additionalProperties: true
+            request_id:
+              type: string
+              example: req_abc123
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'

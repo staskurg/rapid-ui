@@ -1,0 +1,744 @@
+{
+  "api": {
+    "title": "ClientFlow AI Suite API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Appointments",
+      "key": "appointments",
+      "operations": [
+        {
+          "id": "GET:/api/appointments",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/appointments",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "starts_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "reminder_offset_minutes": {
+                      "type": "integer"
+                    },
+                    "contact": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "scheduled",
+                        "completed",
+                        "cancelled"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Automation",
+      "key": "automation",
+      "operations": [
+        {
+          "id": "POST:/api/automations/email_inbound",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/automations/email_inbound",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              },
+              "html": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "org_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "payload": {
+                    "type": "object"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/automations/run",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/automations/run",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "description": "Type of automation to trigger"
+              },
+              "payload": {
+                "type": "object",
+                "description": "Automation-specific payload"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "org_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "payload": {
+                    "type": "object"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/automations/sms_inbound",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/automations/sms_inbound",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "From": {
+                "type": "string"
+              },
+              "To": {
+                "type": "string"
+              },
+              "Body": {
+                "type": "string"
+              },
+              "MessageSid": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "org_id": {
+                    "type": "string"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "payload": {
+                    "type": "object"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRM",
+      "key": "crm",
+      "operations": [
+        {
+          "id": "GET:/api/businesses",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/businesses",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "business_name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "inactive"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/customers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/customers",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "business_id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "first_name": {
+                      "type": "string"
+                    },
+                    "last_name": {
+                      "type": "string"
+                    },
+                    "phone": {
+                      "type": "string"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/customers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/customers",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "business_id",
+              "first_name"
+            ],
+            "properties": {
+              "business_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "first_name": {
+                "type": "string"
+              },
+              "last_name": {
+                "type": "string"
+              },
+              "phone": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "default": "api"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "business_id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "first_name": {
+                    "type": "string"
+                  },
+                  "last_name": {
+                    "type": "string"
+                  },
+                  "phone": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "type": "string"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "ClientFlow AI Suite API"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "status": {
+                "type": "string",
+                "example": "Live"
+              },
+              "description": {
+                "type": "string",
+                "example": "Professional-grade CRM with AI-powered automation"
+              },
+              "endpoints": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "OK",
+                  "DEGRADED",
+                  "ERROR"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "uptime": {
+                "type": "number",
+                "description": "Uptime in seconds"
+              },
+              "memory": {
+                "type": "object",
+                "properties": {
+                  "rss": {
+                    "type": "number"
+                  },
+                  "heapTotal": {
+                    "type": "number"
+                  },
+                  "heapUsed": {
+                    "type": "number"
+                  },
+                  "external": {
+                    "type": "number"
+                  }
+                }
+              },
+              "version": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              },
+              "database": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "Connected",
+                      "Disconnected",
+                      "Error"
+                    ]
+                  },
+                  "error": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "provider": {
+                    "type": "string",
+                    "example": "Supabase"
+                  }
+                }
+              },
+              "services": {
+                "type": "object",
+                "properties": {
+                  "supabase": {
+                    "type": "string",
+                    "enum": [
+                      "UP",
+                      "DOWN"
+                    ]
+                  },
+                  "api": {
+                    "type": "string",
+                    "enum": [
+                      "UP",
+                      "DOWN"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/test",
+          "method": "GET",
+          "kind": "list",
+          "path": "/test",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "database_status": {
+                "type": "string"
+              },
+              "demo_business": {
+                "type": "string"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string"
+              },
+              "environment": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messaging",
+      "key": "messaging",
+      "operations": [
+        {
+          "id": "POST:/api/messages/outbound",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/messages/outbound",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "channel",
+              "to_addr",
+              "body"
+            ],
+            "properties": {
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "sms",
+                  "email"
+                ]
+              },
+              "to_addr": {
+                "type": "string",
+                "description": "Phone number for SMS or email address for email"
+              },
+              "body": {
+                "type": "string",
+                "description": "Message content"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "org_id": {
+                    "type": "string"
+                  },
+                  "channel": {
+                    "type": "string"
+                  },
+                  "to_addr": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SLA",
+      "key": "sla",
+      "operations": [
+        {
+          "id": "GET:/api/sla/unanswered",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/sla/unanswered",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "count": {
+                "type": "integer"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "last_message_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "on_call_phone": {
+                      "type": "string"
+                    },
+                    "waiting_minutes": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

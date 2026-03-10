@@ -1,0 +1,315 @@
+openapi: 3.1.0
+info:
+  title: Notion2RAG2API
+  description: |
+    Notion 문서를 RAG(Retrieval-Augmented Generation) 시스템으로 변환하여
+    자연어 질의응답을 제공하는 REST API 서비스입니다.
+
+    ## 주요 기능
+    - Notion API를 통한 문서 수집 및 처리
+    - OpenAI GPT-4를 활용한 자연어 질의응답
+    - FAISS 기반 벡터 검색 시스템
+    - 한국어 및 영어 텍스트 지원
+    - 실시간 문서 인덱싱 및 업데이트
+
+    ## 인증
+    모든 API 요청은 `X-API-Key` 헤더를 통한 API 키 인증이 필요합니다.
+  version: 1.0.0
+  contact:
+    name: Claude Code
+    email: claude@anthropic.com
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8001
+    description: 로컬 개발 서버
+  - url: http://0.0.0.0:8001
+    description: Docker 컨테이너
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /:
+    get:
+      summary: 서비스 정보 조회
+      description: 서비스의 기본 정보와 상태를 반환합니다.
+      operationId: get_root
+      responses:
+        '200':
+          description: 서비스 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+
+  /health:
+    get:
+      summary: 헬스 체크
+      description: 서비스의 상태를 확인합니다.
+      operationId: health_check
+      security: []
+      responses:
+        '200':
+          description: 서비스 상태 정보
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /api/v1/query:
+    post:
+      summary: RAG 쿼리 실행
+      description: |
+        Notion 문서에서 관련 정보를 검색하고 GPT-4를 사용해 자연어 답변을 생성합니다.
+
+        ## 처리 과정
+        1. 사용자 쿼리를 임베딩으로 변환
+        2. FAISS 벡터 데이터베이스에서 유사한 문서 검색
+        3. 검색된 컨텍스트와 함께 GPT-4에 질문 전달
+        4. 자연스러운 한국어/영어 답변 생성
+      operationId: query_documents
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: 쿼리 처리 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 서버 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/refresh:
+    post:
+      summary: 데이터 새로고침
+      description: |
+        Notion에서 최신 데이터를 가져와 벡터 데이터베이스를 업데이트합니다.
+
+        ## 처리 과정
+        1. Notion API를 통해 페이지 데이터 수집
+        2. 텍스트 추출 및 청킹 처리
+        3. OpenAI API로 임베딩 생성
+        4. FAISS 벡터 데이터베이스 업데이트
+
+        이 작업은 백그라운드에서 비동기적으로 실행됩니다.
+      operationId: refresh_index
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: 새로고침 작업 시작됨
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RefreshResponse'
+        '401':
+          description: 인증 실패
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: 서버 오류
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API 키를 통한 인증
+
+  schemas:
+    ServiceInfo:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Notion2RAG2API"
+        version:
+          type: string
+          example: "0.1.0"
+        status:
+          type: string
+          example: "running"
+        docs:
+          type: string
+          example: "/docs"
+        health:
+          type: string
+          example: "/health"
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          example: "healthy"
+        service:
+          type: string
+          example: "Notion2RAG2API"
+        version:
+          type: string
+          example: "0.1.0"
+
+    QueryRequest:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: 자연어 질문
+          example: "Flutter와 전자정부 프레임워크에 대해 설명해주세요"
+        top_k:
+          type: integer
+          minimum: 1
+          maximum: 20
+          default: 5
+          description: 검색할 관련 문서의 수
+          example: 3
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+          description: LLM 생성 온도 (높을수록 창의적, 낮을수록 일관적)
+          example: 0.7
+
+    QueryResponse:
+      type: object
+      properties:
+        answer:
+          type: string
+          description: GPT-4가 생성한 자연어 답변
+          example: "Flutter는 전자정부 5.0 표준 프레임워크로 공식 채택되었습니다..."
+        sources:
+          type: array
+          items:
+            $ref: '#/components/schemas/Source'
+          description: 검색된 관련 문서들
+        query:
+          type: string
+          description: 원본 사용자 질문
+          example: "Flutter와 전자정부 프레임워크에 대해 설명해주세요"
+        model_used:
+          type: string
+          default: "gpt-4-turbo-preview"
+          description: 사용된 OpenAI 모델
+          example: "gpt-4-turbo-preview"
+
+    Source:
+      type: object
+      properties:
+        page_id:
+          type: string
+          description: Notion 페이지 ID
+          example: "2c6af259-fd05-801e-a963-c4e034d0678e"
+        text:
+          type: string
+          description: 검색된 텍스트 조각
+          example: "전자정부 5.0 표준(Flutter) 전환에 따른..."
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: 쿼리와의 유사도 점수 (높을수록 관련성 높음)
+          example: 0.4796282649040222
+        metadata:
+          type: object
+          description: 추가 메타데이터
+          example: {}
+
+    RefreshRequest:
+      type: object
+      properties:
+        page_ids:
+          type: array
+          items:
+            type: string
+          description: 특정 페이지 ID들. 없으면 모든 페이지 새로고침
+          example: ["2c6af259-fd05-801e-a963-c4e034d0678e"]
+        force:
+          type: boolean
+          default: false
+          description: 변경되지 않은 내용도 강제로 다시 인덱싱
+          example: false
+
+    RefreshResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [accepted, running, completed, failed]
+          description: 새로고침 작업 상태
+          example: "accepted"
+        message:
+          type: string
+          description: 상태 메시지
+          example: "Refresh task has been queued"
+        task_id:
+          type: string
+          description: 작업 추적을 위한 고유 ID
+          example: "refresh_1765418233.803095"
+        started_at:
+          type: string
+          format: date-time
+          description: 작업 시작 시간
+          example: "2025-12-11T10:57:13.803135"
+
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: 오류 상세 메시지
+          examples:
+            invalid_api_key: "Invalid API key"
+            invalid_query: "Query must be between 1 and 1000 characters"
+            processing_error: "Failed to process query: OpenAI API error"
+
+tags:
+  - name: Health
+    description: 서비스 상태 확인
+  - name: Query
+    description: RAG 기반 질의응답
+  - name: Refresh
+    description: 데이터 관리
+
+externalDocs:
+  description: 프로젝트 GitHub 저장소
+  url: https://github.com/user/notion2ragapi

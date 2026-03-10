@@ -1,0 +1,362 @@
+{
+  "api": {
+    "title": "Policy Service API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "status",
+              "timestamp"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "policies",
+      "key": "policies",
+      "operations": [
+        {
+          "id": "getCurrentPolicy",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/policies/current",
+          "responseSchema": {
+            "type": "object",
+            "description": "Current active policy snapshot with signature",
+            "properties": {
+              "snapshot_id": {
+                "type": "string",
+                "description": "Unique snapshot identifier",
+                "example": "SNAP.INIT.policy_snapshot.v1"
+              },
+              "policy_id": {
+                "type": "string",
+                "description": "Policy identifier",
+                "example": "default"
+              },
+              "version": {
+                "type": "string",
+                "description": "Policy version",
+                "example": "1.0.0"
+              },
+              "snapshot_hash": {
+                "type": "string",
+                "description": "SHA256 hash of policy snapshot",
+                "pattern": "^sha256:[0-9a-f]{64}$",
+                "example": "sha256:0842dedf52f07d3fea199dc9a18b24f887beb1e7def17202f3acefc453a79b1c"
+              },
+              "policy_content": {
+                "type": "object",
+                "description": "Policy content (structure varies by policy type)",
+                "additionalProperties": true
+              },
+              "timestamp_utc": {
+                "type": "string",
+                "format": "date-time",
+                "description": "UTC timestamp when snapshot was created",
+                "example": "2025-01-27T12:00:00Z"
+              },
+              "signature": {
+                "type": "string",
+                "description": "Cryptographic signature of the snapshot",
+                "example": "base64:PLACEHOLDER"
+              },
+              "kid": {
+                "type": "string",
+                "description": "Key identifier used for signature",
+                "example": "KID:zero-ui-product:ed25519:2025-10"
+              },
+              "effective_from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When this snapshot becomes effective",
+                "example": "2025-01-27T12:00:00Z"
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Optional metadata",
+                "properties": {
+                  "author": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "snapshot_id",
+              "policy_id",
+              "version",
+              "snapshot_hash",
+              "policy_content",
+              "timestamp_utc",
+              "signature",
+              "kid",
+              "effective_from"
+            ]
+          }
+        },
+        {
+          "id": "getPolicyHistory",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/policies/history",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "snapshots": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Current active policy snapshot with signature",
+                  "properties": {
+                    "snapshot_id": {
+                      "type": "string",
+                      "description": "Unique snapshot identifier",
+                      "example": "SNAP.INIT.policy_snapshot.v1"
+                    },
+                    "policy_id": {
+                      "type": "string",
+                      "description": "Policy identifier",
+                      "example": "default"
+                    },
+                    "version": {
+                      "type": "string",
+                      "description": "Policy version",
+                      "example": "1.0.0"
+                    },
+                    "snapshot_hash": {
+                      "type": "string",
+                      "description": "SHA256 hash of policy snapshot",
+                      "pattern": "^sha256:[0-9a-f]{64}$",
+                      "example": "sha256:0842dedf52f07d3fea199dc9a18b24f887beb1e7def17202f3acefc453a79b1c"
+                    },
+                    "policy_content": {
+                      "type": "object",
+                      "description": "Policy content (structure varies by policy type)",
+                      "additionalProperties": true
+                    },
+                    "timestamp_utc": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "UTC timestamp when snapshot was created",
+                      "example": "2025-01-27T12:00:00Z"
+                    },
+                    "signature": {
+                      "type": "string",
+                      "description": "Cryptographic signature of the snapshot",
+                      "example": "base64:PLACEHOLDER"
+                    },
+                    "kid": {
+                      "type": "string",
+                      "description": "Key identifier used for signature",
+                      "example": "KID:zero-ui-product:ed25519:2025-10"
+                    },
+                    "effective_from": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "When this snapshot becomes effective",
+                      "example": "2025-01-27T12:00:00Z"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "Optional metadata",
+                      "properties": {
+                        "author": {
+                          "type": "string"
+                        },
+                        "description": {
+                          "type": "string"
+                        },
+                        "tags": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "required": [
+                    "snapshot_id",
+                    "policy_id",
+                    "version",
+                    "snapshot_hash",
+                    "policy_content",
+                    "timestamp_utc",
+                    "signature",
+                    "kid",
+                    "effective_from"
+                  ]
+                }
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of snapshots"
+              },
+              "limit": {
+                "type": "integer",
+                "description": "Maximum number returned"
+              },
+              "offset": {
+                "type": "integer",
+                "description": "Number skipped"
+              }
+            },
+            "required": [
+              "snapshots",
+              "total"
+            ]
+          }
+        },
+        {
+          "id": "activatePolicy",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/policies/activate",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "snapshot_id": {
+                "type": "string",
+                "description": "Snapshot identifier to activate",
+                "example": "SNAP.INIT.policy_snapshot.v0"
+              },
+              "effective_from": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When activation should take effect (defaults to now)",
+                "example": "2025-01-27T12:00:00Z"
+              }
+            },
+            "required": [
+              "snapshot_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "snapshot_id": {
+                "type": "string"
+              },
+              "activated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "effective_from": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "snapshot_id",
+              "activated_at",
+              "effective_from"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "trust",
+      "key": "trust",
+      "operations": [
+        {
+          "id": "revokePolicy",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/trust/crl/revoke",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "kid": {
+                "type": "string",
+                "description": "Key identifier",
+                "example": "KID:zero-ui-product:ed25519:2025-01"
+              },
+              "snapshot_id": {
+                "type": "string",
+                "description": "Snapshot identifier to revoke",
+                "example": "SNAP.INIT.policy_snapshot.v1"
+              },
+              "reason": {
+                "type": "string",
+                "description": "Reason for revocation",
+                "example": "rollback"
+              },
+              "revoked_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When revocation takes effect (defaults to now)",
+                "example": "2025-01-27T12:00:00Z"
+              }
+            },
+            "required": [
+              "kid",
+              "snapshot_id",
+              "reason"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "snapshot_id": {
+                "type": "string"
+              },
+              "revoked_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "crl_updated": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "snapshot_id",
+              "revoked_at",
+              "crl_updated"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

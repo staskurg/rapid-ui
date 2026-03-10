@@ -1,0 +1,728 @@
+openapi: 3.1.0
+info:
+  title: Household Budget Service
+  version: '1.0'
+  description: household budget
+tags:
+  - name: csrf
+  - name: users
+  - name: expenses
+  - name: incomes
+paths:
+  /csrf:
+    get:
+      operationId: get-csrf
+      summary: Get Csrf
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CsrfResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - csrf
+  /expenses:
+    get:
+      operationId: get-expenses
+      summary: Get Expenses
+      parameters:
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpenseLists'
+      tags:
+        - expenses
+      security:
+        - ApiKeyAuth: []
+    post:
+      operationId: post-expenses
+      summary: Post Expense
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreExpenseResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - expenses
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreExpenseInput'
+      security:
+        - ApiKeyAuth: []
+  /expenses/categoryTotalAmounts:
+    get:
+      operationId: get-expenses-category-total-amounts
+      summary: Get Expenses Category TotalAmounts
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryTotalAmountListsResponse'
+      tags:
+        - expenses
+      security:
+        - ApiKeyAuth: []
+  /expenses/totalAmounts:
+    get:
+      operationId: get-expenses-total-amounts
+      summary: Get Expense Total Amounts
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalAmountListsResponse'
+      tags:
+        - expenses
+      security:
+        - ApiKeyAuth: []
+  /incomes:
+    get:
+      operationId: get-incomes
+      summary: Get Incomes
+      parameters:
+        - name: fromDate
+          in: query
+          required: false
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: false
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncomeLists'
+      tags:
+        - incomes
+      security:
+        - ApiKeyAuth: []
+    post:
+      operationId: post-incomes
+      summary: Post Income
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoreIncomeResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - incomes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreIncomeInput'
+      security:
+        - ApiKeyAuth: []
+  /incomes/clientTotalAmounts:
+    get:
+      operationId: get-incomes-client-total-amounts
+      summary: Get Income Client TotalAmounts
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientTotalAmountListsResponse'
+      tags:
+        - incomes
+      security:
+        - ApiKeyAuth: []
+  /incomes/totalAmounts:
+    get:
+      operationId: get-incomes-total-amounts
+      summary: Get Income Total Amounts
+      parameters:
+        - name: fromDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+        - name: toDate
+          in: query
+          required: true
+          schema:
+            type: string
+          explode: false
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TotalAmountListsResponse'
+      tags:
+        - incomes
+      security:
+        - ApiKeyAuth: []
+  /users/checkSignedIn:
+    get:
+      operationId: get-users-check-signed-in
+      summary: User Check Signed In
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isSignedIn:
+                    type: boolean
+                required:
+                  - isSignedIn
+      tags:
+        - users
+      security:
+        - ApiKeyAuth: []
+  /users/signIn:
+    post:
+      operationId: post-users-sign-in
+      summary: User Sign In
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          headers:
+            Set-Cookie:
+              required: true
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignInOkResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignInBadRequestResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignInInput'
+  /users/signUp:
+    post:
+      operationId: post-users-sign-up
+      summary: User Sign Up
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignUpResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignUpResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignUpInput'
+  /users/validateSignUp:
+    post:
+      operationId: post-users-validate-sign-up
+      summary: User Validate Sign Up
+      parameters: []
+      responses:
+        '200':
+          description: The request has succeeded.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignUpResponse'
+        '400':
+          description: The server could not understand the request due to invalid syntax.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSignUpResponse'
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                required:
+                  - code
+                  - message
+      tags:
+        - users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSignUpInput'
+components:
+  schemas:
+    CategoryTotalAmountLists:
+      type: object
+      required:
+        - category
+        - totalAmount
+      properties:
+        category:
+          type: integer
+        totalAmount:
+          type: integer
+      title: Category Total Amount Lists
+    CategoryTotalAmountListsResponse:
+      type: object
+      required:
+        - totalAmounts
+      properties:
+        totalAmounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoryTotalAmountLists'
+      title: Category Total Amount Lists Response
+    ClientTotalAmountLists:
+      type: object
+      required:
+        - clientName
+        - totalAmount
+      properties:
+        clientName:
+          type: string
+        totalAmount:
+          type: integer
+      title: Client Total Amount Lists
+    ClientTotalAmountListsResponse:
+      type: object
+      required:
+        - totalAmounts
+      properties:
+        totalAmounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClientTotalAmountLists'
+      title: Client Total Amount Lists Response
+    CsrfResponse:
+      type: object
+      required:
+        - csrfToken
+      properties:
+        csrfToken:
+          type: string
+      title: CsrfResponse
+    Expense:
+      type: object
+      required:
+        - id
+        - paidAt
+        - amount
+        - category
+        - description
+      properties:
+        id:
+          type: string
+        paidAt:
+          type: string
+          format: date
+        amount:
+          type: integer
+        category:
+          type: integer
+        description:
+          type: string
+      title: Expense
+    ExpenseLists:
+      type: object
+      required:
+        - expenses
+      properties:
+        expenses:
+          type: array
+          items:
+            $ref: '#/components/schemas/Expense'
+      title: Expense Lists
+    Income:
+      type: object
+      required:
+        - id
+        - receivedAt
+        - amount
+        - clientName
+      properties:
+        id:
+          type: string
+        receivedAt:
+          type: string
+          format: date
+        amount:
+          type: integer
+        clientName:
+          type: string
+      title: Income
+    IncomeLists:
+      type: object
+      required:
+        - incomes
+      properties:
+        incomes:
+          type: array
+          items:
+            $ref: '#/components/schemas/Income'
+      title: Income Lists
+    StoreExpenseInput:
+      type: object
+      required:
+        - paidAt
+        - amount
+        - category
+        - description
+      properties:
+        paidAt:
+          type: string
+          format: date
+        amount:
+          type: integer
+        category:
+          type: integer
+        description:
+          type: string
+      title: Store Expense Input
+    StoreExpenseResponse:
+      type: object
+      required:
+        - expense
+        - errors
+      properties:
+        expense:
+          $ref: '#/components/schemas/Expense'
+        errors:
+          $ref: '#/components/schemas/StoreExpenseValidationError'
+      title: Store Expense Response
+    StoreExpenseValidationError:
+      type: object
+      properties:
+        paidAt:
+          type: array
+          items:
+            type: string
+        amount:
+          type: array
+          items:
+            type: string
+        category:
+          type: array
+          items:
+            type: string
+        description:
+          type: array
+          items:
+            type: string
+      title: Store Expense Validation Error
+    StoreIncomeInput:
+      type: object
+      required:
+        - receivedAt
+        - amount
+        - clientName
+      properties:
+        receivedAt:
+          type: string
+          format: date
+        amount:
+          type: integer
+        clientName:
+          type: string
+      title: Store Income Input
+    StoreIncomeResponse:
+      type: object
+      required:
+        - income
+        - errors
+      properties:
+        income:
+          $ref: '#/components/schemas/Income'
+        errors:
+          $ref: '#/components/schemas/StoreIncomeValidationError'
+      title: Store Income Response
+    StoreIncomeValidationError:
+      type: object
+      properties:
+        receivedAt:
+          type: array
+          items:
+            type: string
+        amount:
+          type: array
+          items:
+            type: string
+        clientName:
+          type: array
+          items:
+            type: string
+      title: Store Income Validation Error
+    TotalAmountLists:
+      type: object
+      required:
+        - date
+        - extendProps
+      properties:
+        date:
+          type: string
+          format: date
+        extendProps:
+          type: object
+          properties:
+            type:
+              type: string
+            totalAmount:
+              type: integer
+          required:
+            - type
+            - totalAmount
+      title: Total Amount Lists
+    TotalAmountListsResponse:
+      type: object
+      required:
+        - totalAmounts
+      properties:
+        totalAmounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/TotalAmountLists'
+      title: Total Amount Lists Response
+    UserSignInBadRequestResponse:
+      type: object
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          items:
+            type: string
+      title: User Sign In Bad Request Response
+    UserSignInInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      title: User Sign In Input
+    UserSignInOkResponse:
+      type: object
+      title: User Sign In Ok Response
+    UserSignUpInput:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      title: User Sign Up Input
+    UserSignUpResponse:
+      type: object
+      required:
+        - code
+        - errors
+      properties:
+        code:
+          type: integer
+        errors:
+          $ref: '#/components/schemas/UserSignUpValidationError'
+      title: User Sign In Response
+    UserSignUpValidationError:
+      type: object
+      properties:
+        name:
+          type: array
+          items:
+            type: string
+        email:
+          type: array
+          items:
+            type: string
+        password:
+          type: array
+          items:
+            type: string
+      title: User Sign Up Validation Error
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: cookie
+      name: token
+servers:
+  - url: https://localhost:8080
+    variables: {}

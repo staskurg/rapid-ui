@@ -1,0 +1,579 @@
+openapi: 3.0.0
+info:
+  version: "1.1"
+  title: Woorton Market-Maker OTC API
+  x-logo:
+    url: https://www.woorton.com/assets/images/logo/woorton-logo.png
+  description: >
+    <p>
+    The Woorton OTC Public API allows clients to access the market-maker service anytime.
+    <br>
+    The main usage is get quotations and executing trades.
+    <br><br>
+    <b>Clients must be registered to Woorton OTC service to use this API.</b>
+    </p>
+    
+    <h2>Sandbox Environment</h2>
+    <p>
+    URL: <code>https://api-sandbox.woorton.com/api/v1</code>
+    </p>
+    
+    <h2>Authentication</h2>
+    <p>
+    To authenticate with the API, you must add an <code>Authorization</code> header,
+    with the following format : <code>Bearer &lt;TOKEN&gt;</code>.
+    <br><br>
+    Example:
+    <br>
+    <code>Authorization: Bearer e3f515ac6b9b81cd48de42d2ce3f0ada</code>
+    <br><br>
+    Your token will be securely send it to you by Woorton support team.
+    </p>
+    
+    <h2>Security</h2>
+    <p>
+    API access is filtered with IP whitelisting, please contact Woorton support team
+    to whitelist your IPs.
+    </p>
+    
+    <h2>General notes</h2>
+    <ul>
+      <li>API is only accessible through TLS ;
+      <li>dates are in <a href="https://fr.wikipedia.org/wiki/ISO_8601#UTC">ISO 8601 UTC format</a>.</li>
+    </ul>
+    
+    <h2>Libraries and implementation examples</h2>
+    <p>
+    You can find API client library for different languages:
+    </p>
+    <ul>
+      <li><a href="https://github.com/jwoorton/woorton-API-python">Python</a> ;</li>
+      <li><i>more coming soon... </i></li>
+    </ul>
+
+paths:
+  /request_quotes:
+    post:
+      tags: ["Quotes"]
+      description: >
+        <p>
+        You may request for a quotation using this action.
+        <br><br>
+        Once the quotation is returned (in response), you will have a short delay to confirm, ie execute, the trade, by calling the <a href="#tag/Quotes/paths/~1trades/post"><u>Trade API</u></a>.
+        <br><br>
+        Quote expires approximately 20 seconds after the request.
+        <br><br>
+        Allowed instrument can queried via /api/v1/instruments.
+        </p>
+        
+        <table style="width:50%">
+        <thead>
+          <tr>
+          <th>Pair</th>
+          <th>Amount precision</th>
+          <th>Total precision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+          <tr><td>ETHBTC.SPOT</td><td>2</td><td>8</td></tr>
+          <tr><td>ETHUST.SPOT</td><td>2</td><td>2</td></tr>
+          <tr><td>BTCUST.SPOT</td><td>2</td><td>2</td></tr>
+          <tr><td>LTCUST.SPOT</td><td>2</td><td>2</td></tr>
+          <tr><td>BCHUST.SPOT</td><td>2</td><td>2</td></tr>
+          <tr><td>XRPUST.SPOT</td><td>2</td><td>2</td></tr>
+          <tr><td>Others</td><td>4</td><td>2</td></tr>
+        </tbody>
+        </table>
+
+      summary: Create a New RFQ
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RFQ_request"
+        required: true
+      responses:
+        "201":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RFQ_response"
+              examples:
+                response:
+                  value:
+                    client_request_id: d83b5b1a-4d2c-4582-955c-d01abbad9e01
+                    request_id: 3cdb0e86-5001-4b0c-bd35-0b51b3062575
+                    amount: "1.00000000"
+                    price: "1745.51"
+                    total: "1745.51"
+                    instrument: BTCEUR.SPOT
+                    direction: buy
+                    created_at: 2018-12-29T14:33:24.001345Z
+                    expires_at: 2018-12-29T14:33:39.001345Z
+    summary: Request for Quote
+  /trades:
+    post:
+      tags: ["Quotes"]
+      description: |
+        <p>
+        Confirm the given quotation by executing a trade.
+        <br><br>
+        Quotation can only be confirmed, not changed.
+        <br><br>
+        <b>Note:</b> all parameters of the corresponding RFQ must be given again.
+        </p>
+      summary: Confirm a quote (ie execute trade)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Trade_request"
+        required: true
+      responses:
+        "201":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade_response"
+              examples:
+                response:
+                  value:
+                    client_request_id: d83b5b1a-4d2c-4582-955c-d01abbad9e01
+                    amount: "1.00000000"
+                    price: "3123.12345678"
+                    total: "3123.12345678"
+                    direction: buy
+                    instrument: BTCEUR.SPOT
+                    state: executed
+                    created_at: 2018-12-29T14:33:24.001345Z
+                    expired_date: 2018-12-29T14:33:39.001345Z
+    get:
+      tags: ["History"]
+      summary: List Trades
+      description: >
+        <p>
+        You may list all trades using this action.
+        <br><br>
+        Results can be filtered per state (allowed states are `executed`, `canceled` and `pending_confirmation`).
+        <br><br>
+        Results are paginated (see `page` & `per_page` parameter). At most 100 items are returned per query.
+        </p>
+      parameters:
+        - name: page
+          in: query
+          example: 1
+          schema:
+            type: number
+        - name: per_page
+          in: query
+          example: 50
+          schema:
+            type: number
+        - name: state
+          in: query
+          example: executed
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trade_response"
+              examples:
+                response:
+                  value:
+                    - request_id: b1dec8dd-d33f-46d9-a6a6-e10cc721264a
+                      client_request_id: d83b5b1a-4d2c-4582-955c-d01abbad9e01
+                      amount: "1.231122"
+                      price: 14545.33445544
+                      instrument: BTCEUR.SPOT
+                      direction: buy
+                      state: executed
+                    - request_id: 14a357bd-f45a-449c-854a-89af2600c26c
+                      client_request_id: 693c39b3-90ff-4d27-9265-c42b6ce93369
+                      amount: "0.1"
+                      price: 345.3416656
+                      instrument: BTCEUR.SPOT
+                      direction: buy
+                      state: canceled
+    summary: Trades
+  /orders:
+    post:
+      tags: ["Orders"]
+      summary: Post an order
+      description: |
+        You may post an order using this action.
+        <br><br>
+        <b>Orders do not requires confirmations.</b>
+        <br><br>
+        Order type are:
+        <ul>
+          <li>FOK: Fill-or-Kill Order;
+          <li>MKT: Market Order.
+        </ul>
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Order_request"
+        required: true
+      responses:
+        "201":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Trade_response"
+              examples:
+                response:
+                  value:
+                    client_request_id: d83b5b1a-4d2c-4582-955c-d01abbad9e01
+                    amount: "1.00000000"
+                    price: "3123.12345678"
+                    total: "3123.12345678"
+                    direction: buy
+                    instrument: BTCEUR.SPOT
+                    state: executed
+                    order_type: "FOK"
+                    created_at: 2018-12-29T14:33:24.001345Z
+                    expired_date: 2018-12-29T14:33:39.001345Z
+  /balances:
+    get:
+      tags: ["History"]
+      summary: Get balances for all currencies.
+      description: |
+        <p>
+        You may list all your balances using this action.
+        <br>
+        The sign of the amount indicates who owes to the other:
+        <br>
+        <ul>
+          <li>negative: you owe Woorton the amount ;</li>
+          <li>positive: Woorton owe you the amount.</li>
+        </ul>
+        </p>
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Balances"
+              examples:
+                response:
+                  value:
+                    USD: 0
+                    EUR: 0
+                    ETH: 0
+                    BTC: 0
+                    LTC: 0
+    summary: Balances
+  /exposures:
+    get:
+      tags: ["Misc"]
+      summary: Get exposure for all currencies
+      description: >
+        <p>
+        You may list your allowed and consumed exposure for all currencies using this action.
+        <br>
+        For each currency, you get your maximum exposure amount.
+        <br><br>
+        <b>Note:</b>
+        <br>
+        Pending settlement request are not take in account until confirmed by Woorton team ; you can contact Woorton support to increase your exposures.
+        </p>
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exposures"
+              examples:
+                response:
+                  value:
+                    USD: 50000
+                    EUR: 50000
+                    ETH: 100
+                    BTC: 10
+                    LTC: 100
+    summary: Exposures
+  /ledger:
+    get:
+      tags: ["History"]
+      summary: List ledger operations.
+      description: >
+        <p>
+        You may list all ledger operations using this action.
+        </p>
+        Operation's category can be:
+        <ul>
+          <li>trade;</li>
+          <li>withdrawal;</li>
+          <li>deposit.</li>
+        </ul>
+        <p>
+        Results are paginated (see page & per_page parameter). At most 100 items are returned per query.
+        </p>
+      parameters:
+        - name: page
+          in: query
+          example: 1
+          schema:
+            type: number
+        - name: per_page
+          in: query
+          example: 50
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ledger"
+              examples:
+                response:
+                  value:
+                    - operation_id: 0ea203d1-a2de-4f85-ad9e-689e422d8fae
+                      currency: BTC
+                      amount: "13.43554455"
+                      category: trade
+                      created_at: 2018-12-24T19:15:31.012345Z
+                    - operation_id: 1f6cf143-bbe5-46d5-825e-e21814d55bc9
+                      currency: EUR
+                      amount: "40000.00000000"
+                      category: deposit
+                      created_at: 2018-12-25T13:55:34.012345Z
+    summary: Ledger
+  /instruments:
+    get:
+      tags: ["Misc"]
+      summary: List available instruments.
+      description: >
+        You may list all instruments using this action.
+        <br>
+        Instruments' list could change over time, please consult this list regularly.
+      parameters:
+        - name: page
+          in: query
+          example: 1
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Instruments"
+    summary: Instruments
+servers:
+  - url: https://api-sandbox.woorton.com/api/v1
+components:
+  schemas:
+    RFQ_request:
+      title: Request for Quote Request
+      type: object
+      properties:
+        client_request_id:
+          type: string
+          default: d83b5b1a-4d2c-4582-955c-d01abbad9e01
+        amount:
+          type: string
+          default: "1.0"
+        instrument:
+          type: string
+          example: BTCEUR.SPOT
+        direction:
+          type: string
+          example: buy
+      required:
+        - client_request_id
+        - amount
+        - instrument
+        - direction
+    RFQ_response:
+      title: Request for Quote Response
+      type: object
+      properties:
+        client_request_id:
+          type: string
+          default: some-client-uuid
+        request_id:
+          type: string
+          default: some-uuid
+        instrument:
+          type: string
+          example: BTCEUR.SPOT
+        direction:
+          type: string
+          example: buy
+        amount:
+          type: string
+          default: "1.0"
+        total:
+          type: number
+          example: "3123.12"
+        price:
+          type: number
+          example: "3123.12"
+        created_at:
+          type: string
+          example: 2018-12-23T21:51:34.001122Z
+        expires_at:
+          type: string
+          example: 2018-12-23T21:51:34.001122Z
+    Trade_request:
+      title: Trade
+      type: object
+      properties:
+        request_id:
+          type: string
+          default: some-uuid
+        amount:
+          type: string
+          default: "1.0"
+        total:
+          type: string
+          default: "3123.12345678"
+        instrument:
+          type: string
+          example: BTCEUR.SPOT
+        direction:
+          type: string
+          example: buy
+    Trade_response:
+      title: Trade
+      type: object
+      properties:
+        request_id:
+          type: string
+        client_request_id:
+          type: string
+        total:
+          type: string
+          example: "3123.12345678"
+        amount:
+          type: string
+          default: "1.0"
+        instrument:
+          type: string
+          example: BTCEUR.SPOT
+        direction:
+          type: string
+          example: buy
+        state:
+          type: string
+          enum:
+            - executed
+            - canceled
+            - pending_quote
+          example: executed
+        created_at:
+          type: string
+          example: 2018-12-23T21:51:25.001122Z
+        executed_at:
+          type: string
+          example: 2018-12-23T21:51:34.001122Z
+    Order_request:
+      title: Order
+      type: object
+      properties:
+        client_request_id:
+          type: string
+          default: some-uuid
+        amount:
+          type: string
+          default: "1.0"
+        requested_price:
+          type: string
+          default: "6500.45"
+        order_type:
+          type: string
+          example: "FOK"
+        instrument:
+          type: string
+          example: BTCEUR.SPOT
+        direction:
+          type: string
+          example: buy
+    Balances:
+      title: Balances
+      type: object
+      properties:
+        USD:
+          type: number
+          example: 0
+        EUR:
+          type: number
+          example: 0
+        BTC:
+          type: number
+          example: 0
+        LTC:
+          type: number
+          example: 0
+        XRP:
+          type: number
+          example: 0
+        BCH:
+          type: number
+          example: 0
+    Exposures:
+      title: Exposures
+      type: object
+      properties:
+        USD:
+          type: number
+          example: 0
+        EUR:
+          type: number
+          example: 0
+        BTC:
+          type: number
+          example: 0
+        LTC:
+          type: number
+          example: 0
+        XRP:
+          type: number
+          example: 0
+        BCH:
+          type: number
+          example: 0
+    Instruments:
+      title: Instruments
+      type: array
+      example:
+        instrumennts:
+          - ETHBTC.SPOT
+          - ETHUSD.SPOT
+          - ETHEUR.SPOT
+          - BTCEUR.SPOT
+          - BTCUSD.SPOT
+          - LTCUSD.SPOT
+          - LTCEUR.SPOT
+          - BCHUSD.SPOT
+      items: {}
+    Ledger:
+      title: Ledger
+      type: array
+      items:
+        type: object

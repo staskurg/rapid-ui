@@ -1,0 +1,311 @@
+{
+  "api": {
+    "title": "Firecrawl API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Crawl",
+      "key": "crawl",
+      "operations": [
+        {
+          "id": "getCrawlStatus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/crawl/status/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "scraping",
+                  "processing",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of pages"
+              },
+              "completed": {
+                "type": "integer",
+                "description": "Number of completed pages"
+              },
+              "data": {
+                "type": "array",
+                "description": "Crawled data (when completed)",
+                "items": {
+                  "type": "object",
+                  "description": "Crawled page data"
+                }
+              },
+              "next": {
+                "type": "string",
+                "description": "Next page token"
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message (when failed)"
+              }
+            }
+          }
+        },
+        {
+          "id": "startCrawl",
+          "method": "POST",
+          "kind": "create",
+          "path": "/crawl",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "URL to crawl"
+              },
+              "limit": {
+                "type": "integer",
+                "description": "Maximum number of pages to crawl",
+                "default": 50
+              },
+              "allowBackwardLinks": {
+                "type": "boolean",
+                "description": "Whether to allow crawling backward links",
+                "default": false
+              },
+              "scrapeOptions": {
+                "type": "object",
+                "properties": {
+                  "formats": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Content formats to extract"
+                  },
+                  "extract": {
+                    "type": "object",
+                    "properties": {
+                      "schema": {
+                        "type": "object",
+                        "description": "Schema for content extraction"
+                      },
+                      "systemPrompt": {
+                        "type": "string",
+                        "description": "System prompt for extraction"
+                      },
+                      "prompt": {
+                        "type": "string",
+                        "description": "User prompt for extraction"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "id": {
+                "type": "string",
+                "description": "Crawl job ID"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Map",
+      "key": "map",
+      "operations": [
+        {
+          "id": "mapWebsite",
+          "method": "POST",
+          "kind": "create",
+          "path": "/map",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "URL to map"
+              },
+              "search": {
+                "type": "string",
+                "description": "Optional search query"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether the mapping was successful"
+              },
+              "nodes": {
+                "type": "array",
+                "description": "List of mapped URLs and their relationships",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "description": "URL of the page"
+                    },
+                    "links": {
+                      "type": "array",
+                      "description": "Outgoing links from this page",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scrape",
+      "key": "scrape",
+      "operations": [
+        {
+          "id": "scrapePage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/scrape",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "URL to scrape"
+              },
+              "formats": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "default": [
+                  "markdown",
+                  "html"
+                ],
+                "description": "Content formats to extract"
+              },
+              "extract": {
+                "type": "object",
+                "properties": {
+                  "schema": {
+                    "type": "object",
+                    "description": "Schema for content extraction"
+                  },
+                  "systemPrompt": {
+                    "type": "string",
+                    "description": "System prompt for extraction"
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "User prompt for extraction"
+                  }
+                }
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "description": "Type of action"
+                    },
+                    "milliseconds": {
+                      "type": "integer",
+                      "description": "Delay in milliseconds"
+                    },
+                    "selector": {
+                      "type": "string",
+                      "description": "CSS selector for element"
+                    },
+                    "text": {
+                      "type": "string",
+                      "description": "Text to input"
+                    },
+                    "key": {
+                      "type": "string",
+                      "description": "Keyboard key to press"
+                    }
+                  }
+                }
+              },
+              "location": {
+                "type": "object",
+                "properties": {
+                  "country": {
+                    "type": "string",
+                    "description": "Country code"
+                  },
+                  "languages": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Preferred languages"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether the scraping was successful"
+              },
+              "content": {
+                "type": "object",
+                "description": "Scraped content in requested formats",
+                "properties": {
+                  "markdown": {
+                    "type": "string",
+                    "description": "Content in Markdown format"
+                  },
+                  "html": {
+                    "type": "string",
+                    "description": "Content in HTML format"
+                  }
+                }
+              },
+              "extracted": {
+                "type": "object",
+                "description": "Extracted data based on provided schema/prompts"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

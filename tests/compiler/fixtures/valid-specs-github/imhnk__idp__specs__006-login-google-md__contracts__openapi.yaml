@@ -1,0 +1,229 @@
+openapi: 3.0.0
+info:
+  title: Login with Google API
+  description: API for handling user authentication and registration using Google accounts.
+  version: 1.0.0
+servers:
+  - url: https://api.example.com/v1
+paths:
+  /identity/v1/auth/google:
+    post:
+      summary: Authenticate user with Google ID token
+      operationId: authenticateWithGoogle
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_token:
+                  type: string
+                  description: The Google ID token obtained from the Google SDK.
+              required:
+                - id_token
+      responses:
+        '200':
+          description: Successful authentication (existing or auto-linked user)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  refresh_token:
+                    type: string
+                  expires_in:
+                    type: integer
+                  user:
+                    type: object
+        '202':
+          description: Registration incomplete; phone/profile required
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [pending_profile]
+                  required:
+                    type: array
+                    items:
+                      type: string
+        '409':
+          description: Conflict conditions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    enum: [phone_in_use, phone_bound_to_different_email]
+                  recovery:
+                    type: object
+                    properties:
+                      login_hint:
+                        type: boolean
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+        '401':
+          description: Unauthorized (invalid/expired token, wrong audience)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                  message:
+                    type: string
+
+  /identity/v1/auth/challenge:
+    post:
+      summary: Initiate SMS OTP challenge for phone verification
+      operationId: initiateSmsChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge:
+                  type: string
+                  enum: [sms_otp]
+                phone_number:
+                  type: string
+                  description: Phone number in E.164 format.
+              required:
+                - challenge
+                - phone_number
+      responses:
+        '201':
+          description: OTP challenge initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  challenge_id:
+                    type: string
+                    description: Unique identifier for the OTP challenge.
+                  message:
+                    type: string
+
+  /identity/v1/auth/challenge/verify/google:
+    post:
+      summary: Verify OTP for Google login
+      operationId: verifyGoogleOtp
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge_id:
+                  type: string
+                  description: Challenge ID from the SMS OTP challenge.
+                otp:
+                  type: string
+                  description: The OTP code sent to the user's phone.
+                id_token:
+                  type: string
+                  description: The Google ID token obtained from the Google SDK.
+              required:
+                - challenge_id
+                - otp
+                - id_token
+      responses:
+        '200':
+          description: OTP verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  user_exists:
+                    type: boolean
+                  user_info:
+                    type: object
+                    properties:
+                      full_name:
+                        type: string
+                      email:
+                        type: string
+                  phone_number:
+                    type: string
+                  message:
+                    type: string
+
+  /identity/v1/auth/register:
+    post:
+      summary: Register new user after phone verification
+      operationId: registerNewUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                challenge_id:
+                  type: string
+                  description: Verified challenge ID from SMS OTP flow.
+                user_info:
+                  type: object
+                  properties:
+                    full_name:
+                      type: string
+                      description: User's full name.
+                    date_of_birth:
+                      type: string
+                      format: date
+                      description: User's date of birth in YYYY-MM-DD format.
+                    email:
+                      type: string
+                      description: User's email address.
+                    gender:
+                      type: string
+                      enum: [male, female, other]
+                      description: User's gender.
+              required:
+                - challenge_id
+                - user_info
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  access_token:
+                    type: string
+                    description: JWT access token for authorized API calls.
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token for obtaining new access tokens.
+                  expires_in:
+                    type: integer
+                    description: Token expiration time in seconds.

@@ -1,0 +1,1082 @@
+{
+  "api": {
+    "title": "World Cup Predictor API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "GET:/auth/me",
+          "method": "GET",
+          "kind": "list",
+          "path": "/auth/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "name": {
+                "type": "string"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "player",
+                  "group_admin",
+                  "platform_admin"
+                ]
+              },
+              "avatar": {
+                "type": "string",
+                "nullable": true
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "name",
+              "role"
+            ]
+          }
+        },
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "player",
+                      "group_admin",
+                      "platform_admin"
+                    ]
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "email",
+                  "name",
+                  "role"
+                ]
+              },
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "token"
+            ]
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "player",
+                      "group_admin",
+                      "platform_admin"
+                    ]
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                },
+                "required": [
+                  "id",
+                  "email",
+                  "name",
+                  "role"
+                ]
+              },
+              "token": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "user",
+              "token"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups",
+      "key": "groups",
+      "operations": [
+        {
+          "id": "GET:/groups",
+          "method": "GET",
+          "kind": "list",
+          "path": "/groups",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "adminId": {
+                  "type": "string"
+                },
+                "playerCount": {
+                  "type": "integer"
+                },
+                "inviteCode": {
+                  "type": "string"
+                },
+                "inviteLink": {
+                  "type": "string"
+                },
+                "scoringSystem": {
+                  "type": "string",
+                  "enum": [
+                    "classic",
+                    "extended",
+                    "simple"
+                  ]
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "inactive"
+                  ]
+                },
+                "isMember": {
+                  "type": "boolean",
+                  "description": "Whether the requesting user is a member of this group"
+                },
+                "isAdmin": {
+                  "type": "boolean",
+                  "description": "Whether the requesting user is an admin of this group"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "adminId",
+                "inviteCode",
+                "scoringSystem",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "id": "GET:/groups/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/groups/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "adminId": {
+                "type": "string"
+              },
+              "playerCount": {
+                "type": "integer"
+              },
+              "inviteCode": {
+                "type": "string"
+              },
+              "inviteLink": {
+                "type": "string"
+              },
+              "scoringSystem": {
+                "type": "string",
+                "enum": [
+                  "classic",
+                  "extended",
+                  "simple"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive"
+                ]
+              },
+              "isMember": {
+                "type": "boolean",
+                "description": "Whether the requesting user is a member of this group"
+              },
+              "isAdmin": {
+                "type": "boolean",
+                "description": "Whether the requesting user is an admin of this group"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "adminId",
+              "inviteCode",
+              "scoringSystem",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "GET:/groups/{id}/ranking",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/groups/{id}/ranking",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "joinedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "points": {
+                  "type": "integer"
+                },
+                "isAdmin": {
+                  "type": "boolean"
+                },
+                "position": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "userId",
+                "name",
+                "points"
+              ]
+            }
+          }
+        },
+        {
+          "id": "POST:/groups",
+          "method": "POST",
+          "kind": "create",
+          "path": "/groups",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "scoringSystem": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "adminId": {
+                "type": "string"
+              },
+              "playerCount": {
+                "type": "integer"
+              },
+              "inviteCode": {
+                "type": "string"
+              },
+              "inviteLink": {
+                "type": "string"
+              },
+              "scoringSystem": {
+                "type": "string",
+                "enum": [
+                  "classic",
+                  "extended",
+                  "simple"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive"
+                ]
+              },
+              "isMember": {
+                "type": "boolean",
+                "description": "Whether the requesting user is a member of this group"
+              },
+              "isAdmin": {
+                "type": "boolean",
+                "description": "Whether the requesting user is an admin of this group"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "adminId",
+              "inviteCode",
+              "scoringSystem",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "POST:/groups/join",
+          "method": "POST",
+          "kind": "create",
+          "path": "/groups/join",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "inviteCode": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true
+              },
+              "adminId": {
+                "type": "string"
+              },
+              "playerCount": {
+                "type": "integer"
+              },
+              "inviteCode": {
+                "type": "string"
+              },
+              "inviteLink": {
+                "type": "string"
+              },
+              "scoringSystem": {
+                "type": "string",
+                "enum": [
+                  "classic",
+                  "extended",
+                  "simple"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive"
+                ]
+              },
+              "isMember": {
+                "type": "boolean",
+                "description": "Whether the requesting user is a member of this group"
+              },
+              "isAdmin": {
+                "type": "boolean",
+                "description": "Whether the requesting user is an admin of this group"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "adminId",
+              "inviteCode",
+              "scoringSystem",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matches",
+      "key": "matches",
+      "operations": [
+        {
+          "id": "GET:/matches",
+          "method": "GET",
+          "kind": "list",
+          "path": "/matches",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "homeTeam": {
+                  "type": "string"
+                },
+                "awayTeam": {
+                  "type": "string"
+                },
+                "homeFlag": {
+                  "type": "string"
+                },
+                "awayFlag": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "time": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "upcoming",
+                    "live",
+                    "finished"
+                  ]
+                },
+                "homeScore": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "awayScore": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "matchNumber": {
+                  "type": "integer",
+                  "nullable": true
+                },
+                "stage": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "group": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "stadium": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "city": {
+                  "type": "string",
+                  "nullable": true
+                },
+                "userPrediction": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "matchId": {
+                      "type": "string"
+                    },
+                    "userId": {
+                      "type": "string"
+                    },
+                    "homeScore": {
+                      "type": "integer"
+                    },
+                    "awayScore": {
+                      "type": "integer"
+                    },
+                    "points": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Points awarded for this prediction (context-dependent if fetched within a group)"
+                    }
+                  },
+                  "required": [
+                    "matchId",
+                    "userId",
+                    "homeScore",
+                    "awayScore"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "homeTeam",
+                "awayTeam",
+                "date",
+                "status"
+              ]
+            }
+          }
+        },
+        {
+          "id": "POST:/matches",
+          "method": "POST",
+          "kind": "create",
+          "path": "/matches",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "homeTeam": {
+                "type": "string"
+              },
+              "awayTeam": {
+                "type": "string"
+              },
+              "homeFlag": {
+                "type": "string"
+              },
+              "awayFlag": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "time": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "upcoming",
+                  "live",
+                  "finished"
+                ]
+              },
+              "homeScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "awayScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "matchNumber": {
+                "type": "integer",
+                "nullable": true
+              },
+              "stage": {
+                "type": "string",
+                "nullable": true
+              },
+              "group": {
+                "type": "string",
+                "nullable": true
+              },
+              "stadium": {
+                "type": "string",
+                "nullable": true
+              },
+              "city": {
+                "type": "string",
+                "nullable": true
+              },
+              "userPrediction": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "matchId": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "homeScore": {
+                    "type": "integer"
+                  },
+                  "awayScore": {
+                    "type": "integer"
+                  },
+                  "points": {
+                    "type": "integer",
+                    "nullable": true,
+                    "description": "Points awarded for this prediction (context-dependent if fetched within a group)"
+                  }
+                },
+                "required": [
+                  "matchId",
+                  "userId",
+                  "homeScore",
+                  "awayScore"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "homeTeam",
+              "awayTeam",
+              "date",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "homeTeam": {
+                "type": "string"
+              },
+              "awayTeam": {
+                "type": "string"
+              },
+              "homeFlag": {
+                "type": "string"
+              },
+              "awayFlag": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "time": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "upcoming",
+                  "live",
+                  "finished"
+                ]
+              },
+              "homeScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "awayScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "matchNumber": {
+                "type": "integer",
+                "nullable": true
+              },
+              "stage": {
+                "type": "string",
+                "nullable": true
+              },
+              "group": {
+                "type": "string",
+                "nullable": true
+              },
+              "stadium": {
+                "type": "string",
+                "nullable": true
+              },
+              "city": {
+                "type": "string",
+                "nullable": true
+              },
+              "userPrediction": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "matchId": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "homeScore": {
+                    "type": "integer"
+                  },
+                  "awayScore": {
+                    "type": "integer"
+                  },
+                  "points": {
+                    "type": "integer",
+                    "nullable": true,
+                    "description": "Points awarded for this prediction (context-dependent if fetched within a group)"
+                  }
+                },
+                "required": [
+                  "matchId",
+                  "userId",
+                  "homeScore",
+                  "awayScore"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "homeTeam",
+              "awayTeam",
+              "date",
+              "status"
+            ]
+          }
+        },
+        {
+          "id": "PUT:/matches/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/matches/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "homeScore": {
+                "type": "integer"
+              },
+              "awayScore": {
+                "type": "integer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "homeTeam": {
+                "type": "string"
+              },
+              "awayTeam": {
+                "type": "string"
+              },
+              "homeFlag": {
+                "type": "string"
+              },
+              "awayFlag": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "time": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "upcoming",
+                  "live",
+                  "finished"
+                ]
+              },
+              "homeScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "awayScore": {
+                "type": "integer",
+                "nullable": true
+              },
+              "matchNumber": {
+                "type": "integer",
+                "nullable": true
+              },
+              "stage": {
+                "type": "string",
+                "nullable": true
+              },
+              "group": {
+                "type": "string",
+                "nullable": true
+              },
+              "stadium": {
+                "type": "string",
+                "nullable": true
+              },
+              "city": {
+                "type": "string",
+                "nullable": true
+              },
+              "userPrediction": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "matchId": {
+                    "type": "string"
+                  },
+                  "userId": {
+                    "type": "string"
+                  },
+                  "homeScore": {
+                    "type": "integer"
+                  },
+                  "awayScore": {
+                    "type": "integer"
+                  },
+                  "points": {
+                    "type": "integer",
+                    "nullable": true,
+                    "description": "Points awarded for this prediction (context-dependent if fetched within a group)"
+                  }
+                },
+                "required": [
+                  "matchId",
+                  "userId",
+                  "homeScore",
+                  "awayScore"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "homeTeam",
+              "awayTeam",
+              "date",
+              "status"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions",
+      "key": "predictions",
+      "operations": [
+        {
+          "id": "POST:/predictions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/predictions",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "matchId": {
+                "type": "string"
+              },
+              "homeScore": {
+                "type": "integer"
+              },
+              "awayScore": {
+                "type": "integer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "matchId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "homeScore": {
+                "type": "integer"
+              },
+              "awayScore": {
+                "type": "integer"
+              },
+              "points": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Points awarded for this prediction (context-dependent if fetched within a group)"
+              }
+            },
+            "required": [
+              "matchId",
+              "userId",
+              "homeScore",
+              "awayScore"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/users",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string",
+                  "enum": [
+                    "player",
+                    "group_admin",
+                    "platform_admin"
+                  ]
+                },
+                "avatar": {
+                  "type": "string",
+                  "nullable": true
+                }
+              },
+              "required": [
+                "id",
+                "email",
+                "name",
+                "role"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

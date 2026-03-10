@@ -1,0 +1,206 @@
+{
+  "api": {
+    "title": "Anthropic AI API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Complete",
+      "key": "complete",
+      "operations": [
+        {
+          "id": "POST:/complete",
+          "method": "POST",
+          "kind": "create",
+          "path": "/complete",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "model": {
+                "type": "string",
+                "example": "claude-2"
+              },
+              "prompt": {
+                "type": "string"
+              },
+              "max_tokens_to_sample": {
+                "type": "integer",
+                "description": "Maximum tokens to sample.",
+                "example": 256
+              },
+              "stream": {
+                "type": "boolean",
+                "description": "Whether to stream responses incrementally.",
+                "example": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "completion": {
+                "type": "string"
+              },
+              "stop_reason": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "key": "messages",
+      "operations": [
+        {
+          "id": "POST:/messages",
+          "method": "POST",
+          "kind": "create",
+          "path": "/messages",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "model": {
+                "type": "string",
+                "example": "claude-2"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "temperature": {
+                "type": "number",
+                "description": "Sampling temperature to control randomness of response.",
+                "example": 0.7
+              },
+              "max_tokens": {
+                "type": "integer",
+                "description": "Maximum tokens to generate.",
+                "example": 256
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "completion": {
+                "type": "string"
+              },
+              "usage": {
+                "type": "object",
+                "properties": {
+                  "tokens": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/messages/streaming",
+          "method": "POST",
+          "kind": "create",
+          "path": "/messages/streaming",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "model": {
+                "type": "string",
+                "example": "claude-2"
+              },
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "user",
+                        "assistant"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "stream": {
+                "type": "boolean",
+                "description": "Whether to stream responses incrementally.",
+                "example": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Streaming",
+      "key": "streaming",
+      "operations": [
+        {
+          "id": "POST:/streaming",
+          "method": "POST",
+          "kind": "create",
+          "path": "/streaming",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "model": {
+                "type": "string",
+                "example": "claude-2"
+              },
+              "prompt": {
+                "type": "string"
+              },
+              "stream": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "event": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

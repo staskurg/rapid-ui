@@ -1,0 +1,471 @@
+{
+  "api": {
+    "title": "SDG19 Final API",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 256
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "userId",
+              "accessToken",
+              "idToken"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "accessToken": {
+                "type": "string"
+              },
+              "idToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/refresh",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refreshToken"
+            ],
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "minLength": 20,
+                "maxLength": 4096,
+                "pattern": "^[A-Za-z0-9+/=._-]+$",
+                "description": "Token opaco de Cognito (formato base64-like)."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "userId",
+              "accessToken",
+              "idToken"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "accessToken": {
+                "type": "string"
+              },
+              "idToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 256
+              },
+              "name": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "userId",
+              "accessToken",
+              "idToken"
+            ],
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "accessToken": {
+                "type": "string"
+              },
+              "idToken": {
+                "type": "string"
+              },
+              "refreshToken": {
+                "type": "string"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "format": "int32"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "items",
+              "limit"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "orderId",
+                    "status",
+                    "createdAt",
+                    "items",
+                    "total",
+                    "currency"
+                  ],
+                  "properties": {
+                    "orderId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "CREATED",
+                        "PENDING",
+                        "FAILED",
+                        "COMPLETED"
+                      ],
+                      "example": "CREATED"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "items": {
+                      "type": "array",
+                      "maxItems": 50,
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "productId",
+                          "quantity"
+                        ],
+                        "properties": {
+                          "productId": {
+                            "type": "string"
+                          },
+                          "quantity": {
+                            "type": "integer",
+                            "format": "int32",
+                            "minimum": 1,
+                            "maximum": 1000
+                          },
+                          "unitPrice": {
+                            "type": "integer",
+                            "format": "int64",
+                            "description": "Precio unitario en centavos.",
+                            "example": 2999
+                          }
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Total de la orden en centavos.",
+                      "example": 5999
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD",
+                        "EUR",
+                        "GTQ"
+                      ],
+                      "example": "USD"
+                    }
+                  }
+                }
+              },
+              "nextToken": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "returnedCount": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "items"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "maximum": 1000
+                    },
+                    "unitPrice": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Precio unitario en centavos.",
+                      "example": 2999
+                    }
+                  }
+                }
+              },
+              "notes": {
+                "type": "string",
+                "maxLength": 10000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "orderId",
+              "status",
+              "createdAt",
+              "items",
+              "total",
+              "currency"
+            ],
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CREATED",
+                  "PENDING",
+                  "FAILED",
+                  "COMPLETED"
+                ],
+                "example": "CREATED"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "items": {
+                "type": "array",
+                "maxItems": 50,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "format": "int32",
+                      "minimum": 1,
+                      "maximum": 1000
+                    },
+                    "unitPrice": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Precio unitario en centavos.",
+                      "example": 2999
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Total de la orden en centavos.",
+                "example": 5999
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "USD",
+                  "EUR",
+                  "GTQ"
+                ],
+                "example": "USD"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "items",
+              "limit"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "price",
+                    "availableQuantity"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "imageUrl": {
+                      "type": "string"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Precio en centavos (ej. 1000 = $10.00).",
+                      "example": 2999
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "USD",
+                        "EUR",
+                        "GTQ"
+                      ],
+                      "example": "USD"
+                    },
+                    "availableQuantity": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Number of units currently available",
+                      "example": 12
+                    }
+                  }
+                }
+              },
+              "nextToken": {
+                "type": "string"
+              },
+              "limit": {
+                "type": "integer"
+              },
+              "returnedCount": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

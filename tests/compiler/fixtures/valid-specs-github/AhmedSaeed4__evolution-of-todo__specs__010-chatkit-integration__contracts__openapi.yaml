@@ -1,0 +1,289 @@
+openapi: 3.0.3
+info:
+  title: ChatKit Integration API
+  description: OpenAPI specification for ChatKit session management and integration endpoints
+  version: 1.0.0
+  contact:
+    name: Evolution of Todo Team
+    email: team@evolutionoftodo.com
+  x-logo:
+    url: https://example.com/logo.png
+    alt: Evolution of Todo Logo
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+  - url: https://api.evolutionoftodo.com
+    description: Production server
+
+tags:
+  - name: ChatKit
+    description: ChatKit session management and integration
+  - name: Health
+    description: Health check and configuration validation
+
+paths:
+  # ChatKit Session Management
+  /api/chatkit/session:
+    post:
+      tags: [ChatKit]
+      summary: Create ChatKit session
+      description: |
+        Creates a new OpenAI ChatKit session and returns client secret for frontend authentication.
+
+        **Security**: Requires valid JWT token in Authorization header.
+
+        **Note**: OPENAI_API_KEY must be configured in backend environment even when using other AI providers (like Xiaomi mimo-v2-flash).
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Session created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [client_secret, session_id, expires_at]
+                properties:
+                  client_secret:
+                    type: string
+                    description: ChatKit client secret for frontend authentication
+                    example: "sk-chatkit-abc123..."
+                  session_id:
+                    type: string
+                    description: OpenAI ChatKit session identifier
+                    example: "chatkit-session-uuid-12345"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: Expiration timestamp for the client secret
+                    example: "2026-01-17T10:30:00Z"
+        '401':
+          description: Invalid or expired JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or expired JWT token"
+        '500':
+          description: Server configuration error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "OPENAI_API_KEY is required for ChatKit session management..."
+
+  /api/chatkit/refresh:
+    post:
+      tags: [ChatKit]
+      summary: Refresh ChatKit session
+      description: |
+        Refreshes an expired ChatKit session token and returns new client secret.
+
+        **Security**: Requires valid JWT token in Authorization header.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Session refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [client_secret, session_id, expires_at]
+                properties:
+                  client_secret:
+                    type: string
+                    description: New ChatKit client secret
+                    example: "sk-chatkit-refreshed-xyz789..."
+                  session_id:
+                    type: string
+                    description: ChatKit session identifier (same as before)
+                    example: "chatkit-session-uuid-12345"
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: New expiration timestamp
+                    example: "2026-01-17T11:30:00Z"
+        '401':
+          description: Invalid or expired JWT token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Invalid or expired JWT token"
+        '404':
+          description: ChatKit session not found or expired
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "ChatKit session not found or expired"
+
+  # Health Check
+  /api/chatkit/health:
+    get:
+      tags: [Health]
+      summary: ChatKit health check
+      description: |
+        Validates ChatKit configuration and endpoint availability.
+
+        **Note**: This endpoint is public and does not require authentication.
+      responses:
+        '200':
+          description: Configuration is valid and endpoints are available
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [openai_key_configured, session_endpoint_available, store_implemented, timestamp]
+                properties:
+                  openai_key_configured:
+                    type: boolean
+                    description: Whether OPENAI_API_KEY environment variable is set
+                    example: true
+                  session_endpoint_available:
+                    type: boolean
+                    description: Whether session endpoints are operational
+                    example: true
+                  store_implemented:
+                    type: boolean
+                    description: Whether ChatKit Store methods are implemented
+                    example: true
+                  timestamp:
+                    type: string
+                    format: date-time
+                    description: Current server timestamp
+                    example: "2026-01-16T10:30:00Z"
+        '500':
+          description: Configuration error
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [openai_key_configured, session_endpoint_available, store_implemented, timestamp]
+                properties:
+                  openai_key_configured:
+                    type: boolean
+                    example: false
+                  session_endpoint_available:
+                    type: boolean
+                    example: true
+                  store_implemented:
+                    type: boolean
+                    example: true
+                  timestamp:
+                    type: string
+                    format: date-time
+                    example: "2026-01-16T10:30:00Z"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from Better Auth authentication
+
+  schemas:
+    # Error Response Schema
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Human-readable error message
+          example: "Error description"
+
+    # Session Response Schema
+    ChatKitSessionResponse:
+      type: object
+      required: [client_secret, session_id, expires_at]
+      properties:
+        client_secret:
+          type: string
+          description: ChatKit client secret for frontend authentication
+          example: "sk-chatkit-abc123..."
+        session_id:
+          type: string
+          description: OpenAI ChatKit session identifier
+          example: "chatkit-session-uuid-12345"
+        expires_at:
+          type: string
+          format: date-time
+          description: Expiration timestamp for the client secret
+          example: "2026-01-17T10:30:00Z"
+
+    # Health Check Response Schema
+    HealthCheckResponse:
+      type: object
+      required: [openai_key_configured, session_endpoint_available, store_implemented, timestamp]
+      properties:
+        openai_key_configured:
+          type: boolean
+          description: Whether OPENAI_API_KEY environment variable is set
+          example: true
+        session_endpoint_available:
+          type: boolean
+          description: Whether session endpoints are operational
+          example: true
+        store_implemented:
+          type: boolean
+          description: Whether ChatKit Store methods are implemented
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server timestamp
+          example: "2026-01-16T10:30:00Z"
+
+  # Examples
+  examples:
+    SessionSuccess:
+      summary: Successful session creation
+      value:
+        client_secret: "sk-chatkit-abc123def456..."
+        session_id: "chatkit-session-uuid-12345"
+        expires_at: "2026-01-17T10:30:00Z"
+
+    HealthSuccess:
+      summary: Healthy configuration
+      value:
+        openai_key_configured: true
+        session_endpoint_available: true
+        store_implemented: true
+        timestamp: "2026-01-16T10:30:00Z"
+
+    HealthError:
+      summary: Missing OpenAI API key
+      value:
+        openai_key_configured: false
+        session_endpoint_available: true
+        store_implemented: true
+        timestamp: "2026-01-16T10:30:00Z"

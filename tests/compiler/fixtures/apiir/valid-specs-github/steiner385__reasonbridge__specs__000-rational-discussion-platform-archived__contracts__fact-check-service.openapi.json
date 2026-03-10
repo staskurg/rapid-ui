@@ -1,0 +1,484 @@
+{
+  "api": {
+    "title": "reasonBridge Fact-Check Service API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Claims",
+      "key": "claims",
+      "operations": [
+        {
+          "id": "listProviders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/providers",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "providers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "topics": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Topics this provider covers"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getResultsForResponse",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/results/{responseId}",
+          "identifierParam": "responseId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "claimText",
+                    "displayedAs",
+                    "sources"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "claimText": {
+                      "type": "string"
+                    },
+                    "claimStartOffset": {
+                      "type": "integer"
+                    },
+                    "claimEndOffset": {
+                      "type": "integer"
+                    },
+                    "displayedAs": {
+                      "type": "string",
+                      "default": "Related Context",
+                      "description": "UI label - never \"verdict\" or \"truth rating\""
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "provider",
+                          "url",
+                          "title"
+                        ],
+                        "properties": {
+                          "provider": {
+                            "type": "string",
+                            "description": "Fact-check provider name (e.g., \"Snopes\", \"PolitiFact\")"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "rating": {
+                            "type": "string",
+                            "description": "Provider's rating (passed through, not interpreted)"
+                          },
+                          "ratingDescription": {
+                            "type": "string",
+                            "description": "Full description from provider"
+                          },
+                          "credibilityScore": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Source credibility rating"
+                          },
+                          "retrievedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "hasConflictingSources": {
+                      "type": "boolean",
+                      "description": "True if sources disagree"
+                    },
+                    "conflictSummary": {
+                      "type": "string",
+                      "description": "Explanation of conflict if sources disagree"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Cache expiration (24h default)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "checkClaims",
+          "method": "POST",
+          "kind": "create",
+          "path": "/check",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "responseId",
+              "claims"
+            ],
+            "properties": {
+              "responseId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Response containing the claims"
+              },
+              "claims": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "text",
+                    "startOffset",
+                    "endOffset"
+                  ],
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "The factual claim to check"
+                    },
+                    "startOffset": {
+                      "type": "integer",
+                      "description": "Position in original response"
+                    },
+                    "endOffset": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "claimText",
+                    "displayedAs",
+                    "sources"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "claimText": {
+                      "type": "string"
+                    },
+                    "claimStartOffset": {
+                      "type": "integer"
+                    },
+                    "claimEndOffset": {
+                      "type": "integer"
+                    },
+                    "displayedAs": {
+                      "type": "string",
+                      "default": "Related Context",
+                      "description": "UI label - never \"verdict\" or \"truth rating\""
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "provider",
+                          "url",
+                          "title"
+                        ],
+                        "properties": {
+                          "provider": {
+                            "type": "string",
+                            "description": "Fact-check provider name (e.g., \"Snopes\", \"PolitiFact\")"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "publishedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "rating": {
+                            "type": "string",
+                            "description": "Provider's rating (passed through, not interpreted)"
+                          },
+                          "ratingDescription": {
+                            "type": "string",
+                            "description": "Full description from provider"
+                          },
+                          "credibilityScore": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Source credibility rating"
+                          },
+                          "retrievedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        }
+                      }
+                    },
+                    "hasConflictingSources": {
+                      "type": "boolean",
+                      "description": "True if sources disagree"
+                    },
+                    "conflictSummary": {
+                      "type": "string",
+                      "description": "Explanation of conflict if sources disagree"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Cache expiration (24h default)"
+                    }
+                  }
+                }
+              },
+              "processingTimeMs": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sources",
+      "key": "sources",
+      "operations": [
+        {
+          "id": "getSourceCredibility",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/sources/{domain}",
+          "identifierParam": "domain",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "domain": {
+                "type": "string"
+              },
+              "overallScore": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "factualReporting": {
+                "type": "string",
+                "enum": [
+                  "very_high",
+                  "high",
+                  "mixed",
+                  "low",
+                  "very_low",
+                  "unknown"
+                ]
+              },
+              "biasRating": {
+                "type": "string",
+                "enum": [
+                  "left",
+                  "left_center",
+                  "center",
+                  "right_center",
+                  "right",
+                  "unknown"
+                ]
+              },
+              "mediaType": {
+                "type": "string",
+                "enum": [
+                  "news",
+                  "opinion",
+                  "satire",
+                  "advocacy",
+                  "academic",
+                  "government",
+                  "unknown"
+                ]
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rater": {
+                      "type": "string",
+                      "description": "Who provided the rating"
+                    },
+                    "rating": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    }
+                  }
+                }
+              },
+              "lastUpdated": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "batchSourceCredibility",
+          "method": "POST",
+          "kind": "create",
+          "path": "/sources/batch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "domains"
+            ],
+            "properties": {
+              "domains": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 50
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "domain": {
+                      "type": "string"
+                    },
+                    "overallScore": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "factualReporting": {
+                      "type": "string",
+                      "enum": [
+                        "very_high",
+                        "high",
+                        "mixed",
+                        "low",
+                        "very_low",
+                        "unknown"
+                      ]
+                    },
+                    "biasRating": {
+                      "type": "string",
+                      "enum": [
+                        "left",
+                        "left_center",
+                        "center",
+                        "right_center",
+                        "right",
+                        "unknown"
+                      ]
+                    },
+                    "mediaType": {
+                      "type": "string",
+                      "enum": [
+                        "news",
+                        "opinion",
+                        "satire",
+                        "advocacy",
+                        "academic",
+                        "government",
+                        "unknown"
+                      ]
+                    },
+                    "sources": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "rater": {
+                            "type": "string",
+                            "description": "Who provided the rating"
+                          },
+                          "rating": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri"
+                          }
+                        }
+                      }
+                    },
+                    "lastUpdated": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

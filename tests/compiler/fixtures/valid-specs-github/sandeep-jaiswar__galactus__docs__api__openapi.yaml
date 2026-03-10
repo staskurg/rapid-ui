@@ -1,0 +1,529 @@
+openapi: 3.0.3
+info:
+  title: Galactus Intent Inference API
+  description: |
+    Capital-pressure inference engine for Indian financial markets.
+    
+    Galactus infers forced and strategic capital behavior using public data.
+    
+    **Galactus does not predict prices.**  
+    **Galactus does not issue trading instructions.**  
+    **Galactus infers, explains, and waits.**
+  version: 0.1.0
+  contact:
+    name: Galactus Team
+  license:
+    name: TBD
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+  - url: https://api.galactus.example.com/api/v1
+    description: Production server
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /intent:
+    post:
+      summary: Compute single intent vector
+      description: |
+        Computes a single intent vector from provided market data and signals.
+        
+        Returns capital pressure inference with confidence assessment.
+      operationId: computeIntent
+      tags:
+        - Intent Computation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntentRequest'
+            examples:
+              oi_decay_signal:
+                summary: OI decay signal
+                value:
+                  signals:
+                    - name: oi_decay
+                      value: -0.4
+                      confidence: 0.85
+                      timestamp: 1703123456
+                      metadata: {}
+                  client_id: client_123
+                  context: {}
+                  metadata: {}
+      responses:
+        '200':
+          description: Intent computed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntentResponse'
+              examples:
+                bear_pressure:
+                  summary: Bear pressure detected
+                  value:
+                    result:
+                      intent:
+                        pressure: -0.25
+                        confidence: 0.82
+                        regime: bear
+                        signals:
+                          oi_decay:
+                            value: -0.4
+                            weight: 0.8
+                            confidence: 0.85
+                        timestamp: 1703123456
+                      alternatives: []
+                      metadata:
+                        server_version: 0.1.0
+                      processing_time_ns: 150000
+                    metadata: {}
+                    timestamp: 1703123456
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /intent/batch:
+    post:
+      summary: Compute batch intent vectors
+      description: |
+        Computes multiple intent vectors in a single request.
+        
+        More efficient than multiple single requests.
+      operationId: batchComputeIntent
+      tags:
+        - Intent Computation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchIntentRequest'
+      responses:
+        '200':
+          description: Batch computation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchIntentResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /health:
+    get:
+      summary: Service health check
+      description: |
+        Returns service health status and basic metrics.
+        
+        Used for monitoring and load balancer health checks.
+      operationId: healthCheck
+      tags:
+        - Monitoring
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: healthy
+                version: 0.1.0
+                uptime_seconds: 3600
+                metrics:
+                  total_requests: "15000"
+                  active_connections: "5"
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: unhealthy
+                version: 0.1.0
+                uptime_seconds: 120
+                error: Database connection failed
+
+  /metrics:
+    get:
+      summary: Service metrics
+      description: |
+        Returns detailed service metrics for monitoring.
+      operationId: getMetrics
+      tags:
+        - Monitoring
+      responses:
+        '200':
+          description: Metrics retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsResponse'
+              example:
+                requests_total: 15000
+                requests_per_second: 4.2
+                average_latency_ms: 2.1
+                error_rate: 0.001
+                active_connections: 5
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    IntentRequest:
+      type: object
+      required:
+        - signals
+        - client_id
+      properties:
+        signals:
+          type: array
+          description: Input signals for intent computation
+          items:
+            $ref: '#/components/schemas/SignalInput'
+          minItems: 1
+          maxItems: 10
+        client_id:
+          type: string
+          description: Client identifier for tracking
+          example: client_123
+        context:
+          type: object
+          description: Additional context data
+          additionalProperties:
+            type: string
+        metadata:
+          type: object
+          description: Request metadata
+          additionalProperties:
+            type: string
+
+    SignalInput:
+      type: object
+      required:
+        - name
+        - value
+        - confidence
+        - timestamp
+      properties:
+        name:
+          type: string
+          description: Signal identifier
+          example: oi_decay
+        value:
+          type: number
+          format: double
+          description: Signal value
+          minimum: -1.0
+          maximum: 1.0
+          example: -0.4
+        confidence:
+          type: number
+          format: double
+          description: Signal confidence
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.85
+        timestamp:
+          type: integer
+          format: int64
+          description: Signal timestamp (Unix epoch)
+          example: 1703123456
+        metadata:
+          type: object
+          description: Signal-specific metadata
+          additionalProperties: true
+
+    IntentResponse:
+      type: object
+      required:
+        - result
+        - timestamp
+      properties:
+        result:
+          $ref: '#/components/schemas/IntentResult'
+        metadata:
+          type: object
+          description: Response metadata
+          additionalProperties:
+            type: string
+        timestamp:
+          type: integer
+          format: int64
+          description: Response timestamp (Unix epoch)
+
+    IntentResult:
+      type: object
+      required:
+        - intent
+      properties:
+        intent:
+          $ref: '#/components/schemas/IntentVector'
+        alternatives:
+          type: array
+          description: Alternative intent interpretations
+          items:
+            $ref: '#/components/schemas/IntentVector'
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        processing_time_ns:
+          type: integer
+          format: int64
+          description: Processing time in nanoseconds
+
+    IntentVector:
+      type: object
+      required:
+        - pressure
+        - confidence
+        - timestamp
+      properties:
+        pressure:
+          type: number
+          format: double
+          description: Capital pressure direction
+          minimum: -1.0
+          maximum: 1.0
+          example: -0.25
+        confidence:
+          type: number
+          format: double
+          description: Confidence in inference
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.82
+        regime:
+          type: string
+          description: Market regime classification
+          enum: [bull, bear, neutral, transition]
+          example: bear
+        signals:
+          type: object
+          description: Contributing signals
+          additionalProperties:
+            $ref: '#/components/schemas/SignalContribution'
+        timestamp:
+          type: integer
+          format: int64
+          description: Computation timestamp (Unix epoch)
+
+    SignalContribution:
+      type: object
+      required:
+        - value
+        - weight
+        - confidence
+      properties:
+        value:
+          type: number
+          format: double
+          description: Signal value
+          minimum: -1.0
+          maximum: 1.0
+        weight:
+          type: number
+          format: double
+          description: Signal weight in aggregation
+          minimum: 0.0
+          maximum: 1.0
+        confidence:
+          type: number
+          format: double
+          description: Signal confidence
+          minimum: 0.0
+          maximum: 1.0
+        metadata:
+          type: object
+          additionalProperties: true
+
+    BatchIntentRequest:
+      type: object
+      required:
+        - requests
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntentRequest'
+          minItems: 1
+          maxItems: 100
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+
+    BatchIntentResponse:
+      type: object
+      required:
+        - responses
+      properties:
+        responses:
+          type: array
+          items:
+            $ref: '#/components/schemas/IntentResponse'
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+        timestamp:
+          type: integer
+          format: int64
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy, degraded]
+        version:
+          type: string
+          example: 0.1.0
+        uptime_seconds:
+          type: integer
+          format: int64
+        metrics:
+          type: object
+          additionalProperties:
+            type: string
+        error:
+          type: string
+          description: Error message if unhealthy
+
+    MetricsResponse:
+      type: object
+      properties:
+        requests_total:
+          type: integer
+          format: int64
+        requests_per_second:
+          type: number
+          format: double
+        average_latency_ms:
+          type: number
+          format: double
+        error_rate:
+          type: number
+          format: double
+        active_connections:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+              description: Error code
+              example: INVALID_REQUEST
+            message:
+              type: string
+              description: Human-readable error message
+              example: Signal value 1.5 is outside valid range [-1.0, 1.0]
+            details:
+              type: object
+              description: Additional error details
+              additionalProperties: true
+
+  responses:
+    BadRequest:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INVALID_REQUEST
+              message: Signal value must be between -1.0 and 1.0
+              details: {}
+
+    Unauthorized:
+      description: Authentication failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Invalid or missing API key
+              details: {}
+
+    RateLimitExceeded:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          description: Request limit per time window
+          schema:
+            type: integer
+        X-RateLimit-Remaining:
+          description: Remaining requests in window
+          schema:
+            type: integer
+        X-RateLimit-Reset:
+          description: Time when limit resets (Unix epoch)
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: RATE_LIMIT_EXCEEDED
+              message: Rate limit of 100 requests per second exceeded
+              details:
+                retry_after_seconds: 60
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: INTERNAL_ERROR
+              message: An internal error occurred
+              details: {}
+
+tags:
+  - name: Intent Computation
+    description: Core intent inference endpoints
+  - name: Monitoring
+    description: Health and metrics endpoints

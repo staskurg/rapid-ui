@@ -1,0 +1,985 @@
+openapi: 3.0.1
+info:
+  title: Users Api v1
+  version: v1
+servers:
+- url: https://users.roblox.com/
+paths:
+  /v1/birthdate:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.BirthdateResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.BirthdateResponse'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Get the user's birthdate
+      tags:
+      - AccountInformation
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.BirthdateRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.BirthdateRequest'
+        description: The Roblox.Users.Api.BirthdateRequest
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found.\r\n4: The birthdate provided is invalid.\r\
+            \n8: Password is incorrect."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+        "403":
+          content: {}
+          description: "0: Token Validation Failed\r\n2: PIN is locked.\r\n5: Invalid\
+            \ birthdate change."
+        "500":
+          content: {}
+          description: "0: An unknown error occured.\r\n5: Invalid birthdate change."
+      summary: Update the user's birthdate
+      tags:
+      - AccountInformation
+      x-codegen-request-body-name: request
+  /v1/description:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.DescriptionResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.DescriptionResponse'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Get the user's description
+      tags:
+      - AccountInformation
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.DescriptionRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.DescriptionRequest'
+        description: The Roblox.Users.Api.DescriptionRequest
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.DescriptionResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.DescriptionResponse'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+        "403":
+          content: {}
+          description: "0: Token Validation Failed\r\n2: PIN is locked."
+        "500":
+          content: {}
+          description: "0: An unknown error occured."
+        "503":
+          content: {}
+          description: "3: This feature is currently disabled. Please try again later."
+      summary: Update the user's description
+      tags:
+      - AccountInformation
+      x-codegen-request-body-name: request
+  /v1/display-names/validate:
+    get:
+      parameters:
+      - description: The display name.
+        in: query
+        name: displayName
+        required: true
+        schema:
+          type: string
+      - description: The new user's birthdate
+        in: query
+        name: birthdate
+        required: true
+        schema:
+          format: date-time
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+          description: OK
+        "400":
+          content: {}
+          description: "1: Display name is too short\r\n2: Display name is too long\r\
+            \n3: Display name contains invalid characters\r\n4: Display name has been\
+            \ moderated\r\n6: Request must contain a birthdate"
+        "429":
+          content: {}
+          description: "5: Display name updates for this user have been throttled"
+      summary: Validate a display name for a new user.
+      tags:
+      - DisplayNames
+  /v1/gender:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.GenderResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.GenderResponse'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Get the user's gender
+      tags:
+      - AccountInformation
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.GenderRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.GenderRequest'
+        description: The Roblox.Users.Api.GenderRequest
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+          description: OK
+        "400":
+          content: {}
+          description: "1: User not found.\r\n6: The gender provided is invalid."
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+        "403":
+          content: {}
+          description: "0: Token Validation Failed\r\n2: PIN is locked."
+        "500":
+          content: {}
+          description: "0: An unknown error occured."
+      summary: Update the user's gender
+      tags:
+      - AccountInformation
+      x-codegen-request-body-name: request
+  /v1/users/{userId}:
+    get:
+      parameters:
+      - description: The user id.
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.GetUserResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.GetUserResponse'
+          description: OK
+        "404":
+          content: {}
+          description: "3: The user id is invalid."
+      summary: Gets detailed user information by id.
+      tags:
+      - Users
+  /v1/users/{userId}/display-names/validate:
+    get:
+      parameters:
+      - description: The user id.
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: The display name.
+        in: query
+        name: displayName
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+          description: OK
+        "400":
+          content: {}
+          description: "1: Display name is too short\r\n2: Display name is too long\r\
+            \n3: Display name contains invalid characters\r\n4: Display name has been\
+            \ moderated"
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+        "403":
+          content: {}
+          description: "7: The user id is invalid."
+        "429":
+          content: {}
+          description: "5: Display name updates for this user have been throttled"
+      summary: Validate a display name for an existing user.
+      tags:
+      - DisplayNames
+  /v1/users/{userId}/username-history:
+    get:
+      parameters:
+      - in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+      - description: The number of results per request.
+        in: query
+        name: limit
+        schema:
+          default: 10
+          enum:
+          - 10
+          - 25
+          - 50
+          - 100
+          format: int32
+          type: integer
+      - description: The paging cursor for the previous or next page.
+        in: query
+        name: cursor
+        schema:
+          type: string
+      - description: The order the results are sorted in.
+        in: query
+        name: sortOrder
+        schema:
+          default: Asc
+          enum:
+          - Asc
+          - Desc
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UsernameHistoryResponse]"
+            text/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UsernameHistoryResponse]"
+          description: OK
+        "400":
+          content: {}
+          description: "3: The user id is invalid."
+      summary: Retrieves the username history for a particular user.
+      tags:
+      - Usernames
+  /v1/users/authenticated:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.AuthenticatedUserResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.AuthenticatedUserResponse'
+          description: OK
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Gets the minimal authenticated user.
+      tags:
+      - Users
+  /v1/users/authenticated/age-bracket:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserAgeBracketResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserAgeBracketResponse'
+          description: OK
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Gets the age bracket of the authenticated user.
+      tags:
+      - Users
+  /v1/users/authenticated/country-code:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserCountryCodeResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserCountryCodeResponse'
+          description: OK
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: Gets the country code of the authenticated user.
+      tags:
+      - Users
+  /v1/users/authenticated/roles:
+    get:
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserRolesResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Users.Api.UserRolesResponse'
+          description: OK
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+      summary: "Gets the (public) roles of the authenticated user, such as `\"Soothsayer\"\
+        ` and `\"BetaTester\"`."
+      tags:
+      - Users
+  /v1/users/search:
+    get:
+      parameters:
+      - description: The search keyword.
+        in: query
+        name: keyword
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: sessionId
+        schema:
+          type: string
+      - description: The number of results per request.
+        in: query
+        name: limit
+        schema:
+          default: 10
+          enum:
+          - 10
+          - 25
+          - 50
+          - 100
+          format: int32
+          type: integer
+      - description: The paging cursor for the previous or next page.
+        in: query
+        name: cursor
+        schema:
+          type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UserSearchResponse]"
+            text/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UserSearchResponse]"
+          description: OK
+        "400":
+          content: {}
+          description: "5: The keyword was filtered.\r\n6: The keyword is too short."
+        "429":
+          content: {}
+          description: "4: Too many requests."
+      summary: Searches for users by keyword.
+      tags:
+      - UserSearch
+  /v1/usernames/users:
+    post:
+      description: "This endpoint will also check previous usernames.\r\nDoes not\
+        \ require X-CSRF-Token protection because this is essentially a get request\
+        \ but as a POST to avoid URI limits."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.MultiGetByUsernameRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.MultiGetByUsernameRequest'
+        description: The Roblox.Users.Api.MultiGetByUsernameRequest.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.MultiGetUserByNameResponse]"
+            text/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.MultiGetUserByNameResponse]"
+          description: OK
+        "400":
+          content: {}
+          description: "2: Too many usernames."
+      summary: Get users by usernames.
+      tags:
+      - Users
+      x-codegen-request-body-name: request
+  /v1/users:
+    post:
+      description: Does not require X-CSRF-Token protection because this is essentially
+        a get request but as a POST to avoid URI limits.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.MultiGetByUserIdRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.MultiGetByUserIdRequest'
+        description: The Roblox.Users.Api.MultiGetByUserIdRequest.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.VerifiedBadgeUserResponse]"
+            text/json:
+              schema:
+                $ref: "#/components/schemas/Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.VerifiedBadgeUserResponse]"
+          description: OK
+        "400":
+          content: {}
+          description: "1: Too many ids."
+      summary: Get users by ids.
+      tags:
+      - Users
+      x-codegen-request-body-name: request
+  /v1/users/{userId}/display-names:
+    patch:
+      parameters:
+      - description: the user id
+        in: path
+        name: userId
+        required: true
+        schema:
+          format: int64
+          type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.SetDisplayNameRequest'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/Roblox.Users.Api.SetDisplayNameRequest'
+        description: Roblox.Users.Api.SetDisplayNameRequest
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/Roblox.Web.WebAPI.ApiEmptyResponseModel'
+          description: OK
+        "400":
+          content: {}
+          description: "1: Display name is too short\r\n2: Display name is too long\r\
+            \n3: Display name contains invalid characters\r\n4: Display name has been\
+            \ moderated"
+        "401":
+          content: {}
+          description: "0: Authorization has been denied for this request."
+        "403":
+          content: {}
+          description: "0: Token Validation Failed\r\n7: The user id is invalid."
+        "429":
+          content: {}
+          description: "5: Display name updates for this user have been throttled"
+      summary: Set the display name for the authorized user.
+      tags:
+      - DisplayNames
+      x-codegen-request-body-name: request
+components:
+  schemas:
+    Roblox.Paging.ExclusiveStartKeyCursor[System.Nullable[System.Int64]]:
+      properties:
+        key:
+          format: int64
+          type: integer
+        sortOrder:
+          description: " ['Asc' = 1, 'Desc' = 2]"
+          enum:
+          - 1
+          - 2
+          format: int32
+          type: integer
+        pagingDirection:
+          description: " ['Forward' = 1, 'Backward' = 2]"
+          enum:
+          - 1
+          - 2
+          format: int32
+          type: integer
+        pageNumber:
+          format: int32
+          type: integer
+        discriminator:
+          type: string
+        count:
+          format: int32
+          type: integer
+      type: object
+    Roblox.Paging.StartIndexCursor:
+      properties:
+        startIndex:
+          format: int64
+          type: integer
+        discriminator:
+          type: string
+        count:
+          format: int32
+          type: integer
+      type: object
+    Roblox.Users.Api.AuthenticatedUserResponse:
+      description: "A response model representing absolute minimal authenticating\
+        \ user information.\r\nNo new attributes should be added to this response\
+        \ since it is in the critical path of app launch and we want to minimize dependencies."
+      example:
+        displayName: displayName
+        name: name
+        id: 0
+      properties:
+        id:
+          description: The user Id.
+          format: int64
+          type: integer
+        name:
+          description: The user name.
+          type: string
+        displayName:
+          description: The user DisplayName.
+          type: string
+      type: object
+    Roblox.Users.Api.BirthdateRequest:
+      description: The birthdate request
+      properties:
+        birthMonth:
+          description: The birth month
+          format: int32
+          type: integer
+        birthDay:
+          description: The birth day
+          format: int32
+          type: integer
+        birthYear:
+          description: The birth year
+          format: int32
+          type: integer
+        password:
+          description: Password
+          type: string
+      type: object
+    Roblox.Users.Api.BirthdateResponse:
+      description: The birthdate response
+      example:
+        birthMonth: 0
+        birthDay: 6
+        birthYear: 1
+      properties:
+        birthMonth:
+          description: The birth month
+          format: int32
+          type: integer
+        birthDay:
+          description: The birth day
+          format: int32
+          type: integer
+        birthYear:
+          description: The birth year
+          format: int32
+          type: integer
+      type: object
+    Roblox.Users.Api.DescriptionRequest:
+      description: The description request
+      properties:
+        description:
+          description: The description
+          type: string
+      type: object
+    Roblox.Users.Api.DescriptionResponse:
+      description: The description response
+      example:
+        description: description
+      properties:
+        description:
+          description: The description
+          type: string
+      type: object
+    Roblox.Users.Api.GenderRequest:
+      description: The gender request
+      properties:
+        gender:
+          description: The gender
+          type: string
+      type: object
+    Roblox.Users.Api.GenderResponse:
+      description: The gender response
+      example:
+        gender: 0
+      properties:
+        gender:
+          description: The gender
+          format: int32
+          type: integer
+      type: object
+    Roblox.Users.Api.GetUserResponse:
+      description: A response model representing user information.
+      example:
+        hasVerifiedBadge: true
+        created: 2000-01-23T04:56:07.000+00:00
+        displayName: displayName
+        name: name
+        description: description
+        externalAppDisplayName: externalAppDisplayName
+        isBanned: true
+        id: 0
+      properties:
+        description:
+          description: The user description.
+          type: string
+        created:
+          description: When the user signed up.
+          format: date-time
+          type: string
+        isBanned:
+          description: Whether or not the user is banned
+          type: boolean
+        externalAppDisplayName:
+          description: "Unused, legacy attribute. For now always null to not disturb\
+            \ existing client code that might rely on its existence."
+          type: string
+        hasVerifiedBadge:
+          description: The user's verified badge status.
+          type: boolean
+        id:
+          description: The user Id.
+          format: int64
+          type: integer
+        name:
+          description: The user name.
+          type: string
+        displayName:
+          description: The user DisplayName.
+          type: string
+      type: object
+    Roblox.Users.Api.MultiGetByUserIdRequest:
+      description: Request model for getting users by ids.
+      properties:
+        userIds:
+          description: The user ids.
+          items:
+            format: int64
+            type: integer
+          type: array
+        excludeBannedUsers:
+          description: Whether or not the response should exclude banned users
+          type: boolean
+      type: object
+    Roblox.Users.Api.MultiGetByUsernameRequest:
+      description: Request model for getting users by usernames.
+      properties:
+        usernames:
+          description: The usernames.
+          items:
+            type: string
+          type: array
+        excludeBannedUsers:
+          description: Whether or not the response should exclude banned users
+          type: boolean
+      type: object
+    Roblox.Users.Api.MultiGetUserByNameResponse:
+      description: A response model specific to multi-get user by name.
+      example:
+        hasVerifiedBadge: true
+        requestedUsername: requestedUsername
+        displayName: displayName
+        name: name
+        id: 0
+      properties:
+        requestedUsername:
+          description: The username the user was requested with.
+          type: string
+        hasVerifiedBadge:
+          description: The user's verified badge status.
+          type: boolean
+        id:
+          description: The user Id.
+          format: int64
+          type: integer
+        name:
+          description: The user name.
+          type: string
+        displayName:
+          description: The user DisplayName.
+          type: string
+      type: object
+    Roblox.Users.Api.SetDisplayNameRequest:
+      description: Request model for changing a display name.
+      properties:
+        newDisplayName:
+          description: The users new display name.
+          type: string
+      type: object
+    Roblox.Users.Api.UserAgeBracketResponse:
+      description: A user age bracket response model.
+      example:
+        ageBracket: 0
+      properties:
+        ageBracket:
+          description: The age bracket of the user.
+          format: int32
+          type: integer
+      type: object
+    Roblox.Users.Api.UserCountryCodeResponse:
+      description: A user country code response model.
+      example:
+        countryCode: countryCode
+      properties:
+        countryCode:
+          description: The country code of the user.
+          type: string
+      type: object
+    Roblox.Users.Api.UserRolesResponse:
+      description: A user roles response model.
+      example:
+        roles:
+        - roles
+        - roles
+      properties:
+        roles:
+          description: The roles of the user.
+          items:
+            type: string
+          type: array
+      type: object
+    Roblox.Users.Api.UserSearchResponse:
+      description: A user response model specific to getting a user from user search.
+      example:
+        hasVerifiedBadge: true
+        previousUsernames:
+        - previousUsernames
+        - previousUsernames
+        displayName: displayName
+        name: name
+        id: 0
+      properties:
+        previousUsernames:
+          description: Previous usernames for a user.
+          items:
+            type: string
+          type: array
+        hasVerifiedBadge:
+          description: The user's verified badge status.
+          type: boolean
+        id:
+          description: The user Id.
+          format: int64
+          type: integer
+        name:
+          description: The user name.
+          type: string
+        displayName:
+          description: The user DisplayName.
+          type: string
+      type: object
+    Roblox.Users.Api.UsernameHistoryResponse:
+      example:
+        name: name
+      properties:
+        name:
+          description: A past username belonging to a particular userId
+          type: string
+      type: object
+    Roblox.Users.Api.VerifiedBadgeUserResponse:
+      description: A response model specific to multi-get user.
+      example:
+        hasVerifiedBadge: true
+        displayName: displayName
+        name: name
+        id: 0
+      properties:
+        hasVerifiedBadge:
+          description: The user's verified badge status.
+          type: boolean
+        id:
+          description: The user Id.
+          format: int64
+          type: integer
+        name:
+          description: The user name.
+          type: string
+        displayName:
+          description: The user DisplayName.
+          type: string
+      type: object
+    Roblox.Web.WebAPI.ApiEmptyResponseModel:
+      type: object
+    Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.MultiGetUserByNameResponse]:
+      example:
+        data:
+        - hasVerifiedBadge: true
+          requestedUsername: requestedUsername
+          displayName: displayName
+          name: name
+          id: 0
+        - hasVerifiedBadge: true
+          requestedUsername: requestedUsername
+          displayName: displayName
+          name: name
+          id: 0
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Roblox.Users.Api.MultiGetUserByNameResponse'
+          type: array
+      type: object
+    Roblox.Web.WebAPI.Models.ApiArrayResponse[Roblox.Users.Api.VerifiedBadgeUserResponse]:
+      example:
+        data:
+        - hasVerifiedBadge: true
+          displayName: displayName
+          name: name
+          id: 0
+        - hasVerifiedBadge: true
+          displayName: displayName
+          name: name
+          id: 0
+      properties:
+        data:
+          items:
+            $ref: '#/components/schemas/Roblox.Users.Api.VerifiedBadgeUserResponse'
+          type: array
+      type: object
+    Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UserSearchResponse]:
+      example:
+        data:
+        - hasVerifiedBadge: true
+          previousUsernames:
+          - previousUsernames
+          - previousUsernames
+          displayName: displayName
+          name: name
+          id: 0
+        - hasVerifiedBadge: true
+          previousUsernames:
+          - previousUsernames
+          - previousUsernames
+          displayName: displayName
+          name: name
+          id: 0
+        nextPageCursor: nextPageCursor
+        previousPageCursor: previousPageCursor
+      properties:
+        previousPageCursor:
+          type: string
+        nextPageCursor:
+          type: string
+        data:
+          items:
+            $ref: '#/components/schemas/Roblox.Users.Api.UserSearchResponse'
+          type: array
+      type: object
+    Roblox.Web.WebAPI.Models.ApiPageResponse[Roblox.Users.Api.UsernameHistoryResponse]:
+      example:
+        data:
+        - name: name
+        - name: name
+        nextPageCursor: nextPageCursor
+        previousPageCursor: previousPageCursor
+      properties:
+        previousPageCursor:
+          type: string
+        nextPageCursor:
+          type: string
+        data:
+          items:
+            $ref: '#/components/schemas/Roblox.Users.Api.UsernameHistoryResponse'
+          type: array
+      type: object
+x-original-swagger-version: "2.0"
+

@@ -1,0 +1,455 @@
+openapi: 3.0.0
+info:
+  title: World Cup Predictor API
+  description: API for the World Cup Predictor application.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum: [player, group_admin, platform_admin]
+        avatar:
+          type: string
+          nullable: true
+      required: [id, email, name, role]
+
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        adminId:
+          type: string
+        playerCount:
+          type: integer
+        inviteCode:
+          type: string
+        inviteLink:
+          type: string
+        scoringSystem:
+          type: string
+          enum: [classic, extended, simple]
+        createdAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [active, inactive]
+        isMember:
+          type: boolean
+          description: Whether the requesting user is a member of this group
+        isAdmin:
+          type: boolean
+          description: Whether the requesting user is an admin of this group
+      required: [id, name, adminId, inviteCode, scoringSystem, status]
+
+    Match:
+      type: object
+      properties:
+        id:
+          type: string
+        homeTeam:
+          type: string
+        awayTeam:
+          type: string
+        homeFlag:
+          type: string
+        awayFlag:
+          type: string
+        date:
+          type: string
+          format: date
+        time:
+          type: string
+        status:
+          type: string
+          enum: [upcoming, live, finished]
+        homeScore:
+          type: integer
+          nullable: true
+        awayScore:
+          type: integer
+          nullable: true
+        matchNumber:
+          type: integer
+          nullable: true
+        stage:
+          type: string
+          nullable: true
+        group:
+          type: string
+          nullable: true
+        stadium:
+          type: string
+          nullable: true
+        city:
+          type: string
+          nullable: true
+        userPrediction:
+          $ref: '#/components/schemas/Prediction'
+          nullable: true
+      required: [id, homeTeam, awayTeam, date, status]
+
+    Prediction:
+      type: object
+      properties:
+        id:
+          type: string
+        matchId:
+          type: string
+        userId:
+          type: string
+        homeScore:
+          type: integer
+        awayScore:
+          type: integer
+        points:
+          type: integer
+          nullable: true
+          description: Points awarded for this prediction (context-dependent if fetched within a group)
+      required: [matchId, userId, homeScore, awayScore]
+
+    GroupMember:
+      type: object
+      properties:
+        userId:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        joinedAt:
+          type: string
+          format: date-time
+        points:
+          type: integer
+        isAdmin:
+          type: boolean
+        position:
+           type: integer
+      required: [userId, name, points]
+    
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+      required: [user, token]
+
+paths:
+  /auth/login:
+    post:
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/register:
+    post:
+      summary: Register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                name:
+                  type: string
+      responses:
+        '201':
+          description: Successful registration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+
+  /auth/me:
+    get:
+      summary: Get current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  /users:
+    get:
+      summary: List users (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: role
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+
+  /groups:
+    get:
+      summary: List groups (My groups or All groups based on context/role)
+      security:
+        - bearerAuth: []
+      parameters:
+         - name: search
+           in: query
+           schema:
+             type: string
+         - name: filter
+           in: query
+           schema:
+             type: string
+             enum: [mine, all, admin]
+             default: mine
+      responses:
+        '200':
+          description: List of groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+    post:
+      summary: Create a group
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                description:
+                  type: string
+                scoringSystem:
+                  type: string
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+  /groups/{id}:
+    get:
+      summary: Get group details
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Group details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+  
+  /groups/join:
+    post:
+      summary: Join a group by code
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                inviteCode:
+                  type: string
+      responses:
+        '200':
+          description: Successfully joined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+  /groups/{id}/ranking:
+    get:
+      summary: Get ranking for a group
+      security:
+         - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+             type: string
+      responses:
+        '200':
+          description: Group ranking
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GroupMember'
+
+  /matches:
+    get:
+      summary: List matches
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [upcoming, live, finished]
+      responses:
+        '200':
+          description: List of matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Match'
+    post:
+      summary: Create match (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+             schema:
+               $ref: '#/components/schemas/Match'
+      responses:
+        '201':
+           description: Match created
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Match'
+
+  /matches/{id}:
+     put:
+       summary: "Update match (Admin) - e.g. scores, status"
+       security:
+         - bearerAuth: []
+       parameters:
+         - name: id
+           in: path
+           required: true
+           schema:
+             type: string
+       requestBody:
+         required: true
+         content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 status:
+                   type: string
+                 homeScore: 
+                   type: integer
+                 awayScore:
+                   type: integer
+       responses:
+         '200':
+           description: Match updated
+           content:
+             application/json:
+               schema:
+                 $ref: '#/components/schemas/Match'
+
+  /predictions:
+    post:
+      summary: Create or update a prediction
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+           application/json:
+             schema:
+               type: object
+               properties:
+                 matchId:
+                   type: string
+                 homeScore:
+                   type: integer
+                 awayScore:
+                   type: integer
+      responses:
+        '200':
+          description: Prediction saved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Prediction'

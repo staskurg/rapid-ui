@@ -1,0 +1,142 @@
+openapi: 3.0.0
+info:
+  title: RAG Document Q&A API
+  version: 1.0.0
+  description: |
+    RAG system for Thai document Q&A with OCR, vector search, and chat memory.
+    Provides semantic search and contextual conversation capabilities.
+
+servers:
+  - url: http://host.docker.internal:8000
+    description: RAG FastAPI Server (Docker)
+  - url: http://localhost:8000
+    description: RAG FastAPI Server (Local)
+
+paths:
+  /query:
+    post:
+      operationId: queryDocuments
+      summary: Query documents (stateless)
+      description: |
+        Query RAG system for document information using semantic search.
+        This is a stateless operation with no conversation memory.
+      tags:
+        - RAG
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+              properties:
+                question:
+                  type: string
+                  description: Question to ask about the documents
+                  example: "สัญญานี้เกี่ยวกับอะไร"
+      parameters:
+        - in: query
+          name: top_k
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 10
+          description: Number of relevant chunks to retrieve
+      responses:
+        '200':
+          description: Successful query response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                    description: Generated answer from the LLM
+                  source_nodes:
+                    type: array
+                    description: Source document chunks with metadata
+                    items:
+                      type: object
+                      properties:
+                        file_name:
+                          type: string
+                        page_number:
+                          type: integer
+                        score:
+                          type: number
+                          format: float
+                        text_content:
+                          type: string
+
+  /chat:
+    post:
+      operationId: chatWithContext
+      summary: Chat with context (stateful)
+      description: |
+        Chat with RAG system with conversation memory.
+        Uses session_id to maintain conversation history across multiple turns.
+      tags:
+        - RAG
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - question
+                - session_id
+              properties:
+                question:
+                  type: string
+                  description: Question or message to send
+                  example: "มีระยะเวลาเท่าไหร่"
+                session_id:
+                  type: string
+                  description: Unique session identifier for conversation
+                  example: "user123"
+      parameters:
+        - in: query
+          name: top_k
+          schema:
+            type: integer
+            default: 5
+          description: Number of results to retrieve
+      responses:
+        '200':
+          description: Successful chat response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  answer:
+                    type: string
+                  source_nodes:
+                    type: array
+                    items:
+                      type: object
+
+  /health:
+    get:
+      operationId: getSystemHealth
+      summary: Health check
+      description: Check if RAG system is healthy and ready
+      tags:
+        - System
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string

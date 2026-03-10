@@ -1,0 +1,378 @@
+openapi: 3.0.1
+info:
+  title: Account Service for Banking Micro-SOA System
+  description: This is Account Service for Banking Micro-SOA System. Uses Apache CXF
+    and Spring Boot on JAX-RS.
+  contact:
+    name: The Banking Micro-SOA System team
+  license:
+    name: Apache 2.0 License
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  version: 0.0.1-SNAPSHOT
+servers:
+  - url: http://192.168.178.37:9084/services
+paths:
+  /api/transaction/deposit-money:
+    post:
+      description: depositMoney
+      operationId: depositMoney_1
+      requestBody:
+        description: Transaction for money deposit
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BalanceUpdateRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/BalanceUpdateRequest"
+        required: true
+      responses:
+        "201":
+          description: Deposit money in Bank Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+        "404":
+          description: Account whit this Id not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/transaction/execute-atm-payment:
+    post:
+      description: executeAtmPayment
+      operationId: executeAtmPayment_1
+      requestBody:
+        description: ATM payment
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BancomatTransactionRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/BancomatTransactionRequest"
+        required: true
+      responses:
+        "201":
+          description: Execute an ATM payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BancomatTransactionResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/BancomatTransactionResponse"
+        "404":
+          description: Account whit this Id not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/transaction/execute-transfer:
+    post:
+      description: executeTransfer
+      operationId: executeTransfer_1
+      requestBody:
+        description: Transfer
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ExecuteTransferRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/ExecuteTransferRequest"
+        required: true
+      responses:
+        "201":
+          description: Execute transfer from a bankAccount to another bankAccount
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+        "404":
+          description: Account whit this Id not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Insufficient funds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /api/transaction/withdraw-money:
+    post:
+      description: depositMoney
+      operationId: withdrawMoney_1
+      requestBody:
+        description: Transaction for money withdraw
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BalanceUpdateRequest"
+          application/xml:
+            schema:
+              $ref: "#/components/schemas/BalanceUpdateRequest"
+        required: true
+      responses:
+        "201":
+          description: Withdraw money in Bank Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ExecuteTransactionResponse"
+        "404":
+          description: Account whit this Id not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "400":
+          description: Insufficient funds
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+            application/xml:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    BankAccountTransactionResponse:
+      required:
+        - accountId
+        - iban
+        - id
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        accountId:
+          type: integer
+          format: int64
+        iban:
+          type: string
+        balance:
+          type: number
+      xml:
+        name: BankAccountTransactionResponse
+    ExecuteTransactionResponse:
+      required:
+        - amount
+        - date
+        - description
+        - id
+        - transactionCode
+        - transactionType
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        transactionCode:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+        transactionType:
+          type: string
+          enum:
+            - DEPOSIT
+            - WITHDRAWAL
+            - TRANSFER
+            - BANCOMAT
+        date:
+          type: string
+          format: date-time
+        bankAccountSender:
+          $ref: "#/components/schemas/BankAccountTransactionResponse"
+        bankAccountReceiver:
+          $ref: "#/components/schemas/BankAccountTransactionResponse"
+      xml:
+        name: TransactionExecuteResponse
+    ErrorResponse:
+      required:
+        - error
+      type: object
+      properties:
+        error:
+          type: string
+      xml:
+        name: ErrorResponse
+    BalanceUpdateRequest:
+      required:
+        - amount
+        - bankAccountId
+        - description
+      type: object
+      properties:
+        bankAccountId:
+          type: integer
+          format: int64
+        amount:
+          type: number
+        description:
+          type: string
+      xml:
+        name: BalanceUpdateRequest
+    BancomatTransactionResponse:
+      required:
+        - amount
+        - bankAccountTransactionResponse
+        - date
+        - description
+        - id
+        - transactionCode
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        transactionCode:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+        date:
+          type: string
+        bankAccountTransactionResponse:
+          $ref: "#/components/schemas/BankAccountTransactionResponse"
+      xml:
+        name: BancomatTransactionRequest
+    BancomatTransactionRequest:
+      required:
+        - amount
+        - description
+        - number
+      type: object
+      properties:
+        number:
+          type: string
+        amount:
+          type: number
+        description:
+          type: string
+      xml:
+        name: BancomatTransactionRequest
+    AccountTransferRequest:
+      required:
+        - iban
+        - name
+        - surname
+      type: object
+      properties:
+        name:
+          type: string
+        surname:
+          type: string
+        iban:
+          type: string
+      xml:
+        name: AccountTransferRequest
+    ExecuteTransferRequest:
+      required:
+        - amount
+        - description
+        - receiverAccountTransferRequest
+        - senderAccountTransferRequest
+      type: object
+      properties:
+        amount:
+          type: number
+        description:
+          type: string
+        senderAccountTransferRequest:
+          $ref: "#/components/schemas/AccountTransferRequest"
+        receiverAccountTransferRequest:
+          $ref: "#/components/schemas/AccountTransferRequest"
+      xml:
+        name: ExecuteTransferRequest

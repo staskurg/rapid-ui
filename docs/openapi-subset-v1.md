@@ -12,6 +12,19 @@
 
 ---
 
+## Compiler Invariant
+
+```
+OpenAPI → Canonical Spec → ApiIR → UiPlanIR (LLM) → UISpec → UI
+```
+
+**Guarantees:**
+- Same OpenAPI spec always produces identical UI
+- Annotation changes do not affect output
+- Contract changes produce deterministic UI diffs
+
+---
+
 ## Normalization Rules
 
 RapidUI compiles a **deterministic subset** and normalizes common OpenAPI noise at the contract boundary. The compiler does not add flexibility—it adds deterministic normalization.
@@ -24,6 +37,31 @@ RapidUI compiles a **deterministic subset** and normalizes common OpenAPI noise 
 | **Empty object** | `type: object` without `properties` → ObjectOpaque. Rendered as single "Data" placeholder (schema-shape, not fake field). |
 
 Pipeline order: **validate** → **resolve $ref** → **canonicalize** (strip annotations) → **buildApiIR** → **lower**.
+
+### Supported
+
+- OpenAPI 3.0 / 3.1
+- JSON media types
+- Object schemas
+- Arrays with items
+- Map types via additionalProperties
+
+### Unsupported
+
+- oneOf / anyOf / allOf
+- discriminator
+- multiple path params
+- non-JSON responses
+- primitive root responses
+- action endpoints (POST without body)
+- external $ref
+- circular $ref
+
+### Normalization
+
+- multiple media types → JSON selected
+- annotation keys stripped
+- nullable normalized
 
 ---
 
@@ -69,6 +107,8 @@ Algorithmically explicit:
 ---
 
 ## 4. Supported Response Rules
+
+An operation must expose a success response containing a JSON schema. RapidUI currently treats HTTP 200 and 201 responses as success responses during validation.
 
 - **At least one success code in {200, 201}.** Missing (zero) success response → reject
 - **Multiple success (200 and 201):** Accept; pick first deterministically (200 before 201). v1.1 relaxation.
@@ -228,6 +268,15 @@ Specs that pass RUS-v1 validation are extracted per repository and copied to `te
 
 - **Regression tests** — All valid-specs-* fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
 - **LLM determinism testing** — Use these real APIs to validate LLM output stability across runs
+
+---
+
+## RUS-v1 Freeze
+
+The RapidUI OpenAPI Subset v1 is frozen for MVP v3.
+
+No new relaxations will be added during this sprint.
+Future compatibility work will occur in RUS-v2.
 
 ---
 

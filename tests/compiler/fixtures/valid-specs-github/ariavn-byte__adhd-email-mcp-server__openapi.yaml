@@ -1,0 +1,854 @@
+openapi: 3.0.0
+info:
+  title: ADHD Email MCP Server
+  version: 3.0.0
+  description: "A comprehensive MCP server for ADHD email management with dual-tagging system, calendar integration, task creation, batch processing, smart reply generation, and enhanced productivity features. Optimized for Copilot Studio Custom Connector integration."
+  contact:
+    name: ADHD Email Management API
+    email: aria@vaghayenegar.me
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+servers:
+- url: https://adhd-email-mcp-server-il2so.ondigitalocean.app
+  description: Production server (Digital Ocean)
+- url: http://localhost:3000
+  description: Development server
+paths:
+  /v1/analyze-email:
+    post:
+      summary: Analyze single email with dual-tagging system
+      operationId: analyze_single_email
+      description: "Analyze a single email using the dual-tagging system (Action + Context categories) with ADHD-friendly insights and color-coded visual displays."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Email'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /v1/dual-tagging/info:
+    get:
+      summary: Get dual-tagging system information
+      operationId: get_dual_tagging_info
+      description: "Get comprehensive information about the dual-tagging system including color mappings, categories, and features."
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DualTaggingInfo'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /v1/batch-analyze:
+    post:
+      summary: Analyze multiple emails with dual-tagging system
+      operationId: batch_analyze_emails
+      description: "Analyze multiple emails using the dual-tagging system with batch processing, ADHD insights, and comprehensive grouping by action and context categories."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                emails:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Email'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchAnalysisResult'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /v1/generate-reply:
+    post:
+      summary: Generate smart reply based on email analysis
+      operationId: generate_reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  $ref: '#/components/schemas/Email'
+                analysis:
+                  $ref: '#/components/schemas/EmailPriorityResult'
+                templateType:
+                  type: string
+                  enum:
+                  - auto
+                  - acknowledgment
+                  - task_confirmation
+                  - meeting_scheduling
+                  - urgent_response
+                  - question_response
+                  - out_of_office
+                  default: auto
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReplyResult'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /v1/send-reply:
+    post:
+      summary: Send email reply (requires email configuration)
+      operationId: send_reply
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                originalEmail:
+                  $ref: '#/components/schemas/Email'
+                reply:
+                  $ref: '#/components/schemas/ReplyResult'
+                emailConfig:
+                  $ref: '#/components/schemas/EmailConfig'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SendResult'
+        '400':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+      - bearerAuth: []
+  /v1/health:
+    get:
+      summary: Server health check
+      operationId: health_check
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  version:
+                    type: string
+                  features:
+                    type: array
+                    items:
+                      type: string
+components:
+  schemas:
+    Email:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique email identifier
+        subject:
+          type: string
+          description: Email subject line
+        body:
+          type: string
+          description: Email body content
+        from:
+          type: string
+          format: email
+        messageId:
+          type: string
+          description: Email message ID for threading
+          minLength: 1
+      required:
+      - id
+      - subject
+      - body
+      - from
+      additionalProperties: false
+    EmailPriorityParams:
+      type: object
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        from:
+          type: string
+      additionalProperties: false
+      anyOf:
+      - required:
+        - subject
+      - required:
+        - body
+    BatchEmailsParams:
+      type: object
+      properties:
+        emails:
+          type: array
+          items:
+            $ref: '#/components/schemas/Email'
+      required:
+      - emails
+      additionalProperties: false
+    GenerateReplyParams:
+      type: object
+      properties:
+        email:
+          $ref: '#/components/schemas/Email'
+        analysis:
+          $ref: '#/components/schemas/EmailPriorityResult'
+        templateType:
+          type: string
+      required:
+      - email
+      additionalProperties: false
+    SendReplyParams:
+      type: object
+      properties:
+        originalEmail:
+          $ref: '#/components/schemas/Email'
+        reply:
+          $ref: '#/components/schemas/ReplyResult'
+        emailConfig:
+          $ref: '#/components/schemas/EmailConfig'
+      required:
+      - originalEmail
+      - reply
+      - emailConfig
+      additionalProperties: false
+    EmailPriorityResult:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Priority score (0-100+)
+          minimum: 0
+          maximum: 100
+        category:
+          type: string
+          enum:
+          - action_now
+          - this_week
+          - to_read
+        reasons:
+          type: array
+          items:
+            type: string
+        actions:
+          type: array
+          items:
+            type: string
+        calendar:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        deadlines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deadline'
+      additionalProperties: false
+    BatchEmailsResult:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            actionNow:
+              type: integer
+            thisWeek:
+              type: integer
+            toRead:
+              type: integer
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              analysis:
+                $ref: '#/components/schemas/EmailPriorityResult'
+              original:
+                $ref: '#/components/schemas/Email'
+        grouped:
+          type: object
+          properties:
+            actionNow:
+              type: array
+            thisWeek:
+              type: array
+            toRead:
+              type: array
+        calendar:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    ReplyResult:
+      type: object
+      properties:
+        subject:
+          type: string
+        body:
+          type: string
+        templateType:
+          type: string
+        responseTime:
+          type: string
+          description: ISO 8601 duration or date-time format
+      additionalProperties: false
+    SendResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        messageId:
+          type: string
+        response:
+          type: string
+        error:
+          type: string
+      additionalProperties: false
+    CalendarEvent:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date-time
+        text:
+          type: string
+        type:
+          type: string
+    Task:
+      type: object
+      properties:
+        description:
+          type: string
+        priority:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          - urgent
+        source:
+          type: string
+    Deadline:
+      type: object
+      properties:
+        text:
+          type: string
+        urgency:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+    EmailConfig:
+      type: object
+      properties:
+        smtp:
+          type: object
+          properties:
+            host:
+              type: string
+            port:
+              type: integer
+            secure:
+              type: boolean
+        auth:
+          type: object
+          properties:
+            user:
+              type: string
+            pass:
+              type: string
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+      required:
+      - code
+      - message
+      additionalProperties: false
+    EmailAnalysisResult:
+      type: object
+      properties:
+        score:
+          type: integer
+          description: Priority score (0-100+)
+          minimum: 0
+        actionTag:
+          type: string
+          enum: [Action Now, This Week, Waiting On, To Read]
+          description: Action category with color coding
+        contextTag:
+          type: string
+          enum: [Classes, Research, Admin, People, Reference, Archive]
+          description: Context category with color coding
+        actionColor:
+          type: string
+          format: hex
+          description: Hex color code for action category
+        contextColor:
+          type: string
+          format: hex
+          description: Hex color code for context category
+        combinedTag:
+          type: string
+          description: Combined action and context tag
+        visualDisplay:
+          type: string
+          description: Color-coded visual representation
+        colorScheme:
+          type: object
+          properties:
+            action:
+              type: string
+            context:
+              type: string
+        smartFolderPath:
+          type: string
+          description: Suggested folder path based on dual-tagging
+        adhdMetadata:
+          $ref: '#/components/schemas/ADHDMetadata'
+        processingMetadata:
+          $ref: '#/components/schemas/ProcessingMetadata'
+        reasons:
+          type: array
+          items:
+            type: string
+        actions:
+          type: array
+          items:
+            type: string
+        calendar:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        deadlines:
+          type: array
+          items:
+            $ref: '#/components/schemas/Deadline'
+      required:
+      - score
+      - actionTag
+      - contextTag
+      - actionColor
+      - contextColor
+      - combinedTag
+      - visualDisplay
+      - smartFolderPath
+      - adhdMetadata
+    BatchAnalysisResult:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total:
+              type: integer
+            actionNow:
+              type: integer
+            thisWeek:
+              type: integer
+            waitingOn:
+              type: integer
+            toRead:
+              type: integer
+            classes:
+              type: integer
+            research:
+              type: integer
+            admin:
+              type: integer
+            people:
+              type: integer
+            reference:
+              type: integer
+            archive:
+              type: integer
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              analysis:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+              original:
+                $ref: '#/components/schemas/Email'
+        actionGrouped:
+          type: object
+          properties:
+            "Action Now":
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            "This Week":
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            "Waiting On":
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            "To Read":
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+        contextGrouped:
+          type: object
+          properties:
+            Classes:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            Research:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            Admin:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            People:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            Reference:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+            Archive:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmailAnalysisResult'
+        dualTagGrouped:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: '#/components/schemas/EmailAnalysisResult'
+        adhdInsights:
+          $ref: '#/components/schemas/ADHDInsights'
+        recommendations:
+          type: array
+          items:
+            type: string
+        calendar:
+          type: array
+          items:
+            $ref: '#/components/schemas/CalendarEvent'
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+    DualTaggingInfo:
+      type: object
+      properties:
+        systemName:
+          type: string
+          description: Name of the dual-tagging system
+        version:
+          type: string
+          description: System version
+        description:
+          type: string
+          description: System description
+        actionCategories:
+          type: object
+          properties:
+            "Action Now":
+              $ref: '#/components/schemas/CategoryInfo'
+            "This Week":
+              $ref: '#/components/schemas/CategoryInfo'
+            "Waiting On":
+              $ref: '#/components/schemas/CategoryInfo'
+            "To Read":
+              $ref: '#/components/schemas/CategoryInfo'
+        contextCategories:
+          type: object
+          properties:
+            Classes:
+              $ref: '#/components/schemas/CategoryInfo'
+            Research:
+              $ref: '#/components/schemas/CategoryInfo'
+            Admin:
+              $ref: '#/components/schemas/CategoryInfo'
+            People:
+              $ref: '#/components/schemas/CategoryInfo'
+            Reference:
+              $ref: '#/components/schemas/CategoryInfo'
+            Archive:
+              $ref: '#/components/schemas/CategoryInfo'
+        features:
+          type: array
+          items:
+            type: string
+        benefits:
+          type: array
+          items:
+            type: string
+    CategoryInfo:
+      type: object
+      properties:
+        color:
+          type: string
+          format: hex
+        colorName:
+          type: string
+        shortCode:
+          type: string
+        visualCue:
+          type: string
+        description:
+          type: string
+    ADHDMetadata:
+      type: object
+      properties:
+        cognitiveLoad:
+          type: string
+          enum: [Low, Medium, High]
+        processingTime:
+          type: string
+          description: Estimated processing time
+        focusRequired:
+          type: string
+          enum: [Minimal, Moderate, High]
+        urgencyLevel:
+          type: string
+          enum: [Low, Medium, High, Critical]
+        contextPriority:
+          type: string
+          enum: [Low, Medium, High]
+        recommendations:
+          type: array
+          items:
+            type: string
+    ProcessingMetadata:
+      type: object
+      properties:
+        processingTime:
+          type: number
+          description: Processing time in milliseconds
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+    ADHDInsights:
+      type: object
+      properties:
+        totalEmails:
+          type: integer
+        actionableEmails:
+          type: integer
+        highPriorityEmails:
+          type: integer
+        cognitiveLoadDistribution:
+          type: object
+          properties:
+            Low:
+              type: integer
+            Medium:
+              type: integer
+            High:
+              type: integer
+        focusRequirements:
+          type: object
+          properties:
+            Minimal:
+              type: integer
+            Moderate:
+              type: integer
+            High:
+              type: integer
+        batchProcessingRecommendation:
+          type: string
+        timeManagementTips:
+          type: array
+          items:
+            type: string
+        productivityInsights:
+          type: array
+          items:
+            type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

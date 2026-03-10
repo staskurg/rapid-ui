@@ -1,0 +1,248 @@
+openapi: 3.0.3
+info:
+  title: AI Rephrasing API
+  description: API for requesting AI-powered text rephrasing with multiple style options
+  version: 1.0.0
+  contact:
+    name: Life Laboratory Team
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+paths:
+  /api/ai/rephrase:
+    post:
+      summary: Request AI rephrasing of selected text
+      description: |
+        Sends selected text to AI (Ollama local or online API) for rephrasing
+        based on chosen style. Returns 2-3 alternative phrasings.
+        
+        **Privacy**: Only selected text is sent, not entire reflection.
+        Context (surrounding text) is optional.
+      operationId: rephraseText
+      tags:
+        - AI
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RephrasingRequest'
+            examples:
+              clearerStyle:
+                summary: Request clearer phrasing
+                value:
+                  originalText: "The day was characterized by a multitude of challenging circumstances that necessitated careful consideration."
+                  style: "clearer"
+                  aiProvider: "ollama"
+                  model: "llama3"
+              positiveStyle:
+                summary: Request more positive phrasing
+                value:
+                  originalText: "I failed again today. Nothing ever works out."
+                  style: "more-positive"
+                  context:
+                    before: "Reflecting on my work progress."
+                    after: "But I'll try again tomorrow."
+                  aiProvider: "ollama"
+                  model: "llama3"
+      responses:
+        '200':
+          description: Rephrasing suggestions generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RephrasingSuggestion'
+              examples:
+                clearerResponse:
+                  summary: Clearer style suggestions
+                  value:
+                    originalText: "The day was characterized by a multitude of challenging circumstances that necessitated careful consideration."
+                    suggestions:
+                      - "Today was full of challenges that needed careful thought."
+                      - "The day had many difficulties that required thinking through."
+                      - "Today brought several challenges to consider carefully."
+                    style: "clearer"
+                    timestamp: "2025-11-27T14:30:00Z"
+                    tokenCount: 45
+                positiveResponse:
+                  summary: More positive style suggestions
+                  value:
+                    originalText: "I failed again today. Nothing ever works out."
+                    suggestions:
+                      - "Today didn't go as planned. I'm learning what doesn't work, which brings me closer to what does."
+                      - "I tried again today and discovered another approach that needs adjustment. Progress isn't always visible immediately."
+                    style: "more-positive"
+                    timestamp: "2025-11-27T14:31:00Z"
+                    tokenCount: 62
+        '400':
+          description: Invalid request (missing fields, invalid style, text too long)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                textTooLong:
+                  summary: Original text exceeds limit
+                  value:
+                    error: "Bad Request"
+                    message: "originalText must be between 1 and 5000 characters"
+                    code: "TEXT_TOO_LONG"
+                invalidStyle:
+                  summary: Invalid rephrasing style
+                  value:
+                    error: "Bad Request"
+                    message: "style must be one of: clearer, more-positive, more-constructive"
+                    code: "INVALID_STYLE"
+        '503':
+          description: AI service unavailable (Ollama not running, API timeout)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                ollamaDown:
+                  summary: Ollama service not running
+                  value:
+                    error: "Service Unavailable"
+                    message: "AI service is currently unavailable. Please ensure Ollama is running."
+                    code: "AI_UNAVAILABLE"
+                timeout:
+                  summary: AI request timeout
+                  value:
+                    error: "Service Unavailable"
+                    message: "AI request timed out after 10 seconds"
+                    code: "AI_TIMEOUT"
+
+components:
+  schemas:
+    RephrasingRequest:
+      type: object
+      required:
+        - originalText
+        - style
+        - aiProvider
+        - model
+      properties:
+        originalText:
+          type: string
+          minLength: 1
+          maxLength: 5000
+          description: The text user wants rephrased
+          example: "I struggled with this task today."
+        style:
+          type: string
+          enum:
+            - clearer
+            - more-positive
+            - more-constructive
+          description: |
+            Rephrasing style:
+            - `clearer`: Simplify complex language, use shorter sentences
+            - `more-positive`: Reframe negative tone constructively
+            - `more-constructive`: Focus on growth and learning
+          example: "more-positive"
+        context:
+          type: object
+          description: Optional surrounding text for better AI context
+          properties:
+            before:
+              type: string
+              maxLength: 200
+              description: Up to 200 characters before the selected text
+              example: "Reflecting on my day."
+            after:
+              type: string
+              maxLength: 200
+              description: Up to 200 characters after the selected text
+              example: "I'll try a different approach tomorrow."
+        aiProvider:
+          type: string
+          enum:
+            - ollama
+            - openai
+            - anthropic
+          description: AI service to use (must match user's preference)
+          example: "ollama"
+        model:
+          type: string
+          description: Model name (must be available for selected provider)
+          example: "llama3"
+          
+    RephrasingSuggestion:
+      type: object
+      required:
+        - originalText
+        - suggestions
+        - style
+        - timestamp
+        - tokenCount
+      properties:
+        originalText:
+          type: string
+          description: Echo of the user's selected text
+          example: "I struggled with this task today."
+        suggestions:
+          type: array
+          minItems: 2
+          maxItems: 3
+          items:
+            type: string
+            minLength: 1
+            maxLength: 10000
+          description: 2-3 alternative phrasings from AI
+          example:
+            - "This task was challenging today, and I learned from it."
+            - "I found this task difficult today, which helped me understand what I need to practice."
+        style:
+          type: string
+          enum:
+            - clearer
+            - more-positive
+            - more-constructive
+          description: The rephrasing style that was applied
+          example: "more-positive"
+        timestamp:
+          type: string
+          format: date-time
+          description: When the suggestions were generated
+          example: "2025-11-27T14:30:00Z"
+        tokenCount:
+          type: integer
+          minimum: 0
+          description: Token count for API usage tracking (if applicable)
+          example: 42
+          
+    Error:
+      type: object
+      required:
+        - error
+        - message
+        - code
+      properties:
+        error:
+          type: string
+          description: Error type (HTTP status text)
+          example: "Bad Request"
+        message:
+          type: string
+          description: Human-readable error message
+          example: "originalText must be between 1 and 5000 characters"
+        code:
+          type: string
+          description: Machine-readable error code for client handling
+          example: "TEXT_TOO_LONG"
+          enum:
+            - TEXT_TOO_LONG
+            - TEXT_TOO_SHORT
+            - INVALID_STYLE
+            - INVALID_PROVIDER
+            - MODEL_NOT_AVAILABLE
+            - AI_UNAVAILABLE
+            - AI_TIMEOUT
+            - INTERNAL_ERROR
+
+tags:
+  - name: AI
+    description: AI-powered features (mirror, rephrasing)

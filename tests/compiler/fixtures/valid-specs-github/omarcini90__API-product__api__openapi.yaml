@@ -1,0 +1,469 @@
+openapi: 3.0.3
+info:
+  title: API de Productos - Comparador
+  description: |
+    API REST para gestionar y comparar productos con FastAPI, MongoDB y Docker.
+    
+    ## Características principales:
+    - CRUD completo de productos
+    - Comparación inteligente de productos
+    - Validación automática de datos
+    - Documentación interactiva
+    - Containerización con Docker
+    
+    ## Uso:
+    Esta API permite crear, listar, obtener detalles y comparar productos de manera eficiente.
+    La funcionalidad de comparación incluye análisis de precios, calificaciones y agrupación por marcas.
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8000
+    description: Servidor de desarrollo local
+
+tags:
+  - name: products
+    description: Operaciones relacionadas con productos
+    externalDocs:
+      description: Documentación adicional
+      url: https://github.com/omarcini90/API-product
+
+paths:
+  /api/products/:
+    get:
+      tags:
+        - products
+      summary: Obtener todos los productos
+      description: |
+        Retorna una lista completa de todos los productos disponibles en la base de datos.
+        Incluye información detallada como nombre, marca, precio, calificación y especificaciones.
+      operationId: getAllProducts
+      responses:
+        '200':
+          description: Lista de productos obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDetail'
+              examples:
+                success:
+                  summary: Respuesta exitosa
+                  value:
+                    - id: "507f1f77bcf86cd799439011"
+                      name: "Samsung Galaxy S23"
+                      brand: "Samsung"
+                      price: 999.99
+                      category: "Smartphones"
+                      rating: 4.5
+                      image_url: "https://example.com/galaxy-s23.jpg"
+                      description: "Smartphone premium con cámara avanzada"
+                      specs:
+                        screen_size: "6.1 pulgadas"
+                        storage: "256GB"
+                        processor: "Snapdragon 8 Gen 2"
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+    
+    post:
+      tags:
+        - products
+      summary: Crear nuevo producto
+      description: |
+        Crea un nuevo producto en la base de datos con la información proporcionada.
+        Todos los campos requeridos deben estar presentes y cumplir con las validaciones.
+      operationId: createProduct
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreateRequest'
+            examples:
+              smartphone:
+                summary: Ejemplo de smartphone
+                value:
+                  name: "iPhone 15 Pro"
+                  brand: "Apple"
+                  price: 1199.99
+                  category: "Smartphones"
+                  rating: 4.8
+                  image_url: "https://example.com/iphone-15.jpg"
+                  description: "iPhone con chip A17 Pro y titanio"
+                  specs:
+                    screen_size: "6.1 pulgadas"
+                    storage: "512GB"
+                    processor: "A17 Pro"
+              laptop:
+                summary: Ejemplo de laptop
+                value:
+                  name: "MacBook Air M2"
+                  brand: "Apple"
+                  price: 1499.99
+                  category: "Laptops"
+                  rating: 4.7
+                  image_url: "https://example.com/macbook-air.jpg"
+                  description: "Laptop ultraligera con chip M2"
+                  specs:
+                    screen_size: "13.6 pulgadas"
+                    storage: "512GB"
+                    processor: "Apple M2"
+      responses:
+        '201':
+          description: Producto creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+
+  /api/products/{product_id}:
+    get:
+      tags:
+        - products
+      summary: Obtener producto por ID
+      description: |
+        Retorna los detalles completos de un producto específico basado en su ID único.
+        Incluye toda la información disponible del producto.
+      operationId: getProductById
+      parameters:
+        - name: product_id
+          in: path
+          required: true
+          description: ID único del producto en formato ObjectId de MongoDB
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          example: "507f1f77bcf86cd799439011"
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductDetail'
+        '400':
+          description: ID de producto inválido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+
+  /api/products/compare:
+    post:
+      tags:
+        - products
+      summary: Comparar múltiples productos
+      description: |
+        Compara entre 2 y 5 productos proporcionando un análisis detallado que incluye:
+        - Producto más barato y más caro
+        - Producto con mejor calificación
+        - Marcas disponibles
+        - Rango de precios
+        - Lista completa de productos comparados
+      operationId: compareProducts
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCompareRequest'
+            examples:
+              smartphones_comparison:
+                summary: Comparación de smartphones
+                value:
+                  product_ids: 
+                    - "507f1f77bcf86cd799439011"
+                    - "507f1f77bcf86cd799439012"
+                    - "507f1f77bcf86cd799439013"
+      responses:
+        '200':
+          description: Comparación realizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductCompareResponse'
+              examples:
+                success:
+                  summary: Comparación exitosa
+                  value:
+                    message: "Comparación completada exitosamente"
+                    products:
+                      - id: "507f1f77bcf86cd799439011"
+                        name: "Samsung Galaxy S23"
+                        brand: "Samsung"
+                        price: 999.99
+                        category: "Smartphones"
+                        rating: 4.5
+                    comparison_summary:
+                      cheapest: "Samsung Galaxy S23 - $999.99"
+                      most_expensive: "iPhone 15 - $1,199.99"
+                      best_rated: "iPhone 15 - 4.8/5"
+                      brands: "Samsung, Apple"
+                      price_range: "$999.99 - $1,199.99"
+        '400':
+          description: Datos de entrada inválidos o productos no encontrados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+
+  /api/products/category/{category}:
+    get:
+      tags:
+        - products
+      summary: Filtrar productos por categoría
+      description: |
+        Retorna todos los productos que pertenecen a una categoría específica.
+        Útil para filtrar productos por tipo (smartphones, laptops, tablets, etc.).
+      operationId: getProductsByCategory
+      parameters:
+        - name: category
+          in: path
+          required: true
+          description: Nombre de la categoría a filtrar
+          schema:
+            type: string
+            enum: 
+              - Smartphones
+              - Laptops
+              - Tablets
+              - Desktops
+              - Accessories
+          example: "Smartphones"
+      responses:
+        '200':
+          description: Productos filtrados por categoría
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductDetail'
+        '404':
+          description: No se encontraron productos en la categoría
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPError'
+
+components:
+  schemas:
+    ProductDetail:
+      type: object
+      required:
+        - id
+        - name
+        - brand
+        - price
+        - category
+      properties:
+        id:
+          type: string
+          description: ID único del producto
+          example: "507f1f77bcf86cd799439011"
+        name:
+          type: string
+          description: Nombre del producto
+          example: "Samsung Galaxy S23"
+        brand:
+          type: string
+          description: Marca del producto
+          example: "Samsung"
+        price:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+          description: Precio del producto
+          example: 999.99
+        category:
+          type: string
+          description: Categoría del producto
+          example: "Smartphones"
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          description: Calificación de 0 a 5
+          example: 4.5
+        image_url:
+          type: string
+          format: uri
+          description: URL de la imagen del producto
+          example: "https://example.com/galaxy-s23.jpg"
+        description:
+          type: string
+          description: Descripción del producto
+          example: "Smartphone premium con cámara avanzada"
+        specs:
+          type: object
+          additionalProperties:
+            type: string
+          description: Especificaciones técnicas del producto
+          example:
+            screen_size: "6.1 pulgadas"
+            storage: "256GB"
+            processor: "Snapdragon 8 Gen 2"
+
+    ProductCreateRequest:
+      type: object
+      required:
+        - name
+        - brand
+        - price
+        - category
+      properties:
+        name:
+          type: string
+          description: Nombre del producto
+          example: "iPad Pro"
+        brand:
+          type: string
+          description: Marca del producto
+          example: "Apple"
+        price:
+          type: number
+          format: float
+          minimum: 0
+          exclusiveMinimum: true
+          description: Precio del producto
+          example: 1099.99
+        category:
+          type: string
+          description: Categoría del producto
+          example: "Tablets"
+        rating:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 5
+          description: Calificación de 0 a 5
+          example: 4.7
+        image_url:
+          type: string
+          format: uri
+          description: URL de la imagen del producto
+          example: "https://example.com/ipad-pro.jpg"
+        description:
+          type: string
+          description: Descripción del producto
+          example: "Tablet premium con chip M2"
+        specs:
+          type: object
+          additionalProperties:
+            type: string
+          description: Especificaciones técnicas del producto
+          example:
+            screen_size: "12.9 pulgadas"
+            storage: "256GB"
+            processor: "Apple M2"
+
+    ProductCompareRequest:
+      type: object
+      required:
+        - product_ids
+      properties:
+        product_ids:
+          type: array
+          items:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+          minItems: 2
+          maxItems: 5
+          description: IDs de productos a comparar (2-5 productos)
+          example: 
+            - "507f1f77bcf86cd799439011"
+            - "507f1f77bcf86cd799439012"
+            - "507f1f77bcf86cd799439013"
+
+    ProductCompareResponse:
+      type: object
+      required:
+        - message
+        - products
+        - comparison_summary
+      properties:
+        message:
+          type: string
+          description: Mensaje de estado de la comparación
+          example: "Comparación completada exitosamente"
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProductDetail'
+          description: Lista de productos comparados
+        comparison_summary:
+          type: object
+          description: Resumen de la comparación
+          properties:
+            cheapest:
+              type: string
+              description: Producto más barato
+              example: "Samsung Galaxy S23 - $999.99"
+            most_expensive:
+              type: string
+              description: Producto más caro
+              example: "iPhone 15 - $1,199.99"
+            best_rated:
+              type: string
+              description: Producto mejor calificado
+              example: "iPhone 15 - 4.8/5"
+            brands:
+              type: string
+              description: Marcas disponibles
+              example: "Samsung, Apple, Google"
+            price_range:
+              type: string
+              description: Rango de precios
+              example: "$999.99 - $1,199.99"
+
+    HTTPError:
+      type: object
+      required:
+        - detail
+      properties:
+        detail:
+          type: string
+          description: Descripción del error
+          example: "Producto no encontrado"

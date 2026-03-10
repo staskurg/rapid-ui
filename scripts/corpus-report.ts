@@ -330,7 +330,10 @@ const TOP_CATEGORIES_FOR_SUBRULE = [
   "response content type",
 ];
 
+const OTHER_BUCKET_CATEGORY = "other";
+
 const MAX_SUBRULES_PER_CATEGORY = 15;
+const MAX_OTHER_SUBRULES = 25;
 
 function buildSubRuleMetrics(
   invalidResults: CorpusResult[],
@@ -400,6 +403,20 @@ function buildSubRuleMetrics(
       })
       .sort((a, b) => b.specsAffected - a.specsAffected)
       .slice(0, MAX_SUBRULES_PER_CATEGORY);
+  }
+  // Other bucket breakdown (visibility only; simpler table)
+  const otherMessages = byCatAndMsg[OTHER_BUCKET_CATEGORY];
+  if (otherMessages) {
+    out[OTHER_BUCKET_CATEGORY] = Object.entries(otherMessages)
+      .map(([msg, data]) => ({
+        subRule: msg,
+        specsAffected: data.specs.size,
+        onlyBlocker: onlyBlockerByCatMsg[OTHER_BUCKET_CATEGORY]?.[msg]?.size ?? 0,
+        nearPass: nearPassByCatMsg[OTHER_BUCKET_CATEGORY]?.[msg]?.size ?? 0,
+        top10Pct: 0,
+      }))
+      .sort((a, b) => b.specsAffected - a.specsAffected)
+      .slice(0, MAX_OTHER_SUBRULES);
   }
   return out;
 }
@@ -688,6 +705,19 @@ function main(): number {
       const safe = s.subRule.replace(/\|/g, "\\|");
       const short = safe.length > 52 ? safe.slice(0, 49) + "…" : safe;
       lines.push(`| ${short} | ${s.specsAffected} | ${s.onlyBlocker} | ${s.nearPass} | ${s.top10Pct.toFixed(0)}% |`);
+    }
+    lines.push("");
+  }
+  const otherSubRules = subRuleMetrics[OTHER_BUCKET_CATEGORY];
+  if (otherSubRules && otherSubRules.length > 0) {
+    lines.push("### Other bucket breakdown");
+    lines.push("");
+    lines.push("| Sub-rule | Specs affected |");
+    lines.push("|----------|---------------:|");
+    for (const s of otherSubRules) {
+      const safe = s.subRule.replace(/\|/g, "\\|");
+      const short = safe.length > 72 ? safe.slice(0, 69) + "…" : safe;
+      lines.push(`| ${short} | ${s.specsAffected} |`);
     }
     lines.push("");
   }

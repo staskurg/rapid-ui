@@ -1,0 +1,1070 @@
+{
+  "api": {
+    "title": "ICTServe API",
+    "version": "3.6.0"
+  },
+  "resources": [
+    {
+      "name": "Assets",
+      "key": "assets",
+      "operations": [
+        {
+          "id": "GET:/assets",
+          "method": "GET",
+          "kind": "list",
+          "path": "/assets",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "asset_tag": {
+                      "type": "string",
+                      "example": "ICT-NB-001"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Laptop Dell Latitude 5520"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Laptop untuk kegunaan pejabat"
+                    },
+                    "category_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "available",
+                        "on_loan",
+                        "maintenance",
+                        "disposed"
+                      ],
+                      "example": "available"
+                    },
+                    "condition": {
+                      "type": "string",
+                      "enum": [
+                        "excellent",
+                        "good",
+                        "fair",
+                        "poor"
+                      ],
+                      "example": "good"
+                    },
+                    "serial_number": {
+                      "type": "string",
+                      "example": "SN123456789"
+                    },
+                    "purchase_date": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true
+                    },
+                    "purchase_price": {
+                      "type": "number",
+                      "format": "float",
+                      "nullable": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "from": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "to": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 150
+                  }
+                }
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "last": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "prev": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  },
+                  "next": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/assets/{assetId}/availability",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/assets/{assetId}/availability",
+          "identifierParam": "assetId",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "asset_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "available": {
+                "type": "boolean",
+                "example": true
+              },
+              "conflicts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "loan_id": {
+                      "type": "integer"
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "GET:/user",
+          "method": "GET",
+          "kind": "list",
+          "path": "/user",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "name": {
+                "type": "string",
+                "example": "Ahmad bin Abdullah"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "ahmad@motac.gov.my"
+              },
+              "username": {
+                "type": "string",
+                "example": "ahmad.abdullah"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "staff",
+                  "approver",
+                  "admin",
+                  "superuser"
+                ],
+                "example": "staff"
+              },
+              "department": {
+                "type": "string",
+                "example": "Bahagian Pengurusan Maklumat"
+              },
+              "grade": {
+                "type": "string",
+                "example": "41"
+              },
+              "email_verified_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ],
+                "example": "healthy"
+              },
+              "version": {
+                "type": "string",
+                "example": "3.6.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loans",
+      "key": "loans",
+      "operations": [
+        {
+          "id": "GET:/loans",
+          "method": "GET",
+          "kind": "list",
+          "path": "/loans",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "application_number": {
+                      "type": "string",
+                      "example": "LOAN-2025-000001"
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "example": "Mesyuarat di luar pejabat"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "draft",
+                        "pending_support",
+                        "pending_approval",
+                        "approved",
+                        "rejected",
+                        "active",
+                        "returned",
+                        "overdue"
+                      ],
+                      "example": "pending_approval"
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2025-01-15"
+                    },
+                    "end_date": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2025-01-17"
+                    },
+                    "user_id": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "approver_id": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 10
+                    },
+                    "approved_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "from": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "to": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 150
+                  }
+                }
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "last": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "prev": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  },
+                  "next": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/loans/{loanId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/loans/{loanId}",
+          "identifierParam": "loanId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "application_number": {
+                "type": "string",
+                "example": "LOAN-2025-000001"
+              },
+              "purpose": {
+                "type": "string",
+                "example": "Mesyuarat di luar pejabat"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "pending_support",
+                  "pending_approval",
+                  "approved",
+                  "rejected",
+                  "active",
+                  "returned",
+                  "overdue"
+                ],
+                "example": "pending_approval"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-15"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-17"
+              },
+              "user_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 1
+              },
+              "approver_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 10
+              },
+              "approved_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/loans",
+          "method": "POST",
+          "kind": "create",
+          "path": "/loans",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "purpose",
+              "start_date",
+              "end_date",
+              "asset_ids"
+            ],
+            "properties": {
+              "purpose": {
+                "type": "string",
+                "minLength": 10,
+                "example": "Mesyuarat di luar pejabat"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-15"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-17"
+              },
+              "asset_ids": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                },
+                "minItems": 1,
+                "example": [
+                  1,
+                  2,
+                  3
+                ]
+              },
+              "notes": {
+                "type": "string",
+                "nullable": true,
+                "example": "Diperlukan untuk pembentangan"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "application_number": {
+                "type": "string",
+                "example": "LOAN-2025-000001"
+              },
+              "purpose": {
+                "type": "string",
+                "example": "Mesyuarat di luar pejabat"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "pending_support",
+                  "pending_approval",
+                  "approved",
+                  "rejected",
+                  "active",
+                  "returned",
+                  "overdue"
+                ],
+                "example": "pending_approval"
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-15"
+              },
+              "end_date": {
+                "type": "string",
+                "format": "date",
+                "example": "2025-01-17"
+              },
+              "user_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 1
+              },
+              "approver_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 10
+              },
+              "approved_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "key": "tickets",
+      "operations": [
+        {
+          "id": "GET:/tickets",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tickets",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "ticket_number": {
+                      "type": "string",
+                      "example": "TKT-2025-000001"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Masalah komputer tidak boleh dihidupkan"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "open",
+                        "in_progress",
+                        "pending",
+                        "resolved",
+                        "closed"
+                      ],
+                      "example": "open"
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "critical"
+                      ],
+                      "example": "medium"
+                    },
+                    "category_id": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "user_id": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1
+                    },
+                    "assigned_to": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 5
+                    },
+                    "sla_due_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "resolved_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "current_page": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "from": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "last_page": {
+                    "type": "integer",
+                    "example": 10
+                  },
+                  "per_page": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "to": {
+                    "type": "integer",
+                    "example": 15
+                  },
+                  "total": {
+                    "type": "integer",
+                    "example": 150
+                  }
+                }
+              },
+              "links": {
+                "type": "object",
+                "properties": {
+                  "first": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "last": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "prev": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  },
+                  "next": {
+                    "type": "string",
+                    "format": "uri",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/tickets/{ticketId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tickets/{ticketId}",
+          "identifierParam": "ticketId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "ticket_number": {
+                "type": "string",
+                "example": "TKT-2025-000001"
+              },
+              "title": {
+                "type": "string",
+                "example": "Masalah komputer tidak boleh dihidupkan"
+              },
+              "description": {
+                "type": "string",
+                "example": "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "pending",
+                  "resolved",
+                  "closed"
+                ],
+                "example": "open"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "example": "medium"
+              },
+              "category_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "user_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 1
+              },
+              "assigned_to": {
+                "type": "integer",
+                "nullable": true,
+                "example": 5
+              },
+              "sla_due_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "resolved_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/tickets",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tickets",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "title",
+              "description",
+              "category_id"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 255,
+                "example": "Masalah komputer tidak boleh dihidupkan"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10,
+                "example": "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+              },
+              "category_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "default": "medium",
+                "example": "medium"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "ticket_number": {
+                "type": "string",
+                "example": "TKT-2025-000001"
+              },
+              "title": {
+                "type": "string",
+                "example": "Masalah komputer tidak boleh dihidupkan"
+              },
+              "description": {
+                "type": "string",
+                "example": "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "pending",
+                  "resolved",
+                  "closed"
+                ],
+                "example": "open"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "example": "medium"
+              },
+              "category_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "user_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 1
+              },
+              "assigned_to": {
+                "type": "integer",
+                "nullable": true,
+                "example": 5
+              },
+              "sla_due_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "resolved_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/tickets/{ticketId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/tickets/{ticketId}",
+          "identifierParam": "ticketId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "minLength": 10
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "pending",
+                  "resolved",
+                  "closed"
+                ]
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              },
+              "assigned_to": {
+                "type": "integer",
+                "nullable": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "example": 1
+              },
+              "ticket_number": {
+                "type": "string",
+                "example": "TKT-2025-000001"
+              },
+              "title": {
+                "type": "string",
+                "example": "Masalah komputer tidak boleh dihidupkan"
+              },
+              "description": {
+                "type": "string",
+                "example": "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "pending",
+                  "resolved",
+                  "closed"
+                ],
+                "example": "open"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ],
+                "example": "medium"
+              },
+              "category_id": {
+                "type": "integer",
+                "example": 1
+              },
+              "user_id": {
+                "type": "integer",
+                "nullable": true,
+                "example": 1
+              },
+              "assigned_to": {
+                "type": "integer",
+                "nullable": true,
+                "example": 5
+              },
+              "sla_due_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "resolved_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

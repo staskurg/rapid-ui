@@ -1,0 +1,3758 @@
+{
+  "api": {
+    "title": "ADHD Email MCP Server",
+    "version": "3.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analyze-email",
+      "key": "analyze-email",
+      "operations": [
+        {
+          "id": "analyze_single_email",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/analyze-email",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique email identifier"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Email subject line"
+              },
+              "body": {
+                "type": "string",
+                "description": "Email body content"
+              },
+              "from": {
+                "type": "string",
+                "format": "email"
+              },
+              "messageId": {
+                "type": "string",
+                "description": "Email message ID for threading",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "id",
+              "subject",
+              "body",
+              "from"
+            ],
+            "additionalProperties": false
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "score": {
+                "type": "integer",
+                "description": "Priority score (0-100+)",
+                "minimum": 0
+              },
+              "actionTag": {
+                "type": "string",
+                "enum": [
+                  "Action Now",
+                  "This Week",
+                  "Waiting On",
+                  "To Read"
+                ],
+                "description": "Action category with color coding"
+              },
+              "contextTag": {
+                "type": "string",
+                "enum": [
+                  "Classes",
+                  "Research",
+                  "Admin",
+                  "People",
+                  "Reference",
+                  "Archive"
+                ],
+                "description": "Context category with color coding"
+              },
+              "actionColor": {
+                "type": "string",
+                "format": "hex",
+                "description": "Hex color code for action category"
+              },
+              "contextColor": {
+                "type": "string",
+                "format": "hex",
+                "description": "Hex color code for context category"
+              },
+              "combinedTag": {
+                "type": "string",
+                "description": "Combined action and context tag"
+              },
+              "visualDisplay": {
+                "type": "string",
+                "description": "Color-coded visual representation"
+              },
+              "colorScheme": {
+                "type": "object",
+                "properties": {
+                  "action": {
+                    "type": "string"
+                  },
+                  "context": {
+                    "type": "string"
+                  }
+                }
+              },
+              "smartFolderPath": {
+                "type": "string",
+                "description": "Suggested folder path based on dual-tagging"
+              },
+              "adhdMetadata": {
+                "type": "object",
+                "properties": {
+                  "cognitiveLoad": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  },
+                  "processingTime": {
+                    "type": "string",
+                    "description": "Estimated processing time"
+                  },
+                  "focusRequired": {
+                    "type": "string",
+                    "enum": [
+                      "Minimal",
+                      "Moderate",
+                      "High"
+                    ]
+                  },
+                  "urgencyLevel": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High",
+                      "Critical"
+                    ]
+                  },
+                  "contextPriority": {
+                    "type": "string",
+                    "enum": [
+                      "Low",
+                      "Medium",
+                      "High"
+                    ]
+                  },
+                  "recommendations": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "processingMetadata": {
+                "type": "object",
+                "properties": {
+                  "processingTime": {
+                    "type": "number",
+                    "description": "Processing time in milliseconds"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "version": {
+                    "type": "string"
+                  },
+                  "features": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "reasons": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "calendar": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "deadlines": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "urgency": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "required": [
+              "score",
+              "actionTag",
+              "contextTag",
+              "actionColor",
+              "contextColor",
+              "combinedTag",
+              "visualDisplay",
+              "smartFolderPath",
+              "adhdMetadata"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Batch-analyze",
+      "key": "batch-analyze",
+      "operations": [
+        {
+          "id": "batch_analyze_emails",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/batch-analyze",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique email identifier"
+                    },
+                    "subject": {
+                      "type": "string",
+                      "description": "Email subject line"
+                    },
+                    "body": {
+                      "type": "string",
+                      "description": "Email body content"
+                    },
+                    "from": {
+                      "type": "string",
+                      "format": "email"
+                    },
+                    "messageId": {
+                      "type": "string",
+                      "description": "Email message ID for threading",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "subject",
+                    "body",
+                    "from"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer"
+                  },
+                  "actionNow": {
+                    "type": "integer"
+                  },
+                  "thisWeek": {
+                    "type": "integer"
+                  },
+                  "waitingOn": {
+                    "type": "integer"
+                  },
+                  "toRead": {
+                    "type": "integer"
+                  },
+                  "classes": {
+                    "type": "integer"
+                  },
+                  "research": {
+                    "type": "integer"
+                  },
+                  "admin": {
+                    "type": "integer"
+                  },
+                  "people": {
+                    "type": "integer"
+                  },
+                  "reference": {
+                    "type": "integer"
+                  },
+                  "archive": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "emails": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "analysis": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    },
+                    "original": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "description": "Unique email identifier"
+                        },
+                        "subject": {
+                          "type": "string",
+                          "description": "Email subject line"
+                        },
+                        "body": {
+                          "type": "string",
+                          "description": "Email body content"
+                        },
+                        "from": {
+                          "type": "string",
+                          "format": "email"
+                        },
+                        "messageId": {
+                          "type": "string",
+                          "description": "Email message ID for threading",
+                          "minLength": 1
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "subject",
+                        "body",
+                        "from"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                }
+              },
+              "actionGrouped": {
+                "type": "object",
+                "properties": {
+                  "Action Now": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "This Week": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "Waiting On": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "To Read": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  }
+                }
+              },
+              "contextGrouped": {
+                "type": "object",
+                "properties": {
+                  "Classes": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "Research": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "Admin": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "People": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "Reference": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  },
+                  "Archive": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "score": {
+                          "type": "integer",
+                          "description": "Priority score (0-100+)",
+                          "minimum": 0
+                        },
+                        "actionTag": {
+                          "type": "string",
+                          "enum": [
+                            "Action Now",
+                            "This Week",
+                            "Waiting On",
+                            "To Read"
+                          ],
+                          "description": "Action category with color coding"
+                        },
+                        "contextTag": {
+                          "type": "string",
+                          "enum": [
+                            "Classes",
+                            "Research",
+                            "Admin",
+                            "People",
+                            "Reference",
+                            "Archive"
+                          ],
+                          "description": "Context category with color coding"
+                        },
+                        "actionColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for action category"
+                        },
+                        "contextColor": {
+                          "type": "string",
+                          "format": "hex",
+                          "description": "Hex color code for context category"
+                        },
+                        "combinedTag": {
+                          "type": "string",
+                          "description": "Combined action and context tag"
+                        },
+                        "visualDisplay": {
+                          "type": "string",
+                          "description": "Color-coded visual representation"
+                        },
+                        "colorScheme": {
+                          "type": "object",
+                          "properties": {
+                            "action": {
+                              "type": "string"
+                            },
+                            "context": {
+                              "type": "string"
+                            }
+                          }
+                        },
+                        "smartFolderPath": {
+                          "type": "string",
+                          "description": "Suggested folder path based on dual-tagging"
+                        },
+                        "adhdMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "cognitiveLoad": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "processingTime": {
+                              "type": "string",
+                              "description": "Estimated processing time"
+                            },
+                            "focusRequired": {
+                              "type": "string",
+                              "enum": [
+                                "Minimal",
+                                "Moderate",
+                                "High"
+                              ]
+                            },
+                            "urgencyLevel": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High",
+                                "Critical"
+                              ]
+                            },
+                            "contextPriority": {
+                              "type": "string",
+                              "enum": [
+                                "Low",
+                                "Medium",
+                                "High"
+                              ]
+                            },
+                            "recommendations": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "processingMetadata": {
+                          "type": "object",
+                          "properties": {
+                            "processingTime": {
+                              "type": "number",
+                              "description": "Processing time in milliseconds"
+                            },
+                            "timestamp": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "version": {
+                              "type": "string"
+                            },
+                            "features": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "reasons": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "actions": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "calendar": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "date": {
+                                "type": "string",
+                                "format": "date-time"
+                              },
+                              "text": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "tasks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "description": {
+                                "type": "string"
+                              },
+                              "priority": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high",
+                                  "urgent"
+                                ]
+                              },
+                              "source": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        },
+                        "deadlines": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "text": {
+                                "type": "string"
+                              },
+                              "urgency": {
+                                "type": "string",
+                                "enum": [
+                                  "low",
+                                  "medium",
+                                  "high"
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "required": [
+                        "score",
+                        "actionTag",
+                        "contextTag",
+                        "actionColor",
+                        "contextColor",
+                        "combinedTag",
+                        "visualDisplay",
+                        "smartFolderPath",
+                        "adhdMetadata"
+                      ]
+                    }
+                  }
+                }
+              },
+              "dualTagGrouped": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "score": {
+                        "type": "integer",
+                        "description": "Priority score (0-100+)",
+                        "minimum": 0
+                      },
+                      "actionTag": {
+                        "type": "string",
+                        "enum": [
+                          "Action Now",
+                          "This Week",
+                          "Waiting On",
+                          "To Read"
+                        ],
+                        "description": "Action category with color coding"
+                      },
+                      "contextTag": {
+                        "type": "string",
+                        "enum": [
+                          "Classes",
+                          "Research",
+                          "Admin",
+                          "People",
+                          "Reference",
+                          "Archive"
+                        ],
+                        "description": "Context category with color coding"
+                      },
+                      "actionColor": {
+                        "type": "string",
+                        "format": "hex",
+                        "description": "Hex color code for action category"
+                      },
+                      "contextColor": {
+                        "type": "string",
+                        "format": "hex",
+                        "description": "Hex color code for context category"
+                      },
+                      "combinedTag": {
+                        "type": "string",
+                        "description": "Combined action and context tag"
+                      },
+                      "visualDisplay": {
+                        "type": "string",
+                        "description": "Color-coded visual representation"
+                      },
+                      "colorScheme": {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string"
+                          },
+                          "context": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "smartFolderPath": {
+                        "type": "string",
+                        "description": "Suggested folder path based on dual-tagging"
+                      },
+                      "adhdMetadata": {
+                        "type": "object",
+                        "properties": {
+                          "cognitiveLoad": {
+                            "type": "string",
+                            "enum": [
+                              "Low",
+                              "Medium",
+                              "High"
+                            ]
+                          },
+                          "processingTime": {
+                            "type": "string",
+                            "description": "Estimated processing time"
+                          },
+                          "focusRequired": {
+                            "type": "string",
+                            "enum": [
+                              "Minimal",
+                              "Moderate",
+                              "High"
+                            ]
+                          },
+                          "urgencyLevel": {
+                            "type": "string",
+                            "enum": [
+                              "Low",
+                              "Medium",
+                              "High",
+                              "Critical"
+                            ]
+                          },
+                          "contextPriority": {
+                            "type": "string",
+                            "enum": [
+                              "Low",
+                              "Medium",
+                              "High"
+                            ]
+                          },
+                          "recommendations": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "processingMetadata": {
+                        "type": "object",
+                        "properties": {
+                          "processingTime": {
+                            "type": "number",
+                            "description": "Processing time in milliseconds"
+                          },
+                          "timestamp": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "version": {
+                            "type": "string"
+                          },
+                          "features": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "reasons": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "actions": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "calendar": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "date": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "text": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "tasks": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "description": {
+                              "type": "string"
+                            },
+                            "priority": {
+                              "type": "string",
+                              "enum": [
+                                "low",
+                                "medium",
+                                "high",
+                                "urgent"
+                              ]
+                            },
+                            "source": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      },
+                      "deadlines": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "text": {
+                              "type": "string"
+                            },
+                            "urgency": {
+                              "type": "string",
+                              "enum": [
+                                "low",
+                                "medium",
+                                "high"
+                              ]
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "required": [
+                      "score",
+                      "actionTag",
+                      "contextTag",
+                      "actionColor",
+                      "contextColor",
+                      "combinedTag",
+                      "visualDisplay",
+                      "smartFolderPath",
+                      "adhdMetadata"
+                    ]
+                  }
+                }
+              },
+              "adhdInsights": {
+                "type": "object",
+                "properties": {
+                  "totalEmails": {
+                    "type": "integer"
+                  },
+                  "actionableEmails": {
+                    "type": "integer"
+                  },
+                  "highPriorityEmails": {
+                    "type": "integer"
+                  },
+                  "cognitiveLoadDistribution": {
+                    "type": "object",
+                    "properties": {
+                      "Low": {
+                        "type": "integer"
+                      },
+                      "Medium": {
+                        "type": "integer"
+                      },
+                      "High": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "focusRequirements": {
+                    "type": "object",
+                    "properties": {
+                      "Minimal": {
+                        "type": "integer"
+                      },
+                      "Moderate": {
+                        "type": "integer"
+                      },
+                      "High": {
+                        "type": "integer"
+                      }
+                    }
+                  },
+                  "batchProcessingRecommendation": {
+                    "type": "string"
+                  },
+                  "timeManagementTips": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "productivityInsights": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "recommendations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "calendar": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high",
+                        "urgent"
+                      ]
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dual-tagging",
+      "key": "dual-tagging",
+      "operations": [
+        {
+          "id": "get_dual_tagging_info",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/dual-tagging/info",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "systemName": {
+                "type": "string",
+                "description": "Name of the dual-tagging system"
+              },
+              "version": {
+                "type": "string",
+                "description": "System version"
+              },
+              "description": {
+                "type": "string",
+                "description": "System description"
+              },
+              "actionCategories": {
+                "type": "object",
+                "properties": {
+                  "Action Now": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "This Week": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Waiting On": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "To Read": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "contextCategories": {
+                "type": "object",
+                "properties": {
+                  "Classes": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Research": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Admin": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "People": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Reference": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "Archive": {
+                    "type": "object",
+                    "properties": {
+                      "color": {
+                        "type": "string",
+                        "format": "hex"
+                      },
+                      "colorName": {
+                        "type": "string"
+                      },
+                      "shortCode": {
+                        "type": "string"
+                      },
+                      "visualCue": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "benefits": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Generate-reply",
+      "key": "generate-reply",
+      "operations": [
+        {
+          "id": "generate_reply",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/generate-reply",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique email identifier"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "description": "Email subject line"
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Email body content"
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "description": "Email message ID for threading",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "subject",
+                  "body",
+                  "from"
+                ],
+                "additionalProperties": false
+              },
+              "analysis": {
+                "type": "object",
+                "properties": {
+                  "score": {
+                    "type": "integer",
+                    "description": "Priority score (0-100+)",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "action_now",
+                      "this_week",
+                      "to_read"
+                    ]
+                  },
+                  "reasons": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "actions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "calendar": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "date": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "tasks": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "priority": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high",
+                            "urgent"
+                          ]
+                        },
+                        "source": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  },
+                  "deadlines": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "text": {
+                          "type": "string"
+                        },
+                        "urgency": {
+                          "type": "string",
+                          "enum": [
+                            "low",
+                            "medium",
+                            "high"
+                          ]
+                        }
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              },
+              "templateType": {
+                "type": "string",
+                "enum": [
+                  "auto",
+                  "acknowledgment",
+                  "task_confirmation",
+                  "meeting_scheduling",
+                  "urgent_response",
+                  "question_response",
+                  "out_of_office"
+                ],
+                "default": "auto"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "templateType": {
+                "type": "string"
+              },
+              "responseTime": {
+                "type": "string",
+                "description": "ISO 8601 duration or date-time format"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "health_check",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "features": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Send-reply",
+      "key": "send-reply",
+      "operations": [
+        {
+          "id": "send_reply",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/send-reply",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "originalEmail": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique email identifier"
+                  },
+                  "subject": {
+                    "type": "string",
+                    "description": "Email subject line"
+                  },
+                  "body": {
+                    "type": "string",
+                    "description": "Email body content"
+                  },
+                  "from": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "description": "Email message ID for threading",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "id",
+                  "subject",
+                  "body",
+                  "from"
+                ],
+                "additionalProperties": false
+              },
+              "reply": {
+                "type": "object",
+                "properties": {
+                  "subject": {
+                    "type": "string"
+                  },
+                  "body": {
+                    "type": "string"
+                  },
+                  "templateType": {
+                    "type": "string"
+                  },
+                  "responseTime": {
+                    "type": "string",
+                    "description": "ISO 8601 duration or date-time format"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "emailConfig": {
+                "type": "object",
+                "properties": {
+                  "smtp": {
+                    "type": "object",
+                    "properties": {
+                      "host": {
+                        "type": "string"
+                      },
+                      "port": {
+                        "type": "integer"
+                      },
+                      "secure": {
+                        "type": "boolean"
+                      }
+                    }
+                  },
+                  "auth": {
+                    "type": "object",
+                    "properties": {
+                      "user": {
+                        "type": "string"
+                      },
+                      "pass": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "messageId": {
+                "type": "string"
+              },
+              "response": {
+                "type": "string"
+              },
+              "error": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,676 @@
+{
+  "api": {
+    "title": "Users Api v1",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "AccountInformation",
+      "key": "accountinformation",
+      "operations": [
+        {
+          "id": "GET:/v1/birthdate",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/birthdate",
+          "responseSchema": {
+            "description": "The birthdate response",
+            "example": {
+              "birthMonth": 0,
+              "birthDay": 6,
+              "birthYear": 1
+            },
+            "properties": {
+              "birthMonth": {
+                "description": "The birth month",
+                "format": "int32",
+                "type": "integer"
+              },
+              "birthDay": {
+                "description": "The birth day",
+                "format": "int32",
+                "type": "integer"
+              },
+              "birthYear": {
+                "description": "The birth year",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/description",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/description",
+          "responseSchema": {
+            "description": "The description response",
+            "example": {
+              "description": "description"
+            },
+            "properties": {
+              "description": {
+                "description": "The description",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/gender",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/gender",
+          "responseSchema": {
+            "description": "The gender response",
+            "example": {
+              "gender": 0
+            },
+            "properties": {
+              "gender": {
+                "description": "The gender",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/v1/birthdate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/birthdate",
+          "requestSchema": {
+            "description": "The birthdate request",
+            "properties": {
+              "birthMonth": {
+                "description": "The birth month",
+                "format": "int32",
+                "type": "integer"
+              },
+              "birthDay": {
+                "description": "The birth day",
+                "format": "int32",
+                "type": "integer"
+              },
+              "birthYear": {
+                "description": "The birth year",
+                "format": "int32",
+                "type": "integer"
+              },
+              "password": {
+                "description": "Password",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/v1/description",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/description",
+          "requestSchema": {
+            "description": "The description request",
+            "properties": {
+              "description": {
+                "description": "The description",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "The description response",
+            "example": {
+              "description": "description"
+            },
+            "properties": {
+              "description": {
+                "description": "The description",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/v1/gender",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/gender",
+          "requestSchema": {
+            "description": "The gender request",
+            "properties": {
+              "gender": {
+                "description": "The gender",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "DisplayNames",
+      "key": "displaynames",
+      "operations": [
+        {
+          "id": "GET:/v1/display-names/validate",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/display-names/validate",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/users/{userId}/display-names/validate",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/users/{userId}/display-names/validate",
+          "identifierParam": "userId",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "PATCH:/v1/users/{userId}/display-names",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/v1/users/{userId}/display-names",
+          "identifierParam": "userId",
+          "requestSchema": {
+            "description": "Request model for changing a display name.",
+            "properties": {
+              "newDisplayName": {
+                "description": "The users new display name.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Usernames",
+      "key": "usernames",
+      "operations": [
+        {
+          "id": "GET:/v1/users/{userId}/username-history",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/users/{userId}/username-history",
+          "identifierParam": "userId",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "example": {
+              "data": [
+                {
+                  "name": "name"
+                },
+                {
+                  "name": "name"
+                }
+              ],
+              "nextPageCursor": "nextPageCursor",
+              "previousPageCursor": "previousPageCursor"
+            },
+            "properties": {
+              "previousPageCursor": {
+                "type": "string"
+              },
+              "nextPageCursor": {
+                "type": "string"
+              },
+              "data": {
+                "items": {
+                  "example": {
+                    "name": "name"
+                  },
+                  "properties": {
+                    "name": {
+                      "description": "A past username belonging to a particular userId",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "GET:/v1/users/authenticated",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/authenticated",
+          "responseSchema": {
+            "description": "A response model representing absolute minimal authenticating user information.\r\nNo new attributes should be added to this response since it is in the critical path of app launch and we want to minimize dependencies.",
+            "example": {
+              "displayName": "displayName",
+              "name": "name",
+              "id": 0
+            },
+            "properties": {
+              "id": {
+                "description": "The user Id.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "name": {
+                "description": "The user name.",
+                "type": "string"
+              },
+              "displayName": {
+                "description": "The user DisplayName.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/users/authenticated/age-bracket",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/authenticated/age-bracket",
+          "responseSchema": {
+            "description": "A user age bracket response model.",
+            "example": {
+              "ageBracket": 0
+            },
+            "properties": {
+              "ageBracket": {
+                "description": "The age bracket of the user.",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/users/authenticated/country-code",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/authenticated/country-code",
+          "responseSchema": {
+            "description": "A user country code response model.",
+            "example": {
+              "countryCode": "countryCode"
+            },
+            "properties": {
+              "countryCode": {
+                "description": "The country code of the user.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/users/authenticated/roles",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/authenticated/roles",
+          "responseSchema": {
+            "description": "A user roles response model.",
+            "example": {
+              "roles": [
+                "roles",
+                "roles"
+              ]
+            },
+            "properties": {
+              "roles": {
+                "description": "The roles of the user.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/v1/users/{userId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/users/{userId}",
+          "identifierParam": "userId",
+          "responseSchema": {
+            "description": "A response model representing user information.",
+            "example": {
+              "hasVerifiedBadge": true,
+              "created": "2000-01-23T04:56:07.000+00:00",
+              "displayName": "displayName",
+              "name": "name",
+              "description": "description",
+              "externalAppDisplayName": "externalAppDisplayName",
+              "isBanned": true,
+              "id": 0
+            },
+            "properties": {
+              "description": {
+                "description": "The user description.",
+                "type": "string"
+              },
+              "created": {
+                "description": "When the user signed up.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "isBanned": {
+                "description": "Whether or not the user is banned",
+                "type": "boolean"
+              },
+              "externalAppDisplayName": {
+                "description": "Unused, legacy attribute. For now always null to not disturb existing client code that might rely on its existence.",
+                "type": "string"
+              },
+              "hasVerifiedBadge": {
+                "description": "The user's verified badge status.",
+                "type": "boolean"
+              },
+              "id": {
+                "description": "The user Id.",
+                "format": "int64",
+                "type": "integer"
+              },
+              "name": {
+                "description": "The user name.",
+                "type": "string"
+              },
+              "displayName": {
+                "description": "The user DisplayName.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/v1/usernames/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/usernames/users",
+          "requestSchema": {
+            "description": "Request model for getting users by usernames.",
+            "properties": {
+              "usernames": {
+                "description": "The usernames.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "excludeBannedUsers": {
+                "description": "Whether or not the response should exclude banned users",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "data": [
+                {
+                  "hasVerifiedBadge": true,
+                  "requestedUsername": "requestedUsername",
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                },
+                {
+                  "hasVerifiedBadge": true,
+                  "requestedUsername": "requestedUsername",
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                }
+              ]
+            },
+            "properties": {
+              "data": {
+                "items": {
+                  "description": "A response model specific to multi-get user by name.",
+                  "example": {
+                    "hasVerifiedBadge": true,
+                    "requestedUsername": "requestedUsername",
+                    "displayName": "displayName",
+                    "name": "name",
+                    "id": 0
+                  },
+                  "properties": {
+                    "requestedUsername": {
+                      "description": "The username the user was requested with.",
+                      "type": "string"
+                    },
+                    "hasVerifiedBadge": {
+                      "description": "The user's verified badge status.",
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "description": "The user Id.",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "The user name.",
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "description": "The user DisplayName.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "POST:/v1/users",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/users",
+          "requestSchema": {
+            "description": "Request model for getting users by ids.",
+            "properties": {
+              "userIds": {
+                "description": "The user ids.",
+                "items": {
+                  "format": "int64",
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              "excludeBannedUsers": {
+                "description": "Whether or not the response should exclude banned users",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "data": [
+                {
+                  "hasVerifiedBadge": true,
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                },
+                {
+                  "hasVerifiedBadge": true,
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                }
+              ]
+            },
+            "properties": {
+              "data": {
+                "items": {
+                  "description": "A response model specific to multi-get user.",
+                  "example": {
+                    "hasVerifiedBadge": true,
+                    "displayName": "displayName",
+                    "name": "name",
+                    "id": 0
+                  },
+                  "properties": {
+                    "hasVerifiedBadge": {
+                      "description": "The user's verified badge status.",
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "description": "The user Id.",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "The user name.",
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "description": "The user DisplayName.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "UserSearch",
+      "key": "usersearch",
+      "operations": [
+        {
+          "id": "GET:/v1/users/search",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/users/search",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "example": {
+              "data": [
+                {
+                  "hasVerifiedBadge": true,
+                  "previousUsernames": [
+                    "previousUsernames",
+                    "previousUsernames"
+                  ],
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                },
+                {
+                  "hasVerifiedBadge": true,
+                  "previousUsernames": [
+                    "previousUsernames",
+                    "previousUsernames"
+                  ],
+                  "displayName": "displayName",
+                  "name": "name",
+                  "id": 0
+                }
+              ],
+              "nextPageCursor": "nextPageCursor",
+              "previousPageCursor": "previousPageCursor"
+            },
+            "properties": {
+              "previousPageCursor": {
+                "type": "string"
+              },
+              "nextPageCursor": {
+                "type": "string"
+              },
+              "data": {
+                "items": {
+                  "description": "A user response model specific to getting a user from user search.",
+                  "example": {
+                    "hasVerifiedBadge": true,
+                    "previousUsernames": [
+                      "previousUsernames",
+                      "previousUsernames"
+                    ],
+                    "displayName": "displayName",
+                    "name": "name",
+                    "id": 0
+                  },
+                  "properties": {
+                    "previousUsernames": {
+                      "description": "Previous usernames for a user.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "hasVerifiedBadge": {
+                      "description": "The user's verified badge status.",
+                      "type": "boolean"
+                    },
+                    "id": {
+                      "description": "The user Id.",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "name": {
+                      "description": "The user name.",
+                      "type": "string"
+                    },
+                    "displayName": {
+                      "description": "The user DisplayName.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,512 @@
+{
+  "api": {
+    "title": "ClipNotes Insights API (Draft)",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Insights",
+      "key": "insights",
+      "operations": [
+        {
+          "id": "getInsights",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/insights",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "window",
+              "generated_at",
+              "summary",
+              "summary_source",
+              "severity_totals",
+              "series"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "summary_source": {
+                "type": "string",
+                "enum": [
+                  "hafnia",
+                  "fallback"
+                ]
+              },
+              "severity_totals": {
+                "type": "object",
+                "required": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "properties": {
+                  "low": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "medium": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "high": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "bucket_start",
+                    "total",
+                    "severity"
+                  ],
+                  "properties": {
+                    "bucket_start": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "severity": {
+                      "type": "object",
+                      "required": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "properties": {
+                        "low": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "high": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "top_labels": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "label",
+                    "count"
+                  ],
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "avg_severity": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "delta": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "cache_expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "getInsightShare",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/insights/share/{token}",
+          "identifierParam": "token",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "window",
+              "generated_at",
+              "summary",
+              "summary_source",
+              "severity_totals",
+              "series"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "summary_source": {
+                "type": "string",
+                "enum": [
+                  "hafnia",
+                  "fallback"
+                ]
+              },
+              "severity_totals": {
+                "type": "object",
+                "required": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "properties": {
+                  "low": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "medium": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "high": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "bucket_start",
+                    "total",
+                    "severity"
+                  ],
+                  "properties": {
+                    "bucket_start": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "severity": {
+                      "type": "object",
+                      "required": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "properties": {
+                        "low": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "high": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "top_labels": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "label",
+                    "count"
+                  ],
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "avg_severity": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "delta": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "cache_expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "regenerateInsights",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/insights/regenerate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "window"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "window",
+              "generated_at",
+              "summary",
+              "summary_source",
+              "severity_totals",
+              "series"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "summary_source": {
+                "type": "string",
+                "enum": [
+                  "hafnia",
+                  "fallback"
+                ]
+              },
+              "severity_totals": {
+                "type": "object",
+                "required": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "properties": {
+                  "low": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "medium": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "high": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              },
+              "series": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "bucket_start",
+                    "total",
+                    "severity"
+                  ],
+                  "properties": {
+                    "bucket_start": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "severity": {
+                      "type": "object",
+                      "required": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "properties": {
+                        "low": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "medium": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "high": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "top_labels": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "label",
+                    "count"
+                  ],
+                  "properties": {
+                    "label": {
+                      "type": "string",
+                      "maxLength": 80
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "avg_severity": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 2,
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "delta": {
+                "type": "object",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "cache_expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "createInsightShare",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/insights/share",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "window"
+            ],
+            "properties": {
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "token",
+              "url",
+              "window"
+            ],
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "window": {
+                "type": "string",
+                "enum": [
+                  "24h",
+                  "7d"
+                ]
+              },
+              "generated_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "cache_expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

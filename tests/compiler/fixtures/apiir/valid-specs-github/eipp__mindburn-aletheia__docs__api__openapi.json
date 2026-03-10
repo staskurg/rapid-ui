@@ -1,0 +1,328 @@
+{
+  "api": {
+    "title": "Mindburn Aletheia API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Payments",
+      "key": "payments",
+      "operations": [
+        {
+          "id": "getBalance",
+          "method": "GET",
+          "kind": "list",
+          "path": "/payments/balance",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "available": {
+                "type": "number",
+                "format": "float"
+              },
+              "pending": {
+                "type": "number",
+                "format": "float"
+              },
+              "total": {
+                "type": "number",
+                "format": "float"
+              },
+              "currency": {
+                "type": "string",
+                "default": "TON"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "listTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "classification",
+                        "validation",
+                        "annotation"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "active",
+                        "completed",
+                        "failed"
+                      ]
+                    },
+                    "data": {
+                      "type": "object"
+                    },
+                    "reward": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "instructions": {
+                      "type": "string"
+                    },
+                    "metadata": {
+                      "type": "object"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getTask",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{taskId}",
+          "identifierParam": "taskId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "classification",
+                  "validation",
+                  "annotation"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "active",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "data": {
+                "type": "object"
+              },
+              "reward": {
+                "type": "number",
+                "format": "float"
+              },
+              "instructions": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTask",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "type",
+              "data",
+              "reward"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "classification",
+                  "validation",
+                  "annotation"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "description": "Task-specific data"
+              },
+              "reward": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0
+              },
+              "instructions": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "classification",
+                  "validation",
+                  "annotation"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "active",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "data": {
+                "type": "object"
+              },
+              "reward": {
+                "type": "number",
+                "format": "float"
+              },
+              "instructions": {
+                "type": "string"
+              },
+              "metadata": {
+                "type": "object"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verification",
+      "key": "verification",
+      "operations": [
+        {
+          "id": "submitVerification",
+          "method": "POST",
+          "kind": "create",
+          "path": "/verification/submit",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "taskId",
+              "result"
+            ],
+            "properties": {
+              "taskId": {
+                "type": "string"
+              },
+              "result": {
+                "type": "object"
+              },
+              "confidence": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "metadata": {
+                "type": "object"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "taskId": {
+                "type": "string"
+              },
+              "workerId": {
+                "type": "string"
+              },
+              "result": {
+                "type": "object"
+              },
+              "confidence": {
+                "type": "number",
+                "format": "float"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "accepted",
+                  "rejected"
+                ]
+              },
+              "reward": {
+                "type": "number",
+                "format": "float"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

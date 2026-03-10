@@ -1,0 +1,125 @@
+# Ensuring (future) better global consistency with reusable error responses
+openapi: "3.0.3"
+
+info:
+  title: Postmanaut Directory
+  description: |
+    ![OpenAPI Logo](https://avatars3.githubusercontent.com/u/16343502?v=3&s=100)
+
+    A demo _API_ to **discover** the **_[OpenAPI Specification](https://www.openapis.org/)_**.
+  version: "1.0"
+
+servers:
+  - description: The base path for all resources 
+    url: /postmanaut-directory/v1 
+
+paths:
+  /postmanauts:
+    get:
+      summary: Search postmanauts
+      description: You can either get the full list of postmanauts or filter them on their name
+      parameters:
+        - name: name
+          in: query
+          required: false
+          description: Partial or complete postmanaut name
+          schema: 
+            type: string
+      responses:
+        200:
+          description: Found postmanauts (the returned list is empty if none found)
+          content:
+            application/json:
+              schema:
+                title: Postmanauts
+                type: object
+                required:
+                  - data
+                properties:
+                  data:
+                    type: array
+                    minItems: 0
+                    items:
+                      title: Postmanaut
+                      required:
+                        - id
+                        - name
+                        - registrationDate
+                      properties:
+                        id: 
+                          type: string
+                        name:
+                          type: string
+                          minLength: 1
+                          maxLength: 256
+                        registrationDate:
+                          type: string
+                          format: date
+                        supportLevel:
+                          type: string
+                          enum:
+                            - bronze
+                            - silver
+                            - gold
+                        pendingTickets:
+                          type: integer
+                          minimum: 0
+        401:
+          # A reference to a reusable response
+          $ref: "#/components/responses/AuthenticationError"
+        500:
+          # A reference to a reusable response
+          $ref: "#/components/responses/UnexpectedError"
+components:
+  schemas:
+    Errors:
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          minItems: 1
+          items:
+            required:
+              - code
+              - message
+            properties:
+              code:
+                type: string
+              message:
+                type: string
+              source:
+                title: ErrorSource
+                required:
+                  - location
+                  - name
+                properties:
+                  location:
+                    type: string
+                    enum:
+                      - path
+                      - query
+                      - body
+                      - header
+                  name:
+                    type: string
+                    description: The name of the property or parameter causing the error
+                  path:
+                    type: string
+                    description: JSON path targeting the source of error (only used when location is `body`)
+  # The place to put reusable responses
+  responses:
+    # All operations will need a 500
+    UnexpectedError:
+      description: Unexpected error. Consumer may try to send the request again.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"
+    # All operations will need a 401
+    AuthenticationError:
+      description: Missing or invalid API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Errors"

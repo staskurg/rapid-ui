@@ -1,0 +1,813 @@
+openapi: 3.0.3
+info:
+  title: ICTServe API
+  description: |
+    API untuk Sistem Pengurusan Perkhidmatan ICT MOTAC (ICTServe) v3.6.0.
+
+    ## Pengesahan (Authentication)
+    API ini menggunakan Laravel Sanctum untuk pengesahan. Terdapat dua kaedah:
+
+    1. **Token Bearer** - Untuk aplikasi pihak ketiga
+    2. **Cookie Session** - Untuk SPA (Single Page Application)
+
+    ## Keupayaan Token (Token Abilities)
+    Token API boleh dikonfigurasi dengan keupayaan tertentu:
+    - `tickets:*` - Operasi tiket helpdesk
+    - `loans:*` - Operasi pinjaman aset
+    - `assets:*` - Operasi pengurusan aset
+    - `users:*` - Operasi pengurusan pengguna
+    - `reports:*` - Operasi laporan
+
+    ## Had Kadar (Rate Limiting)
+    API ini mempunyai had kadar 60 permintaan seminit per pengguna.
+
+    @trace Requirements 5.1, 5.2, 5.3, 5.4, 12.1, 12.2, 12.4, 12.5
+  version: 3.6.0
+  contact:
+    name: Pasukan BPM MOTAC
+    email: bpm@motac.gov.my
+  license:
+    name: Proprietary
+    url: https://motac.gov.my
+
+servers:
+  - url: https://ictserve.motac.gov.my/api/v1
+    description: Production Server
+  - url: https://staging.ictserve.motac.gov.my/api/v1
+    description: Staging Server
+  - url: http://localhost:8000/api/v1
+    description: Development Server
+
+tags:
+  - name: Authentication
+    description: Operasi pengesahan dan pengurusan token
+  - name: Tickets
+    description: Operasi tiket helpdesk
+  - name: Loans
+    description: Operasi pinjaman aset
+  - name: Assets
+    description: Operasi pengurusan aset
+  - name: Users
+    description: Operasi pengurusan pengguna (Admin sahaja)
+  - name: Health
+    description: Endpoint pemeriksaan kesihatan sistem
+
+security:
+  - bearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Pemeriksaan kesihatan asas
+      description: Mengembalikan status kesihatan sistem
+      security: []
+      responses:
+        "200":
+          description: Sistem sihat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /user:
+    get:
+      tags:
+        - Authentication
+      summary: Dapatkan maklumat pengguna semasa
+      description: Mengembalikan maklumat pengguna yang sedang log masuk
+      responses:
+        "200":
+          description: Maklumat pengguna berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /tickets:
+    get:
+      tags:
+        - Tickets
+      summary: Senarai tiket helpdesk
+      description: Mengembalikan senarai tiket helpdesk dengan pagination
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
+        - name: status
+          in: query
+          description: Tapis mengikut status tiket
+          schema:
+            type: string
+            enum: [open, in_progress, pending, resolved, closed]
+        - name: priority
+          in: query
+          description: Tapis mengikut keutamaan
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        "200":
+          description: Senarai tiket berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+    post:
+      tags:
+        - Tickets
+      summary: Cipta tiket helpdesk baharu
+      description: Mencipta tiket helpdesk baharu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketRequest"
+      responses:
+        "201":
+          description: Tiket berjaya dicipta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /tickets/{ticketId}:
+    get:
+      tags:
+        - Tickets
+      summary: Dapatkan butiran tiket
+      description: Mengembalikan butiran lengkap tiket helpdesk
+      parameters:
+        - $ref: "#/components/parameters/TicketIdParam"
+      responses:
+        "200":
+          description: Butiran tiket berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      tags:
+        - Tickets
+      summary: Kemaskini tiket
+      description: Mengemaskini maklumat tiket helpdesk
+      parameters:
+        - $ref: "#/components/parameters/TicketIdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTicketRequest"
+      responses:
+        "200":
+          description: Tiket berjaya dikemaskini
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ticket"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /loans:
+    get:
+      tags:
+        - Loans
+      summary: Senarai permohonan pinjaman
+      description: Mengembalikan senarai permohonan pinjaman aset
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
+        - name: status
+          in: query
+          description: Tapis mengikut status permohonan
+          schema:
+            type: string
+            enum:
+              [
+                draft,
+                pending_support,
+                pending_approval,
+                approved,
+                rejected,
+                active,
+                returned,
+                overdue,
+              ]
+      responses:
+        "200":
+          description: Senarai permohonan berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      tags:
+        - Loans
+      summary: Cipta permohonan pinjaman baharu
+      description: Mencipta permohonan pinjaman aset baharu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLoanRequest"
+      responses:
+        "201":
+          description: Permohonan berjaya dicipta
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplication"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /loans/{loanId}:
+    get:
+      tags:
+        - Loans
+      summary: Dapatkan butiran permohonan
+      description: Mengembalikan butiran lengkap permohonan pinjaman
+      parameters:
+        - $ref: "#/components/parameters/LoanIdParam"
+      responses:
+        "200":
+          description: Butiran permohonan berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoanApplication"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /assets:
+    get:
+      tags:
+        - Assets
+      summary: Senarai aset
+      description: Mengembalikan senarai aset ICT
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/PerPageParam"
+        - name: status
+          in: query
+          description: Tapis mengikut status aset
+          schema:
+            type: string
+            enum: [available, on_loan, maintenance, disposed]
+        - name: category_id
+          in: query
+          description: Tapis mengikut kategori aset
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Senarai aset berjaya diambil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /assets/{assetId}/availability:
+    get:
+      tags:
+        - Assets
+      summary: Semak ketersediaan aset
+      description: Menyemak ketersediaan aset untuk tempoh tertentu
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/AssetIdParam"
+        - name: start_date
+          in: query
+          required: true
+          description: Tarikh mula (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: end_date
+          in: query
+          required: true
+          description: Tarikh tamat (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Status ketersediaan aset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssetAvailabilityResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+      description: |
+        Token API Laravel Sanctum. Dapatkan token melalui endpoint /auth/login.
+        Format: `Bearer {token}`
+
+  parameters:
+    PageParam:
+      name: page
+      in: query
+      description: Nombor halaman untuk pagination
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+
+    PerPageParam:
+      name: per_page
+      in: query
+      description: Bilangan item per halaman
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 15
+
+    TicketIdParam:
+      name: ticketId
+      in: path
+      required: true
+      description: ID tiket helpdesk
+      schema:
+        type: integer
+
+    LoanIdParam:
+      name: loanId
+      in: path
+      required: true
+      description: ID permohonan pinjaman
+      schema:
+        type: integer
+
+    AssetIdParam:
+      name: assetId
+      in: path
+      required: true
+      description: ID aset
+      schema:
+        type: integer
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Ahmad bin Abdullah"
+        email:
+          type: string
+          format: email
+          example: "ahmad@motac.gov.my"
+        username:
+          type: string
+          example: "ahmad.abdullah"
+        role:
+          type: string
+          enum: [staff, approver, admin, superuser]
+          example: "staff"
+        department:
+          type: string
+          example: "Bahagian Pengurusan Maklumat"
+        grade:
+          type: string
+          example: "41"
+        email_verified_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        ticket_number:
+          type: string
+          example: "TKT-2025-000001"
+        title:
+          type: string
+          example: "Masalah komputer tidak boleh dihidupkan"
+        description:
+          type: string
+          example: "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+        status:
+          type: string
+          enum: [open, in_progress, pending, resolved, closed]
+          example: "open"
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          example: "medium"
+        category_id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          nullable: true
+          example: 1
+        assigned_to:
+          type: integer
+          nullable: true
+          example: 5
+        sla_due_at:
+          type: string
+          format: date-time
+          nullable: true
+        resolved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LoanApplication:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        application_number:
+          type: string
+          example: "LOAN-2025-000001"
+        purpose:
+          type: string
+          example: "Mesyuarat di luar pejabat"
+        status:
+          type: string
+          enum:
+            [
+              draft,
+              pending_support,
+              pending_approval,
+              approved,
+              rejected,
+              active,
+              returned,
+              overdue,
+            ]
+          example: "pending_approval"
+        start_date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        end_date:
+          type: string
+          format: date
+          example: "2025-01-17"
+        user_id:
+          type: integer
+          nullable: true
+          example: 1
+        approver_id:
+          type: integer
+          nullable: true
+          example: 10
+        approved_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Asset:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        asset_tag:
+          type: string
+          example: "ICT-NB-001"
+        name:
+          type: string
+          example: "Laptop Dell Latitude 5520"
+        description:
+          type: string
+          example: "Laptop untuk kegunaan pejabat"
+        category_id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: [available, on_loan, maintenance, disposed]
+          example: "available"
+        condition:
+          type: string
+          enum: [excellent, good, fair, poor]
+          example: "good"
+        serial_number:
+          type: string
+          example: "SN123456789"
+        purchase_date:
+          type: string
+          format: date
+          nullable: true
+        purchase_price:
+          type: number
+          format: float
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateTicketRequest:
+      type: object
+      required:
+        - title
+        - description
+        - category_id
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 255
+          example: "Masalah komputer tidak boleh dihidupkan"
+        description:
+          type: string
+          minLength: 10
+          example: "Komputer di pejabat saya tidak boleh dihidupkan sejak pagi tadi."
+        category_id:
+          type: integer
+          example: 1
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+          default: medium
+          example: "medium"
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          minLength: 5
+          maxLength: 255
+        description:
+          type: string
+          minLength: 10
+        status:
+          type: string
+          enum: [open, in_progress, pending, resolved, closed]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        assigned_to:
+          type: integer
+          nullable: true
+
+    CreateLoanRequest:
+      type: object
+      required:
+        - purpose
+        - start_date
+        - end_date
+        - asset_ids
+      properties:
+        purpose:
+          type: string
+          minLength: 10
+          example: "Mesyuarat di luar pejabat"
+        start_date:
+          type: string
+          format: date
+          example: "2025-01-15"
+        end_date:
+          type: string
+          format: date
+          example: "2025-01-17"
+        asset_ids:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+          example: [1, 2, 3]
+        notes:
+          type: string
+          nullable: true
+          example: "Diperlukan untuk pembentangan"
+
+    TicketListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticket"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+        links:
+          $ref: "#/components/schemas/PaginationLinks"
+
+    LoanListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/LoanApplication"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+        links:
+          $ref: "#/components/schemas/PaginationLinks"
+
+    AssetListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Asset"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+        links:
+          $ref: "#/components/schemas/PaginationLinks"
+
+    AssetAvailabilityResponse:
+      type: object
+      properties:
+        asset_id:
+          type: integer
+          example: 1
+        available:
+          type: boolean
+          example: true
+        conflicts:
+          type: array
+          items:
+            type: object
+            properties:
+              loan_id:
+                type: integer
+              start_date:
+                type: string
+                format: date
+              end_date:
+                type: string
+                format: date
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          example: "healthy"
+        version:
+          type: string
+          example: "3.6.0"
+        timestamp:
+          type: string
+          format: date-time
+
+    PaginationMeta:
+      type: object
+      properties:
+        current_page:
+          type: integer
+          example: 1
+        from:
+          type: integer
+          example: 1
+        last_page:
+          type: integer
+          example: 10
+        per_page:
+          type: integer
+          example: 15
+        to:
+          type: integer
+          example: 15
+        total:
+          type: integer
+          example: 150
+
+    PaginationLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          format: uri
+        last:
+          type: string
+          format: uri
+        prev:
+          type: string
+          format: uri
+          nullable: true
+        next:
+          type: string
+          format: uri
+          nullable: true
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Ralat telah berlaku"
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+
+  responses:
+    Unauthorized:
+      description: Tidak dibenarkan - Token tidak sah atau tamat tempoh
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthenticated."
+
+    Forbidden:
+      description: Dilarang - Tiada kebenaran untuk operasi ini
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Anda tidak mempunyai kebenaran untuk operasi ini."
+
+    NotFound:
+      description: Tidak dijumpai - Sumber tidak wujud
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Sumber tidak dijumpai."
+
+    ValidationError:
+      description: Ralat pengesahan - Data input tidak sah
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

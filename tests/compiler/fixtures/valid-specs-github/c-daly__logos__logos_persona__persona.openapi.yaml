@@ -1,0 +1,206 @@
+openapi: 3.1.0
+info:
+  title: Persona API
+  version: 1.0.0
+  description: |
+    Canonical Persona Diary OpenAPI contract for Project LOGOS.
+    See Project LOGOS spec: Phase 2 specification (Persona section).
+    
+    The Persona Diary provides a memory system for storing activity summaries
+    and sentiments in the HCG. These memories are:
+    - Created by Apollo, Executor, or other client surfaces
+    - Consumed by CWM-E reflection to generate emotion states
+    - Queried by planners and Apollo to understand past experiences
+    
+    PersonaEntry nodes capture what the agent has done, how it felt about it,
+    and links to related HCG processes. This enables the agent to build a
+    sense of history and learn from past experiences.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+paths:
+  /persona/entries:
+    post:
+      summary: Create Persona Diary Entry
+      description: |
+        Create a new PersonaEntry node in Neo4j representing a memory or
+        activity summary. Entries can optionally include sentiment and
+        links to related Process nodes.
+      operationId: createEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                summary:
+                  type: string
+                  description: Text summary of the activity or memory
+                  example: "Successfully completed pick-and-place task"
+                sentiment:
+                  type: string
+                  description: Optional emotional tone of the entry
+                  example: "confident"
+                  enum:
+                    - confident
+                    - cautious
+                    - curious
+                    - neutral
+                    - concerned
+                related_process:
+                  type: string
+                  description: Optional UUID of related Process node
+                  example: "process-uuid-123"
+              required:
+                - summary
+      responses:
+        '200':
+          description: Entry created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PersonaEntryResponse'
+        '400':
+          description: Invalid request (e.g., empty summary)
+        '500':
+          description: Internal server error
+
+    get:
+      summary: Get Recent Persona Entries
+      description: |
+        Retrieve recent PersonaEntry nodes from Neo4j, optionally filtered
+        by sentiment. Used by Apollo for chat context and CWM-E for reflection.
+      operationId: getEntries
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of entries to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+            example: 10
+        - name: sentiment
+          in: query
+          description: Optional sentiment filter
+          schema:
+            type: string
+            example: "confident"
+            enum:
+              - confident
+              - cautious
+              - curious
+              - neutral
+              - concerned
+      responses:
+        '200':
+          description: List of persona entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaEntryResponse'
+        '400':
+          description: Invalid query parameters
+        '500':
+          description: Internal server error
+
+  /persona/entries/process/{process_uuid}:
+    get:
+      summary: Get Entries for Process
+      description: |
+        Retrieve all PersonaEntry nodes related to a specific Process node.
+        Used to understand the agent's reflections on a particular action.
+      operationId: getEntriesForProcess
+      parameters:
+        - name: process_uuid
+          in: path
+          required: true
+          description: UUID of the Process node
+          schema:
+            type: string
+            example: "process-uuid-123"
+      responses:
+        '200':
+          description: List of persona entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PersonaEntryResponse'
+        '404':
+          description: Process not found
+        '500':
+          description: Internal server error
+
+  /persona/sentiment/summary:
+    get:
+      summary: Get Sentiment Summary
+      description: |
+        Retrieve sentiment distribution statistics across all PersonaEntry nodes.
+        Provides a high-level view of the agent's emotional history.
+      operationId: getSentimentSummary
+      responses:
+        '200':
+          description: Sentiment distribution summary
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sentiments:
+                    type: object
+                    additionalProperties:
+                      type: integer
+                    description: Count of entries for each sentiment type
+                    example:
+                      confident: 15
+                      cautious: 8
+                      curious: 5
+                      neutral: 12
+                      concerned: 3
+        '500':
+          description: Internal server error
+
+components:
+  schemas:
+    PersonaEntryResponse:
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: Unique identifier for the entry
+          example: "entry-uuid-123"
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the entry was created
+          example: "2024-01-15T10:30:00Z"
+        summary:
+          type: string
+          description: Text summary of the activity or memory
+          example: "Successfully completed pick-and-place task"
+        sentiment:
+          type: string
+          description: Optional emotional tone of the entry
+          example: "confident"
+          enum:
+            - confident
+            - cautious
+            - curious
+            - neutral
+            - concerned
+        related_process:
+          type: string
+          description: Optional UUID of related Process node
+          example: "process-uuid-123"
+      required:
+        - uuid
+        - timestamp
+        - summary

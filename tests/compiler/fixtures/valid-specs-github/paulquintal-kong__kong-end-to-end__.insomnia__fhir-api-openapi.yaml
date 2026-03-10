@@ -1,0 +1,1102 @@
+openapi: 3.1.0
+info:
+  title: FHIR API for Patient, Observation, Encounter, Condition, and Medication (Smile CDR Compatible)
+  description: |
+    This API provides access to FHIR resources including Patient, Observation, Encounter, Condition, and Medication. It is designed to be compatible with Smile CDR.
+    
+    **Note:** This specification provides a basic structure and may need to be extended with Smile CDR specific profiles and extensions for full compatibility.
+  version: '1.0.1'
+  contact:
+    name: API Support
+    email: api-support@konghq.com
+servers:
+  - url: http://localhost:8080/fhir
+    description: Smile CDR FHIR Server (R4)
+
+tags:
+  - name: Patient
+    description: Operations related to Patient resources
+  - name: Observation
+    description: Operations related to Observation resources
+  - name: Encounter
+    description: Operations related to Encounter resources
+  - name: Condition
+    description: Operations related to Condition resources
+  - name: Medication
+    description: Operations related to Medication resources
+
+paths:
+  /Patient:
+    get:
+      summary: Search for Patient resources
+      description: Returns a bundle of Patient resources based on search criteria.
+      operationId: searchPatient
+      tags:
+        - Patient
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Patient.read
+      parameters:
+        - name: _count
+          in: query
+          description: The maximum number of resources to return in a page.
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            maximum: 100
+        - name: _offset
+          in: query
+          description: The number of results to skip for pagination.
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/PatientBundle'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+    post:
+      summary: Create a new Patient resource
+      description: Creates a new Patient resource.
+      operationId: createPatient
+      tags:
+        - Patient
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Patient.write
+      requestBody:
+        description: The Patient resource to create.
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Patient'
+      responses:
+        '201':
+          description: Patient resource created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+  /Patient/{id}:
+    get:
+      summary: Retrieve a Patient resource by ID
+      description: Returns a specific Patient resource based on its ID.
+      operationId: getPatientById
+      tags:
+        - Patient
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Patient.read
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Patient resource to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Patient'
+        '400':
+          description: Bad Request
+        '404':
+          description: Patient resource not found
+  /Observation:
+    get:
+      summary: Search for Observation resources
+      description: Returns a bundle of Observation resources based on search criteria.
+      operationId: searchObservation
+      tags:
+        - Observation
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Observation.read
+      parameters:
+        - name: patient
+          in: query
+          description: The ID of the patient associated with the observation.
+          schema:
+            type: string
+        - name: code
+          in: query
+          description: The code of the observation.
+          schema:
+            type: string
+        - name: _count
+          in: query
+          description: The maximum number of resources to return in a page.
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            maximum: 100
+        - name: _offset
+          in: query
+          description: The number of results to skip for pagination.
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/ObservationBundle'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+    post:
+      summary: Create a new Observation resource
+      description: Creates a new Observation resource.
+      operationId: createObservation
+      tags:
+        - Observation
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Observation.write
+      requestBody:
+        description: The Observation resource to create.
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Observation'
+      responses:
+        '201':
+          description: Observation resource created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Observation'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+  /Observation/{id}:
+    get:
+      summary: Retrieve an Observation resource by ID
+      description: Returns a specific Observation resource based on its ID.
+      operationId: getObservationById
+      tags:
+        - Observation
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Observation.read
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Observation resource to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Observation'
+        '400':
+          description: Bad Request
+        '404':
+          description: Observation resource not found
+  /Encounter:
+    get:
+      summary: Search for Encounter resources
+      description: Returns a bundle of Encounter resources based on search criteria.
+      operationId: searchEncounter
+      tags:
+        - Encounter
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Encounter.read
+      parameters:
+        - name: patient
+          in: query
+          description: The ID of the patient associated with the encounter.
+          schema:
+            type: string
+        - name: _count
+          in: query
+          description: The maximum number of resources to return in a page.
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            maximum: 100
+        - name: _offset
+          in: query
+          description: The number of results to skip for pagination.
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/EncounterBundle'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+    post:
+      summary: Create a new Encounter resource
+      description: Creates a new Encounter resource.
+      operationId: createEncounter
+      tags:
+        - Encounter
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Encounter.write
+      requestBody:
+        description: The Encounter resource to create.
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Encounter'
+      responses:
+        '201':
+          description: Encounter resource created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Encounter'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+  /Encounter/{id}:
+    get:
+      summary: Retrieve an Encounter resource by ID
+      description: Returns a specific Encounter resource based on its ID.
+      operationId: getEncounterById
+      tags:
+        - Encounter
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Encounter.read
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Encounter resource to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Encounter'
+        '400':
+          description: Bad Request
+        '404':
+          description: Encounter resource not found
+  /Condition:
+    get:
+      summary: Search for Condition resources
+      description: Returns a bundle of Condition resources based on search criteria.
+      operationId: searchCondition
+      tags:
+        - Condition
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Condition.read
+      parameters:
+        - name: patient
+          in: query
+          description: The ID of the patient associated with the condition.
+          schema:
+            type: string
+        - name: _count
+          in: query
+          description: The maximum number of resources to return in a page.
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            maximum: 100
+        - name: _offset
+          in: query
+          description: The number of results to skip for pagination.
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/ConditionBundle'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+    post:
+      summary: Create a new Condition resource
+      description: Creates a new Condition resource.
+      operationId: createCondition
+      tags:
+        - Condition
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Condition.write
+      requestBody:
+        description: The Condition resource to create.
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Condition'
+      responses:
+        '201':
+          description: Condition resource created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+  /Condition/{id}:
+    get:
+      summary: Retrieve a Condition resource by ID
+      description: Returns a specific Condition resource based on its ID.
+      operationId: getConditionById
+      tags:
+        - Condition
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Condition.read
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Condition resource to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Condition'
+        '400':
+          description: Bad Request
+        '404':
+          description: Condition resource not found
+  /Medication:
+    get:
+      summary: Search for Medication resources
+      description: Returns a bundle of Medication resources based on search criteria.
+      operationId: searchMedication
+      tags:
+        - Medication
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Medication.read
+      parameters:
+        - name: code
+          in: query
+          description: The code of the medication.
+          schema:
+            type: string
+        - name: _count
+          in: query
+          description: The maximum number of resources to return in a page.
+          schema:
+            type: integer
+            format: int32
+            default: 10
+            maximum: 100
+        - name: _offset
+          in: query
+          description: The number of results to skip for pagination.
+          schema:
+            type: integer
+            format: int32
+            default: 0
+      responses:
+        '200':
+          description: Successful search
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/MedicationBundle'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+    post:
+      summary: Create a new Medication resource
+      description: Creates a new Medication resource.
+      operationId: createMedication
+      tags:
+        - Medication
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Medication.write
+      requestBody:
+        description: The Medication resource to create.
+        required: true
+        content:
+          application/fhir+json:
+            schema:
+              $ref: '#/components/schemas/Medication'
+      responses:
+        '201':
+          description: Medication resource created successfully
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Medication'
+        '400':
+          description: Bad Request
+        '404':
+          description: Not Found
+  /Medication/{id}:
+    get:
+      summary: Retrieve a Medication resource by ID
+      description: Returns a specific Medication resource based on its ID.
+      operationId: getMedicationById
+      tags:
+        - Medication
+      security:
+        - ApiKeyAuth: []
+        - OAuth2:
+          - patient/Medication.read
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the Medication resource to retrieve.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/fhir+json:
+              schema:
+                $ref: '#/components/schemas/Medication'
+        '400':
+          description: Bad Request
+        '404':
+          description: Medication resource not found
+
+components:
+  schemas:
+    Patient:
+      type: object
+      description: A FHIR Patient resource
+      required:
+        - id
+        - identifier
+        - name
+        - birthDate
+        - gender
+      properties:
+        resourceType:
+          type: string
+          example: Patient
+        id:
+          type: string
+          description: Logical id of this artifact
+          example: string
+        identifier:
+          type: array
+          items:
+            type: object
+            required: 
+              - system
+              - value
+            properties:
+              system:
+                type: string
+                example: "http://example.com/fhir/patient-identifier"
+              value:
+                type: string
+                example: "12345"
+        name:
+          type: array
+          items:
+            type: object
+            required:
+              - family
+              - given
+            properties:
+              family:
+                type: string
+                example: "Doe"
+              given:
+                type: array
+                items:
+                  type: string
+                  example: "John"
+        gender:
+          type: string
+          enum:
+            - male
+            - female
+            - other
+            - unknown
+          example: male
+        birthDate:
+          type: string
+          format: date
+          example: 1970-01-01
+        telecom:
+          type: array
+          items:
+            type: object
+            properties:
+              system:
+                type: string
+                enum:
+                  - phone
+                  - email
+                  - fax
+                  - pager
+                  - url
+                  - sms
+                  - other
+                example: phone
+              value:
+                type: string
+                example: 555-555-5555
+      
+    PatientBundle:
+      type: object
+      description: A FHIR Bundle resource containing Patient resources
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          example: searchset
+        total:
+          type: integer
+          format: int32
+          description: The total number of results matching the query (for pagination).
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+                example: next
+              url:
+                type: string
+                example: 'https://example.com/Patient?_count=10&_offset=10'
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                $ref: '#/components/schemas/Patient'
+    Observation:
+      type: object
+      description: A FHIR Observation resource
+      required:
+        - id
+        - status
+        - code
+        - subject
+      properties:
+        resourceType:
+          type: string
+          example: Observation
+        id:
+          type: string
+          description: Logical id of this artifact
+          example: string
+        status:
+          type: string
+          enum:
+            - registered
+            - preliminary
+            - final
+            - amended
+            - corrected
+            - cancelled
+            - entered-in-error
+            - unknown
+          example: final
+        code:
+          type: object
+          required:
+            - coding
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                required:
+                  - system
+                  - code
+                  - display
+                properties:
+                  system:
+                    type: string
+                    example: "http://loinc.org"
+                  code:
+                    type: string
+                    example: "8310-5"
+                  display:
+                    type: string
+                    example: Body temperature
+        subject:
+          type: object
+          required:
+            - reference
+          properties:
+            reference:
+              type: string
+              example: Patient/123
+        effectiveDateTime:
+          type: string
+          format: date-time
+          example: 2024-01-22T10:00:00Z
+        valueQuantity:
+          type: object
+          properties:
+            value:
+              type: number
+              format: double
+              example: 37.0
+            unit:
+              type: string
+              example: Cel
+            system:
+              type: string
+              example: "http://unitsofmeasure.org"
+            code:
+              type: string
+              example: Cel
+    ObservationBundle:
+      type: object
+      description: A FHIR Bundle resource containing Observation resources
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          example: searchset
+        total:
+          type: integer
+          format: int32
+          description: The total number of results matching the query (for pagination).
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+                example: next
+              url:
+                type: string
+                example: 'https://example.com/Observation?patient=123&_count=10&_offset=10'
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                $ref: '#/components/schemas/Observation'
+    Encounter:
+      type: object
+      description: A FHIR Encounter resource
+      required:
+        - id
+        - status
+        - subject
+        - class
+      properties:
+        resourceType:
+          type: string
+          example: Encounter
+        id:
+          type: string
+          description: Logical id of this artifact
+          example: string
+        status:
+          type: string
+          enum:
+            - planned
+            - arrived
+            - triaged
+            - in-progress
+            - onleave
+            - finished
+            - cancelled
+            - entered-in-error
+            - unknown
+          example: in-progress
+        class:
+          type: object
+          required:
+            - system
+            - code
+            - display
+          properties:
+            system:
+              type: string
+              example: "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+            code:
+              type: string
+              example: AMB
+            display:
+              type: string
+              example: ambulatory
+        subject:
+          type: object
+          required:
+            - reference
+          properties:
+            reference:
+              type: string
+              example: Patient/123
+        period:
+          type: object
+          properties:
+            start:
+              type: string
+              format: date-time
+              example: 2024-01-22T09:00:00Z
+            end:
+              type: string
+              format: date-time
+              example: 2024-01-22T10:00:00Z
+        location:
+          type: array
+          items:
+            type: object
+            properties:
+              location:
+                type: object
+                properties:
+                  reference:
+                    type: string
+                    example: Location/1
+    EncounterBundle:
+      type: object
+      description: A FHIR Bundle resource containing Encounter resources
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          example: searchset
+        total:
+          type: integer
+          format: int32
+          description: The total number of results matching the query (for pagination).
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+                example: next
+              url:
+                type: string
+                example: 'https://example.com/Encounter?patient=123&_count=10&_offset=10'
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                $ref: '#/components/schemas/Encounter'
+    Condition:
+      type: object
+      description: A FHIR Condition resource
+      required:
+        - id
+        - subject
+        - code
+        - clinicalStatus
+      properties:
+        resourceType:
+          type: string
+          example: Condition
+        id:
+          type: string
+          description: Logical id of this artifact
+          example: string
+        clinicalStatus:
+          type: object
+          required:
+            - coding
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                required:
+                  - system
+                  - code
+                  - display
+                properties:
+                  system:
+                    type: string
+                    example: "http://terminology.hl7.org/CodeSystem/condition-clinical"
+                  code:
+                    type: string
+                    example: active
+                  display:
+                    type: string
+                    example: Active
+        verificationStatus:
+          type: object
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                properties:
+                  system:
+                    type: string
+                    example: "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+                  code:
+                    type: string
+                    example: confirmed
+                  display:
+                    type: string
+                    example: Confirmed
+        code:
+          type: object
+          required:
+            - coding
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                required:
+                  - system
+                  - code
+                  - display
+                properties:
+                  system:
+                    type: string
+                    example: "http://snomed.info/sct"
+                  code:
+                    type: string
+                    example: "233604007"
+                  display:
+                    type: string
+                    example: "Finding of pneumonia (finding)"
+        subject:
+          type: object
+          required:
+            - reference
+          properties:
+            reference:
+              type: string
+              example: Patient/123
+        onsetDateTime:
+          type: string
+          format: date-time
+          example: 2024-01-20T08:00:00Z
+    ConditionBundle:
+      type: object
+      description: A FHIR Bundle resource containing Condition resources
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          example: searchset
+        total:
+          type: integer
+          format: int32
+          description: The total number of results matching the query (for pagination).
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+                example: next
+              url:
+                type: string
+                example: 'https://example.com/Condition?patient=123&_count=10&_offset=10'
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                $ref: '#/components/schemas/Condition'
+    Medication:
+      type: object
+      description: A FHIR Medication resource
+      required:
+        - id
+        - code
+      properties:
+        resourceType:
+          type: string
+          example: Medication
+        id:
+          type: string
+          description: Logical id of this artifact
+          example: string
+        code:
+          type: object
+          required:
+            - coding
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                required:
+                  - system
+                  - code
+                  - display
+                properties:
+                  system:
+                    type: string
+                    example: "http://www.nlm.nih.gov/research/umls/rxnorm"
+                  code:
+                    type: string
+                    example: "1191"
+                  display:
+                    type: string
+                    example: Amoxicillin
+        status:
+          type: string
+          enum:
+            - active
+            - inactive
+            - entered-in-error
+          example: active
+        form:
+          type: object
+          properties:
+            coding:
+              type: array
+              items:
+                type: object
+                properties:
+                  system:
+                    type: string
+                    example: "http://snomed.info/sct"
+                  code:
+                    type: string
+                    example: "385219002"
+                  display:
+                    type: string
+                    example: Oral dose form
+    MedicationBundle:
+      type: object
+      description: A FHIR Bundle resource containing Medication resources
+      properties:
+        resourceType:
+          type: string
+          example: Bundle
+        type:
+          type: string
+          example: searchset
+        total:
+          type: integer
+          format: int32
+          description: The total number of results matching the query (for pagination).
+        link:
+          type: array
+          items:
+            type: object
+            properties:
+              relation:
+                type: string
+                example: next
+              url:
+                type: string
+                example: 'https://example.com/Medication?code=1191&_count=10&_offset=10'
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              resource:
+                $ref: '#/components/schemas/Medication'
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API Key for authentication
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/oauth/authorize
+          tokenUrl: https://example.com/oauth/token
+          scopes:
+            patient/Patient.read: Read access to Patient resources
+            patient/Patient.write: Write access to Patient resources
+            patient/Observation.read: Read access to Observation resources
+            patient/Observation.write: Write access to Observation resources
+            patient/Encounter.read: Read access to Encounter resources
+            patient/Encounter.write: Write access to Encounter resources
+            patient/Condition.read: Read access to Condition resources
+            patient/Condition.write: Write access to Condition resources
+            patient/Medication.read: Read access to Medication resources
+            patient/Medication.write: Write access to Medication resources
+security:
+  - ApiKeyAuth: []
+  - OAuth2: []

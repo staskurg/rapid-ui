@@ -1,0 +1,147 @@
+{
+  "api": {
+    "title": "Natural Language Database Query Tool API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "POST:/query",
+          "method": "POST",
+          "kind": "create",
+          "path": "/query",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "connection_string",
+              "question"
+            ],
+            "properties": {
+              "connection_string": {
+                "type": "string",
+                "description": "Database connection string (e.g., mysql://user:pass@host/db)",
+                "example": "mysql://user:password@localhost:3306/mydb"
+              },
+              "question": {
+                "type": "string",
+                "description": "Natural language question about the database",
+                "example": "How many users are there?"
+              },
+              "context": {
+                "type": "object",
+                "description": "Optional context about expected data structure",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "array",
+                "description": "Query results",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              },
+              "summary": {
+                "type": "string",
+                "description": "Natural language summary of results",
+                "example": "There are 1,250 users in the database."
+              },
+              "execution_time": {
+                "type": "number",
+                "description": "Time taken to execute query in seconds",
+                "example": 2.5
+              },
+              "row_count": {
+                "type": "integer",
+                "description": "Number of rows returned",
+                "example": 1250
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schema",
+      "key": "schema",
+      "operations": [
+        {
+          "id": "POST:/schema",
+          "method": "POST",
+          "kind": "create",
+          "path": "/schema",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "connection_string"
+            ],
+            "properties": {
+              "connection_string": {
+                "type": "string",
+                "description": "Database connection string",
+                "example": "mysql://user:password@localhost:3306/mydb"
+              },
+              "table_name": {
+                "type": "string",
+                "description": "Optional specific table name",
+                "example": "users"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "tables": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "users"
+                    },
+                    "columns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string",
+                            "example": "id"
+                          },
+                          "type": {
+                            "type": "string",
+                            "example": "INT"
+                          },
+                          "nullable": {
+                            "type": "boolean",
+                            "example": false
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

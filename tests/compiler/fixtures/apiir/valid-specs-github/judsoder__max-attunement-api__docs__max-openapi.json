@@ -1,0 +1,656 @@
+{
+  "api": {
+    "title": "Max's Attunement Assistant API",
+    "version": "1.1.0"
+  },
+  "resources": [
+    {
+      "name": "Assignment",
+      "key": "assignment",
+      "operations": [
+        {
+          "id": "getAssignmentContent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/assignment/content",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "courseId",
+              "assignmentId"
+            ],
+            "properties": {
+              "courseId": {
+                "type": "integer",
+                "description": "The Canvas course ID (from /context response)"
+              },
+              "assignmentId": {
+                "type": "integer",
+                "description": "The Canvas assignment ID (from /context response)"
+              },
+              "student": {
+                "type": "string",
+                "enum": [
+                  "max"
+                ],
+                "default": "max"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Full assignment content including attachments",
+            "properties": {
+              "student": {
+                "type": "string"
+              },
+              "assignmentId": {
+                "type": "integer"
+              },
+              "courseId": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string",
+                "nullable": true,
+                "description": "Raw HTML description"
+              },
+              "descriptionText": {
+                "type": "string",
+                "nullable": true,
+                "description": "Plain text description (HTML stripped, up to 5000 chars)"
+              },
+              "dueAt": {
+                "type": "string",
+                "nullable": true
+              },
+              "points": {
+                "type": "number"
+              },
+              "url": {
+                "type": "string"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "contentType": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "content": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Parsed text content of the file (if available)"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "externalContent": {
+                "type": "string",
+                "nullable": true,
+                "description": "Content from linked quizzes or Canvas pages"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Context",
+      "key": "context",
+      "operations": [
+        {
+          "id": "fetchMaxContext",
+          "method": "POST",
+          "kind": "create",
+          "path": "/context",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "text": {
+                "type": "string",
+                "description": "The user's message/question"
+              },
+              "who": {
+                "type": "string",
+                "description": "Who is asking (Jud, Jules, or Max)"
+              },
+              "student": {
+                "type": "string",
+                "enum": [
+                  "max"
+                ],
+                "default": "max",
+                "description": "Always \"max\" for this assistant"
+              }
+            },
+            "required": [
+              "student"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "student": {
+                "type": "string"
+              },
+              "studentDisplayName": {
+                "type": "string"
+              },
+              "canvasBaseUrl": {
+                "type": "string"
+              },
+              "assignments": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "integer"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "courseId": {
+                      "type": "integer"
+                    },
+                    "courseName": {
+                      "type": "string"
+                    },
+                    "dueAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true
+                    },
+                    "due": {
+                      "type": "string",
+                      "description": "Human-readable due date"
+                    },
+                    "points": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "desc": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "url": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "start": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "end": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "location": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "source": {
+                      "type": "string"
+                    },
+                    "joinUrl": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "courses": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "dueSoon": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "courseId": {
+                          "type": "integer"
+                        },
+                        "courseName": {
+                          "type": "string"
+                        },
+                        "dueAt": {
+                          "type": "string",
+                          "format": "date-time",
+                          "nullable": true
+                        },
+                        "due": {
+                          "type": "string",
+                          "description": "Human-readable due date"
+                        },
+                        "points": {
+                          "type": "number",
+                          "nullable": true
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "desc": {
+                          "type": "string",
+                          "nullable": true
+                        },
+                        "url": {
+                          "type": "string",
+                          "nullable": true
+                        }
+                      }
+                    }
+                  },
+                  "assignmentsByCourse": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "integer"
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "courseId": {
+                            "type": "integer"
+                          },
+                          "courseName": {
+                            "type": "string"
+                          },
+                          "dueAt": {
+                            "type": "string",
+                            "format": "date-time",
+                            "nullable": true
+                          },
+                          "due": {
+                            "type": "string",
+                            "description": "Human-readable due date"
+                          },
+                          "points": {
+                            "type": "number",
+                            "nullable": true
+                          },
+                          "status": {
+                            "type": "string"
+                          },
+                          "desc": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "url": {
+                            "type": "string",
+                            "nullable": true
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "assignmentCount": {
+                    "type": "integer"
+                  },
+                  "eventCount": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "coursePerformance": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "courseId": {
+                      "type": "integer"
+                    },
+                    "courseName": {
+                      "type": "string"
+                    },
+                    "currentScore": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "currentGrade": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "finalScore": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "finalGrade": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              },
+              "recentPerformance": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reflections",
+      "key": "reflections",
+      "operations": [
+        {
+          "id": "cleanupReflections",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reflections/cleanup",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "student": {
+                "type": "string",
+                "enum": [
+                  "max"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "removed": {
+                "type": "integer"
+              },
+              "remaining": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getRecentReflections",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reflections/recent",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "student": {
+                "type": "string",
+                "enum": [
+                  "max"
+                ],
+                "default": "max"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 5
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "reflections": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "student": {
+                      "type": "string"
+                    },
+                    "date": {
+                      "type": "string"
+                    },
+                    "threads": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "saveWeeklyReflection",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reflections/save",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "student",
+              "threads"
+            ],
+            "properties": {
+              "student": {
+                "type": "string",
+                "enum": [
+                  "max"
+                ]
+              },
+              "threads": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "2-3 key threads from the reflection"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "student": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "threads": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Syllabus",
+      "key": "syllabus",
+      "operations": [
+        {
+          "id": "getAllSyllabi",
+          "method": "GET",
+          "kind": "list",
+          "path": "/syllabus",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "syllabi": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "courseName": {
+                      "type": "string"
+                    },
+                    "teacher": {
+                      "type": "string"
+                    },
+                    "gradeWeights": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number"
+                      }
+                    },
+                    "policies": {
+                      "type": "object"
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getGradeWeights",
+          "method": "GET",
+          "kind": "list",
+          "path": "/syllabus/weights",
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object"
+            }
+          }
+        },
+        {
+          "id": "getSyllabus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/syllabus/{course}",
+          "identifierParam": "course",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "courseName": {
+                "type": "string"
+              },
+              "teacher": {
+                "type": "string"
+              },
+              "gradeWeights": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number"
+                }
+              },
+              "policies": {
+                "type": "object"
+              },
+              "content": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "calculateGradeImpact",
+          "method": "POST",
+          "kind": "create",
+          "path": "/syllabus/impact",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "courseName",
+              "category",
+              "score",
+              "maxScore"
+            ],
+            "properties": {
+              "courseName": {
+                "type": "string",
+                "description": "Course name (e.g., \"Latin\", \"Math\")"
+              },
+              "category": {
+                "type": "string",
+                "description": "Grade category (e.g., \"quiz\", \"test\", \"homework\")"
+              },
+              "score": {
+                "type": "number",
+                "description": "Points earned"
+              },
+              "maxScore": {
+                "type": "number",
+                "description": "Points possible"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "percentage": {
+                "type": "number"
+              },
+              "categoryWeight": {
+                "type": "number"
+              },
+              "impactOnOverall": {
+                "type": "number"
+              },
+              "relevantPolicies": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

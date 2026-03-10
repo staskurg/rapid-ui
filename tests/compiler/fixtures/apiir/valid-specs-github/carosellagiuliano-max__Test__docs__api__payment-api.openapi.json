@@ -1,0 +1,699 @@
+{
+  "api": {
+    "title": "Coiffeur Platform Payment API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Payment Status",
+      "key": "payment-status",
+      "operations": [
+        {
+          "id": "getPaymentStatus",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/payments/{paymentId}/status",
+          "identifierParam": "paymentId",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "paymentId",
+              "status",
+              "provider",
+              "amount",
+              "currency",
+              "createdAt"
+            ],
+            "properties": {
+              "paymentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Payment identifier",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "processing",
+                  "completed",
+                  "failed",
+                  "cancelled",
+                  "refunded"
+                ],
+                "description": "Current payment status"
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "stripe",
+                  "sumup"
+                ],
+                "description": "Payment provider identifier"
+              },
+              "amount": {
+                "type": "integer",
+                "description": "Payment amount in cents",
+                "example": 5405
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code",
+                "example": "chf"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Payment creation timestamp",
+                "example": "2025-01-01T10:00:00Z"
+              },
+              "paidAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Payment completion timestamp",
+                "example": "2025-01-01T10:05:00Z"
+              },
+              "failedAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Payment failure timestamp"
+              },
+              "appointmentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Related appointment ID",
+                "example": "660e8400-e29b-41d4-a716-446655440001"
+              },
+              "errorMessage": {
+                "type": "string",
+                "description": "Error message for failed payments"
+              },
+              "vatBreakdown": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "serviceName",
+                    "baseAmount",
+                    "vatRate",
+                    "vatAmount",
+                    "totalAmount"
+                  ],
+                  "properties": {
+                    "serviceName": {
+                      "type": "string",
+                      "description": "Service name",
+                      "example": "Haarschnitt"
+                    },
+                    "baseAmount": {
+                      "type": "integer",
+                      "description": "Base amount before VAT in cents",
+                      "example": 5000
+                    },
+                    "vatRate": {
+                      "type": "string",
+                      "enum": [
+                        "STANDARD",
+                        "REDUCED",
+                        "SPECIAL"
+                      ],
+                      "description": "Swiss VAT rate types:\n- STANDARD: 8.1% (normal services)\n- REDUCED: 2.6% (accommodation)\n- SPECIAL: 3.8% (food, books, medicine)\n"
+                    },
+                    "vatAmount": {
+                      "type": "integer",
+                      "description": "VAT amount in cents",
+                      "example": 405
+                    },
+                    "totalAmount": {
+                      "type": "integer",
+                      "description": "Total amount including VAT in cents",
+                      "example": 5405
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stripe Payments",
+      "key": "stripe-payments",
+      "operations": [
+        {
+          "id": "createStripeCheckout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/payments/stripe/checkout",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "appointmentId",
+              "services",
+              "customerInfo",
+              "mode",
+              "successUrl",
+              "cancelUrl"
+            ],
+            "properties": {
+              "appointmentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Appointment UUID",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "services": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "price",
+                    "vatRate"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique service identifier",
+                      "example": "service-1"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Service display name",
+                      "example": "Haarschnitt"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Service price in cents (Swiss Rappen)",
+                      "example": 5000
+                    },
+                    "vatRate": {
+                      "type": "string",
+                      "enum": [
+                        "STANDARD",
+                        "REDUCED",
+                        "SPECIAL"
+                      ],
+                      "description": "Swiss VAT rate types:\n- STANDARD: 8.1% (normal services)\n- REDUCED: 2.6% (accommodation)\n- SPECIAL: 3.8% (food, books, medicine)\n"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Service description",
+                      "example": "Standard Haarschnitt für alle Haarlängen"
+                    },
+                    "duration": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Service duration in minutes",
+                      "example": 60
+                    }
+                  }
+                }
+              },
+              "customerInfo": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "name"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer email address",
+                    "example": "customer@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Customer full name",
+                    "example": "Max Mustermann"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer phone number",
+                    "example": "+41791234567"
+                  },
+                  "address": {
+                    "type": "object",
+                    "required": [
+                      "line1",
+                      "city",
+                      "postalCode",
+                      "country"
+                    ],
+                    "properties": {
+                      "line1": {
+                        "type": "string",
+                        "description": "Street address line 1",
+                        "example": "Bahnhofstrasse 123"
+                      },
+                      "line2": {
+                        "type": "string",
+                        "description": "Street address line 2",
+                        "example": "Apt 4B"
+                      },
+                      "city": {
+                        "type": "string",
+                        "description": "City name",
+                        "example": "Zürich"
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{3}$",
+                        "description": "Swiss postal code (4 digits)",
+                        "example": "8001"
+                      },
+                      "country": {
+                        "type": "string",
+                        "enum": [
+                          "CH"
+                        ],
+                        "description": "Country code (Switzerland only)",
+                        "example": "CH"
+                      }
+                    }
+                  }
+                }
+              },
+              "mode": {
+                "type": "string",
+                "enum": [
+                  "payment",
+                  "setup"
+                ],
+                "description": "Stripe checkout mode",
+                "example": "payment"
+              },
+              "successUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL to redirect on successful payment",
+                "example": "https://app.example.com/success?session_id={CHECKOUT_SESSION_ID}"
+              },
+              "cancelUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL to redirect on cancelled payment",
+                "example": "https://app.example.com/cancel"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Additional metadata for the payment"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether the operation was successful"
+              },
+              "sessionId": {
+                "type": "string",
+                "description": "Stripe checkout session ID",
+                "example": "cs_test_1234567890"
+              },
+              "sessionUrl": {
+                "type": "string",
+                "format": "uri",
+                "description": "Stripe checkout URL",
+                "example": "https://checkout.stripe.com/pay/cs_test_1234567890"
+              },
+              "paymentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Internal payment record ID",
+                "example": "payment-uuid-1234"
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message if success is false"
+              },
+              "code": {
+                "type": "string",
+                "description": "Error code if success is false"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SumUp Payments",
+      "key": "sumup-payments",
+      "operations": [
+        {
+          "id": "createSumUpPayment",
+          "method": "POST",
+          "kind": "create",
+          "path": "/payments/sumup/create",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "appointmentId",
+              "services",
+              "customerInfo",
+              "paymentType"
+            ],
+            "properties": {
+              "appointmentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Appointment UUID",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "services": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "price",
+                    "vatRate"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "description": "Unique service identifier",
+                      "example": "service-1"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Service display name",
+                      "example": "Haarschnitt"
+                    },
+                    "price": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Service price in cents (Swiss Rappen)",
+                      "example": 5000
+                    },
+                    "vatRate": {
+                      "type": "string",
+                      "enum": [
+                        "STANDARD",
+                        "REDUCED",
+                        "SPECIAL"
+                      ],
+                      "description": "Swiss VAT rate types:\n- STANDARD: 8.1% (normal services)\n- REDUCED: 2.6% (accommodation)\n- SPECIAL: 3.8% (food, books, medicine)\n"
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "Service description",
+                      "example": "Standard Haarschnitt für alle Haarlängen"
+                    },
+                    "duration": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Service duration in minutes",
+                      "example": 60
+                    }
+                  }
+                }
+              },
+              "customerInfo": {
+                "type": "object",
+                "required": [
+                  "email",
+                  "name"
+                ],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Customer email address",
+                    "example": "customer@example.com"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Customer full name",
+                    "example": "Max Mustermann"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Customer phone number",
+                    "example": "+41791234567"
+                  },
+                  "address": {
+                    "type": "object",
+                    "required": [
+                      "line1",
+                      "city",
+                      "postalCode",
+                      "country"
+                    ],
+                    "properties": {
+                      "line1": {
+                        "type": "string",
+                        "description": "Street address line 1",
+                        "example": "Bahnhofstrasse 123"
+                      },
+                      "line2": {
+                        "type": "string",
+                        "description": "Street address line 2",
+                        "example": "Apt 4B"
+                      },
+                      "city": {
+                        "type": "string",
+                        "description": "City name",
+                        "example": "Zürich"
+                      },
+                      "postalCode": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]{3}$",
+                        "description": "Swiss postal code (4 digits)",
+                        "example": "8001"
+                      },
+                      "country": {
+                        "type": "string",
+                        "enum": [
+                          "CH"
+                        ],
+                        "description": "Country code (Switzerland only)",
+                        "example": "CH"
+                      }
+                    }
+                  }
+                }
+              },
+              "paymentType": {
+                "type": "string",
+                "enum": [
+                  "in_store",
+                  "remote"
+                ],
+                "description": "Type of payment",
+                "example": "in_store"
+              },
+              "reservationTtlMinutes": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 1440,
+                "description": "Stock reservation TTL in minutes (for in_store payments)",
+                "example": 30
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Additional metadata for the payment"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether the operation was successful"
+              },
+              "paymentId": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Internal payment record ID",
+                "example": "payment-uuid-5678"
+              },
+              "checkoutId": {
+                "type": "string",
+                "description": "SumUp checkout ID",
+                "example": "sumup-checkout-123"
+              },
+              "checkoutReference": {
+                "type": "string",
+                "description": "SumUp checkout reference",
+                "example": "apt_550e8400_1640995200"
+              },
+              "deepLink": {
+                "type": "string",
+                "format": "uri",
+                "description": "Deep link for SumUp merchant app",
+                "example": "sumupmerchant://pay/1.0?checkout-id=checkout-123&callback=https%3A%2F%2Fapp.example.com%2Fcallback"
+              },
+              "qrCodeData": {
+                "type": "string",
+                "format": "uri",
+                "description": "QR code data for in-store payments",
+                "example": "https://api.sumup.com/v0.1/checkouts/checkout-123"
+              },
+              "amount": {
+                "type": "integer",
+                "description": "Total amount in cents including VAT",
+                "example": 5405
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code",
+                "example": "CHF"
+              },
+              "expiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Payment expiry time",
+                "example": "2025-01-01T12:30:00Z"
+              },
+              "reservationExpiresAt": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Stock reservation expiry time",
+                "example": "2025-01-01T12:30:00Z"
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message if success is false"
+              },
+              "code": {
+                "type": "string",
+                "description": "Error code if success is false"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "key": "webhooks",
+      "operations": [
+        {
+          "id": "handleStripeWebhook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhooks/stripe",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "type",
+              "data"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stripe event ID",
+                "example": "evt_1234567890"
+              },
+              "type": {
+                "type": "string",
+                "description": "Event type",
+                "example": "checkout.session.completed"
+              },
+              "data": {
+                "type": "object",
+                "description": "Event data object"
+              },
+              "created": {
+                "type": "integer",
+                "description": "Unix timestamp of event creation"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        },
+        {
+          "id": "handleSumUpWebhook",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhooks/sumup",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "event_type",
+              "resource_type",
+              "resource_id",
+              "event_data",
+              "timestamp"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "SumUp event ID",
+                "example": "event_1234567890"
+              },
+              "event_type": {
+                "type": "string",
+                "description": "Event type",
+                "example": "CHECKOUT_STATUS_CHANGED"
+              },
+              "resource_type": {
+                "type": "string",
+                "description": "Resource type",
+                "example": "checkout"
+              },
+              "resource_id": {
+                "type": "string",
+                "description": "Resource ID",
+                "example": "checkout_1234567890"
+              },
+              "event_data": {
+                "type": "object",
+                "description": "Event data"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Event timestamp"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean",
+                "example": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

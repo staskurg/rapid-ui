@@ -1,0 +1,562 @@
+openapi: 3.0.1
+info:
+  description: The security APIs help you detect and block security threats.
+  title: securityapi
+  version: v1
+servers:
+- url: https://api.cloudmersive.com/
+paths:
+  /security/threat-detection/content/automatic/detect/string:
+    post:
+      description: "Auto-detects a wide range of threat types in input string, including\
+        \ Cross-Site Scripting (XSS), SQL Injection (SQLI), XML External Entitites\
+        \ (XXE), Server-side Request Forgeries (SSRF), and JSON Insecure Deserialization\
+        \ (JID)."
+      operationId: ContentThreatDetection_AutomaticThreatDetectionString
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: User-facing text input.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringAutomaticThreatDetection'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/StringAutomaticThreatDetection'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StringAutomaticThreatDetection'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/StringAutomaticThreatDetection'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Automatically detect threats in an input string
+      tags:
+      - ContentThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/content/insecure-deserialization/json/detect/string:
+    post:
+      description: Detects Insecure Deserialization JSON (JID) attacks from text input.
+      operationId: ContentThreatDetection_DetectInsecureDeserializationJsonString
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: User-facing text input.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringInsecureDeserializationJsonDetection'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/StringInsecureDeserializationJsonDetection'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StringInsecureDeserializationJsonDetection'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/StringInsecureDeserializationJsonDetection'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Detect Insecure Deserialization JSON (JID) attacks in a string
+      tags:
+      - ContentThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/content/sql-injection/detect/string:
+    post:
+      description: Detects SQL Injection (SQLI) attacks from text input.
+      operationId: ContentThreatDetection_CheckSqlInjectionString
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: User-facing text input.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringSqlInjectionDetectionResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/StringSqlInjectionDetectionResult'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StringSqlInjectionDetectionResult'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/StringSqlInjectionDetectionResult'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Check text input for SQL Injection (SQLI) attacks
+      tags:
+      - ContentThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/content/xss/detect/string:
+    post:
+      description: "Detects and removes XSS (Cross-Site-Scripting) attacks from text\
+        \ input through normalization.  Returns the normalized result, as well as\
+        \ information on whether the original input contained an XSS risk."
+      operationId: ContentThreatDetection_ProtectXss
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: User-facing text input.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringXssProtectionResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/StringXssProtectionResult'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StringXssProtectionResult'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/StringXssProtectionResult'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Protect text input from Cross-Site-Scripting (XSS) attacks through
+        normalization
+      tags:
+      - ContentThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/content/xxe/detect/xml/string:
+    post:
+      description: Detects XXE (XML External Entity) attacks from XML text input.
+      operationId: ContentThreatDetection_CheckXxe
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: User-facing text input.
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StringXxeDetectionResult'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/StringXxeDetectionResult'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/StringXxeDetectionResult'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/StringXxeDetectionResult'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Protect text input from XML External Entity (XXE) attacks
+      tags:
+      - ContentThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/network/url/ssrf/detect:
+    post:
+      description: Checks if an input URL is at risk of being an SSRF (Server-side
+        request forgery) threat or attack.
+      operationId: NetworkThreatDetection_DetectSsrfUrl
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UrlSsrfThreatDetectionRequestFull'
+          text/json:
+            schema:
+              $ref: '#/components/schemas/UrlSsrfThreatDetectionRequestFull'
+        description: Input URL request
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UrlSsrfThreatDetectionResponseFull'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/UrlSsrfThreatDetectionResponseFull'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/UrlSsrfThreatDetectionResponseFull'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/UrlSsrfThreatDetectionResponseFull'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Check a URL for Server-side Request Forgery (SSRF) threats
+      tags:
+      - NetworkThreatDetection
+      x-codegen-request-body-name: request
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/network/ip/is-threat:
+    post:
+      description: "Check if the input IP address is a known threat IP address.  Checks\
+        \ against known bad IPs, botnets, compromised servers, and other lists of\
+        \ threats."
+      operationId: NetworkThreatDetection_IsThreat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: "IP address to check, e.g. \"55.55.55.55\".  The input is a string\
+          \ so be sure to enclose it in double-quotes."
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IPThreatDetectionResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/IPThreatDetectionResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/IPThreatDetectionResponse'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/IPThreatDetectionResponse'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Check if IP address is a known threat
+      tags:
+      - NetworkThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/network/ip/is-bot:
+    post:
+      description: "Check if the input IP address is a Bot, robot, or otherwise a\
+        \ non-user entity.  Leverages real-time signals to check against known high-probability\
+        \ bots.."
+      operationId: NetworkThreatDetection_IsBot
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: "IP address to check, e.g. \"55.55.55.55\".  The input is a string\
+          \ so be sure to enclose it in double-quotes."
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionBotCheckResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionBotCheckResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionBotCheckResponse'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionBotCheckResponse'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Check if IP address is a Bot client threat
+      tags:
+      - NetworkThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+  /security/threat-detection/network/ip/is-tor-node:
+    post:
+      description: Check if the input IP address is a Tor exit node server.  Tor servers
+        are a type of privacy-preserving technology that can hide the original IP
+        address who makes a request.
+      operationId: NetworkThreatDetection_IsTorNode
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+        description: "IP address to check, e.g. \"55.55.55.55\".  The input is a string\
+          \ so be sure to enclose it in double-quotes."
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionTorNodeResponse'
+            text/json:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionTorNodeResponse'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionTorNodeResponse'
+            text/xml:
+              schema:
+                $ref: '#/components/schemas/ThreatDetectionTorNodeResponse'
+          description: OK
+      security:
+      - Apikey: []
+      summary: Check if IP address is a Tor node server
+      tags:
+      - NetworkThreatDetection
+      x-codegen-request-body-name: value
+      x-content-type: application/json
+      x-accepts: application/json
+components:
+  schemas:
+    StringAutomaticThreatDetection:
+      description: Result of performing an Insecure Deserialization JSON protection
+        operation
+      example:
+        ContainedSqlInjectionThreat: true
+        ContainedSsrfThreat: true
+        IsXML: true
+        ContainedXxeThreat: true
+        ContainedJsonInsecureDeserializationAttack: true
+        ContainedXssThreat: true
+        IsJSON: true
+        Successful: true
+        CleanResult: true
+        OriginalInput: OriginalInput
+        IsURL: true
+      properties:
+        Successful:
+          description: "True if the operation was successful, false otherwise"
+          type: boolean
+        CleanResult:
+          type: boolean
+        ContainedJsonInsecureDeserializationAttack:
+          description: "True if the input contained Insecure Deserialization JSON,\
+            \ false otherwise"
+          type: boolean
+        ContainedXssThreat:
+          description: "True if the input contained XSS attack, false otherwise"
+          type: boolean
+        ContainedXxeThreat:
+          description: "True if the input contained XXE attack, false otherwise"
+          type: boolean
+        ContainedSqlInjectionThreat:
+          description: "True if the input contained SQL Injection attack, false otherwise"
+          type: boolean
+        ContainedSsrfThreat:
+          description: "True if the input contained an Server-Side Request Forgery\
+            \ (SSRF) URL attack, false otherwise"
+          type: boolean
+        IsXML:
+          description: "True if the input string is XML, false otherwise"
+          type: boolean
+        IsJSON:
+          description: "True if the input string is JSON, false otherwise"
+          type: boolean
+        IsURL:
+          description: "True if the input string is a URL, false otherwise"
+          type: boolean
+        OriginalInput:
+          description: Original input string
+          type: string
+      type: object
+    StringInsecureDeserializationJsonDetection:
+      description: Result of performing an Insecure Deserialization JSON protection
+        operation
+      example:
+        ContainedJsonInsecureDeserializationAttack: true
+        Successful: true
+        OriginalInput: OriginalInput
+      properties:
+        Successful:
+          description: "True if the operation was successful, false otherwise"
+          type: boolean
+        ContainedJsonInsecureDeserializationAttack:
+          description: "True if the input contained Insecure Deserialization JSON,\
+            \ false otherwise"
+          type: boolean
+        OriginalInput:
+          description: Original input string
+          type: string
+      type: object
+    StringSqlInjectionDetectionResult:
+      description: Result of performing an SQL Injection protection operation
+      example:
+        ContainedSqlInjectionAttack: true
+        Successful: true
+        OriginalInput: OriginalInput
+      properties:
+        Successful:
+          description: "True if the operation was successful, false otherwise"
+          type: boolean
+        ContainedSqlInjectionAttack:
+          description: "True if the input contained SQL Injection attacks, false otherwise"
+          type: boolean
+        OriginalInput:
+          description: Original input string
+          type: string
+      type: object
+    StringXssProtectionResult:
+      description: Result of performing an XSS protection operation
+      example:
+        NormalizedResult: NormalizedResult
+        ContainedXss: true
+        Successful: true
+        OriginalInput: OriginalInput
+      properties:
+        Successful:
+          description: "True if the operation was successful, false otherwise"
+          type: boolean
+        ContainedXss:
+          description: "True if the input contained XSS scripting, false otherwise"
+          type: boolean
+        OriginalInput:
+          description: Original input string
+          type: string
+        NormalizedResult:
+          description: "Normalized string result, with XSS removed"
+          type: string
+      type: object
+    StringXxeDetectionResult:
+      description: Result of performing an XXE threat detection operation
+      example:
+        Successful: true
+        ContainedXxe: true
+      properties:
+        Successful:
+          description: "True if the operation was successful, false otherwise"
+          type: boolean
+        ContainedXxe:
+          description: "True if the input contained XXE threats, false otherwise"
+          type: boolean
+      type: object
+    UrlSsrfThreatDetectionRequestFull:
+      description: Request to determine if a URL is an SSRF threat check
+      example:
+        BlockedDomains:
+        - BlockedDomains
+        - BlockedDomains
+        URL: URL
+      properties:
+        URL:
+          description: URL to validate
+          type: string
+        BlockedDomains:
+          description: "Top level domains that you do not want to allow access to,\
+            \ e.g. mydomain.com - will block all subdomains as well"
+          items:
+            type: string
+          type: array
+      type: object
+    UrlSsrfThreatDetectionResponseFull:
+      description: Result of checking a URL for SSRF threats
+      example:
+        ThreatLevel: ThreatLevel
+        CleanURL: true
+      properties:
+        CleanURL:
+          description: "True if the URL is clean, false if it is at risk of containing\
+            \ an SSRF threat or attack"
+          type: boolean
+        ThreatLevel:
+          description: "Threat level of the URL; possible values are High, Medium,\
+            \ Low and None"
+          type: string
+      type: object
+    IPThreatDetectionResponse:
+      description: Result of performing a IP threat check on an IP address
+      example:
+        ThreatType: ThreatType
+        IsThreat: true
+      properties:
+        IsThreat:
+          description: "True if the input IP address is a threat, false otherwise"
+          type: boolean
+        ThreatType:
+          description: "Specifies the type of IP threat; possible values include Blocklist,\
+            \ Botnet, WebBot"
+          type: string
+      type: object
+    ThreatDetectionBotCheckResponse:
+      description: Result of performing a Bot check on an IP address
+      example:
+        IsBot: true
+      properties:
+        IsBot:
+          description: "True if the input IP address is a Bot or Robot, false otherwise"
+          type: boolean
+      type: object
+    ThreatDetectionTorNodeResponse:
+      description: Result of performing a Tor node check on an IP address
+      example:
+        IsTorNode: true
+      properties:
+        IsTorNode:
+          description: "True if the input IP address is a Tor exit node, false otherwise"
+          type: boolean
+      type: object
+  securitySchemes:
+    Apikey:
+      description: API Key Authentication
+      in: header
+      name: Apikey
+      type: apiKey
+x-original-swagger-version: "2.0"
+

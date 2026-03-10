@@ -1,0 +1,501 @@
+{
+  "api": {
+    "title": "Orders Service API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "documentation",
+      "key": "documentation",
+      "operations": [
+        {
+          "id": "GET:/openapi.json",
+          "method": "GET",
+          "kind": "list",
+          "path": "/openapi.json",
+          "responseSchema": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/healthz",
+          "method": "GET",
+          "kind": "list",
+          "path": "/healthz",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/readyz",
+          "method": "GET",
+          "kind": "list",
+          "path": "/readyz",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "customerId",
+                "items",
+                "totalAmount",
+                "status",
+                "createdAt",
+                "updatedAt"
+              ],
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "550e8400-e29b-41d4-a716-446655440002"
+                },
+                "customerId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "550e8400-e29b-41d4-a716-446655440001"
+                },
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "productId",
+                      "quantity",
+                      "price"
+                    ],
+                    "properties": {
+                      "productId": {
+                        "type": "string",
+                        "format": "uuid",
+                        "example": "550e8400-e29b-41d4-a716-446655440000"
+                      },
+                      "quantity": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "example": 2
+                      },
+                      "price": {
+                        "type": "number",
+                        "minimum": 0.01,
+                        "example": 29.99
+                      }
+                    }
+                  }
+                },
+                "totalAmount": {
+                  "type": "number",
+                  "example": 59.98
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "confirmed",
+                    "shipped",
+                    "delivered"
+                  ],
+                  "example": "pending"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2023-12-01T12:00:00Z"
+                },
+                "updatedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "example": "2023-12-01T12:00:00Z"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/orders/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "customerId",
+              "items",
+              "totalAmount",
+              "status",
+              "createdAt",
+              "updatedAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "customerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "price"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 2
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "example": 29.99
+                    }
+                  }
+                }
+              },
+              "totalAmount": {
+                "type": "number",
+                "example": 59.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered"
+                ],
+                "example": "pending"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "customerId",
+              "items",
+              "totalAmount"
+            ],
+            "properties": {
+              "customerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "items": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "price"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 2
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "example": 29.99
+                    }
+                  }
+                }
+              },
+              "totalAmount": {
+                "type": "number",
+                "minimum": 0.01,
+                "example": 59.98
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "customerId",
+              "items",
+              "totalAmount",
+              "status",
+              "createdAt",
+              "updatedAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "customerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "price"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 2
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "example": 29.99
+                    }
+                  }
+                }
+              },
+              "totalAmount": {
+                "type": "number",
+                "example": 59.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered"
+                ],
+                "example": "pending"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "PATCH:/orders/{id}",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/orders/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "status"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered"
+                ],
+                "example": "confirmed"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "customerId",
+              "items",
+              "totalAmount",
+              "status",
+              "createdAt",
+              "updatedAt"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440002"
+              },
+              "customerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440001"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "price"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "example": 2
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "example": 29.99
+                    }
+                  }
+                }
+              },
+              "totalAmount": {
+                "type": "number",
+                "example": 59.98
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "confirmed",
+                  "shipped",
+                  "delivered"
+                ],
+                "example": "pending"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2023-12-01T12:00:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "service",
+      "key": "service",
+      "operations": [
+        {
+          "id": "GET:/",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "version"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "orders-service"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

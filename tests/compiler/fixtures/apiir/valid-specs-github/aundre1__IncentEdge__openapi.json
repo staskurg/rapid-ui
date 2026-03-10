@@ -1,0 +1,815 @@
+{
+  "api": {
+    "title": "IncentEdge API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Calculate",
+      "key": "calculate",
+      "operations": [
+        {
+          "id": "calculateIncentives",
+          "method": "POST",
+          "kind": "create",
+          "path": "/calculate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "state",
+              "totalDevelopmentCost",
+              "equityInvestment"
+            ],
+            "properties": {
+              "state": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              "county": {
+                "type": "string"
+              },
+              "municipality": {
+                "type": "string"
+              },
+              "buildingType": {
+                "type": "string",
+                "enum": [
+                  "multifamily",
+                  "commercial",
+                  "mixed_use",
+                  "industrial",
+                  "residential"
+                ]
+              },
+              "totalUnits": {
+                "type": "integer"
+              },
+              "totalSqft": {
+                "type": "number"
+              },
+              "affordableUnits": {
+                "type": "integer"
+              },
+              "affordablePercentage": {
+                "type": "number"
+              },
+              "totalDevelopmentCost": {
+                "type": "number"
+              },
+              "equityInvestment": {
+                "type": "number"
+              },
+              "projectedNOI": {
+                "type": "number"
+              },
+              "holdPeriod": {
+                "type": "integer"
+              },
+              "sustainabilityTier": {
+                "type": "string",
+                "enum": [
+                  "tier_1_efficient",
+                  "tier_2_high_performance",
+                  "tier_3_net_zero"
+                ]
+              },
+              "solarCapacityKw": {
+                "type": "number"
+              },
+              "storageCapacityKwh": {
+                "type": "number"
+              },
+              "entityType": {
+                "type": "string",
+                "enum": [
+                  "corporation",
+                  "partnership",
+                  "llc",
+                  "nonprofit",
+                  "tax_exempt"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "project": {
+                "type": "object"
+              },
+              "results": {
+                "type": "object",
+                "properties": {
+                  "incentives": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "type": {
+                          "type": "string"
+                        },
+                        "category": {
+                          "type": "string"
+                        },
+                        "estimatedValue": {
+                          "type": "number"
+                        },
+                        "confidence": {
+                          "type": "number"
+                        },
+                        "eligible": {
+                          "type": "boolean"
+                        },
+                        "notes": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "totals": {
+                    "type": "object",
+                    "properties": {
+                      "federal": {
+                        "type": "number"
+                      },
+                      "state": {
+                        "type": "number"
+                      },
+                      "local": {
+                        "type": "number"
+                      },
+                      "utility": {
+                        "type": "number"
+                      },
+                      "total": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "roiImpact": {
+                    "type": "object",
+                    "properties": {
+                      "baseIRR": {
+                        "type": "number"
+                      },
+                      "enhancedIRR": {
+                        "type": "number"
+                      },
+                      "irrLift": {
+                        "type": "number"
+                      },
+                      "equityMultipleLift": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy",
+                  "alive"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "version": {
+                "type": "string"
+              },
+              "uptime": {
+                "type": "integer"
+              },
+              "checks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pass",
+                        "warn",
+                        "fail"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "lastChecked": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "metrics": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Programs",
+      "key": "programs",
+      "operations": [
+        {
+          "id": "searchPrograms",
+          "method": "GET",
+          "kind": "list",
+          "path": "/programs",
+          "queryParamCount": 14,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "external_id": {
+                      "type": "string",
+                      "example": "IRA-45L"
+                    },
+                    "name": {
+                      "type": "string",
+                      "example": "Section 45L New Energy Efficient Home Credit"
+                    },
+                    "short_name": {
+                      "type": "string",
+                      "example": "45L Tax Credit"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "summary": {
+                      "type": "string"
+                    },
+                    "program_type": {
+                      "type": "string",
+                      "enum": [
+                        "tax_credit",
+                        "grant",
+                        "rebate",
+                        "loan",
+                        "tax_deduction",
+                        "tax_exemption"
+                      ]
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "federal",
+                        "state",
+                        "local",
+                        "utility"
+                      ]
+                    },
+                    "sector_types": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "technology_types": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "building_types": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "amount_min": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "amount_max": {
+                      "type": "number",
+                      "nullable": true
+                    },
+                    "direct_pay_eligible": {
+                      "type": "boolean"
+                    },
+                    "transferable": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "inactive",
+                        "expired",
+                        "pending"
+                      ]
+                    },
+                    "source_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "confidence_score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "popularity_score": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  },
+                  "hasNextPage": {
+                    "type": "boolean"
+                  },
+                  "hasPrevPage": {
+                    "type": "boolean"
+                  }
+                }
+              },
+              "filters_applied": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "getProgramById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/programs/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "external_id": {
+                    "type": "string",
+                    "example": "IRA-45L"
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "Section 45L New Energy Efficient Home Credit"
+                  },
+                  "short_name": {
+                    "type": "string",
+                    "example": "45L Tax Credit"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "program_type": {
+                    "type": "string",
+                    "enum": [
+                      "tax_credit",
+                      "grant",
+                      "rebate",
+                      "loan",
+                      "tax_deduction",
+                      "tax_exemption"
+                    ]
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "federal",
+                      "state",
+                      "local",
+                      "utility"
+                    ]
+                  },
+                  "sector_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "technology_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "building_types": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "amount_min": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "amount_max": {
+                    "type": "number",
+                    "nullable": true
+                  },
+                  "direct_pay_eligible": {
+                    "type": "boolean"
+                  },
+                  "transferable": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "inactive",
+                      "expired",
+                      "pending"
+                    ]
+                  },
+                  "source_url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "confidence_score": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "popularity_score": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 100
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "listProjects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/projects",
+          "queryParamCount": 6,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "portfolio": {
+                "type": "object"
+              },
+              "projects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "sector_type": {
+                      "type": "string"
+                    },
+                    "building_type": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "total_development_cost": {
+                      "type": "number"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "fallback": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "getProjectById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/projects/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sector_type": {
+                    "type": "string"
+                  },
+                  "building_type": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "total_development_cost": {
+                    "type": "number"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createProject",
+          "method": "POST",
+          "kind": "create",
+          "path": "/projects",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "sector_type",
+              "building_type",
+              "construction_type",
+              "address_line1",
+              "city",
+              "state",
+              "zip_code"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string"
+              },
+              "sector_type": {
+                "type": "string",
+                "enum": [
+                  "real-estate",
+                  "clean-energy",
+                  "water",
+                  "waste",
+                  "transportation",
+                  "industrial"
+                ]
+              },
+              "building_type": {
+                "type": "string"
+              },
+              "construction_type": {
+                "type": "string",
+                "enum": [
+                  "new-construction",
+                  "substantial-rehab",
+                  "acquisition",
+                  "refinance"
+                ]
+              },
+              "address_line1": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              },
+              "state": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$"
+              },
+              "zip_code": {
+                "type": "string"
+              },
+              "county": {
+                "type": "string"
+              },
+              "total_sqft": {
+                "type": "number"
+              },
+              "total_units": {
+                "type": "number"
+              },
+              "total_development_cost": {
+                "type": "number"
+              },
+              "domestic_content_eligible": {
+                "type": "boolean"
+              },
+              "prevailing_wage_commitment": {
+                "type": "boolean"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "sector_type": {
+                    "type": "string"
+                  },
+                  "building_type": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "total_development_cost": {
+                    "type": "number"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "key": "stats",
+      "operations": [
+        {
+          "id": "getStats",
+          "method": "GET",
+          "kind": "list",
+          "path": "/stats",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "incentives": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer"
+                  },
+                  "active": {
+                    "type": "integer"
+                  },
+                  "by_category": {
+                    "type": "object"
+                  }
+                }
+              },
+              "awards": {
+                "type": "object",
+                "properties": {
+                  "total": {
+                    "type": "integer"
+                  },
+                  "success_rate": {
+                    "type": "number"
+                  }
+                }
+              },
+              "coverage": {
+                "type": "object",
+                "properties": {
+                  "states_covered": {
+                    "type": "integer"
+                  },
+                  "states_list": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "platform": {
+                "type": "object"
+              },
+              "value": {
+                "type": "object"
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

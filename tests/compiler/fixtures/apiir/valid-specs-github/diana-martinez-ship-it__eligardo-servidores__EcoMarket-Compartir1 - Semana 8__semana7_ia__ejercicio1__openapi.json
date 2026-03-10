@@ -1,0 +1,277 @@
+{
+  "api": {
+    "title": "EcoMarket Products API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/api/v1/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/products",
+          "queryParamCount": 5,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "price",
+                    "currency",
+                    "tags",
+                    "createdAt",
+                    "updatedAt"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "550e8400-e29b-41d4-a716-446655440000"
+                    },
+                    "name": {
+                      "type": "string",
+                      "minLength": 2,
+                      "maxLength": 80,
+                      "example": "Laptop Ecológica"
+                    },
+                    "price": {
+                      "type": "number",
+                      "minimum": 0,
+                      "example": 899.99
+                    },
+                    "currency": {
+                      "type": "string",
+                      "enum": [
+                        "MXN",
+                        "USD",
+                        "EUR"
+                      ],
+                      "example": "MXN"
+                    },
+                    "tags": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "maxItems": 10,
+                      "example": [
+                        "tecnología",
+                        "sostenible"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-11-18T12:00:00Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2025-11-18T12:00:00Z"
+                    }
+                  }
+                }
+              },
+              "error": {
+                "type": "object",
+                "nullable": true
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer"
+                  },
+                  "limit": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  },
+                  "totalPages": {
+                    "type": "integer"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/v1/products/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/products/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "nullable": true
+              },
+              "error": {
+                "type": "object",
+                "nullable": true
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/v1/products",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/products",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "price"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 80
+              },
+              "price": {
+                "type": "number",
+                "minimum": 0
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "MXN",
+                  "USD",
+                  "EUR"
+                ],
+                "default": "MXN"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 10,
+                "default": []
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "nullable": true
+              },
+              "error": {
+                "type": "object",
+                "nullable": true
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/v1/products/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/v1/products/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 2,
+                "maxLength": 80
+              },
+              "price": {
+                "type": "number",
+                "minimum": 0
+              },
+              "currency": {
+                "type": "string",
+                "enum": [
+                  "MXN",
+                  "USD",
+                  "EUR"
+                ]
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "maxItems": 10
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "nullable": true
+              },
+              "error": {
+                "type": "object",
+                "nullable": true
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/v1/products/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/v1/products/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "object",
+                "properties": {
+                  "deleted": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              },
+              "error": {
+                "type": "object",
+                "nullable": true
+              },
+              "meta": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

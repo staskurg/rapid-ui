@@ -1,0 +1,2469 @@
+{
+  "api": {
+    "title": "FHIR API for Patient, Observation, Encounter, Condition, and Medication (Smile CDR Compatible)",
+    "version": "1.0.1"
+  },
+  "resources": [
+    {
+      "name": "Condition",
+      "key": "condition",
+      "operations": [
+        {
+          "id": "searchCondition",
+          "method": "GET",
+          "kind": "list",
+          "path": "/Condition",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Bundle resource containing Condition resources",
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Bundle"
+              },
+              "type": {
+                "type": "string",
+                "example": "searchset"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The total number of results matching the query (for pagination)."
+              },
+              "link": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "type": "string",
+                      "example": "next"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://example.com/Condition?patient=123&_count=10&_offset=10"
+                    }
+                  }
+                }
+              },
+              "entry": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "description": "A FHIR Condition resource",
+                      "required": [
+                        "id",
+                        "subject",
+                        "code",
+                        "clinicalStatus"
+                      ],
+                      "properties": {
+                        "resourceType": {
+                          "type": "string",
+                          "example": "Condition"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Logical id of this artifact",
+                          "example": "string"
+                        },
+                        "clinicalStatus": {
+                          "type": "object",
+                          "required": [
+                            "coding"
+                          ],
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "system",
+                                  "code",
+                                  "display"
+                                ],
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://terminology.hl7.org/CodeSystem/condition-clinical"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "active"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Active"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "verificationStatus": {
+                          "type": "object",
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "confirmed"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Confirmed"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "code": {
+                          "type": "object",
+                          "required": [
+                            "coding"
+                          ],
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "system",
+                                  "code",
+                                  "display"
+                                ],
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://snomed.info/sct"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "233604007"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Finding of pneumonia (finding)"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "subject": {
+                          "type": "object",
+                          "required": [
+                            "reference"
+                          ],
+                          "properties": {
+                            "reference": {
+                              "type": "string",
+                              "example": "Patient/123"
+                            }
+                          }
+                        },
+                        "onsetDateTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-01-20T08:00:00Z"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getConditionById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/Condition/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Condition resource",
+            "required": [
+              "id",
+              "subject",
+              "code",
+              "clinicalStatus"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Condition"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "clinicalStatus": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-clinical"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "active"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Active"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "verificationStatus": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "confirmed"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Confirmed"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "233604007"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Finding of pneumonia (finding)"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "onsetDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-20T08:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "createCondition",
+          "method": "POST",
+          "kind": "create",
+          "path": "/Condition",
+          "requestSchema": {
+            "type": "object",
+            "description": "A FHIR Condition resource",
+            "required": [
+              "id",
+              "subject",
+              "code",
+              "clinicalStatus"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Condition"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "clinicalStatus": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-clinical"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "active"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Active"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "verificationStatus": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "confirmed"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Confirmed"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "233604007"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Finding of pneumonia (finding)"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "onsetDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-20T08:00:00Z"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Condition resource",
+            "required": [
+              "id",
+              "subject",
+              "code",
+              "clinicalStatus"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Condition"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "clinicalStatus": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-clinical"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "active"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Active"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "verificationStatus": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://terminology.hl7.org/CodeSystem/condition-ver-status"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "confirmed"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Confirmed"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "233604007"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Finding of pneumonia (finding)"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "onsetDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-20T08:00:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Encounter",
+      "key": "encounter",
+      "operations": [
+        {
+          "id": "searchEncounter",
+          "method": "GET",
+          "kind": "list",
+          "path": "/Encounter",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Bundle resource containing Encounter resources",
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Bundle"
+              },
+              "type": {
+                "type": "string",
+                "example": "searchset"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The total number of results matching the query (for pagination)."
+              },
+              "link": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "type": "string",
+                      "example": "next"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://example.com/Encounter?patient=123&_count=10&_offset=10"
+                    }
+                  }
+                }
+              },
+              "entry": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "description": "A FHIR Encounter resource",
+                      "required": [
+                        "id",
+                        "status",
+                        "subject",
+                        "class"
+                      ],
+                      "properties": {
+                        "resourceType": {
+                          "type": "string",
+                          "example": "Encounter"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Logical id of this artifact",
+                          "example": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "planned",
+                            "arrived",
+                            "triaged",
+                            "in-progress",
+                            "onleave",
+                            "finished",
+                            "cancelled",
+                            "entered-in-error",
+                            "unknown"
+                          ],
+                          "example": "in-progress"
+                        },
+                        "class": {
+                          "type": "object",
+                          "required": [
+                            "system",
+                            "code",
+                            "display"
+                          ],
+                          "properties": {
+                            "system": {
+                              "type": "string",
+                              "example": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+                            },
+                            "code": {
+                              "type": "string",
+                              "example": "AMB"
+                            },
+                            "display": {
+                              "type": "string",
+                              "example": "ambulatory"
+                            }
+                          }
+                        },
+                        "subject": {
+                          "type": "object",
+                          "required": [
+                            "reference"
+                          ],
+                          "properties": {
+                            "reference": {
+                              "type": "string",
+                              "example": "Patient/123"
+                            }
+                          }
+                        },
+                        "period": {
+                          "type": "object",
+                          "properties": {
+                            "start": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2024-01-22T09:00:00Z"
+                            },
+                            "end": {
+                              "type": "string",
+                              "format": "date-time",
+                              "example": "2024-01-22T10:00:00Z"
+                            }
+                          }
+                        },
+                        "location": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "location": {
+                                "type": "object",
+                                "properties": {
+                                  "reference": {
+                                    "type": "string",
+                                    "example": "Location/1"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getEncounterById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/Encounter/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Encounter resource",
+            "required": [
+              "id",
+              "status",
+              "subject",
+              "class"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Encounter"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "arrived",
+                  "triaged",
+                  "in-progress",
+                  "onleave",
+                  "finished",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "in-progress"
+              },
+              "class": {
+                "type": "object",
+                "required": [
+                  "system",
+                  "code",
+                  "display"
+                ],
+                "properties": {
+                  "system": {
+                    "type": "string",
+                    "example": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "AMB"
+                  },
+                  "display": {
+                    "type": "string",
+                    "example": "ambulatory"
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T09:00:00Z"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T10:00:00Z"
+                  }
+                }
+              },
+              "location": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "reference": {
+                          "type": "string",
+                          "example": "Location/1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createEncounter",
+          "method": "POST",
+          "kind": "create",
+          "path": "/Encounter",
+          "requestSchema": {
+            "type": "object",
+            "description": "A FHIR Encounter resource",
+            "required": [
+              "id",
+              "status",
+              "subject",
+              "class"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Encounter"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "arrived",
+                  "triaged",
+                  "in-progress",
+                  "onleave",
+                  "finished",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "in-progress"
+              },
+              "class": {
+                "type": "object",
+                "required": [
+                  "system",
+                  "code",
+                  "display"
+                ],
+                "properties": {
+                  "system": {
+                    "type": "string",
+                    "example": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "AMB"
+                  },
+                  "display": {
+                    "type": "string",
+                    "example": "ambulatory"
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T09:00:00Z"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T10:00:00Z"
+                  }
+                }
+              },
+              "location": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "reference": {
+                          "type": "string",
+                          "example": "Location/1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Encounter resource",
+            "required": [
+              "id",
+              "status",
+              "subject",
+              "class"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Encounter"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "arrived",
+                  "triaged",
+                  "in-progress",
+                  "onleave",
+                  "finished",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "in-progress"
+              },
+              "class": {
+                "type": "object",
+                "required": [
+                  "system",
+                  "code",
+                  "display"
+                ],
+                "properties": {
+                  "system": {
+                    "type": "string",
+                    "example": "http://terminology.hl7.org/CodeSystem/v3-ActCode"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "AMB"
+                  },
+                  "display": {
+                    "type": "string",
+                    "example": "ambulatory"
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "period": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T09:00:00Z"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-22T10:00:00Z"
+                  }
+                }
+              },
+              "location": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "type": "object",
+                      "properties": {
+                        "reference": {
+                          "type": "string",
+                          "example": "Location/1"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Medication",
+      "key": "medication",
+      "operations": [
+        {
+          "id": "searchMedication",
+          "method": "GET",
+          "kind": "list",
+          "path": "/Medication",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Bundle resource containing Medication resources",
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Bundle"
+              },
+              "type": {
+                "type": "string",
+                "example": "searchset"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The total number of results matching the query (for pagination)."
+              },
+              "link": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "type": "string",
+                      "example": "next"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://example.com/Medication?code=1191&_count=10&_offset=10"
+                    }
+                  }
+                }
+              },
+              "entry": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "description": "A FHIR Medication resource",
+                      "required": [
+                        "id",
+                        "code"
+                      ],
+                      "properties": {
+                        "resourceType": {
+                          "type": "string",
+                          "example": "Medication"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Logical id of this artifact",
+                          "example": "string"
+                        },
+                        "code": {
+                          "type": "object",
+                          "required": [
+                            "coding"
+                          ],
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "system",
+                                  "code",
+                                  "display"
+                                ],
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://www.nlm.nih.gov/research/umls/rxnorm"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "1191"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Amoxicillin"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "active",
+                            "inactive",
+                            "entered-in-error"
+                          ],
+                          "example": "active"
+                        },
+                        "form": {
+                          "type": "object",
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://snomed.info/sct"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "385219002"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Oral dose form"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getMedicationById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/Medication/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Medication resource",
+            "required": [
+              "id",
+              "code"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Medication"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://www.nlm.nih.gov/research/umls/rxnorm"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "1191"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Amoxicillin"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "entered-in-error"
+                ],
+                "example": "active"
+              },
+              "form": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "385219002"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Oral dose form"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createMedication",
+          "method": "POST",
+          "kind": "create",
+          "path": "/Medication",
+          "requestSchema": {
+            "type": "object",
+            "description": "A FHIR Medication resource",
+            "required": [
+              "id",
+              "code"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Medication"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://www.nlm.nih.gov/research/umls/rxnorm"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "1191"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Amoxicillin"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "entered-in-error"
+                ],
+                "example": "active"
+              },
+              "form": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "385219002"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Oral dose form"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Medication resource",
+            "required": [
+              "id",
+              "code"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Medication"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://www.nlm.nih.gov/research/umls/rxnorm"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "1191"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Amoxicillin"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "entered-in-error"
+                ],
+                "example": "active"
+              },
+              "form": {
+                "type": "object",
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://snomed.info/sct"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "385219002"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Oral dose form"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Observation",
+      "key": "observation",
+      "operations": [
+        {
+          "id": "searchObservation",
+          "method": "GET",
+          "kind": "list",
+          "path": "/Observation",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Bundle resource containing Observation resources",
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Bundle"
+              },
+              "type": {
+                "type": "string",
+                "example": "searchset"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The total number of results matching the query (for pagination)."
+              },
+              "link": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "type": "string",
+                      "example": "next"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://example.com/Observation?patient=123&_count=10&_offset=10"
+                    }
+                  }
+                }
+              },
+              "entry": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "description": "A FHIR Observation resource",
+                      "required": [
+                        "id",
+                        "status",
+                        "code",
+                        "subject"
+                      ],
+                      "properties": {
+                        "resourceType": {
+                          "type": "string",
+                          "example": "Observation"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Logical id of this artifact",
+                          "example": "string"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "registered",
+                            "preliminary",
+                            "final",
+                            "amended",
+                            "corrected",
+                            "cancelled",
+                            "entered-in-error",
+                            "unknown"
+                          ],
+                          "example": "final"
+                        },
+                        "code": {
+                          "type": "object",
+                          "required": [
+                            "coding"
+                          ],
+                          "properties": {
+                            "coding": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "required": [
+                                  "system",
+                                  "code",
+                                  "display"
+                                ],
+                                "properties": {
+                                  "system": {
+                                    "type": "string",
+                                    "example": "http://loinc.org"
+                                  },
+                                  "code": {
+                                    "type": "string",
+                                    "example": "8310-5"
+                                  },
+                                  "display": {
+                                    "type": "string",
+                                    "example": "Body temperature"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "subject": {
+                          "type": "object",
+                          "required": [
+                            "reference"
+                          ],
+                          "properties": {
+                            "reference": {
+                              "type": "string",
+                              "example": "Patient/123"
+                            }
+                          }
+                        },
+                        "effectiveDateTime": {
+                          "type": "string",
+                          "format": "date-time",
+                          "example": "2024-01-22T10:00:00Z"
+                        },
+                        "valueQuantity": {
+                          "type": "object",
+                          "properties": {
+                            "value": {
+                              "type": "number",
+                              "format": "double",
+                              "example": 37
+                            },
+                            "unit": {
+                              "type": "string",
+                              "example": "Cel"
+                            },
+                            "system": {
+                              "type": "string",
+                              "example": "http://unitsofmeasure.org"
+                            },
+                            "code": {
+                              "type": "string",
+                              "example": "Cel"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getObservationById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/Observation/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Observation resource",
+            "required": [
+              "id",
+              "status",
+              "code",
+              "subject"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Observation"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "registered",
+                  "preliminary",
+                  "final",
+                  "amended",
+                  "corrected",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "final"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://loinc.org"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "8310-5"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Body temperature"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "effectiveDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-22T10:00:00Z"
+              },
+              "valueQuantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "format": "double",
+                    "example": 37
+                  },
+                  "unit": {
+                    "type": "string",
+                    "example": "Cel"
+                  },
+                  "system": {
+                    "type": "string",
+                    "example": "http://unitsofmeasure.org"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "Cel"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createObservation",
+          "method": "POST",
+          "kind": "create",
+          "path": "/Observation",
+          "requestSchema": {
+            "type": "object",
+            "description": "A FHIR Observation resource",
+            "required": [
+              "id",
+              "status",
+              "code",
+              "subject"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Observation"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "registered",
+                  "preliminary",
+                  "final",
+                  "amended",
+                  "corrected",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "final"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://loinc.org"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "8310-5"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Body temperature"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "effectiveDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-22T10:00:00Z"
+              },
+              "valueQuantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "format": "double",
+                    "example": 37
+                  },
+                  "unit": {
+                    "type": "string",
+                    "example": "Cel"
+                  },
+                  "system": {
+                    "type": "string",
+                    "example": "http://unitsofmeasure.org"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "Cel"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Observation resource",
+            "required": [
+              "id",
+              "status",
+              "code",
+              "subject"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Observation"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "registered",
+                  "preliminary",
+                  "final",
+                  "amended",
+                  "corrected",
+                  "cancelled",
+                  "entered-in-error",
+                  "unknown"
+                ],
+                "example": "final"
+              },
+              "code": {
+                "type": "object",
+                "required": [
+                  "coding"
+                ],
+                "properties": {
+                  "coding": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": [
+                        "system",
+                        "code",
+                        "display"
+                      ],
+                      "properties": {
+                        "system": {
+                          "type": "string",
+                          "example": "http://loinc.org"
+                        },
+                        "code": {
+                          "type": "string",
+                          "example": "8310-5"
+                        },
+                        "display": {
+                          "type": "string",
+                          "example": "Body temperature"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "subject": {
+                "type": "object",
+                "required": [
+                  "reference"
+                ],
+                "properties": {
+                  "reference": {
+                    "type": "string",
+                    "example": "Patient/123"
+                  }
+                }
+              },
+              "effectiveDateTime": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-22T10:00:00Z"
+              },
+              "valueQuantity": {
+                "type": "object",
+                "properties": {
+                  "value": {
+                    "type": "number",
+                    "format": "double",
+                    "example": 37
+                  },
+                  "unit": {
+                    "type": "string",
+                    "example": "Cel"
+                  },
+                  "system": {
+                    "type": "string",
+                    "example": "http://unitsofmeasure.org"
+                  },
+                  "code": {
+                    "type": "string",
+                    "example": "Cel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Patient",
+      "key": "patient",
+      "operations": [
+        {
+          "id": "searchPatient",
+          "method": "GET",
+          "kind": "list",
+          "path": "/Patient",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Bundle resource containing Patient resources",
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Bundle"
+              },
+              "type": {
+                "type": "string",
+                "example": "searchset"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int32",
+                "description": "The total number of results matching the query (for pagination)."
+              },
+              "link": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "relation": {
+                      "type": "string",
+                      "example": "next"
+                    },
+                    "url": {
+                      "type": "string",
+                      "example": "https://example.com/Patient?_count=10&_offset=10"
+                    }
+                  }
+                }
+              },
+              "entry": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "object",
+                      "description": "A FHIR Patient resource",
+                      "required": [
+                        "id",
+                        "identifier",
+                        "name",
+                        "birthDate",
+                        "gender"
+                      ],
+                      "properties": {
+                        "resourceType": {
+                          "type": "string",
+                          "example": "Patient"
+                        },
+                        "id": {
+                          "type": "string",
+                          "description": "Logical id of this artifact",
+                          "example": "string"
+                        },
+                        "identifier": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "system",
+                              "value"
+                            ],
+                            "properties": {
+                              "system": {
+                                "type": "string",
+                                "example": "http://example.com/fhir/patient-identifier"
+                              },
+                              "value": {
+                                "type": "string",
+                                "example": "12345"
+                              }
+                            }
+                          }
+                        },
+                        "name": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "family",
+                              "given"
+                            ],
+                            "properties": {
+                              "family": {
+                                "type": "string",
+                                "example": "Doe"
+                              },
+                              "given": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "example": "John"
+                                }
+                              }
+                            }
+                          }
+                        },
+                        "gender": {
+                          "type": "string",
+                          "enum": [
+                            "male",
+                            "female",
+                            "other",
+                            "unknown"
+                          ],
+                          "example": "male"
+                        },
+                        "birthDate": {
+                          "type": "string",
+                          "format": "date",
+                          "example": "1970-01-01"
+                        },
+                        "telecom": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "system": {
+                                "type": "string",
+                                "enum": [
+                                  "phone",
+                                  "email",
+                                  "fax",
+                                  "pager",
+                                  "url",
+                                  "sms",
+                                  "other"
+                                ],
+                                "example": "phone"
+                              },
+                              "value": {
+                                "type": "string",
+                                "example": "555-555-5555"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getPatientById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/Patient/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Patient resource",
+            "required": [
+              "id",
+              "identifier",
+              "name",
+              "birthDate",
+              "gender"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Patient"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "identifier": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "system",
+                    "value"
+                  ],
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "example": "http://example.com/fhir/patient-identifier"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "12345"
+                    }
+                  }
+                }
+              },
+              "name": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "family",
+                    "given"
+                  ],
+                  "properties": {
+                    "family": {
+                      "type": "string",
+                      "example": "Doe"
+                    },
+                    "given": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "John"
+                      }
+                    }
+                  }
+                }
+              },
+              "gender": {
+                "type": "string",
+                "enum": [
+                  "male",
+                  "female",
+                  "other",
+                  "unknown"
+                ],
+                "example": "male"
+              },
+              "birthDate": {
+                "type": "string",
+                "format": "date",
+                "example": "1970-01-01"
+              },
+              "telecom": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "enum": [
+                        "phone",
+                        "email",
+                        "fax",
+                        "pager",
+                        "url",
+                        "sms",
+                        "other"
+                      ],
+                      "example": "phone"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "555-555-5555"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createPatient",
+          "method": "POST",
+          "kind": "create",
+          "path": "/Patient",
+          "requestSchema": {
+            "type": "object",
+            "description": "A FHIR Patient resource",
+            "required": [
+              "id",
+              "identifier",
+              "name",
+              "birthDate",
+              "gender"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Patient"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "identifier": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "system",
+                    "value"
+                  ],
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "example": "http://example.com/fhir/patient-identifier"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "12345"
+                    }
+                  }
+                }
+              },
+              "name": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "family",
+                    "given"
+                  ],
+                  "properties": {
+                    "family": {
+                      "type": "string",
+                      "example": "Doe"
+                    },
+                    "given": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "John"
+                      }
+                    }
+                  }
+                }
+              },
+              "gender": {
+                "type": "string",
+                "enum": [
+                  "male",
+                  "female",
+                  "other",
+                  "unknown"
+                ],
+                "example": "male"
+              },
+              "birthDate": {
+                "type": "string",
+                "format": "date",
+                "example": "1970-01-01"
+              },
+              "telecom": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "enum": [
+                        "phone",
+                        "email",
+                        "fax",
+                        "pager",
+                        "url",
+                        "sms",
+                        "other"
+                      ],
+                      "example": "phone"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "555-555-5555"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "A FHIR Patient resource",
+            "required": [
+              "id",
+              "identifier",
+              "name",
+              "birthDate",
+              "gender"
+            ],
+            "properties": {
+              "resourceType": {
+                "type": "string",
+                "example": "Patient"
+              },
+              "id": {
+                "type": "string",
+                "description": "Logical id of this artifact",
+                "example": "string"
+              },
+              "identifier": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "system",
+                    "value"
+                  ],
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "example": "http://example.com/fhir/patient-identifier"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "12345"
+                    }
+                  }
+                }
+              },
+              "name": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "family",
+                    "given"
+                  ],
+                  "properties": {
+                    "family": {
+                      "type": "string",
+                      "example": "Doe"
+                    },
+                    "given": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "example": "John"
+                      }
+                    }
+                  }
+                }
+              },
+              "gender": {
+                "type": "string",
+                "enum": [
+                  "male",
+                  "female",
+                  "other",
+                  "unknown"
+                ],
+                "example": "male"
+              },
+              "birthDate": {
+                "type": "string",
+                "format": "date",
+                "example": "1970-01-01"
+              },
+              "telecom": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "system": {
+                      "type": "string",
+                      "enum": [
+                        "phone",
+                        "email",
+                        "fax",
+                        "pager",
+                        "url",
+                        "sms",
+                        "other"
+                      ],
+                      "example": "phone"
+                    },
+                    "value": {
+                      "type": "string",
+                      "example": "555-555-5555"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

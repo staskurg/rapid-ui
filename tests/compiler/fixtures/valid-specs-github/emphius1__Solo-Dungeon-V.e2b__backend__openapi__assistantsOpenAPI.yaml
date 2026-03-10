@@ -1,0 +1,112 @@
+openapi: 3.0.0
+info:
+  title: GPT Assistants API
+  version: 1.0.0
+  description: API for GPT-powered Assistants in the D&D game application.
+servers:
+  - url: https://api.openai.com/v1/assistants
+    description: OpenAI Assistant API Endpoint
+
+paths:
+  /dungeonMaster:
+    post:
+      summary: Dungeon Master Assistant Action
+      operationId: dungeonMasterAction
+      tags:
+        - Dungeon Master Assistant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantActionRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantActionResponse'
+        '400':
+          description: Bad request
+
+  /databaseCRUD:
+    post:
+      summary: Database CRUD Operations Manager Action
+      operationId: databaseCRUDAction
+      tags:
+        - Database CRUD Operations Manager
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantActionRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantActionResponse'
+        '400':
+          description: Bad request
+
+  /qualityAssurance:
+    post:
+      summary: Quality Assurance Officer Action
+      operationId: qualityAssuranceAction
+      tags:
+        - Quality Assurance Officer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantActionRequest'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantActionResponse'
+        '400':
+          description: Bad request
+
+components:
+  schemas:
+    AssistantActionRequest:
+      type: object
+      properties:
+        task:
+          type: string
+          description: The specific task the Assistant is requested to perform.
+        parameters:
+          type: object
+          additionalProperties: true
+          description: Parameters related to the specific task.
+      required:
+        - task
+
+    AssistantActionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Indicates if the action was successful.
+        data:
+          type: object
+          additionalProperties: true
+          description: Data returned from the Assistant's action, if any.
+        message:
+          type: string
+          description: A message from the Assistant, which may include status information or details about any errors.
+
+tags:
+  - name: Dungeon Master Assistant
+    description: Assistant responsible for narrative generation and game management.
+  - name: Database CRUD Operations Manager
+    description: Assistant responsible for managing CRUD operations on the game's database.
+  - name: Quality Assurance Officer
+    description: Assistant responsible for ensuring the quality of the game's content and interactions.

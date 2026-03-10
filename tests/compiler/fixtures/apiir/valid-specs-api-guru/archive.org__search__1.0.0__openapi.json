@@ -1,0 +1,98 @@
+{
+  "api": {
+    "title": "Search Services",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "GET:/search/v1/fields",
+          "method": "GET",
+          "kind": "list",
+          "path": "/search/v1/fields",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "items": {
+              "description": "The name of a field",
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        {
+          "id": "GET:/search/v1/organic",
+          "method": "GET",
+          "kind": "list",
+          "path": "/search/v1/organic",
+          "queryParamCount": 5,
+          "responseSchema": {
+            "description": "The result of a organic search request",
+            "properties": {
+              "count": {
+                "description": "Number of results returned",
+                "maximum": 10000,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "items": {
+                "items": {
+                  "description": "One item returned (object of fields and values)",
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "total": {
+                "description": "Approximate number of results meeting query",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "GET:/search/v1/scrape",
+          "method": "GET",
+          "kind": "list",
+          "path": "/search/v1/scrape",
+          "queryParamCount": 7,
+          "responseSchema": {
+            "description": "The result of a scrape request",
+            "properties": {
+              "count": {
+                "description": "Number of results returned",
+                "maximum": 10000,
+                "minimum": 0,
+                "type": "integer"
+              },
+              "cursor": {
+                "description": "A scroll handle",
+                "type": "string"
+              },
+              "items": {
+                "items": {
+                  "description": "One item returned (object of fields and values)",
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "previous": {
+                "description": "A scroll handle",
+                "type": "string"
+              },
+              "total": {
+                "description": "Total number of results from this cursor point",
+                "minimum": 0,
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

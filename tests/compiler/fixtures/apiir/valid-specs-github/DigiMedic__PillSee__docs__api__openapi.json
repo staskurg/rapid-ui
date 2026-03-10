@@ -1,0 +1,196 @@
+{
+  "api": {
+    "title": "PillSee API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "service",
+              "version",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "degraded",
+                  "unhealthy"
+                ],
+                "description": "Celkový stav služby",
+                "example": "healthy"
+              },
+              "service": {
+                "type": "string",
+                "description": "Název služby",
+                "example": "PillSee API"
+              },
+              "version": {
+                "type": "string",
+                "description": "Verze API",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Čas kontroly",
+                "example": "2024-01-15T10:30:00Z"
+              },
+              "dependencies": {
+                "type": "object",
+                "description": "Stav externích závislostí",
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "example": {
+                  "openai": "connected",
+                  "database": "connected",
+                  "sukl_data": "pending"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "imageQuery",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/query/image",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "image_data"
+            ],
+            "properties": {
+              "image_data": {
+                "type": "string",
+                "format": "byte",
+                "description": "Base64 encoded obrázek obalu léku (včetně data URL prefix)",
+                "example": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA..."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "data",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "description": "Status odpovědi",
+                "example": "success"
+              },
+              "data": {
+                "type": "object",
+                "description": "Data odpovědi (struktura závisí na typu dotazu)",
+                "additionalProperties": true
+              },
+              "error": {
+                "type": "string",
+                "description": "Chybová zpráva (pouze při status=error)",
+                "default": ""
+              },
+              "disclaimer": {
+                "type": "string",
+                "description": "Povinný zdravotní disclaimer (MDR compliance)",
+                "example": "UPOZORNĚNÍ: Tyto informace slouží pouze pro informativní účely..."
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp odpovědi (ISO 8601)",
+                "example": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "textQuery",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/query/text",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 500,
+                "description": "Textový dotaz v češtině",
+                "example": "Co je Paralen a k čemu se používá?"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "data",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "error"
+                ],
+                "description": "Status odpovědi",
+                "example": "success"
+              },
+              "data": {
+                "type": "object",
+                "description": "Data odpovědi (struktura závisí na typu dotazu)",
+                "additionalProperties": true
+              },
+              "error": {
+                "type": "string",
+                "description": "Chybová zpráva (pouze při status=error)",
+                "default": ""
+              },
+              "disclaimer": {
+                "type": "string",
+                "description": "Povinný zdravotní disclaimer (MDR compliance)",
+                "example": "UPOZORNĚNÍ: Tyto informace slouží pouze pro informativní účely..."
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp odpovědi (ISO 8601)",
+                "example": "2024-01-15T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

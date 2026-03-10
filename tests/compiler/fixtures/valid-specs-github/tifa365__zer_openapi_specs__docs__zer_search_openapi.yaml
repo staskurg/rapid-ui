@@ -1,0 +1,235 @@
+openapi: 3.0.3
+info:
+  title: ZER Charity Search API
+  version: "1.0.1"
+  description: |
+    This OpenAPI specification describes the publicly accessible **Zuwendungsempfängerregister** (ZER)
+    search endpoint provided by the German Federal Central Tax Office (BZSt).
+    
+    The endpoint lets you search organisations that are eligible to issue tax‑deductible donation receipts.
+    
+    ⚠️ **CORS Warning**: This API does not support CORS and cannot be called directly from web browsers. 
+    The "Try it out" feature in Swagger UI will fail with a CORS error. 
+    
+    **How to test this API:**
+    - Use command-line tools like `curl` (copy the curl command from below)
+    - Use API testing tools like Postman or Insomnia
+    - Call the API from your backend server code
+servers:
+  - url: https://zer.bzst.de/api/v1
+paths:
+  /search:
+    get:
+      summary: Search the ZER register
+      description: |
+        Returns a paginated list of organisations that match the given search criteria.
+        Every parameter is optional; omitting a parameter broadens the search scope.
+        
+        ⚠️ **Note**: Browser requests will fail due to CORS. Use the curl command shown below.
+      parameters:
+        - name: label
+          in: query
+          description: Filter by full or partial organisation name (case‑insensitive).
+          required: false
+          schema:
+            type: string
+        - name: zwecke
+          in: query
+          description: Charity purpose code (e.g. `57` for international aid, `901` for civic education).
+          required: false
+          schema:
+            type: integer
+        - name: plz
+          in: query
+          description: German postal code.
+          required: false
+          schema:
+            type: string
+            pattern: "^\\d{5}$"
+        - name: ort
+          in: query
+          description: City.
+          required: false
+          schema:
+            type: string
+        - name: bundesland
+          in: query
+          description: Two‑letter federal state code (e.g. **BE** for Berlin).
+          required: false
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 2
+        - name: staat
+          in: query
+          description: Country name (defaults to *Deutschland*).
+          required: false
+          schema:
+            type: string
+        - name: page
+          in: query
+          description: Page number starting at **1**.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of results per page.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: sortBy
+          in: query
+          description: Field to sort by.
+          required: false
+          schema:
+            type: string
+            enum: [label, plz, ort]
+        - name: sortOrder
+          in: query
+          description: Sort direction.
+          required: false
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: asc
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+              examples:
+                BerlinPurpose57:
+                  summary: Organisations in Berlin for purpose 57
+                  value:
+                    page: 1
+                    pageSize: 10
+                    sortBy: label
+                    sortOrder: asc
+                    totalCount: 2
+                    totalPages: 1
+                    results:
+                      - wid: ""
+                        label: "Kliopolis e.V. - Gesellschaft für historisch-politisches Wissen und Wirken"
+                        url: ""
+                        plz: "13355"
+                        ort: "Berlin"
+                        bundesland: "BE"
+                        strasse: "Ramlerstr."
+                        hausnummer: "32"
+                        staat: "Deutschland"
+                        spendenkonten: []
+                        zwecke: [901]
+                        zustaendigesFinanzamt: "für Körperschaften I"
+                        freistellungbescheidErteilungAm: "2022-11-11"
+                        uuid: 357180
+                      - wid: "DE418807376"
+                        label: "Verein für Demokratie und Vielfalt in Schule und beruflicher Bildung e.V."
+                        url: ""
+                        plz: "13355"
+                        ort: "Berlin"
+                        bundesland: "BE"
+                        strasse: "Ramlerstr."
+                        hausnummer: "27"
+                        staat: "Deutschland"
+                        spendenkonten: []
+                        zwecke: [901]
+                        zustaendigesFinanzamt: "für Körperschaften I"
+                        freistellungbescheidErteilungAm: "2023-10-18"
+                        uuid: 357403
+        "400":
+          description: Invalid query parameter(s).
+components:
+  schemas:
+    SearchResponse:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/SearchResult"
+        sortBy:
+          type: string
+        sortOrder:
+          type: string
+        totalCount:
+          type: integer
+        totalPages:
+          type: integer
+      required: [page, pageSize, results, sortBy, sortOrder, totalCount, totalPages]
+    SearchResult:
+      type: object
+      properties:
+        wid:
+          type: string
+        label:
+          type: string
+        url:
+          type: string
+          description: URL of the organization (may be empty)
+        plz:
+          type: string
+        ort:
+          type: string
+        bundesland:
+          type: string
+          nullable: true
+        strasse:
+          type: string
+        hausnummer:
+          type: string
+        hausnummerzusatz:
+          type: string
+          nullable: true
+        postfach:
+          type: string
+        staat:
+          type: string
+        spendenkonten:
+          type: array
+          items:
+            type: object
+        zwecke:
+          type: array
+          items:
+            type: integer
+        zustaendigesFinanzamt:
+          type: string
+        freistellungbescheidErteilungAm:
+          type: string
+          format: date
+          nullable: true
+        feststellungbescheidErteilungAm:
+          type: string
+          format: date
+          nullable: true
+        anerkennungAlsParteiAm:
+          type: string
+          format: date
+          nullable: true
+        anerkennungAlsWaehlervereinigungAm:
+          type: string
+          format: date
+          nullable: true
+        anerkennungAlsParteiAmOderWaehlervereinigungAm:
+          type: string
+          format: date
+          nullable: true
+        juristischePersonDesOEffentlichenRechtsStatus:
+          type: string
+          description: Status as a legal entity under public law
+        uuid:
+          type: integer
+          description: Unique identifier for the organization
+      required: [label, plz, ort, bundesland, uuid]

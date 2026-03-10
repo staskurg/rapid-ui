@@ -1,0 +1,1642 @@
+{
+  "api": {
+    "title": "Wishlist Service",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Wishlist",
+      "key": "wishlist",
+      "operations": [
+        {
+          "id": "Wishlist_AddItemToWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/AddItemToWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "itemGrn": {
+                "type": "string"
+              },
+              "preferredQuantity": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "title": "The customer adds the item to the wishlist",
+                "type": "string"
+              }
+            },
+            "required": [
+              "itemGrn",
+              "tenantId",
+              "wishlistId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "grn": "grn",
+              "itemGrn": "itemGrn",
+              "addedAt": "2000-01-23T04:56:07.000+00:00",
+              "addedByCustomerGrn": "addedByCustomerGrn",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "wishlistId": "wishlistId",
+              "preferredQuantity": "preferredQuantity",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "itemGrn": {
+                "type": "string"
+              },
+              "preferredQuantity": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "addedByCustomerGrn": {
+                "type": "string"
+              },
+              "addedAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_AreItemsInWishlists",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/AreItemsInWishlists",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "itemGrns": {
+                "items": {
+                  "type": "string"
+                },
+                "title": "Max 500 items per request",
+                "type": "array"
+              }
+            },
+            "required": [
+              "itemGrns",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "itemGrnMap": {
+                "key": {
+                  "wishlistGrnToWishlistItemGrnMap": {
+                    "key": "wishlistGrnToWishlistItemGrnMap"
+                  }
+                }
+              }
+            },
+            "properties": {
+              "itemGrnMap": {
+                "additionalProperties": {
+                  "example": {
+                    "wishlistGrnToWishlistItemGrnMap": {
+                      "key": "wishlistGrnToWishlistItemGrnMap"
+                    }
+                  },
+                  "properties": {
+                    "wishlistGrnToWishlistItemGrnMap": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_BulkCreateSharing",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/BulkCreateSharing",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "sharingRequests": {
+                "items": {
+                  "properties": {
+                    "wishlistId": {
+                      "type": "string"
+                    },
+                    "permission": {
+                      "default": "UNKNOWN_PERMISSION",
+                      "enum": [
+                        "UNKNOWN_PERMISSION",
+                        "VIEW_PERMISSION",
+                        "EDIT_PERMISSION"
+                      ],
+                      "type": "string"
+                    },
+                    "customerGrn": {
+                      "type": "string"
+                    },
+                    "customerAggregationId": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "sharingResponses": [
+                {
+                  "createdAt": "2000-01-23T04:56:07.000+00:00",
+                  "customerGrn": "customerGrn",
+                  "sharingGrn": "sharingGrn",
+                  "permission": "UNKNOWN_PERMISSION",
+                  "customerAggregationId": "customerAggregationId",
+                  "wishlistId": "wishlistId",
+                  "sharingId": "sharingId",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                },
+                {
+                  "createdAt": "2000-01-23T04:56:07.000+00:00",
+                  "customerGrn": "customerGrn",
+                  "sharingGrn": "sharingGrn",
+                  "permission": "UNKNOWN_PERMISSION",
+                  "customerAggregationId": "customerAggregationId",
+                  "wishlistId": "wishlistId",
+                  "sharingId": "sharingId",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                }
+              ]
+            },
+            "properties": {
+              "sharingResponses": {
+                "items": {
+                  "example": {
+                    "createdAt": "2000-01-23T04:56:07.000+00:00",
+                    "customerGrn": "customerGrn",
+                    "sharingGrn": "sharingGrn",
+                    "permission": "UNKNOWN_PERMISSION",
+                    "customerAggregationId": "customerAggregationId",
+                    "wishlistId": "wishlistId",
+                    "sharingId": "sharingId",
+                    "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                  },
+                  "properties": {
+                    "sharingId": {
+                      "type": "string"
+                    },
+                    "sharingGrn": {
+                      "type": "string"
+                    },
+                    "wishlistId": {
+                      "type": "string"
+                    },
+                    "permission": {
+                      "default": "UNKNOWN_PERMISSION",
+                      "enum": [
+                        "UNKNOWN_PERMISSION",
+                        "VIEW_PERMISSION",
+                        "EDIT_PERMISSION"
+                      ],
+                      "type": "string"
+                    },
+                    "customerGrn": {
+                      "type": "string"
+                    },
+                    "customerAggregationId": {
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_BulkRemoveItemsFromWishlists",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/BulkRemoveItemsFromWishlists",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "itemGrns": {
+                "description": "Item GRNs to remove from wishlists. Max 500 items per request.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "wishlistIds": {
+                "description": "Wishlist IDs to remove items from. Max 500 wishlists per request.\nIf not provided, items will be removed from all wishlists.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "itemGrns",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_BulkRevokeSharing",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/BulkRevokeSharing",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "sharingIds": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_CreateWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/CreateWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "description": "If the customer GRN is set on JWT, it will be used as default. Otherwise, it will be used the customer_grn field.",
+                "type": "string"
+              },
+              "isDefault": {
+                "title": "If is the first wishlist for the customer, it will be set as default",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "privacy",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
+              "grn": "grn",
+              "isDefault": true,
+              "customerGrn": "customerGrn",
+              "privacy": "PRIVACY_UNKNOWN",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "label": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "sharedCode": "sharedCode",
+              "itemsCount": "itemsCount",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "itemsCount": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "createdAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_DeleteWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/DeleteWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_GetItemFromWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/GetItemFromWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "grn": "grn",
+              "itemGrn": "itemGrn",
+              "addedAt": "2000-01-23T04:56:07.000+00:00",
+              "addedByCustomerGrn": "addedByCustomerGrn",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "wishlistId": "wishlistId",
+              "preferredQuantity": "preferredQuantity",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "itemGrn": {
+                "type": "string"
+              },
+              "preferredQuantity": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "addedByCustomerGrn": {
+                "type": "string"
+              },
+              "addedAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_GetWishlistById",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/GetWishlistById",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
+              "grn": "grn",
+              "isDefault": true,
+              "customerGrn": "customerGrn",
+              "privacy": "PRIVACY_UNKNOWN",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "label": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "sharedCode": "sharedCode",
+              "itemsCount": "itemsCount",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "itemsCount": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "createdAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_GetWishlistBySharedCode",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/GetWishlistBySharedCode",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "customerGrn": {
+                "description": "If the customer GRN is set on JWT, it will be used as default. Otherwise, it will be used the customer_grn field.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sharedCode",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
+              "grn": "grn",
+              "isDefault": true,
+              "customerGrn": "customerGrn",
+              "privacy": "PRIVACY_UNKNOWN",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "label": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "sharedCode": "sharedCode",
+              "itemsCount": "itemsCount",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "itemsCount": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "createdAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_ListWishlistItems",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/ListWishlistItems",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "customerGrn": {
+                "title": "If customer_grn is not provided, the wishlist will be returned only if it is not PRIVATE",
+                "type": "string"
+              },
+              "pageSize": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "pageToken": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tenantId",
+              "wishlistId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "wishlistItems": [
+                {
+                  "grn": "grn",
+                  "itemGrn": "itemGrn",
+                  "addedAt": "2000-01-23T04:56:07.000+00:00",
+                  "addedByCustomerGrn": "addedByCustomerGrn",
+                  "description": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "id": "id",
+                  "wishlistId": "wishlistId",
+                  "preferredQuantity": "preferredQuantity",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                },
+                {
+                  "grn": "grn",
+                  "itemGrn": "itemGrn",
+                  "addedAt": "2000-01-23T04:56:07.000+00:00",
+                  "addedByCustomerGrn": "addedByCustomerGrn",
+                  "description": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "id": "id",
+                  "wishlistId": "wishlistId",
+                  "preferredQuantity": "preferredQuantity",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                }
+              ],
+              "nextPageToken": "nextPageToken"
+            },
+            "properties": {
+              "wishlistItems": {
+                "items": {
+                  "example": {
+                    "grn": "grn",
+                    "itemGrn": "itemGrn",
+                    "addedAt": "2000-01-23T04:56:07.000+00:00",
+                    "addedByCustomerGrn": "addedByCustomerGrn",
+                    "description": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "id": "id",
+                    "wishlistId": "wishlistId",
+                    "preferredQuantity": "preferredQuantity",
+                    "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                  },
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "grn": {
+                      "type": "string"
+                    },
+                    "wishlistId": {
+                      "type": "string"
+                    },
+                    "itemGrn": {
+                      "type": "string"
+                    },
+                    "preferredQuantity": {
+                      "format": "uint64",
+                      "type": "string"
+                    },
+                    "description": {
+                      "example": {
+                        "value": {
+                          "key": "value"
+                        }
+                      },
+                      "properties": {
+                        "value": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "addedByCustomerGrn": {
+                      "type": "string"
+                    },
+                    "addedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nextPageToken": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_ListWishlists",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/ListWishlists",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "pageSize": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "pageToken": {
+                "type": "string"
+              },
+              "filter": {
+                "properties": {
+                  "customerGrn": {
+                    "description": "If the customer GRN is set on JWT, it will be used as default. Otherwise, it will be used the customer_grn field.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "filterMask": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "wishlist": [
+                {
+                  "createdAt": "2000-01-23T04:56:07.000+00:00",
+                  "grn": "grn",
+                  "isDefault": true,
+                  "customerGrn": "customerGrn",
+                  "privacy": "PRIVACY_UNKNOWN",
+                  "description": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "id": "id",
+                  "label": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "sharedCode": "sharedCode",
+                  "itemsCount": "itemsCount",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                },
+                {
+                  "createdAt": "2000-01-23T04:56:07.000+00:00",
+                  "grn": "grn",
+                  "isDefault": true,
+                  "customerGrn": "customerGrn",
+                  "privacy": "PRIVACY_UNKNOWN",
+                  "description": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "id": "id",
+                  "label": {
+                    "value": {
+                      "key": "value"
+                    }
+                  },
+                  "sharedCode": "sharedCode",
+                  "itemsCount": "itemsCount",
+                  "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                }
+              ],
+              "nextPageToken": "nextPageToken"
+            },
+            "properties": {
+              "wishlist": {
+                "items": {
+                  "example": {
+                    "createdAt": "2000-01-23T04:56:07.000+00:00",
+                    "grn": "grn",
+                    "isDefault": true,
+                    "customerGrn": "customerGrn",
+                    "privacy": "PRIVACY_UNKNOWN",
+                    "description": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "id": "id",
+                    "label": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "sharedCode": "sharedCode",
+                    "itemsCount": "itemsCount",
+                    "updatedAt": "2000-01-23T04:56:07.000+00:00"
+                  },
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "grn": {
+                      "type": "string"
+                    },
+                    "sharedCode": {
+                      "type": "string"
+                    },
+                    "privacy": {
+                      "default": "PRIVACY_UNKNOWN",
+                      "enum": [
+                        "PRIVACY_UNKNOWN",
+                        "PRIVACY_PUBLIC",
+                        "PRIVACY_PRIVATE",
+                        "PRIVACY_SHARED"
+                      ],
+                      "type": "string"
+                    },
+                    "label": {
+                      "example": {
+                        "value": {
+                          "key": "value"
+                        }
+                      },
+                      "properties": {
+                        "value": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "description": {
+                      "example": {
+                        "value": {
+                          "key": "value"
+                        }
+                      },
+                      "properties": {
+                        "value": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "customerGrn": {
+                      "type": "string"
+                    },
+                    "isDefault": {
+                      "type": "boolean"
+                    },
+                    "itemsCount": {
+                      "format": "uint64",
+                      "type": "string"
+                    },
+                    "createdAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "updatedAt": {
+                      "format": "date-time",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "nextPageToken": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_MergeWishlists",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/MergeWishlists",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "startingWishlistId": {
+                "type": "string"
+              },
+              "customerGrn": {
+                "description": "If the customer GRN is set on JWT, it will be used as default. Otherwise, it will be used the customer_grn field.",
+                "type": "string"
+              },
+              "targetWishlistId": {
+                "description": "The wishlist to merge into the starting wishlist.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "customerGrn",
+              "startingWishlistId",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
+              "grn": "grn",
+              "isDefault": true,
+              "customerGrn": "customerGrn",
+              "privacy": "PRIVACY_UNKNOWN",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "label": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "sharedCode": "sharedCode",
+              "itemsCount": "itemsCount",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "itemsCount": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "createdAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_RemoveItemFromWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/RemoveItemFromWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_UpdateItemInWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/UpdateItemInWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "payload": {
+                "properties": {
+                  "preferredQuantity": {
+                    "format": "uint64",
+                    "type": "string"
+                  },
+                  "description": {
+                    "example": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "properties": {
+                      "value": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "customerGrn": {
+                    "title": "The customer adds the item to the wishlist",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "payloadMask": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "payload",
+              "payloadMask",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "grn": "grn",
+              "itemGrn": "itemGrn",
+              "addedAt": "2000-01-23T04:56:07.000+00:00",
+              "addedByCustomerGrn": "addedByCustomerGrn",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "wishlistId": "wishlistId",
+              "preferredQuantity": "preferredQuantity",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "wishlistId": {
+                "type": "string"
+              },
+              "itemGrn": {
+                "type": "string"
+              },
+              "preferredQuantity": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "addedByCustomerGrn": {
+                "type": "string"
+              },
+              "addedAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Wishlist_UpdateWishlist",
+          "method": "POST",
+          "kind": "create",
+          "path": "/wishlist.Wishlist/UpdateWishlist",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "payload": {
+                "properties": {
+                  "privacy": {
+                    "default": "PRIVACY_UNKNOWN",
+                    "enum": [
+                      "PRIVACY_UNKNOWN",
+                      "PRIVACY_PUBLIC",
+                      "PRIVACY_PRIVATE",
+                      "PRIVACY_SHARED"
+                    ],
+                    "type": "string"
+                  },
+                  "label": {
+                    "example": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "properties": {
+                      "value": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "description": {
+                    "example": {
+                      "value": {
+                        "key": "value"
+                      }
+                    },
+                    "properties": {
+                      "value": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "isDefault": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "payloadMask": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "payload",
+              "payloadMask",
+              "tenantId"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "createdAt": "2000-01-23T04:56:07.000+00:00",
+              "grn": "grn",
+              "isDefault": true,
+              "customerGrn": "customerGrn",
+              "privacy": "PRIVACY_UNKNOWN",
+              "description": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "id": "id",
+              "label": {
+                "value": {
+                  "key": "value"
+                }
+              },
+              "sharedCode": "sharedCode",
+              "itemsCount": "itemsCount",
+              "updatedAt": "2000-01-23T04:56:07.000+00:00"
+            },
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "grn": {
+                "type": "string"
+              },
+              "sharedCode": {
+                "type": "string"
+              },
+              "privacy": {
+                "default": "PRIVACY_UNKNOWN",
+                "enum": [
+                  "PRIVACY_UNKNOWN",
+                  "PRIVACY_PUBLIC",
+                  "PRIVACY_PRIVATE",
+                  "PRIVACY_SHARED"
+                ],
+                "type": "string"
+              },
+              "label": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "description": {
+                "example": {
+                  "value": {
+                    "key": "value"
+                  }
+                },
+                "properties": {
+                  "value": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "customerGrn": {
+                "type": "string"
+              },
+              "isDefault": {
+                "type": "boolean"
+              },
+              "itemsCount": {
+                "format": "uint64",
+                "type": "string"
+              },
+              "createdAt": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "updatedAt": {
+                "format": "date-time",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

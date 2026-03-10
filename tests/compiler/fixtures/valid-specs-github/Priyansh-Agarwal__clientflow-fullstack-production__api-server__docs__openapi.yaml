@@ -1,0 +1,755 @@
+openapi: 3.0.3
+info:
+  title: ClientFlow AI Suite API
+  description: |
+    Professional CRM API with AI-powered business automation.
+    
+    This API provides comprehensive customer relationship management capabilities
+    with integrated automation workflows, messaging, and appointment management.
+    
+    ## Authentication
+    
+    All API requests require an organization ID in the `x-org-id` header or as a query parameter.
+    
+    ## Rate Limiting
+    
+    - 100 requests per 15 minutes per IP address
+    - 1000 requests per 15 minutes per organization
+    
+    ## Error Handling
+    
+    All errors return a consistent JSON format:
+    ```json
+    {
+      "success": false,
+      "error": "Error description",
+      "message": "Detailed error message",
+      "timestamp": "2024-01-01T00:00:00.000Z"
+    }
+    ```
+  version: 1.0.0
+  contact:
+    name: ClientFlow AI Suite Support
+    email: hello@clientflow.ai
+    url: https://clientflow.ai
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://clientflow-ai-suite-api.vercel.app
+    description: Production server
+  - url: https://clientflow-ai-suite-api-git-main.vercel.app
+    description: Preview server
+  - url: http://localhost:4000
+    description: Development server
+
+tags:
+  - name: Health
+    description: Health check and system status endpoints
+  - name: CRM
+    description: Customer relationship management endpoints
+  - name: Automation
+    description: AI-powered automation and workflow endpoints
+  - name: Messaging
+    description: SMS and email messaging endpoints
+  - name: Appointments
+    description: Appointment management endpoints
+  - name: SLA
+    description: Service level agreement monitoring endpoints
+
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: API Documentation
+      description: Returns API documentation and available endpoints
+      responses:
+        '200':
+          description: API documentation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIDocumentation'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Returns the health status of the API and connected services
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+        '503':
+          description: System is degraded or unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /test:
+    get:
+      tags:
+        - Health
+      summary: Database Connection Test
+      description: Tests the database connection and returns status
+      responses:
+        '200':
+          description: Database connection test result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseTest'
+
+  /api/businesses:
+    get:
+      tags:
+        - CRM
+      summary: Get All Businesses
+      description: Retrieves a list of all businesses
+      responses:
+        '200':
+          description: List of businesses
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BusinessListResponse'
+
+  /api/customers:
+    get:
+      tags:
+        - CRM
+      summary: Get All Customers
+      description: Retrieves a list of all customers
+      responses:
+        '200':
+          description: List of customers
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerListResponse'
+    post:
+      tags:
+        - CRM
+      summary: Create Customer
+      description: Creates a new customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateCustomerRequest'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          description: Bad request - missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/messages/outbound:
+    post:
+      tags:
+        - Messaging
+      summary: Send Outbound Message
+      description: Sends an SMS or email message
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OutboundMessageRequest'
+      responses:
+        '200':
+          description: Message sent successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Bad request - missing required fields or organization ID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/automations/sms_inbound:
+    post:
+      tags:
+        - Automation
+      summary: Process Inbound SMS
+      description: Webhook endpoint for processing inbound SMS messages from Twilio
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundSMSRequest'
+      responses:
+        '200':
+          description: SMS processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationResponse'
+
+  /api/automations/email_inbound:
+    post:
+      tags:
+        - Automation
+      summary: Process Inbound Email
+      description: Webhook endpoint for processing inbound email messages from SendGrid
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InboundEmailRequest'
+      responses:
+        '200':
+          description: Email processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationResponse'
+
+  /api/automations/run:
+    post:
+      tags:
+        - Automation
+      summary: Trigger Automation
+      description: Programmatically triggers an automation workflow
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutomationTriggerRequest'
+      responses:
+        '200':
+          description: Automation triggered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationResponse'
+
+  /api/appointments:
+    get:
+      tags:
+        - Appointments
+      summary: Get Appointments
+      description: Retrieves appointments with optional filtering
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+        - name: window
+          in: query
+          description: Time window filter
+          schema:
+            type: string
+            enum: [next_24h]
+        - name: status
+          in: query
+          description: Appointment status filter
+          schema:
+            type: string
+            enum: [scheduled, completed, cancelled]
+        - name: within
+          in: query
+          description: Time range filter (e.g., 7d for 7 days)
+          schema:
+            type: string
+            pattern: '^\d+d$'
+      responses:
+        '200':
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentListResponse'
+
+  /api/sla/unanswered:
+    get:
+      tags:
+        - SLA
+      summary: Get SLA Violations
+      description: Retrieves conversations that have exceeded SLA response time
+      parameters:
+        - name: orgId
+          in: query
+          required: true
+          description: Organization ID
+          schema:
+            type: string
+        - name: minutes
+          in: query
+          description: SLA threshold in minutes
+          schema:
+            type: integer
+            default: 5
+            minimum: 1
+            maximum: 60
+      responses:
+        '200':
+          description: List of SLA violations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SLAResponse'
+
+components:
+  schemas:
+    APIDocumentation:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "ClientFlow AI Suite API"
+        version:
+          type: string
+          example: "1.0.0"
+        status:
+          type: string
+          example: "Live"
+        description:
+          type: string
+          example: "Professional-grade CRM with AI-powered automation"
+        endpoints:
+          type: object
+          additionalProperties:
+            type: string
+        features:
+          type: array
+          items:
+            type: string
+
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [OK, DEGRADED, ERROR]
+        timestamp:
+          type: string
+          format: date-time
+        uptime:
+          type: number
+          description: Uptime in seconds
+        memory:
+          $ref: '#/components/schemas/MemoryUsage'
+        version:
+          type: string
+        environment:
+          type: string
+        database:
+          $ref: '#/components/schemas/DatabaseStatus'
+        services:
+          $ref: '#/components/schemas/ServiceStatus'
+
+    MemoryUsage:
+      type: object
+      properties:
+        rss:
+          type: number
+        heapTotal:
+          type: number
+        heapUsed:
+          type: number
+        external:
+          type: number
+
+    DatabaseStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [Connected, Disconnected, Error]
+        error:
+          type: string
+          nullable: true
+        provider:
+          type: string
+          example: "Supabase"
+
+    ServiceStatus:
+      type: object
+      properties:
+        supabase:
+          type: string
+          enum: [UP, DOWN]
+        api:
+          type: string
+          enum: [UP, DOWN]
+
+    DatabaseTest:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        database_status:
+          type: string
+        demo_business:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+        environment:
+          type: string
+
+    BusinessListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        count:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Business'
+
+    Business:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_name:
+          type: string
+        slug:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        address:
+          type: string
+        status:
+          type: string
+          enum: [active, inactive]
+        created_at:
+          type: string
+          format: date-time
+
+    CustomerListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        count:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        source:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    CreateCustomerRequest:
+      type: object
+      required:
+        - business_id
+        - first_name
+      properties:
+        business_id:
+          type: string
+          format: uuid
+        first_name:
+          type: string
+        last_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        source:
+          type: string
+          default: "api"
+
+    CustomerResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Customer'
+
+    OutboundMessageRequest:
+      type: object
+      required:
+        - channel
+        - to_addr
+        - body
+      properties:
+        channel:
+          type: string
+          enum: [sms, email]
+        to_addr:
+          type: string
+          description: Phone number for SMS or email address for email
+        body:
+          type: string
+          description: Message content
+
+    MessageResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Message'
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+        channel:
+          type: string
+        to_addr:
+          type: string
+        body:
+          type: string
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    InboundSMSRequest:
+      type: object
+      properties:
+        From:
+          type: string
+        To:
+          type: string
+        Body:
+          type: string
+        MessageSid:
+          type: string
+
+    InboundEmailRequest:
+      type: object
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        subject:
+          type: string
+        text:
+          type: string
+        html:
+          type: string
+
+    AutomationTriggerRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          description: Type of automation to trigger
+        payload:
+          type: object
+          description: Automation-specific payload
+
+    AutomationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/AutomationTrigger'
+
+    AutomationTrigger:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        org_id:
+          type: string
+        type:
+          type: string
+        payload:
+          type: object
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    AppointmentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        count:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointment'
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        starts_at:
+          type: string
+          format: date-time
+        reminder_offset_minutes:
+          type: integer
+        contact:
+          type: string
+        status:
+          type: string
+          enum: [scheduled, completed, cancelled]
+
+    SLAResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        count:
+          type: integer
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SLAViolation'
+
+    SLAViolation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        last_message_at:
+          type: string
+          format: date-time
+        on_call_phone:
+          type: string
+        waiting_minutes:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        requestId:
+          type: string
+          nullable: true
+
+  securitySchemes:
+    OrgIdHeader:
+      type: apiKey
+      in: header
+      name: x-org-id
+      description: Organization ID for multi-tenant access
+    OrgIdQuery:
+      type: apiKey
+      in: query
+      name: orgId
+      description: Organization ID for multi-tenant access
+
+security:
+  - OrgIdHeader: []
+  - OrgIdQuery: []

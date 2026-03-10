@@ -1,0 +1,454 @@
+openapi: 3.0.3
+info:
+  title: RRHH - APP
+  description: API para la gestión de empleados y recursos humanos. Permite realizar operaciones CRUD sobre los empleados, gestionar la autenticación de usuarios y generar reportes estratégicos.
+  version: 1.0.0
+  contact:
+    name: Equipo de Desarrollo
+    email: juan.gimenez@example.com
+
+servers:
+  - url: http://127.0.0.1:3001
+    description: Servidor de desarrollo local
+
+tags:
+  - name: Empleados
+    description: Operaciones sobre los empleados.
+  - name: Reportes y Búsquedas
+    description: Funcionalidades de alta complejidad para análisis de datos.
+  - name: Autenticación
+    description: Registro e inicio de sesión de usuarios.
+  - name: Status
+    description: Endpoints para verificar el estado de la API.
+
+paths:
+  # --- Status Endpoints ---
+  /:
+    get:
+      tags:
+        - Status
+      summary: Mensaje de bienvenida de la API
+      description: Devuelve información básica sobre el servicio y su estado.
+      operationId: getWelcomeMessage
+      responses:
+        '200':
+          description: Información del servicio obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WelcomeResponse'
+
+  # --- Autenticación Endpoints ---
+  /api/user/signup:
+    post:
+      tags:
+        - Autenticación
+      summary: Registrar un nuevo usuario
+      description: Crea un nuevo usuario en el sistema de autenticación (Supabase).
+      operationId: signupUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '201':
+          description: Usuario creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/user/login:
+    post:
+      tags:
+        - Autenticación
+      summary: Iniciar sesión
+      description: Autentica a un usuario con su email y contraseña y devuelve un token JWT.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: Autenticación exitosa.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # --- Empleados CRUD Endpoints ---
+  /api/empleados/all:
+    get:
+      tags:
+        - Empleados
+      summary: Obtener todos los empleados
+      description: Devuelve una lista completa de todos los empleados registrados.
+      operationId: getAllEmpleados
+      responses:
+        '200':
+          description: Lista de empleados obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Empleado'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/empleados/create:
+    post:
+      tags:
+        - Empleados
+      summary: Crear un nuevo empleado
+      description: Añade un nuevo empleado a la base de datos. Requiere autenticación.
+      operationId: createEmpleado
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpleadoInput'
+      responses:
+        '201':
+          description: Empleado creado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleado'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/empleados/{id}:
+    get:
+      tags:
+        - Empleados
+      summary: Obtener un empleado por ID
+      description: Devuelve los detalles de un empleado específico.
+      operationId: getEmpleadoById
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Empleado encontrado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleado'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    patch:
+      tags:
+        - Empleados
+      summary: Actualizar un empleado por ID
+      description: Modifica los datos de un empleado existente. Requiere autenticación.
+      operationId: updateEmpleado
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpleadoInput'
+      responses:
+        '200':
+          description: Empleado actualizado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empleado'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Empleados
+      summary: Eliminar un empleado por ID
+      description: Borra un empleado de la base de datos. Requiere autenticación.
+      operationId: deleteEmpleado
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Empleado eliminado exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Empleado eliminado exitosamente"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # --- Reportes y Búsquedas Endpoints ---
+  /api/empleados/buscar:
+    get:
+      tags:
+        - Reportes y Búsquedas
+      summary: Buscar empleados por capacidad
+      description: Devuelve una lista de empleados que poseen una habilidad específica.
+      operationId: buscarPorCapacidad
+      parameters:
+        - name: capacidad
+          in: query
+          required: true
+          description: La capacidad o habilidad a buscar (ej. JavaScript, Ventas, SEO).
+          schema:
+            type: string
+            example: JavaScript
+      responses:
+        '200':
+          description: Lista de empleados que coinciden con la búsqueda.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Empleado'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/empleados/reporte/capacidades:
+    get:
+      tags:
+        - Reportes y Búsquedas
+      summary: Generar reporte de capacidades
+      description: Crea un reporte que agrupa a los empleados por sus capacidades, mostrando cuántos empleados tienen cada habilidad. Requiere autenticación.
+      operationId: getReporteCapacidades
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Reporte generado exitosamente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReporteCapacidades'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  # --- Security ---
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Token JWT obtenido tras el login. Formato: 'Bearer {token}'"
+
+  # --- Schemas (Data Models) ---
+  schemas:
+    Empleado:
+      type: object
+      properties:
+        id:
+          type: integer
+          description: Identificador único del empleado.
+          example: 1
+        nombre:
+          type: string
+          example: Juan
+        apellido:
+          type: string
+          example: Perez
+        dni:
+          type: string
+          example: "12345678"
+        correoElectronico:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        puesto:
+          type: string
+          example: "Desarrollador Backend"
+        capacidades:
+          type: string
+          description: Lista de habilidades separadas por comas.
+          example: "Node.js, SQL, Express"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    EmpleadoInput:
+      type: object
+      description: Campos para crear o actualizar un empleado.
+      required:
+        - nombre
+        - apellido
+        - dni
+        - correoElectronico
+        - puesto
+      properties:
+        nombre:
+          type: string
+        apellido:
+          type: string
+        dni:
+          type: string
+        correoElectronico:
+          type: string
+          format: email
+        puesto:
+          type: string
+        capacidades:
+          type: string
+
+    AuthRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "test.user@example.com"
+        password:
+          type: string
+          format: password
+          example: "password123"
+
+    AuthSuccessResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Bienvenido test.user@example.com"
+        user:
+          type: string
+          example: "test.user@example.com"
+        role:
+          type: string
+          example: "authenticated"
+        token:
+          type: string
+          description: Token JWT para autenticar peticiones posteriores.
+
+    ReporteCapacidades:
+      type: object
+      properties:
+        reporteGenerado:
+          type: string
+          format: date-time
+        totalCapacidadesUnicas:
+          type: integer
+        distribucion:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              cantidad:
+                type: integer
+              empleados:
+                type: array
+                items:
+                  type: string
+
+    WelcomeResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Bienvenido a la API de RRHH"
+
+  # --- Reusable Parameters ---
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      description: ID numérico del empleado.
+      schema:
+        type: integer
+        example: 1
+
+  # --- Reusable Responses ---
+  responses:
+    NotFound:
+      description: El recurso solicitado no fue encontrado.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Recurso no encontrado"
+    Unauthorized:
+      description: Autenticación fallida o token no provisto.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Token no válido o ausente"
+    BadRequest:
+      description: La petición es incorrecta o faltan parámetros.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Petición incorrecta"
+    InternalServerError:
+      description: Ocurrió un error inesperado en el servidor.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Error interno del servidor"

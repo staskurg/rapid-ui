@@ -1,0 +1,646 @@
+openapi: 3.1.0
+info:
+  title: Regulations.gov API (v4) - Inline X-Api-Key
+  description: >
+    This version inlines the X-Api-Key parameter in each endpoint to avoid
+    "missing or non-string name" errors for parameter $ref references.
+  version: '3.0.1'
+
+servers:
+  - url: https://api.regulations.gov/v4
+    description: Production endpoint for Regulations.gov API
+
+components:
+  schemas:
+    Meta:
+      type: object
+      description: "Pagination/total metadata"
+      properties:
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        pageNumber:
+          type: integer
+        pageSize:
+          type: integer
+        hasNextPage:
+          type: boolean
+        hasPreviousPage:
+          type: boolean
+        nextPageToken:
+          type: string
+        previousPageToken:
+          type: string
+
+    Attachment:
+      type: object
+      description: "Attachment details"
+      properties:
+        id:
+          type: string
+        fileName:
+          type: string
+        fileFormat:
+          type: string
+        url:
+          type: string
+
+    DocumentAttributes:
+      type: object
+      description: "Attributes for a Document"
+      properties:
+        documentId:
+          type: string
+        title:
+          type: string
+        postedDate:
+          type: string
+          format: date-time
+
+    Document:
+      type: object
+      description: "Minimal Document object"
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        attributes:
+          $ref: '#/components/schemas/DocumentAttributes'
+
+    DocumentFindAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    DocumentFindOneResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Document'
+        included:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    DocketAttributes:
+      type: object
+      description: "Attributes for a Docket"
+      properties:
+        docketId:
+          type: string
+        title:
+          type: string
+        agencyId:
+          type: string
+        lastModifiedDate:
+          type: string
+          format: date-time
+        commentStartDate:
+          type: string
+          format: date-time
+        commentEndDate:
+          type: string
+          format: date-time
+
+    Docket:
+      type: object
+      description: "Docket object"
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        attributes:
+          $ref: '#/components/schemas/DocketAttributes'
+
+    DocketFindAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Docket'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    DocketFindOneResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Docket'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    CommentAttributes:
+      type: object
+      description: "Attributes for a Comment"
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        attributes:
+          type: object
+          properties:
+            title:
+              type: string
+            comment:
+              type: string
+            postedDate:
+              type: string
+              format: date-time
+
+    Comment:
+      type: object
+      description: "Single Comment"
+      properties:
+        type:
+          type: string
+        id:
+          type: string
+        attributes:
+          $ref: '#/components/schemas/CommentAttributes'
+
+    CommentFindAllResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    CommentFindOneResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Comment'
+        included:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    CreateCommentRequest:
+      type: object
+      required:
+        - type
+        - attributes
+      properties:
+        type:
+          type: string
+          description: "Should be 'comments'"
+        attributes:
+          type: object
+          required:
+            - commentOnDocumentId
+            - comment
+            - submissionType
+            - submitterType
+          properties:
+            commentOnDocumentId:
+              type: string
+            comment:
+              type: string
+            submissionType:
+              type: string
+              enum: [API]
+            submitterType:
+              type: string
+              enum: [ANONYMOUS, INDIVIDUAL, ORGANIZATION]
+            firstName:
+              type: string
+            lastName:
+              type: string
+            organization:
+              type: string
+            files:
+              type: array
+              items:
+                type: string
+            sendEmailReceipt:
+              type: boolean
+            email:
+              type: string
+            numItemsReceived:
+              type: integer
+            city:
+              type: string
+            stateProvinceRegion:
+              type: string
+            country:
+              type: string
+            zip:
+              type: string
+            phone:
+              type: string
+            category:
+              type: string
+            submissionKey:
+              type: string
+
+    CreateCommentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+        trackingNumber:
+          type: string
+
+    SubmissionKeyRequest:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - type
+          properties:
+            type:
+              type: string
+              description: "Must be 'submission-keys'"
+
+    SubmissionKeyResponse:
+      type: object
+      required:
+        - data
+      properties:
+        data:
+          type: object
+          required:
+            - id
+            - type
+          properties:
+            id:
+              type: string
+            type:
+              type: string
+
+    FileUploadUrlRequest:
+      type: object
+      properties:
+        data:
+          type: object
+          required: [ type, attributes ]
+          properties:
+            type:
+              type: string
+              enum: [file-upload-urls]
+            attributes:
+              type: object
+              required: [ fileName, submissionKey, contentType ]
+              properties:
+                fileName:
+                  type: string
+                submissionKey:
+                  type: string
+                contentType:
+                  type: string
+
+    FileUploadUrlResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            type:
+              type: string
+            attributes:
+              type: object
+              properties:
+                url:
+                  type: string
+                fields:
+                  type: object
+
+    AgencyCategoriesResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              id:
+                type: string
+              attributes:
+                type: object
+                properties:
+                  acronym:
+                    type: string
+                  category:
+                    type: string
+
+paths:
+
+  /documents:
+    get:
+      operationId: listDocuments
+      summary: List of documents
+      description: Returns documents with optional filters.
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: filter[searchTerm]
+          in: query
+          schema:
+            type: string
+        - name: filter[docketId]
+          in: query
+          schema:
+            type: string
+        - name: filter[title]
+          in: query
+          schema:
+            type: string
+        - name: page[size]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+        - name: page[number]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: A list of documents
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/DocumentFindAllResponse'
+
+  /documents/{documentId}:
+    get:
+      operationId: getDocument
+      summary: Get info for a specific document
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: include
+          in: query
+          schema:
+            type: string
+            enum: [attachments]
+      responses:
+        '200':
+          description: A single document resource
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/DocumentFindOneResponse'
+        '404':
+          description: Not found
+
+  /comments:
+    get:
+      operationId: listComments
+      summary: Fetch comments
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: filter[searchTerm]
+          in: query
+          schema:
+            type: string
+        - name: page[size]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: page[after]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of comments
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/CommentFindAllResponse'
+
+    post:
+      operationId: createComment
+      summary: Create a new comment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/CreateCommentRequest'
+      responses:
+        '201':
+          description: Created comment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateCommentResponse'
+
+  /comments/{commentId}:
+    get:
+      operationId: getComment
+      summary: Get a specific comment
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: include
+          in: query
+          schema:
+            type: string
+            enum: [attachments]
+      responses:
+        '200':
+          description: A single comment resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentFindOneResponse'
+        '404':
+          description: Not found
+
+  /dockets:
+    get:
+      operationId: listDockets
+      summary: Retrieve a list of dockets
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: filter[searchTerm]
+          in: query
+          schema:
+            type: string
+        - name: page[size]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 250
+        - name: page[number]
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: A list of dockets
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocketFindAllResponse'
+
+  /dockets/{docketId}:
+    get:
+      operationId: getDocket
+      summary: Get a single docket
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: docketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A single docket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocketFindOneResponse'
+        '404':
+          description: Not found
+
+  /submission-keys:
+    post:
+      operationId: createSubmissionKey
+      summary: Generate a submission key
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+      requestBody:
+        required: true
+        content:
+          application/vnd.api+json:
+            schema:
+              $ref: '#/components/schemas/SubmissionKeyRequest'
+      responses:
+        '201':
+          description: Created submission key
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/SubmissionKeyResponse'
+
+  /file-upload-urls:
+    post:
+      operationId: createFileUploadUrl
+      summary: Create a presigned S3 URL
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FileUploadUrlRequest'
+      responses:
+        '201':
+          description: Presigned URL created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileUploadUrlResponse'
+
+  /agency-categories:
+    get:
+      operationId: listAgencyCategories
+      summary: Returns a list of categories
+      parameters:
+        - name: X-Api-Key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: "REGULATIONSGOV_API_KEY"
+        - name: filter[acronym]
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of agency categories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgencyCategoriesResponse'

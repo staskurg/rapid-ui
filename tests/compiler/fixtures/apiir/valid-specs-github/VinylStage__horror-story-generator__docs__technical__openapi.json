@@ -1,0 +1,1718 @@
+{
+  "api": {
+    "title": "Horror Story Research API",
+    "version": "1.7.0"
+  },
+  "resources": [
+    {
+      "name": "dedup",
+      "key": "dedup",
+      "operations": [
+        {
+          "id": "evaluateDedup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/dedup/evaluate",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "template_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Template ID being used"
+              },
+              "canonical_core": {
+                "type": "object",
+                "description": "Canonical dimensions for story comparison",
+                "properties": {
+                  "setting": {
+                    "type": "string",
+                    "description": "Setting type (urban, rural, institutional, etc.)",
+                    "example": "urban"
+                  },
+                  "primary_fear": {
+                    "type": "string",
+                    "description": "Primary fear type",
+                    "example": "isolation"
+                  },
+                  "antagonist": {
+                    "type": "string",
+                    "description": "Antagonist type",
+                    "example": "entity"
+                  },
+                  "mechanism": {
+                    "type": "string",
+                    "description": "Horror mechanism",
+                    "example": "corruption"
+                  },
+                  "twist": {
+                    "type": "string",
+                    "description": "Twist pattern",
+                    "example": "identity"
+                  }
+                }
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story title for similarity check"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "signal",
+              "similarity_score"
+            ],
+            "properties": {
+              "signal": {
+                "type": "string",
+                "description": "Deduplication signal level",
+                "enum": [
+                  "LOW",
+                  "MEDIUM",
+                  "HIGH"
+                ]
+              },
+              "similarity_score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Maximum similarity score found"
+              },
+              "similar_stories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "story_id",
+                    "template_id",
+                    "similarity_score",
+                    "matched_dimensions"
+                  ],
+                  "properties": {
+                    "story_id": {
+                      "type": "string",
+                      "description": "Similar story identifier"
+                    },
+                    "template_id": {
+                      "type": "string",
+                      "description": "Template used by similar story"
+                    },
+                    "similarity_score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Similarity score (0.0-1.0)"
+                    },
+                    "matched_dimensions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of matching canonical dimensions"
+                    }
+                  }
+                },
+                "description": "List of similar stories found",
+                "default": []
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Advisory message"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "research",
+      "key": "research",
+      "operations": [
+        {
+          "id": "listResearch",
+          "method": "GET",
+          "kind": "list",
+          "path": "/research/list",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "cards",
+              "total",
+              "limit",
+              "offset"
+            ],
+            "properties": {
+              "cards": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "card_id",
+                    "title",
+                    "topic",
+                    "quality_score",
+                    "created_at"
+                  ],
+                  "properties": {
+                    "card_id": {
+                      "type": "string",
+                      "description": "Card identifier",
+                      "example": "RC-20260111-123456"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Research card title",
+                      "example": "아파트 엘리베이터의 공포"
+                    },
+                    "topic": {
+                      "type": "string",
+                      "description": "Original research topic"
+                    },
+                    "quality_score": {
+                      "type": "string",
+                      "description": "Quality assessment"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "description": "Creation date (YYYY-MM-DD)",
+                      "example": "2026-01-11"
+                    }
+                  }
+                },
+                "description": "List of research cards"
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of cards returned"
+              },
+              "limit": {
+                "type": "integer",
+                "description": "Requested limit"
+              },
+              "offset": {
+                "type": "integer",
+                "description": "Requested offset"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              }
+            }
+          }
+        },
+        {
+          "id": "checkResearchDedup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/research/dedup",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "card_id"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Card ID to check for duplicates",
+                "pattern": "^RC-\\d{8}-\\d{6}$"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "card_id",
+              "signal",
+              "similarity_score",
+              "index_size"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Checked card ID"
+              },
+              "signal": {
+                "type": "string",
+                "description": "Dedup signal level",
+                "enum": [
+                  "LOW",
+                  "MEDIUM",
+                  "HIGH"
+                ]
+              },
+              "similarity_score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Highest similarity score (0.0-1.0)"
+              },
+              "nearest_card_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Most similar card ID"
+              },
+              "similar_cards": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "card_id",
+                    "similarity_score"
+                  ],
+                  "properties": {
+                    "card_id": {
+                      "type": "string",
+                      "description": "Similar card identifier"
+                    },
+                    "similarity_score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Similarity score (0.0-1.0)"
+                    },
+                    "title": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Card title"
+                    }
+                  }
+                },
+                "default": [],
+                "description": "List of similar cards"
+              },
+              "index_size": {
+                "type": "integer",
+                "default": 0,
+                "description": "Number of cards in FAISS index"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              }
+            }
+          }
+        },
+        {
+          "id": "matchResearchTemplates",
+          "method": "POST",
+          "kind": "create",
+          "path": "/research/matching-templates",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "card_id"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Research card ID to match against templates",
+                "pattern": "^RC-\\d{8}-\\d{6}$"
+              },
+              "max_templates": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 15,
+                "default": 5,
+                "description": "Maximum number of templates to return"
+              },
+              "min_score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "default": 0.5,
+                "description": "Minimum match score threshold (0.0-1.0)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "card_id",
+              "matching_templates",
+              "total_templates"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Research card ID that was matched"
+              },
+              "matching_templates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "template_id",
+                    "template_name",
+                    "match_score"
+                  ],
+                  "properties": {
+                    "template_id": {
+                      "type": "string",
+                      "description": "Template ID (e.g., T-SYS-001)"
+                    },
+                    "template_name": {
+                      "type": "string",
+                      "description": "Human-readable template name"
+                    },
+                    "match_score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Match score (0.0-1.0)"
+                    },
+                    "canonical_core": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "default": {},
+                      "description": "Template's canonical core values"
+                    },
+                    "match_details": {
+                      "type": "object",
+                      "nullable": true,
+                      "additionalProperties": true,
+                      "description": "Per-dimension match breakdown"
+                    }
+                  }
+                },
+                "default": [],
+                "description": "List of matching templates sorted by score (highest first)"
+              },
+              "total_templates": {
+                "type": "integer",
+                "description": "Total number of templates evaluated"
+              },
+              "card_affinity": {
+                "type": "object",
+                "nullable": true,
+                "additionalProperties": true,
+                "description": "The research card's canonical affinity used for matching"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              }
+            }
+          }
+        },
+        {
+          "id": "runResearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/research/run",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "topic"
+            ],
+            "properties": {
+              "topic": {
+                "type": "string",
+                "description": "Research topic to analyze",
+                "minLength": 5,
+                "maxLength": 500,
+                "example": "한국 아파트 공포"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Optional tags for categorization",
+                "default": [],
+                "example": [
+                  "apartment",
+                  "korean"
+                ]
+              },
+              "model": {
+                "type": "string",
+                "description": "Ollama model override",
+                "example": "qwen3:30b"
+              },
+              "timeout": {
+                "type": "integer",
+                "description": "Timeout in seconds",
+                "minimum": 30,
+                "maximum": 600,
+                "default": 300
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "card_id",
+              "status"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Generated card ID (empty on error)",
+                "example": "RC-20260111-123456"
+              },
+              "status": {
+                "type": "string",
+                "description": "Execution status",
+                "enum": [
+                  "complete",
+                  "error",
+                  "timeout"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              },
+              "output_path": {
+                "type": "string",
+                "nullable": true,
+                "description": "Path to output file"
+              }
+            }
+          }
+        },
+        {
+          "id": "validateResearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/research/validate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "card_id"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Card ID to validate",
+                "pattern": "^RC-\\d{8}-\\d{6}$",
+                "example": "RC-20260111-123456"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "card_id",
+              "is_valid",
+              "quality_score"
+            ],
+            "properties": {
+              "card_id": {
+                "type": "string",
+                "description": "Validated card ID"
+              },
+              "is_valid": {
+                "type": "boolean",
+                "description": "Whether card is valid"
+              },
+              "quality_score": {
+                "type": "string",
+                "description": "Quality score",
+                "enum": [
+                  "good",
+                  "partial",
+                  "incomplete",
+                  "not_found",
+                  "invalid_id",
+                  "error"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Validation details"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "scheduler",
+      "key": "scheduler",
+      "operations": [
+        {
+          "id": "getSchedulerStatus",
+          "method": "GET",
+          "kind": "list",
+          "path": "/scheduler/status",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "scheduler_running",
+              "queue_length",
+              "cumulative_stats",
+              "has_active_reservation"
+            ],
+            "properties": {
+              "scheduler_running": {
+                "type": "boolean",
+                "description": "Whether scheduler dispatch loop is running"
+              },
+              "current_task_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Currently executing task ID (null if none)"
+              },
+              "queue_length": {
+                "type": "integer",
+                "default": 0,
+                "description": "Number of QUEUED tasks"
+              },
+              "cumulative_stats": {
+                "type": "object",
+                "properties": {
+                  "total_executed": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Total TaskRuns executed"
+                  },
+                  "succeeded": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "COMPLETED TaskRuns"
+                  },
+                  "failed": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "FAILED TaskRuns"
+                  },
+                  "cancelled": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "CANCELLED Tasks"
+                  },
+                  "skipped": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "SKIPPED TaskRuns"
+                  }
+                }
+              },
+              "has_active_reservation": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether a Direct API reservation is active"
+              }
+            }
+          }
+        },
+        {
+          "id": "startScheduler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/scheduler/start",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "run_recovery": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether to run crash recovery on startup"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether scheduler started successfully"
+              },
+              "message": {
+                "type": "string",
+                "description": "Status message"
+              },
+              "recovery_stats": {
+                "type": "object",
+                "nullable": true,
+                "additionalProperties": true,
+                "description": "Recovery statistics if recovery was run"
+              }
+            }
+          }
+        },
+        {
+          "id": "stopScheduler",
+          "method": "POST",
+          "kind": "create",
+          "path": "/scheduler/stop",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "timeout": {
+                "type": "number",
+                "format": "float",
+                "minimum": 1,
+                "maximum": 300,
+                "default": 30,
+                "description": "Maximum wait time for current task to complete (seconds)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether scheduler stopped successfully"
+              },
+              "message": {
+                "type": "string",
+                "description": "Status message"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "story",
+      "key": "story",
+      "operations": [
+        {
+          "id": "listStories",
+          "method": "GET",
+          "kind": "list",
+          "path": "/story/list",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "stories",
+              "total"
+            ],
+            "properties": {
+              "stories": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "story_id",
+                    "created_at",
+                    "accepted"
+                  ],
+                  "properties": {
+                    "story_id": {
+                      "type": "string",
+                      "description": "Story identifier",
+                      "example": "20260113_120000"
+                    },
+                    "title": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Story title"
+                    },
+                    "template_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Template used for generation"
+                    },
+                    "template_name": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Template display name"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "description": "Creation timestamp (ISO format)",
+                      "example": "2026-01-13T12:00:00"
+                    },
+                    "accepted": {
+                      "type": "boolean",
+                      "description": "Whether story was accepted by quality filter"
+                    },
+                    "decision_reason": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Quality decision reason"
+                    },
+                    "story_signature": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Story deduplication signature"
+                    },
+                    "research_used": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of research card IDs used",
+                      "default": []
+                    }
+                  }
+                },
+                "description": "List of stories"
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of stories"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              }
+            }
+          }
+        },
+        {
+          "id": "getStoryDetail",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/story/{story_id}",
+          "identifierParam": "story_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "story_id",
+              "created_at",
+              "accepted"
+            ],
+            "properties": {
+              "story_id": {
+                "type": "string",
+                "description": "Story identifier"
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story title"
+              },
+              "template_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Template used for generation"
+              },
+              "template_name": {
+                "type": "string",
+                "nullable": true,
+                "description": "Template display name"
+              },
+              "semantic_summary": {
+                "type": "string",
+                "nullable": true,
+                "description": "Semantic summary of the story"
+              },
+              "created_at": {
+                "type": "string",
+                "description": "Creation timestamp (ISO format)"
+              },
+              "accepted": {
+                "type": "boolean",
+                "description": "Whether story was accepted"
+              },
+              "decision_reason": {
+                "type": "string",
+                "nullable": true,
+                "description": "Quality decision reason"
+              },
+              "story_signature": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story deduplication signature"
+              },
+              "canonical_core": {
+                "type": "object",
+                "nullable": true,
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "description": "Canonical dimensions for deduplication"
+              },
+              "research_used": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of research card IDs used",
+                "default": []
+              }
+            }
+          }
+        },
+        {
+          "id": "generateStory",
+          "method": "POST",
+          "kind": "create",
+          "path": "/story/generate",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story topic. If provided, searches for matching research card or auto-generates one.",
+                "example": "Korean apartment horror"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "nullable": true,
+                "description": "Custom tags to include. Merged with auto-generated tags (default: ['호러', 'horror'])",
+                "example": [
+                  "수면공포",
+                  "청각공포",
+                  "일상공포"
+                ]
+              },
+              "auto_research": {
+                "type": "boolean",
+                "default": true,
+                "description": "Auto-generate research if no matching card found for topic"
+              },
+              "model": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story model. Options: null (Claude Sonnet default), 'claude-sonnet-4-5-20250929', 'claude-opus-4-5-20251101', 'ollama:qwen3:30b' (local Ollama)",
+                "example": "ollama:qwen3:30b"
+              },
+              "research_model": {
+                "type": "string",
+                "nullable": true,
+                "description": "Research model for auto-research. Options: null/'qwen3:30b' (Ollama), 'gemini', 'deep-research' (Gemini Deep Research)",
+                "example": "deep-research"
+              },
+              "save_output": {
+                "type": "boolean",
+                "default": true,
+                "description": "Save generated story to file"
+              },
+              "target_length": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 300,
+                "maximum": 10000,
+                "description": "Target story length in characters (soft limit, ±10%). If not provided, uses default (~3000-4000 chars).",
+                "example": 3000
+              },
+              "webhook_url": {
+                "type": "string",
+                "nullable": true,
+                "description": "Webhook URL for completion notification (fire-and-forget)",
+                "example": "https://example.com/webhook"
+              },
+              "thumbnail_provider": {
+                "type": "string",
+                "nullable": true,
+                "description": "Image provider for thumbnail. Options: 'openai_dalle3' (default), 'stability_ai', 'flux', 'local_sd'. Requires ENABLE_THUMBNAIL_GENERATION=true.",
+                "example": "openai_dalle3"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "webhook_triggered"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "description": "Whether generation succeeded"
+              },
+              "story_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Generated story identifier",
+                "example": "20260113_120000"
+              },
+              "story": {
+                "type": "string",
+                "nullable": true,
+                "description": "Full story text in markdown format"
+              },
+              "title": {
+                "type": "string",
+                "nullable": true,
+                "description": "Story title"
+              },
+              "file_path": {
+                "type": "string",
+                "nullable": true,
+                "description": "Path to saved story file",
+                "example": "./data/novel/horror_story_20260113_120000.md"
+              },
+              "word_count": {
+                "type": "integer",
+                "nullable": true,
+                "description": "Story word count"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional metadata (model, provider, research_used, etc.)"
+              },
+              "error": {
+                "type": "string",
+                "nullable": true,
+                "description": "Error message if generation failed"
+              },
+              "webhook_triggered": {
+                "type": "boolean",
+                "default": false,
+                "description": "Whether a webhook notification was triggered"
+              },
+              "thumbnail_url": {
+                "type": "string",
+                "nullable": true,
+                "description": "URL of generated thumbnail image (empty if disabled or failed)"
+              },
+              "thumbnail_provider": {
+                "type": "string",
+                "nullable": true,
+                "description": "Image provider used for thumbnail generation"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "system",
+      "key": "system",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "version"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "description": "Health status",
+                "example": "ok"
+              },
+              "version": {
+                "type": "string",
+                "description": "API version",
+                "example": "1.5.0"
+              }
+            }
+          }
+        },
+        {
+          "id": "resourceStatus",
+          "method": "GET",
+          "kind": "list",
+          "path": "/resource/status",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "running",
+              "idle_timeout_seconds",
+              "active_models",
+              "model_count"
+            ],
+            "properties": {
+              "running": {
+                "type": "boolean",
+                "description": "Whether resource manager is running"
+              },
+              "idle_timeout_seconds": {
+                "type": "integer",
+                "description": "Idle timeout before model unload (0 = disabled)",
+                "example": 300
+              },
+              "active_models": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "description": "Map of model name to last used timestamp",
+                "example": {
+                  "qwen3:30b": "2026-01-11T12:00:00"
+                }
+              },
+              "model_count": {
+                "type": "integer",
+                "description": "Number of active models"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "listTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "tasks",
+              "total",
+              "queued_count",
+              "running_count"
+            ],
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "task_id",
+                    "task_type",
+                    "status",
+                    "created_at",
+                    "queued_at"
+                  ],
+                  "properties": {
+                    "task_id": {
+                      "type": "string",
+                      "description": "Unique task identifier"
+                    },
+                    "task_type": {
+                      "type": "string",
+                      "description": "Task type (story/research)"
+                    },
+                    "status": {
+                      "type": "string",
+                      "description": "Task status (QUEUED/RUNNING/CANCELLED)",
+                      "enum": [
+                        "QUEUED",
+                        "RUNNING",
+                        "CANCELLED"
+                      ]
+                    },
+                    "params": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Task parameters",
+                      "default": {}
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "default": 0,
+                      "description": "Task priority"
+                    },
+                    "position": {
+                      "type": "integer",
+                      "default": 0,
+                      "description": "Queue position"
+                    },
+                    "template_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Source template ID"
+                    },
+                    "group_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Task group ID"
+                    },
+                    "retry_of": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Original task ID if retry"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Creation timestamp (ISO format)"
+                    },
+                    "queued_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Queue entry timestamp (ISO format)"
+                    },
+                    "started_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true,
+                      "description": "Execution start timestamp"
+                    },
+                    "finished_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true,
+                      "description": "Completion timestamp"
+                    }
+                  }
+                },
+                "description": "List of tasks"
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of tasks"
+              },
+              "queued_count": {
+                "type": "integer",
+                "default": 0,
+                "description": "Number of QUEUED tasks"
+              },
+              "running_count": {
+                "type": "integer",
+                "default": 0,
+                "description": "Number of RUNNING tasks"
+              }
+            }
+          }
+        },
+        {
+          "id": "getTask",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "task_type",
+              "status",
+              "created_at",
+              "queued_at"
+            ],
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "Unique task identifier"
+              },
+              "task_type": {
+                "type": "string",
+                "description": "Task type (story/research)"
+              },
+              "status": {
+                "type": "string",
+                "description": "Task status (QUEUED/RUNNING/CANCELLED)",
+                "enum": [
+                  "QUEUED",
+                  "RUNNING",
+                  "CANCELLED"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Task parameters",
+                "default": {}
+              },
+              "priority": {
+                "type": "integer",
+                "default": 0,
+                "description": "Task priority"
+              },
+              "position": {
+                "type": "integer",
+                "default": 0,
+                "description": "Queue position"
+              },
+              "template_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Source template ID"
+              },
+              "group_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Task group ID"
+              },
+              "retry_of": {
+                "type": "string",
+                "nullable": true,
+                "description": "Original task ID if retry"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Creation timestamp (ISO format)"
+              },
+              "queued_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Queue entry timestamp (ISO format)"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Execution start timestamp"
+              },
+              "finished_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Completion timestamp"
+              }
+            }
+          }
+        },
+        {
+          "id": "getTaskRuns",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{task_id}/runs",
+          "identifierParam": "task_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "runs",
+              "total"
+            ],
+            "properties": {
+              "runs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "run_id",
+                    "task_id",
+                    "started_at"
+                  ],
+                  "properties": {
+                    "run_id": {
+                      "type": "string",
+                      "description": "Unique run identifier"
+                    },
+                    "task_id": {
+                      "type": "string",
+                      "description": "Associated task ID"
+                    },
+                    "status": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Run status (COMPLETED/FAILED/SKIPPED)",
+                      "enum": [
+                        "COMPLETED",
+                        "FAILED",
+                        "SKIPPED"
+                      ]
+                    },
+                    "params_snapshot": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Parameters at execution time",
+                      "default": {}
+                    },
+                    "template_id": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Source template ID"
+                    },
+                    "started_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Execution start timestamp"
+                    },
+                    "finished_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "nullable": true,
+                      "description": "Completion timestamp"
+                    },
+                    "exit_code": {
+                      "type": "integer",
+                      "nullable": true,
+                      "description": "Process exit code"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Error message if failed"
+                    },
+                    "artifacts": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Output artifact paths",
+                      "default": []
+                    },
+                    "log_path": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Execution log path"
+                    }
+                  }
+                },
+                "description": "List of task runs"
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of runs"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "type"
+              ],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "story",
+                    "research"
+                  ],
+                  "description": "Task type: 'story' for story generation, 'research' for research generation"
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Task parameters (type-specific)",
+                  "default": {}
+                },
+                "priority": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "default": 0,
+                  "description": "Task priority (higher = dispatched sooner)"
+                }
+              }
+            },
+            "minItems": 1,
+            "maxItems": 50
+          },
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "task_id",
+                "task_type",
+                "status",
+                "created_at",
+                "queued_at"
+              ],
+              "properties": {
+                "task_id": {
+                  "type": "string",
+                  "description": "Unique task identifier"
+                },
+                "task_type": {
+                  "type": "string",
+                  "description": "Task type (story/research)"
+                },
+                "status": {
+                  "type": "string",
+                  "description": "Task status (QUEUED/RUNNING/CANCELLED)",
+                  "enum": [
+                    "QUEUED",
+                    "RUNNING",
+                    "CANCELLED"
+                  ]
+                },
+                "params": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "description": "Task parameters",
+                  "default": {}
+                },
+                "priority": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Task priority"
+                },
+                "position": {
+                  "type": "integer",
+                  "default": 0,
+                  "description": "Queue position"
+                },
+                "template_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Source template ID"
+                },
+                "group_id": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Task group ID"
+                },
+                "retry_of": {
+                  "type": "string",
+                  "nullable": true,
+                  "description": "Original task ID if retry"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Creation timestamp (ISO format)"
+                },
+                "queued_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Queue entry timestamp (ISO format)"
+                },
+                "started_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true,
+                  "description": "Execution start timestamp"
+                },
+                "finished_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "nullable": true,
+                  "description": "Completion timestamp"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createTaskGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks/group",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "tasks"
+            ],
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "type"
+                  ],
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "story",
+                        "research"
+                      ],
+                      "description": "Task type: 'story' for story generation, 'research' for research generation"
+                    },
+                    "params": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Task parameters (type-specific)",
+                      "default": {}
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 100,
+                      "default": 0,
+                      "description": "Task priority (higher = dispatched sooner)"
+                    }
+                  }
+                },
+                "minItems": 1,
+                "maxItems": 50,
+                "description": "List of task specifications"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "group_id",
+              "task_ids",
+              "task_count"
+            ],
+            "properties": {
+              "group_id": {
+                "type": "string",
+                "description": "Created group ID"
+              },
+              "task_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of created task IDs"
+              },
+              "task_count": {
+                "type": "integer",
+                "description": "Number of tasks in group"
+              },
+              "status": {
+                "type": "string",
+                "default": "queued",
+                "description": "Initial group status"
+              },
+              "message": {
+                "type": "string",
+                "default": "Task group created successfully"
+              }
+            }
+          }
+        },
+        {
+          "id": "updateTask",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "priority": {
+                "type": "integer",
+                "nullable": true,
+                "minimum": 0,
+                "maximum": 100,
+                "description": "New priority value"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "task_type",
+              "status",
+              "created_at",
+              "queued_at"
+            ],
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "Unique task identifier"
+              },
+              "task_type": {
+                "type": "string",
+                "description": "Task type (story/research)"
+              },
+              "status": {
+                "type": "string",
+                "description": "Task status (QUEUED/RUNNING/CANCELLED)",
+                "enum": [
+                  "QUEUED",
+                  "RUNNING",
+                  "CANCELLED"
+                ]
+              },
+              "params": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Task parameters",
+                "default": {}
+              },
+              "priority": {
+                "type": "integer",
+                "default": 0,
+                "description": "Task priority"
+              },
+              "position": {
+                "type": "integer",
+                "default": 0,
+                "description": "Queue position"
+              },
+              "template_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Source template ID"
+              },
+              "group_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Task group ID"
+              },
+              "retry_of": {
+                "type": "string",
+                "nullable": true,
+                "description": "Original task ID if retry"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Creation timestamp (ISO format)"
+              },
+              "queued_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Queue entry timestamp (ISO format)"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Execution start timestamp"
+              },
+              "finished_at": {
+                "type": "string",
+                "format": "date-time",
+                "nullable": true,
+                "description": "Completion timestamp"
+              }
+            }
+          }
+        },
+        {
+          "id": "deleteTask",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "task_id",
+              "success"
+            ],
+            "properties": {
+              "task_id": {
+                "type": "string",
+                "description": "Task identifier"
+              },
+              "success": {
+                "type": "boolean",
+                "description": "Whether cancellation succeeded"
+              },
+              "message": {
+                "type": "string",
+                "nullable": true,
+                "description": "Status message"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

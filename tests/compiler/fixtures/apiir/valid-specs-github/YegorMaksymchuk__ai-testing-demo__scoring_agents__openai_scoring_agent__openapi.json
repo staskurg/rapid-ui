@@ -1,0 +1,416 @@
+{
+  "api": {
+    "title": "AI Scoring Agent API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Scoring",
+      "key": "scoring",
+      "operations": [
+        {
+          "id": "scoreResponse",
+          "method": "POST",
+          "kind": "create",
+          "path": "/score",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "response"
+            ],
+            "properties": {
+              "response": {
+                "type": "string",
+                "description": "The AI response to be scored",
+                "minLength": 1,
+                "example": "The capital of France is Paris."
+              },
+              "criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "accuracy",
+                    "relevance",
+                    "clarity",
+                    "completeness",
+                    "coherence"
+                  ]
+                },
+                "description": "List of scoring criteria to evaluate",
+                "example": [
+                  "accuracy",
+                  "relevance",
+                  "clarity"
+                ]
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for scoring (e.g., original question, expected format)",
+                "example": "Question: What is the capital of France?"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "score",
+              "reasoning",
+              "model_used",
+              "timestamp"
+            ],
+            "properties": {
+              "score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 10,
+                "description": "Numeric score from 0-10",
+                "example": 8.5
+              },
+              "reasoning": {
+                "type": "string",
+                "description": "Detailed reasoning for the score",
+                "example": "This is an accurate and relevant response that clearly answers the question."
+              },
+              "criteria_scores": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "number",
+                  "format": "float",
+                  "minimum": 0,
+                  "maximum": 10
+                },
+                "description": "Individual scores for each criterion",
+                "example": {
+                  "accuracy": 9,
+                  "relevance": 8,
+                  "clarity": 8.5
+                }
+              },
+              "confidence": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence level in the scoring (0-1)",
+                "example": 0.9
+              },
+              "model_used": {
+                "type": "string",
+                "description": "OpenAI model used for scoring",
+                "example": "gpt-4"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of scoring",
+                "example": "2024-01-01T12:00:00Z"
+              },
+              "processing_time_ms": {
+                "type": "number",
+                "format": "float",
+                "description": "Processing time in milliseconds",
+                "example": 1500
+              }
+            }
+          }
+        },
+        {
+          "id": "scoreBatch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/score/batch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "responses"
+            ],
+            "properties": {
+              "responses": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "List of AI responses to be scored",
+                "minItems": 1,
+                "example": [
+                  "Response 1",
+                  "Response 2",
+                  "Response 3"
+                ]
+              },
+              "criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "accuracy",
+                    "relevance",
+                    "clarity",
+                    "completeness",
+                    "coherence"
+                  ]
+                },
+                "description": "List of scoring criteria to evaluate",
+                "example": [
+                  "accuracy",
+                  "relevance",
+                  "clarity"
+                ]
+              },
+              "context": {
+                "type": "string",
+                "description": "Additional context for scoring (e.g., original question, expected format)",
+                "example": "Question: What is the capital of France?"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "results",
+              "total_processed",
+              "successful",
+              "failed",
+              "model_used",
+              "timestamp"
+            ],
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "response",
+                    "score",
+                    "reasoning"
+                  ],
+                  "properties": {
+                    "response": {
+                      "type": "string",
+                      "description": "The original response that was scored",
+                      "example": "The capital of France is Paris."
+                    },
+                    "score": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 10,
+                      "description": "Overall score from 0-10",
+                      "example": 8.5
+                    },
+                    "reasoning": {
+                      "type": "string",
+                      "description": "Detailed reasoning for the score",
+                      "example": "This is an accurate and relevant response."
+                    },
+                    "criteria_scores": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "number",
+                        "format": "float",
+                        "minimum": 0,
+                        "maximum": 10
+                      },
+                      "description": "Individual scores for each criterion",
+                      "example": {
+                        "accuracy": 9,
+                        "relevance": 8
+                      }
+                    },
+                    "confidence": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Confidence level in the scoring (0-1)",
+                      "example": 0.9
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message if scoring failed",
+                      "example": "OpenAI API error: Rate limit exceeded"
+                    }
+                  }
+                },
+                "description": "List of scoring results"
+              },
+              "total_processed": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Total number of responses processed",
+                "example": 3
+              },
+              "successful": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of successful scorings",
+                "example": 3
+              },
+              "failed": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Number of failed scorings",
+                "example": 0
+              },
+              "model_used": {
+                "type": "string",
+                "description": "OpenAI model used for scoring",
+                "example": "gpt-4"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of batch scoring",
+                "example": "2024-01-01T12:00:00Z"
+              },
+              "total_processing_time_ms": {
+                "type": "number",
+                "format": "float",
+                "description": "Total processing time in milliseconds",
+                "example": 4500
+              },
+              "average_processing_time_ms": {
+                "type": "number",
+                "format": "float",
+                "description": "Average processing time per response",
+                "example": 1500
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "getRoot",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "AI Scoring Agent API"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "status": {
+                "type": "string",
+                "example": "running"
+              }
+            }
+          }
+        },
+        {
+          "id": "getConfig",
+          "method": "GET",
+          "kind": "list",
+          "path": "/config",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "openai_model": {
+                "type": "string",
+                "example": "gpt-4"
+              },
+              "max_tokens": {
+                "type": "integer",
+                "example": 2000
+              },
+              "temperature": {
+                "type": "number",
+                "format": "float",
+                "example": 0
+              },
+              "default_criteria": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "accuracy",
+                  "relevance",
+                  "clarity"
+                ]
+              },
+              "scoring_scale": {
+                "type": "string",
+                "example": "1-10"
+              },
+              "max_batch_size": {
+                "type": "integer",
+                "example": 100
+              },
+              "rate_limit_per_minute": {
+                "type": "integer",
+                "example": 60
+              }
+            }
+          }
+        },
+        {
+          "id": "getHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "service",
+              "version",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy",
+                  "degraded"
+                ],
+                "description": "Health status",
+                "example": "healthy"
+              },
+              "service": {
+                "type": "string",
+                "description": "Service name",
+                "example": "ai-scoring-agent"
+              },
+              "version": {
+                "type": "string",
+                "description": "Service version",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Health check timestamp",
+                "example": "2024-01-01T12:00:00Z"
+              },
+              "uptime_seconds": {
+                "type": "number",
+                "format": "float",
+                "description": "Service uptime in seconds",
+                "example": 3600
+              },
+              "openai_status": {
+                "type": "string",
+                "description": "OpenAI API connection status",
+                "example": "connected"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

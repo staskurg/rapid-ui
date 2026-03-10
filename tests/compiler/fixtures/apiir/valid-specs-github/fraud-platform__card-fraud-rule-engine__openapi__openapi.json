@@ -1,0 +1,2033 @@
+{
+  "api": {
+    "title": "Card Fraud Rule Engine API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Evaluation",
+      "key": "evaluation",
+      "operations": [
+        {
+          "id": "health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/evaluate/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "UP",
+                  "DOWN"
+                ],
+                "example": "UP"
+              },
+              "storageAccessible": {
+                "type": "boolean",
+                "description": "Whether MinIO/S3 storage is reachable"
+              }
+            }
+          }
+        },
+        {
+          "id": "evaluateAUTH",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/evaluate/auth",
+          "requestSchema": {
+            "type": "object",
+            "description": "Transaction to evaluate",
+            "required": [
+              "transaction_id",
+              "card_hash",
+              "amount",
+              "currency"
+            ],
+            "properties": {
+              "transaction_id": {
+                "type": "string",
+                "description": "Unique transaction identifier"
+              },
+              "card_hash": {
+                "type": "string",
+                "description": "Tokenized card identifier"
+              },
+              "amount": {
+                "type": "number",
+                "format": "double",
+                "description": "Transaction amount"
+              },
+              "currency": {
+                "type": "string",
+                "description": "ISO 4217 currency code (e.g., USD, EUR)",
+                "example": "USD"
+              },
+              "merchant_id": {
+                "type": "string",
+                "description": "Merchant identifier"
+              },
+              "merchant_name": {
+                "type": "string",
+                "description": "Merchant business name"
+              },
+              "merchant_category": {
+                "type": "string",
+                "description": "Merchant category"
+              },
+              "merchant_category_code": {
+                "type": "string",
+                "description": "Merchant Category Code (MCC)",
+                "example": "5411"
+              },
+              "card_present": {
+                "type": "boolean",
+                "description": "Whether physical card was present"
+              },
+              "transaction_type": {
+                "type": "string",
+                "description": "Transaction type (PURCHASE, REFUND, etc.)",
+                "enum": [
+                  "PURCHASE",
+                  "REFUND",
+                  "REVERSAL",
+                  "AUTHORIZATION",
+                  "TRANSFER"
+                ]
+              },
+              "entry_mode": {
+                "type": "string",
+                "description": "Entry mode (ECOM, CHIP, SWIPE, CONTACTLESS)"
+              },
+              "country_code": {
+                "type": "string",
+                "description": "ISO 3166-1 alpha-2 country code",
+                "example": "US"
+              },
+              "ip_address": {
+                "type": "string",
+                "description": "IP address (IPv4 or IPv6)"
+              },
+              "device_id": {
+                "type": "string",
+                "description": "Device fingerprint/identifier"
+              },
+              "email": {
+                "type": "string",
+                "description": "User email address"
+              },
+              "phone": {
+                "type": "string",
+                "description": "User phone number"
+              },
+              "billing_address": {
+                "type": "object",
+                "properties": {
+                  "street1": {
+                    "type": "string"
+                  },
+                  "street2": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  }
+                }
+              },
+              "shipping_address": {
+                "type": "object",
+                "properties": {
+                  "street1": {
+                    "type": "string"
+                  },
+                  "street2": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Transaction timestamp"
+              },
+              "card_network": {
+                "type": "string",
+                "description": "Card network (VISA, MC, AMEX, etc.)"
+              },
+              "card_bin": {
+                "type": "string",
+                "description": "Bank Identification Number (first 6-8 digits)"
+              },
+              "card_logo": {
+                "type": "string",
+                "description": "Card brand logo identifier"
+              },
+              "decision": {
+                "type": "string",
+                "description": "Required for MONITORING - final decision",
+                "enum": [
+                  "APPROVE",
+                  "DECLINE"
+                ]
+              },
+              "custom_fields": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional custom fields"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Decision result from evaluation",
+            "properties": {
+              "decision_id": {
+                "type": "string",
+                "description": "Unique decision identifier (UUID)"
+              },
+              "transaction_id": {
+                "type": "string",
+                "description": "Transaction identifier"
+              },
+              "evaluation_type": {
+                "type": "string",
+                "enum": [
+                  "AUTH",
+                  "MONITORING"
+                ],
+                "description": "Type of evaluation performed"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "APPROVE",
+                  "DECLINE"
+                ],
+                "description": "Final decision"
+              },
+              "engine_mode": {
+                "type": "string",
+                "enum": [
+                  "NORMAL",
+                  "DEGRADED",
+                  "FAIL_OPEN"
+                ],
+                "description": "Engine processing mode"
+              },
+              "engine_error_code": {
+                "type": "string",
+                "description": "Error code if not in NORMAL mode"
+              },
+              "engine_error_message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "ruleset_key": {
+                "type": "string",
+                "description": "Ruleset key used for evaluation"
+              },
+              "ruleset_version": {
+                "type": "integer",
+                "description": "Ruleset version"
+              },
+              "ruleset_id": {
+                "type": "string",
+                "description": "Ruleset UUID"
+              },
+              "matched_rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "rule_name": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "APPROVE",
+                        "DECLINE",
+                        "REVIEW"
+                      ]
+                    },
+                    "priority": {
+                      "type": "integer"
+                    },
+                    "conditions_met": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "condition_values": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "rule_version": {
+                      "type": "integer"
+                    },
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "contributing": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "description": "Rules that matched during evaluation"
+              },
+              "velocity_results": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "dimension": {
+                      "type": "string",
+                      "description": "Dimension name (card_hash, ip_address, etc.)"
+                    },
+                    "dimension_value": {
+                      "type": "string",
+                      "description": "Actual value being tracked (tokenized)"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Current counter value"
+                    },
+                    "threshold": {
+                      "type": "integer",
+                      "description": "Threshold configured for this dimension"
+                    },
+                    "window_seconds": {
+                      "type": "integer",
+                      "description": "Time window in seconds"
+                    },
+                    "exceeded": {
+                      "type": "boolean",
+                      "description": "Whether threshold was exceeded"
+                    },
+                    "ttl_remaining": {
+                      "type": "integer",
+                      "description": "Seconds until counter window resets"
+                    }
+                  }
+                },
+                "description": "Velocity check results"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the decision was made"
+              },
+              "processing_time_ms": {
+                "type": "integer",
+                "description": "Processing time in milliseconds"
+              },
+              "timing_breakdown": {
+                "type": "object",
+                "properties": {
+                  "total_processing_time_ms": {
+                    "type": "number",
+                    "description": "Total processing time"
+                  },
+                  "ruleset_lookup_time_ms": {
+                    "type": "number",
+                    "description": "Time to lookup ruleset"
+                  },
+                  "rule_evaluation_time_ms": {
+                    "type": "number",
+                    "description": "Time to evaluate rules"
+                  },
+                  "velocity_check_count": {
+                    "type": "integer",
+                    "description": "Number of velocity checks performed"
+                  }
+                }
+              },
+              "transaction_context": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Full transaction context"
+              }
+            }
+          }
+        },
+        {
+          "id": "evaluateMONITORING",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/evaluate/monitoring",
+          "requestSchema": {
+            "type": "object",
+            "description": "Transaction to evaluate",
+            "required": [
+              "transaction_id",
+              "card_hash",
+              "amount",
+              "currency"
+            ],
+            "properties": {
+              "transaction_id": {
+                "type": "string",
+                "description": "Unique transaction identifier"
+              },
+              "card_hash": {
+                "type": "string",
+                "description": "Tokenized card identifier"
+              },
+              "amount": {
+                "type": "number",
+                "format": "double",
+                "description": "Transaction amount"
+              },
+              "currency": {
+                "type": "string",
+                "description": "ISO 4217 currency code (e.g., USD, EUR)",
+                "example": "USD"
+              },
+              "merchant_id": {
+                "type": "string",
+                "description": "Merchant identifier"
+              },
+              "merchant_name": {
+                "type": "string",
+                "description": "Merchant business name"
+              },
+              "merchant_category": {
+                "type": "string",
+                "description": "Merchant category"
+              },
+              "merchant_category_code": {
+                "type": "string",
+                "description": "Merchant Category Code (MCC)",
+                "example": "5411"
+              },
+              "card_present": {
+                "type": "boolean",
+                "description": "Whether physical card was present"
+              },
+              "transaction_type": {
+                "type": "string",
+                "description": "Transaction type (PURCHASE, REFUND, etc.)",
+                "enum": [
+                  "PURCHASE",
+                  "REFUND",
+                  "REVERSAL",
+                  "AUTHORIZATION",
+                  "TRANSFER"
+                ]
+              },
+              "entry_mode": {
+                "type": "string",
+                "description": "Entry mode (ECOM, CHIP, SWIPE, CONTACTLESS)"
+              },
+              "country_code": {
+                "type": "string",
+                "description": "ISO 3166-1 alpha-2 country code",
+                "example": "US"
+              },
+              "ip_address": {
+                "type": "string",
+                "description": "IP address (IPv4 or IPv6)"
+              },
+              "device_id": {
+                "type": "string",
+                "description": "Device fingerprint/identifier"
+              },
+              "email": {
+                "type": "string",
+                "description": "User email address"
+              },
+              "phone": {
+                "type": "string",
+                "description": "User phone number"
+              },
+              "billing_address": {
+                "type": "object",
+                "properties": {
+                  "street1": {
+                    "type": "string"
+                  },
+                  "street2": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  }
+                }
+              },
+              "shipping_address": {
+                "type": "object",
+                "properties": {
+                  "street1": {
+                    "type": "string"
+                  },
+                  "street2": {
+                    "type": "string"
+                  },
+                  "city": {
+                    "type": "string"
+                  },
+                  "state": {
+                    "type": "string"
+                  },
+                  "postal_code": {
+                    "type": "string"
+                  },
+                  "country": {
+                    "type": "string"
+                  }
+                }
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Transaction timestamp"
+              },
+              "card_network": {
+                "type": "string",
+                "description": "Card network (VISA, MC, AMEX, etc.)"
+              },
+              "card_bin": {
+                "type": "string",
+                "description": "Bank Identification Number (first 6-8 digits)"
+              },
+              "card_logo": {
+                "type": "string",
+                "description": "Card brand logo identifier"
+              },
+              "decision": {
+                "type": "string",
+                "description": "Required for MONITORING - final decision",
+                "enum": [
+                  "APPROVE",
+                  "DECLINE"
+                ]
+              },
+              "custom_fields": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Additional custom fields"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Decision result from evaluation",
+            "properties": {
+              "decision_id": {
+                "type": "string",
+                "description": "Unique decision identifier (UUID)"
+              },
+              "transaction_id": {
+                "type": "string",
+                "description": "Transaction identifier"
+              },
+              "evaluation_type": {
+                "type": "string",
+                "enum": [
+                  "AUTH",
+                  "MONITORING"
+                ],
+                "description": "Type of evaluation performed"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "APPROVE",
+                  "DECLINE"
+                ],
+                "description": "Final decision"
+              },
+              "engine_mode": {
+                "type": "string",
+                "enum": [
+                  "NORMAL",
+                  "DEGRADED",
+                  "FAIL_OPEN"
+                ],
+                "description": "Engine processing mode"
+              },
+              "engine_error_code": {
+                "type": "string",
+                "description": "Error code if not in NORMAL mode"
+              },
+              "engine_error_message": {
+                "type": "string",
+                "description": "Human-readable error message"
+              },
+              "ruleset_key": {
+                "type": "string",
+                "description": "Ruleset key used for evaluation"
+              },
+              "ruleset_version": {
+                "type": "integer",
+                "description": "Ruleset version"
+              },
+              "ruleset_id": {
+                "type": "string",
+                "description": "Ruleset UUID"
+              },
+              "matched_rules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "rule_name": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "APPROVE",
+                        "DECLINE",
+                        "REVIEW"
+                      ]
+                    },
+                    "priority": {
+                      "type": "integer"
+                    },
+                    "conditions_met": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "condition_values": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "rule_version": {
+                      "type": "integer"
+                    },
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "contributing": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "description": "Rules that matched during evaluation"
+              },
+              "velocity_results": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "dimension": {
+                      "type": "string",
+                      "description": "Dimension name (card_hash, ip_address, etc.)"
+                    },
+                    "dimension_value": {
+                      "type": "string",
+                      "description": "Actual value being tracked (tokenized)"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Current counter value"
+                    },
+                    "threshold": {
+                      "type": "integer",
+                      "description": "Threshold configured for this dimension"
+                    },
+                    "window_seconds": {
+                      "type": "integer",
+                      "description": "Time window in seconds"
+                    },
+                    "exceeded": {
+                      "type": "boolean",
+                      "description": "Whether threshold was exceeded"
+                    },
+                    "ttl_remaining": {
+                      "type": "integer",
+                      "description": "Seconds until counter window resets"
+                    }
+                  }
+                },
+                "description": "Velocity check results"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "When the decision was made"
+              },
+              "processing_time_ms": {
+                "type": "integer",
+                "description": "Processing time in milliseconds"
+              },
+              "timing_breakdown": {
+                "type": "object",
+                "properties": {
+                  "total_processing_time_ms": {
+                    "type": "number",
+                    "description": "Total processing time"
+                  },
+                  "ruleset_lookup_time_ms": {
+                    "type": "number",
+                    "description": "Time to lookup ruleset"
+                  },
+                  "rule_evaluation_time_ms": {
+                    "type": "number",
+                    "description": "Time to evaluate rules"
+                  },
+                  "velocity_check_count": {
+                    "type": "integer",
+                    "description": "Number of velocity checks performed"
+                  }
+                }
+              },
+              "transaction_context": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Full transaction context"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Management",
+      "key": "management",
+      "operations": [
+        {
+          "id": "getMetrics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/manage/metrics",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "rulesetCacheSize": {
+                "type": "integer"
+              },
+              "storageAccessible": {
+                "type": "boolean"
+              },
+              "jvmUptime": {
+                "type": "integer",
+                "description": "JVM uptime in milliseconds"
+              },
+              "jvmMemory": {
+                "type": "integer",
+                "description": "JVM memory usage in bytes"
+              },
+              "fieldRegistryVersion": {
+                "type": "integer"
+              },
+              "fieldRegistrySource": {
+                "type": "string"
+              },
+              "fieldCount": {
+                "type": "integer"
+              },
+              "fieldRegistryWatcherRunning": {
+                "type": "boolean"
+              },
+              "fieldRegistryS3Available": {
+                "type": "boolean"
+              },
+              "rulesetS3Available": {
+                "type": "boolean"
+              },
+              "startupHealthy": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "replayTransaction",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/manage/replay",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "transaction"
+            ],
+            "properties": {
+              "transaction": {
+                "type": "object",
+                "description": "Transaction to evaluate",
+                "required": [
+                  "transaction_id",
+                  "card_hash",
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "transaction_id": {
+                    "type": "string",
+                    "description": "Unique transaction identifier"
+                  },
+                  "card_hash": {
+                    "type": "string",
+                    "description": "Tokenized card identifier"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Transaction amount"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code (e.g., USD, EUR)",
+                    "example": "USD"
+                  },
+                  "merchant_id": {
+                    "type": "string",
+                    "description": "Merchant identifier"
+                  },
+                  "merchant_name": {
+                    "type": "string",
+                    "description": "Merchant business name"
+                  },
+                  "merchant_category": {
+                    "type": "string",
+                    "description": "Merchant category"
+                  },
+                  "merchant_category_code": {
+                    "type": "string",
+                    "description": "Merchant Category Code (MCC)",
+                    "example": "5411"
+                  },
+                  "card_present": {
+                    "type": "boolean",
+                    "description": "Whether physical card was present"
+                  },
+                  "transaction_type": {
+                    "type": "string",
+                    "description": "Transaction type (PURCHASE, REFUND, etc.)",
+                    "enum": [
+                      "PURCHASE",
+                      "REFUND",
+                      "REVERSAL",
+                      "AUTHORIZATION",
+                      "TRANSFER"
+                    ]
+                  },
+                  "entry_mode": {
+                    "type": "string",
+                    "description": "Entry mode (ECOM, CHIP, SWIPE, CONTACTLESS)"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "description": "ISO 3166-1 alpha-2 country code",
+                    "example": "US"
+                  },
+                  "ip_address": {
+                    "type": "string",
+                    "description": "IP address (IPv4 or IPv6)"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "description": "Device fingerprint/identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "User email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "User phone number"
+                  },
+                  "billing_address": {
+                    "type": "object",
+                    "properties": {
+                      "street1": {
+                        "type": "string"
+                      },
+                      "street2": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "postal_code": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "shipping_address": {
+                    "type": "object",
+                    "properties": {
+                      "street1": {
+                        "type": "string"
+                      },
+                      "street2": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "postal_code": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Transaction timestamp"
+                  },
+                  "card_network": {
+                    "type": "string",
+                    "description": "Card network (VISA, MC, AMEX, etc.)"
+                  },
+                  "card_bin": {
+                    "type": "string",
+                    "description": "Bank Identification Number (first 6-8 digits)"
+                  },
+                  "card_logo": {
+                    "type": "string",
+                    "description": "Card brand logo identifier"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "description": "Required for MONITORING - final decision",
+                    "enum": [
+                      "APPROVE",
+                      "DECLINE"
+                    ]
+                  },
+                  "custom_fields": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional custom fields"
+                  }
+                }
+              },
+              "rulesetKey": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "decision": {
+                "type": "object",
+                "description": "Decision result from evaluation",
+                "properties": {
+                  "decision_id": {
+                    "type": "string",
+                    "description": "Unique decision identifier (UUID)"
+                  },
+                  "transaction_id": {
+                    "type": "string",
+                    "description": "Transaction identifier"
+                  },
+                  "evaluation_type": {
+                    "type": "string",
+                    "enum": [
+                      "AUTH",
+                      "MONITORING"
+                    ],
+                    "description": "Type of evaluation performed"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "enum": [
+                      "APPROVE",
+                      "DECLINE"
+                    ],
+                    "description": "Final decision"
+                  },
+                  "engine_mode": {
+                    "type": "string",
+                    "enum": [
+                      "NORMAL",
+                      "DEGRADED",
+                      "FAIL_OPEN"
+                    ],
+                    "description": "Engine processing mode"
+                  },
+                  "engine_error_code": {
+                    "type": "string",
+                    "description": "Error code if not in NORMAL mode"
+                  },
+                  "engine_error_message": {
+                    "type": "string",
+                    "description": "Human-readable error message"
+                  },
+                  "ruleset_key": {
+                    "type": "string",
+                    "description": "Ruleset key used for evaluation"
+                  },
+                  "ruleset_version": {
+                    "type": "integer",
+                    "description": "Ruleset version"
+                  },
+                  "ruleset_id": {
+                    "type": "string",
+                    "description": "Ruleset UUID"
+                  },
+                  "matched_rules": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "rule_id": {
+                          "type": "string"
+                        },
+                        "rule_name": {
+                          "type": "string"
+                        },
+                        "action": {
+                          "type": "string",
+                          "enum": [
+                            "APPROVE",
+                            "DECLINE",
+                            "REVIEW"
+                          ]
+                        },
+                        "priority": {
+                          "type": "integer"
+                        },
+                        "conditions_met": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "condition_values": {
+                          "type": "object",
+                          "additionalProperties": true
+                        },
+                        "rule_version": {
+                          "type": "integer"
+                        },
+                        "matched": {
+                          "type": "boolean"
+                        },
+                        "contributing": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "description": "Rules that matched during evaluation"
+                  },
+                  "velocity_results": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "properties": {
+                        "dimension": {
+                          "type": "string",
+                          "description": "Dimension name (card_hash, ip_address, etc.)"
+                        },
+                        "dimension_value": {
+                          "type": "string",
+                          "description": "Actual value being tracked (tokenized)"
+                        },
+                        "count": {
+                          "type": "integer",
+                          "description": "Current counter value"
+                        },
+                        "threshold": {
+                          "type": "integer",
+                          "description": "Threshold configured for this dimension"
+                        },
+                        "window_seconds": {
+                          "type": "integer",
+                          "description": "Time window in seconds"
+                        },
+                        "exceeded": {
+                          "type": "boolean",
+                          "description": "Whether threshold was exceeded"
+                        },
+                        "ttl_remaining": {
+                          "type": "integer",
+                          "description": "Seconds until counter window resets"
+                        }
+                      }
+                    },
+                    "description": "Velocity check results"
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "When the decision was made"
+                  },
+                  "processing_time_ms": {
+                    "type": "integer",
+                    "description": "Processing time in milliseconds"
+                  },
+                  "timing_breakdown": {
+                    "type": "object",
+                    "properties": {
+                      "total_processing_time_ms": {
+                        "type": "number",
+                        "description": "Total processing time"
+                      },
+                      "ruleset_lookup_time_ms": {
+                        "type": "number",
+                        "description": "Time to lookup ruleset"
+                      },
+                      "rule_evaluation_time_ms": {
+                        "type": "number",
+                        "description": "Time to evaluate rules"
+                      },
+                      "velocity_check_count": {
+                        "type": "integer",
+                        "description": "Number of velocity checks performed"
+                      }
+                    }
+                  },
+                  "transaction_context": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Full transaction context"
+                  }
+                }
+              },
+              "version": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "batchReplay",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/manage/replay/batch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "transactions"
+            ],
+            "properties": {
+              "transactions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Transaction to evaluate",
+                  "required": [
+                    "transaction_id",
+                    "card_hash",
+                    "amount",
+                    "currency"
+                  ],
+                  "properties": {
+                    "transaction_id": {
+                      "type": "string",
+                      "description": "Unique transaction identifier"
+                    },
+                    "card_hash": {
+                      "type": "string",
+                      "description": "Tokenized card identifier"
+                    },
+                    "amount": {
+                      "type": "number",
+                      "format": "double",
+                      "description": "Transaction amount"
+                    },
+                    "currency": {
+                      "type": "string",
+                      "description": "ISO 4217 currency code (e.g., USD, EUR)",
+                      "example": "USD"
+                    },
+                    "merchant_id": {
+                      "type": "string",
+                      "description": "Merchant identifier"
+                    },
+                    "merchant_name": {
+                      "type": "string",
+                      "description": "Merchant business name"
+                    },
+                    "merchant_category": {
+                      "type": "string",
+                      "description": "Merchant category"
+                    },
+                    "merchant_category_code": {
+                      "type": "string",
+                      "description": "Merchant Category Code (MCC)",
+                      "example": "5411"
+                    },
+                    "card_present": {
+                      "type": "boolean",
+                      "description": "Whether physical card was present"
+                    },
+                    "transaction_type": {
+                      "type": "string",
+                      "description": "Transaction type (PURCHASE, REFUND, etc.)",
+                      "enum": [
+                        "PURCHASE",
+                        "REFUND",
+                        "REVERSAL",
+                        "AUTHORIZATION",
+                        "TRANSFER"
+                      ]
+                    },
+                    "entry_mode": {
+                      "type": "string",
+                      "description": "Entry mode (ECOM, CHIP, SWIPE, CONTACTLESS)"
+                    },
+                    "country_code": {
+                      "type": "string",
+                      "description": "ISO 3166-1 alpha-2 country code",
+                      "example": "US"
+                    },
+                    "ip_address": {
+                      "type": "string",
+                      "description": "IP address (IPv4 or IPv6)"
+                    },
+                    "device_id": {
+                      "type": "string",
+                      "description": "Device fingerprint/identifier"
+                    },
+                    "email": {
+                      "type": "string",
+                      "description": "User email address"
+                    },
+                    "phone": {
+                      "type": "string",
+                      "description": "User phone number"
+                    },
+                    "billing_address": {
+                      "type": "object",
+                      "properties": {
+                        "street1": {
+                          "type": "string"
+                        },
+                        "street2": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "postal_code": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "shipping_address": {
+                      "type": "object",
+                      "properties": {
+                        "street1": {
+                          "type": "string"
+                        },
+                        "street2": {
+                          "type": "string"
+                        },
+                        "city": {
+                          "type": "string"
+                        },
+                        "state": {
+                          "type": "string"
+                        },
+                        "postal_code": {
+                          "type": "string"
+                        },
+                        "country": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "timestamp": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Transaction timestamp"
+                    },
+                    "card_network": {
+                      "type": "string",
+                      "description": "Card network (VISA, MC, AMEX, etc.)"
+                    },
+                    "card_bin": {
+                      "type": "string",
+                      "description": "Bank Identification Number (first 6-8 digits)"
+                    },
+                    "card_logo": {
+                      "type": "string",
+                      "description": "Card brand logo identifier"
+                    },
+                    "decision": {
+                      "type": "string",
+                      "description": "Required for MONITORING - final decision",
+                      "enum": [
+                        "APPROVE",
+                        "DECLINE"
+                      ]
+                    },
+                    "custom_fields": {
+                      "type": "object",
+                      "additionalProperties": true,
+                      "description": "Additional custom fields"
+                    }
+                  }
+                }
+              },
+              "rulesetKey": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "totalCount": {
+                "type": "integer"
+              },
+              "failureCount": {
+                "type": "integer"
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "transactionId": {
+                      "type": "string"
+                    },
+                    "decision": {
+                      "type": "object",
+                      "description": "Decision result from evaluation",
+                      "properties": {
+                        "decision_id": {
+                          "type": "string",
+                          "description": "Unique decision identifier (UUID)"
+                        },
+                        "transaction_id": {
+                          "type": "string",
+                          "description": "Transaction identifier"
+                        },
+                        "evaluation_type": {
+                          "type": "string",
+                          "enum": [
+                            "AUTH",
+                            "MONITORING"
+                          ],
+                          "description": "Type of evaluation performed"
+                        },
+                        "decision": {
+                          "type": "string",
+                          "enum": [
+                            "APPROVE",
+                            "DECLINE"
+                          ],
+                          "description": "Final decision"
+                        },
+                        "engine_mode": {
+                          "type": "string",
+                          "enum": [
+                            "NORMAL",
+                            "DEGRADED",
+                            "FAIL_OPEN"
+                          ],
+                          "description": "Engine processing mode"
+                        },
+                        "engine_error_code": {
+                          "type": "string",
+                          "description": "Error code if not in NORMAL mode"
+                        },
+                        "engine_error_message": {
+                          "type": "string",
+                          "description": "Human-readable error message"
+                        },
+                        "ruleset_key": {
+                          "type": "string",
+                          "description": "Ruleset key used for evaluation"
+                        },
+                        "ruleset_version": {
+                          "type": "integer",
+                          "description": "Ruleset version"
+                        },
+                        "ruleset_id": {
+                          "type": "string",
+                          "description": "Ruleset UUID"
+                        },
+                        "matched_rules": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "rule_id": {
+                                "type": "string"
+                              },
+                              "rule_name": {
+                                "type": "string"
+                              },
+                              "action": {
+                                "type": "string",
+                                "enum": [
+                                  "APPROVE",
+                                  "DECLINE",
+                                  "REVIEW"
+                                ]
+                              },
+                              "priority": {
+                                "type": "integer"
+                              },
+                              "conditions_met": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "condition_values": {
+                                "type": "object",
+                                "additionalProperties": true
+                              },
+                              "rule_version": {
+                                "type": "integer"
+                              },
+                              "matched": {
+                                "type": "boolean"
+                              },
+                              "contributing": {
+                                "type": "boolean"
+                              }
+                            }
+                          },
+                          "description": "Rules that matched during evaluation"
+                        },
+                        "velocity_results": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                              "dimension": {
+                                "type": "string",
+                                "description": "Dimension name (card_hash, ip_address, etc.)"
+                              },
+                              "dimension_value": {
+                                "type": "string",
+                                "description": "Actual value being tracked (tokenized)"
+                              },
+                              "count": {
+                                "type": "integer",
+                                "description": "Current counter value"
+                              },
+                              "threshold": {
+                                "type": "integer",
+                                "description": "Threshold configured for this dimension"
+                              },
+                              "window_seconds": {
+                                "type": "integer",
+                                "description": "Time window in seconds"
+                              },
+                              "exceeded": {
+                                "type": "boolean",
+                                "description": "Whether threshold was exceeded"
+                              },
+                              "ttl_remaining": {
+                                "type": "integer",
+                                "description": "Seconds until counter window resets"
+                              }
+                            }
+                          },
+                          "description": "Velocity check results"
+                        },
+                        "timestamp": {
+                          "type": "string",
+                          "format": "date-time",
+                          "description": "When the decision was made"
+                        },
+                        "processing_time_ms": {
+                          "type": "integer",
+                          "description": "Processing time in milliseconds"
+                        },
+                        "timing_breakdown": {
+                          "type": "object",
+                          "properties": {
+                            "total_processing_time_ms": {
+                              "type": "number",
+                              "description": "Total processing time"
+                            },
+                            "ruleset_lookup_time_ms": {
+                              "type": "number",
+                              "description": "Time to lookup ruleset"
+                            },
+                            "rule_evaluation_time_ms": {
+                              "type": "number",
+                              "description": "Time to evaluate rules"
+                            },
+                            "velocity_check_count": {
+                              "type": "integer",
+                              "description": "Number of velocity checks performed"
+                            }
+                          }
+                        },
+                        "transaction_context": {
+                          "type": "object",
+                          "additionalProperties": true,
+                          "description": "Full transaction context"
+                        }
+                      }
+                    },
+                    "error": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "simulate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/manage/simulate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "transaction",
+              "rulesetYaml"
+            ],
+            "properties": {
+              "transaction": {
+                "type": "object",
+                "description": "Transaction to evaluate",
+                "required": [
+                  "transaction_id",
+                  "card_hash",
+                  "amount",
+                  "currency"
+                ],
+                "properties": {
+                  "transaction_id": {
+                    "type": "string",
+                    "description": "Unique transaction identifier"
+                  },
+                  "card_hash": {
+                    "type": "string",
+                    "description": "Tokenized card identifier"
+                  },
+                  "amount": {
+                    "type": "number",
+                    "format": "double",
+                    "description": "Transaction amount"
+                  },
+                  "currency": {
+                    "type": "string",
+                    "description": "ISO 4217 currency code (e.g., USD, EUR)",
+                    "example": "USD"
+                  },
+                  "merchant_id": {
+                    "type": "string",
+                    "description": "Merchant identifier"
+                  },
+                  "merchant_name": {
+                    "type": "string",
+                    "description": "Merchant business name"
+                  },
+                  "merchant_category": {
+                    "type": "string",
+                    "description": "Merchant category"
+                  },
+                  "merchant_category_code": {
+                    "type": "string",
+                    "description": "Merchant Category Code (MCC)",
+                    "example": "5411"
+                  },
+                  "card_present": {
+                    "type": "boolean",
+                    "description": "Whether physical card was present"
+                  },
+                  "transaction_type": {
+                    "type": "string",
+                    "description": "Transaction type (PURCHASE, REFUND, etc.)",
+                    "enum": [
+                      "PURCHASE",
+                      "REFUND",
+                      "REVERSAL",
+                      "AUTHORIZATION",
+                      "TRANSFER"
+                    ]
+                  },
+                  "entry_mode": {
+                    "type": "string",
+                    "description": "Entry mode (ECOM, CHIP, SWIPE, CONTACTLESS)"
+                  },
+                  "country_code": {
+                    "type": "string",
+                    "description": "ISO 3166-1 alpha-2 country code",
+                    "example": "US"
+                  },
+                  "ip_address": {
+                    "type": "string",
+                    "description": "IP address (IPv4 or IPv6)"
+                  },
+                  "device_id": {
+                    "type": "string",
+                    "description": "Device fingerprint/identifier"
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "User email address"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "User phone number"
+                  },
+                  "billing_address": {
+                    "type": "object",
+                    "properties": {
+                      "street1": {
+                        "type": "string"
+                      },
+                      "street2": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "postal_code": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "shipping_address": {
+                    "type": "object",
+                    "properties": {
+                      "street1": {
+                        "type": "string"
+                      },
+                      "street2": {
+                        "type": "string"
+                      },
+                      "city": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "postal_code": {
+                        "type": "string"
+                      },
+                      "country": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "timestamp": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Transaction timestamp"
+                  },
+                  "card_network": {
+                    "type": "string",
+                    "description": "Card network (VISA, MC, AMEX, etc.)"
+                  },
+                  "card_bin": {
+                    "type": "string",
+                    "description": "Bank Identification Number (first 6-8 digits)"
+                  },
+                  "card_logo": {
+                    "type": "string",
+                    "description": "Card brand logo identifier"
+                  },
+                  "decision": {
+                    "type": "string",
+                    "description": "Required for MONITORING - final decision",
+                    "enum": [
+                      "APPROVE",
+                      "DECLINE"
+                    ]
+                  },
+                  "custom_fields": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Additional custom fields"
+                  }
+                }
+              },
+              "rulesetYaml": {
+                "type": "string",
+                "description": "Ruleset YAML content"
+              },
+              "includeDebug": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "transactionId": {
+                "type": "string"
+              },
+              "decision": {
+                "type": "string"
+              },
+              "rulesetKey": {
+                "type": "string"
+              },
+              "rulesetVersion": {
+                "type": "integer"
+              },
+              "matchedRules": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "rule_name": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string",
+                      "enum": [
+                        "APPROVE",
+                        "DECLINE",
+                        "REVIEW"
+                      ]
+                    },
+                    "priority": {
+                      "type": "integer"
+                    },
+                    "conditions_met": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "condition_values": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "rule_version": {
+                      "type": "integer"
+                    },
+                    "matched": {
+                      "type": "boolean"
+                    },
+                    "contributing": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              },
+              "velocityResults": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "dimension": {
+                      "type": "string",
+                      "description": "Dimension name (card_hash, ip_address, etc.)"
+                    },
+                    "dimension_value": {
+                      "type": "string",
+                      "description": "Actual value being tracked (tokenized)"
+                    },
+                    "count": {
+                      "type": "integer",
+                      "description": "Current counter value"
+                    },
+                    "threshold": {
+                      "type": "integer",
+                      "description": "Threshold configured for this dimension"
+                    },
+                    "window_seconds": {
+                      "type": "integer",
+                      "description": "Time window in seconds"
+                    },
+                    "exceeded": {
+                      "type": "boolean",
+                      "description": "Whether threshold was exceeded"
+                    },
+                    "ttl_remaining": {
+                      "type": "integer",
+                      "description": "Seconds until counter window resets"
+                    }
+                  }
+                }
+              },
+              "explanations": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "explanation": {
+                "type": "string"
+              },
+              "evaluatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "evaluationTimeMs": {
+                "type": "number"
+              },
+              "engineMode": {
+                "type": "string"
+              },
+              "debugInfo": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "RulesetManagement",
+      "key": "rulesetmanagement",
+      "operations": [
+        {
+          "id": "getRegistryStatus",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/evaluate/rulesets/registry/status",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "totalRulesets": {
+                "type": "integer",
+                "description": "Number of rulesets loaded"
+              },
+              "countries": {
+                "type": "integer",
+                "description": "Number of countries with rulesets"
+              },
+              "storageAccessible": {
+                "type": "boolean",
+                "description": "Whether storage is accessible"
+              }
+            }
+          }
+        },
+        {
+          "id": "getCountryRulesets",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/evaluate/rulesets/registry/{country}",
+          "identifierParam": "country",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "country": {
+                "type": "string"
+              },
+              "keys": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "bulkLoadRulesets",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/evaluate/rulesets/bulk-load",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "rulesets"
+            ],
+            "properties": {
+              "rulesets": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "country": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "loadedCount": {
+                "type": "integer"
+              },
+              "totalCount": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "hotSwapRuleset",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/evaluate/rulesets/hotswap",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "key",
+              "version"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "Ruleset key",
+                "example": "CARD_AUTH"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "New version to load",
+                "example": 2
+              },
+              "country": {
+                "type": "string",
+                "description": "Country code (defaults to global)",
+                "example": "global"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "SWAPPED",
+                  "NO_CHANGE",
+                  "VERSION_NOT_FOUND"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "oldVersion": {
+                "type": "integer",
+                "nullable": true
+              },
+              "newVersion": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "loadRuleset",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/evaluate/rulesets/load",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "key",
+              "version"
+            ],
+            "properties": {
+              "key": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "country": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "key": {
+                "type": "string"
+              },
+              "version": {
+                "type": "integer"
+              },
+              "country": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

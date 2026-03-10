@@ -1,0 +1,4389 @@
+openapi: 3.0.0
+info:
+  title: Cashboard API
+  description: >-
+    Cashboard is a personal finance tool that helps users keep track of their
+    income, expenses, savings and investments.
+
+
+    API URL: `https://cashboard-f5x2.onrender.com`
+
+
+    The Cashboard API has endpoints for:
+
+
+    - Users
+
+    - Accounts
+
+    - Income
+
+    - Expenses
+
+    - Savings
+
+    - Investments
+  version: 1.0.0
+servers:
+  - url: https://cashboard-f5x2.onrender.com
+tags:
+  - name: User
+    description: |-
+      Cashboard uses the users endpoint to:
+
+      - create a new user
+      - get a user details
+      - update user details
+          
+
+      The endpoint URL: `https://cashboard-f5x2.onrender.com/user`
+  - name: Account
+    description: |-
+      These endpoints are used to:
+
+      - create account
+      - get all user's accounts
+      - get account
+      - update accounts
+      - delete accounts.
+          
+
+      The endpoint URL is: `https://cashboard-f5x2.onrender.com/account`
+  - name: Income
+    description: |-
+      These endpoints are used to:
+
+      - create an income source
+      - get all income source
+      - get an income source
+      - update income source
+      - delete income source
+          
+
+      The endpoint URL: `https://cashboard-f5x2.onrender.com/income`
+  - name: Expenses
+    description: |-
+      These endpoints are used to:
+
+      - create an expense
+      - get all expenses
+      - get an expense
+      - update an expense
+      - delete an expense
+          
+
+      The endpoint URL is: `https://cashboard-f5x2.onrender.com/expenses`
+  - name: Savings
+    description: |-
+      These endpoints are used to:
+
+      - create a saving
+      - get all savings
+      - get a saving
+      - update a saving
+      - delete a saving
+          
+
+      The endpoint URL: `https://cashboard-f5x2.onrender.com/savings`
+  - name: Investments
+    description: |-
+      These endpoints are used to:
+
+      - create an investment
+          
+      - get all investments
+          
+      - get an investment
+          
+      - update an investment
+          
+      - delete an investment
+          
+
+      The endpoint URL: `https://cashboard-f5x2.onrender.com/investments`
+paths:
+  /user/add:
+    post:
+      tags:
+        - User
+      summary: Creating a new user
+      description: >-
+        This endpoint creates a new user.
+
+
+        The request body can include the following properties:
+
+
+        - username(string) - the user's username
+
+        - email(string) - the user's email
+
+        - password(string) - the user's password
+
+        - currency(string) - the user's preferred currency
+            
+
+        The currency property is not required and defaults to "KSH" if not
+        provided.
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+            
+        - message(string) - provides details
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                username: michellemso
+                email: michellemuthoni2@gmail.com
+                password: Mso!254
+      responses:
+        '201':
+          description: Created
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '61'
+            ETag:
+              schema:
+                type: string
+                example: W/"3d-9C6pAihvSMniaN8KUU7pLe0Jlz0"
+            Date:
+              schema:
+                type: string
+                example: Mon, 12 Feb 2024 06:40:01 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: success
+                message: A new user has been created!
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:07:41 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c08be3488d6f9d-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"41-sxTD6YtiUZ8q4iDWuBWK8DFCRw0"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: c0e7ae9c-d8f8-46dd
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: User not created! Please try again
+  /user/{id}:
+    get:
+      tags:
+        - User
+      summary: User Details
+      description: >-
+        This endpoint gets a user's details.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/user/:id
+
+
+        Path Parameter: User's UUID
+
+
+        The response body is a JSON object that returns the new user. The user
+        object contains the following properties:
+
+
+        - username(string) - the user's username
+
+        - email(string) - the user's email
+
+        - password(string) - the user's password
+
+        - currency(string) - the user's currency
+
+        - accounts(array) - all the user's accounts
+
+        - income(array) - all the user's income sources
+
+        - expenses(array) - all the user's expenses
+
+        - savings(array) - all the user's saving goals
+
+        - investments(array) - all the user's investments
+
+        - reports(array) - all the user's reports
+
+        - transactions(array) - all the user's transactions
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:29:40 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c054309814578b-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"176-cTm2HOArTEGhbCpGiyqH45jsxDI"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 41e2401d-da75-4659
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                _id: 662fbbe0ac827e370c18d4b0
+                username: michellemso
+                email: michellemuthoni2@gmail.com
+                password: $2a$10$yjp6lyCU6.jwQrhOG/7kjOnCJQC5uSbk2gs62oj8EqGN0s5lU3UM.
+                currency: KSH
+                accounts: []
+                income: []
+                expenses: []
+                savings: []
+                investments: []
+                reports: []
+                transactions: []
+                createdAt: '2024-04-29T15:25:20.377Z'
+                updatedAt: '2024-04-29T15:25:20.377Z'
+                __v: 0
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:01:38 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c08308eee95884-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"4a-fOMG1BJva1s/NJ/TCi6cViPmbMw"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d8e328d6-c028-4b3c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: We couldn't find the user. Please try again
+    put:
+      tags:
+        - User
+      summary: Update user
+      description: >-
+        This endpoint is used to update the user's details.
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/user/:id](https://cashboard-f5x2.onrender.com/user/:id)
+
+
+        Path Parameter: User's UUID
+
+
+        It can be used to update:
+
+
+        - currency (string) - the user's preferred currency
+
+        - email address (string)
+
+        - username (string)
+
+        - password (string)
+            
+
+        > This endpoint can not be used to update the user's accounts, expenses,
+        income, savings and investments.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                currency: KSH
+      parameters:
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Powered-By:
+              schema:
+                type: string
+                example: Express
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Content-Length:
+              schema:
+                type: integer
+                example: '276'
+            ETag:
+              schema:
+                type: string
+                example: W/"114-3MzmrYaZewZKISGFNdZf7jetRxc"
+            Date:
+              schema:
+                type: string
+                example: Mon, 12 Feb 2024 06:43:50 GMT
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            Keep-Alive:
+              schema:
+                type: string
+                example: timeout=5
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                _id: 65c9bd409983f403ed82f194
+                username: michellem
+                email: michelle.muthoni@gmail.com
+                password: $2a$10$yjp6lyCU6.jwQrhOG/7kjOhnYHR3dyh4t8EkdoC3np9IZstHoiXiC
+                currency: USD
+                accounts: []
+                income: []
+                expenses: []
+                savings: []
+                investments: []
+                reports: []
+                __v: 0
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:50:11 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0723efd9707a0-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3c-yxkCqTD1MwlnN/TfQyhJ8K6J6bc"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d24a3024-f592-4c10
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: The user could not be updated
+  /account/add:
+    post:
+      tags:
+        - Account
+      summary: Create an Account
+      description: >-
+        This endpoint creates an account for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/account/add
+
+
+        Query Parameter: User UUID
+
+
+        The request body is a JSON object that includes:
+
+
+        - name(string) - the name of the account
+
+        - desc(string) - a short description of the account
+
+        - currentAmount(number) - the account's balance
+            
+
+        The response body is a JSON object that includes an array of all the
+        user's accounts. Each account includes:
+
+
+        - name(string) - the name of the account
+
+        - desc(string) - a short description of the account
+
+        - currentAmount(number) - the account's balance
+
+        - _id(string) - the unique identifier for the account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                name: KCB Account
+                desc: My checking account
+                currentAmount: 150000
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:41:19 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0653edf1d8242-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"7a-FJ5RBZQHH4OFKqcfnE5/Qyx+ME0"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 41acb5e1-6542-4d2c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                accounts:
+                  - name: KCB Account
+                    desc: My checking account
+                    currentAmount: 150000
+                    _id: 662fbf9eac827e370c18d4b9
+  /account:
+    get:
+      tags:
+        - Account
+      summary: All Accounts
+      description: >-
+        This endpoint returns all the specified user's accounts
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/account/add
+
+
+        Query Parameter: User UUID
+
+
+        The response body is a JSON object that includes an array of all the
+        user's accounts. Each account includes:
+
+
+        - name(string) - the name of the account
+            
+        - desc(string) - a short description of the account
+            
+        - currentAmount(number) - the account's balance
+            
+        - _id(string) - the unique identifier for the account
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:08:53 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c08da6c9aa82bd-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"7a-YIUzyWNbV/QKyzKxokhFwwLRYTA"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 549a93b5-7cab-45b0
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                accounts:
+                  - name: KCB Account
+                    desc: My checking account
+                    currentAmount: 157000
+                    _id: 662fbf9eac827e370c18d4b9
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:09:28 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c08e7e5f945944-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3f-KxDWEnY1i2BvPblTL7VcYNzzBmc"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: b518490d-006b-4490
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Couldn't get the user's accounts
+  /account/{id}:
+    get:
+      tags:
+        - Account
+      summary: Account
+      description: >-
+        This endpoint returns the account for the specified user
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/account/:id
+
+
+        Query Parameter: User UUID
+
+
+        Path Parameter: Account ID
+
+
+        The response body is a JSON object that contains the specified account
+        details. Each account includes:
+
+
+        - name(string) - the name of the account
+
+        - desc(string) - a short description of the account
+
+        - currentAmount(number) - the account's balance
+
+        - _id(string) - the unique identifier for the account
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fbf9eac827e370c18d4b9
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:11:49 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c091f26eaf0634-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"77-h4KdD/aoR4PKYUX6dvNvI0jECic"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d7d10904-5010-44d5
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                account:
+                  name: KCB Account
+                  desc: My checking account
+                  currentAmount: 157000
+                  _id: 662fbf9eac827e370c18d4b9
+        '404':
+          description: Not Found
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:12:23 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c092c43b7707c5-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"41-UZb/MXusOiYsP6NnwjrNGvuMCts"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: ef8601de-b3ac-4030
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                mesage: Sorry! We couldn't find the account
+    put:
+      tags:
+        - Account
+      summary: Update Account
+      description: >-
+        This endpoint updates the user's account by incrementing the user's
+        balance
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/account/:id
+
+
+        Query Parameter: User UUID
+
+
+        Path Parameter: Account ID
+
+
+        The response body is a JSON object that contains the updated account
+        details. Each account includes:
+
+
+        - name(string) - the name of the account
+            
+        - desc(string) - a short description of the account
+            
+        - currentAmount(number) - the account's balance
+            
+        - _id(string) - the unique identifier for the account
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                amount: 15000
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fbf9eac827e370c18d4b9
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:32:28 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0b02f6fa51fd3-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"77-4QSuKVuNhTo0yBF7GKgdsxYEJUE"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 25610a0c-796e-41b6
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                account:
+                  name: KCB Account
+                  desc: My checking account
+                  currentAmount: 175000
+                  _id: 662fbf9eac827e370c18d4b9
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:33:19 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0b16eb85b1fe5-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"32-ilIj8jJNz3lXF6aX2SEDBdeYguk"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: ad184e47-97ad-46f5
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Error
+                  value:
+                    status: error
+                    message: Account not updated
+                example-1:
+                  summary: Error
+                  value:
+                    status: error
+                    message: Account not updated
+    delete:
+      tags:
+        - Account
+      summary: Account
+      description: >-
+        This endpoint deletes the specified account for the user
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/account/:id](https://cashboard-f5x2.onrender.com/account/:id)  
+
+        Query Parameter: User's UUID
+
+
+        Path Parameter: Account ID
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+
+        - message(string) - provides details
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fbf9eac827e370c18d4b9
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 21:26:42 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c25f2ace5a56b6-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3d-rHv95vdomfdjzYKDHqtGhnaXUw8"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 2627a608-f13d-47d6
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: success
+                message: Account successfully deleted
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 21:27:49 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c260cffff90849-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"32-kFv45T0P8qTfkUGEP/tAYl8It/8"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 745f7b46-04a8-4627
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Account not deleted
+  /income/add:
+    post:
+      tags:
+        - Income
+      summary: Create an Income Source
+      description: >-
+        This endpoint creates an income source for the specified user.
+
+
+        The details that should be specified in the request body are:
+
+
+        - the income source (string) - the income's description
+
+        - the payDate (date) - the date the income was paid
+
+        - the category (string) - the category of the income
+
+        - the account's id (string) - the account that was credited
+
+        - the amount (number) - the amount made from the income source
+            
+
+        > When you're withdrawing from an investment, you can use this endpoint
+        by assigning the investment ID to the income source. This will ensure
+        the amount is deducted from the investment and credited to the account. 
+          
+
+        The response body is a JSON object that includes an array of all the
+        user's income sources. The individual income object contains:
+
+
+        - the income source (string) - the income's description
+
+        - the payDate (date) - the date the income was paid
+
+        - the category (string) - the category of the income
+
+        - the account's id (string) - the account that was credited
+
+        - the amount (number) - the amount made from the income source
+
+        - _id (string) - the unique identifier for the income
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                source: 'Side Hustle: Selling Shoes'
+                payDate: 11/02/2024
+                category: side hustle
+                account: 662fbf9eac827e370c18d4b9
+                amount: '7000'
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '201':
+          description: Created
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:42:04 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0664fbe21084d-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"c6-4VgTxg1a8AFmYFE7OaKaXHnWseA"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 167c87e6-9952-4b42
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                income:
+                  - source: 'Side Hustle: Selling Shoes'
+                    payDate: '2024-11-02T00:00:00.000Z'
+                    account: 662fbf9eac827e370c18d4b9
+                    category: side hustle
+                    amount: 7000
+                    _id: 662fbfcaac827e370c18d4bf
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:43:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0689c4f62394a-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"2f-5nVh4Q6rIS7qAyLOwv9hydVqSuU"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: ad87471b-3f50-44a2
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Income not added
+  /income:
+    get:
+      tags:
+        - Income
+      summary: All income sources
+      description: >-
+        This endpoint gets all the income sources for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/income
+
+
+        Query Parameter: User UUID
+
+
+        The response body is a JSON object that includes an array of all the
+        user's income sources. The individual income object contains:
+
+
+        - the income source (string) - the income's description
+
+        - the payDate (date) - the date the income was paid
+
+        - the category (string) - the category of the income
+
+        - the account's id (string) - the account that was credited
+
+        - the amount (number) - the amount made from the income source
+
+        - _id (string) - the unique identifier for the income
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:51:44 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c074863a0f5a6a-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"c6-4VgTxg1a8AFmYFE7OaKaXHnWseA"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 16c49e20-fcf7-4e1f
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                income:
+                  - source: 'Side Hustle: Selling Shoes'
+                    payDate: '2024-11-02T00:00:00.000Z'
+                    account: 662fbf9eac827e370c18d4b9
+                    category: side hustle
+                    amount: 7000
+                    _id: 662fbfcaac827e370c18d4bf
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:56:45 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c07bdd0d6005d8-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"33-SVRkMN9ULmEXpqR5u1QTgUwCSmc"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 14620a7e-5012-4643
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Income not available
+  /income/{id}:
+    get:
+      tags:
+        - Income
+      summary: Income Source
+      description: >-
+        This endpoint gets the details of the specified income source.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/income/:id
+
+
+        Query Parameter: User UUID
+
+
+        Path Parameter: Income ID
+
+
+        The response body is a JSON object that includes the specified income
+        source. The individual income object contains:
+
+
+        - the income source (string) - the income's description
+
+        - the payDate (date) - the date the income was paid
+
+        - the category (string) - the category of the income
+
+        - the account's id (string) - the account that was credited
+
+        - the amount (number) - the amount made from the income source
+
+        - _id (string) - the unique identifier for the income
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fbfcaac827e370c18d667j
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 15:59:26 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c07fcd3f130601-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"c4-B30tc/s7FSdC3z3yw2JSkAk746I"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d2b2ebfc-53af-4ee7
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Success
+                  value:
+                    income:
+                      source: 'Side Hustle: Selling Shoes'
+                      payDate: '2024-11-02T00:00:00.000Z'
+                      account: 662fbf9eac827e370c18d4b9
+                      category: side hustle
+                      amount: 7000
+                      _id: 662fbfcaac827e370c18d4bf
+                example-1:
+                  summary: Error
+                  value:
+                    income: null
+    delete:
+      tags:
+        - Income
+      summary: Income
+      description: >-
+        This endpoint deletes the specified income source
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/income/:id](https://cashboard-f5x2.onrender.com/income/:id)  
+
+        Query Parameter: User's UUID
+
+
+        Path Parameter: Income ID
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+
+        - message(string) - provides details
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{user_id}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fbfcaac827e370c18d4bf
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 21:18:10 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c252acad1e07df-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"43-/ssQpUoma2pl4vISdm8mDVbx6qw"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 50c5f72a-b81a-4780
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: success
+                message: The income was succefully deleted!
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 20:38:51 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c2191c2be607c4-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3c-OPSdw9m15jyINlEQSfUAgyIN/LQ"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 83f5465f-06ae-4d54
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: success
+                message: The income was not deleted!
+  /expense/add:
+    post:
+      tags:
+        - Expenses
+      summary: Create an Expense
+      description: >-
+        This endpoint is used to add an expense for a specific user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/expense/add  
+
+        Query: User's UUID
+
+
+        The request body should be a JSON object that includes:
+
+
+        - desc (string): Description of the expense
+
+        - category (string): Category of the expense
+
+        - account (string): The Account ID that paid for the expense
+
+        - date (date): Date of the expense
+
+        - amount (number): Amount of the expense
+            
+
+        The response to this request will be a JSON schema, with an array of the
+        user's expenses including the new entry.
+
+
+        Each expense object in the array will have the following properties:
+
+
+        - desc (string): Description of the expense
+
+        - category (string): Category of the expense
+
+        - date (string): Date of the expense
+
+        - account (string): Account associated with the expense
+
+        - amount (number): Amount of the expense
+
+        - _id (string): Unique identifier for the expense
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                desc: Electricity bill
+                category: Utility
+                account: 662fbf9eac827e370c18d4b9
+                date: 2/04/2024
+                amount: 1000
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:42:41 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0bf20a8e756c2-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b5-PmtGgcVMMeDxiAev7oQdGnGphDo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 78d42aef-3642-4e51
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                expenses:
+                  - desc: Electricity bill
+                    category: Utility
+                    date: '2024-02-04T00:00:00.000Z'
+                    account: 662fbf9eac827e370c18d4b9
+                    amount: 1000
+                    _id: 662fce008f1d17198913a0ab
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:39:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0baa36ad459ec-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"30-Z8Nju0mZFaCbCzG9Gnb6TkQMUik"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d83e86fc-4e63-4823
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Expense not added
+  /expense:
+    get:
+      tags:
+        - Expenses
+      summary: All Expenses
+      description: >-
+        This endpoint is used to get all expenses for a specific user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/expense  
+
+        Query: User's UUID
+
+
+        The response will be a JSON object that includes an array of all the
+        user's expenses.
+
+
+        Each expense object in the array will have the following properties:
+
+
+        - desc (string): Description of the expense
+            
+        - category (string): Category of the expense
+            
+        - date (timestamp): Date of the expense
+            
+        - account (string): Account associated with the expense
+            
+        - amount (number): Amount of the expense
+            
+        - _id (string): Unique identifier for the expense
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:44:00 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0c1165a9d0617-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b5-PmtGgcVMMeDxiAev7oQdGnGphDo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 5a2db4dc-9dd3-4bdd
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                expenses:
+                  - desc: Electricity bill
+                    category: Utility
+                    date: '2024-02-04T00:00:00.000Z'
+                    account: 662fbf9eac827e370c18d4b9
+                    amount: 1000
+                    _id: 662fce008f1d17198913a0ab
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:45:52 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0c3d24f0d801e-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"32-V5GZa5T18/k4DyNuEPa6MBfXFhg"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: e6d481a8-1e3d-4f0f
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Expenses not found!
+  /expense/{id}:
+    get:
+      tags:
+        - Expenses
+      summary: Expense
+      description: >-
+        This endpoint is used to get an expense for a specific user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/expense/:id  
+
+        Query: User's UUID
+
+
+        The response will be a JSON object that includes details of the
+        specified expense.
+
+
+        The expense object will have the following properties:
+
+
+        - desc (string): Description of the expense
+            
+        - category (string): Category of the expense
+            
+        - date (timestamp): Date of the expense
+            
+        - account (string): Account associated with the expense
+            
+        - amount (number): Amount of the expense
+            
+        - _id (string): Unique identifier for the expense
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fce008f1d17198913a0ab
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:50:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0cac06e4b05d2-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b2-jgaU76Hmc4PoU2kPa4JpcOhCulo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: ea3e75d8-cee3-400d
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Success
+                  value:
+                    expense:
+                      desc: Electricity bill
+                      category: Utility
+                      date: '2024-02-04T00:00:00.000Z'
+                      account: 662fbf9eac827e370c18d4b9
+                      amount: 1000
+                      _id: 662fce008f1d17198913a0ab
+                example-1:
+                  summary: Error
+                  value:
+                    expense: null
+    delete:
+      tags:
+        - Expenses
+      summary: Expense
+      description: >-
+        This endpoint is used to delete an expense for a specific user.
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/expense/:id](https://cashboard-f5x2.onrender.com/expense/:id)  
+
+        Query Parameter: User's UUID
+
+
+        Path Parameter: Expense ID
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+
+        - message(string) - provides details
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          description: required
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          description: required
+          example: 662fce008f1d17198913a0ab
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 16:50:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0cac06e4b05d2-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b2-jgaU76Hmc4PoU2kPa4JpcOhCulo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: ea3e75d8-cee3-400d
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Success
+                  value:
+                    expense:
+                      desc: Electricity bill
+                      category: Utility
+                      date: '2024-02-04T00:00:00.000Z'
+                      account: 662fbf9eac827e370c18d4b9
+                      amount: 1000
+                      _id: 662fce008f1d17198913a0ab
+                example-1:
+                  summary: Error
+                  value:
+                    expense: null
+  /savings/add:
+    post:
+      tags:
+        - Savings
+      summary: Create a Saving
+      description: >-
+        This endpoint creates a new saving for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/saving/add
+
+
+        Query Parameter: User UUID
+
+
+        The request body includes:
+
+
+        - desc (string) - A description of the saving goal
+
+        - goalAmount (number) - The goal
+
+        - currency (string) - The user's preference
+
+        - currentAmount (number) - the current amount saved
+            
+
+        ** The currency and currentAmount are not required.
+
+
+        The response is JSON object that contains all the user's savings. An
+        individual saving contains:
+
+
+        - desc (string) - A description of the saving goal
+            
+        - goalAmount (number) - The goal
+            
+        - currency (string) - The user's preference
+            
+        - currentAmount (number) - the current amount saved
+            
+        - _id - the unique identifier of the saving
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                desc: New Car
+                goal: 950000
+                currency: KSH
+                currentAmount: 0
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 17:01:53 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0db438f1f6fad-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b0-AejV7vmf02i002hJKbnIT1PAJAM"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 99a15726-916c-468c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                savings:
+                  - desc: New Car
+                    goal: '950000'
+                    currency: KSH
+                    _id: 662fd2808f1d17198913a0c8
+                    createdAt: '2024-04-29T17:01:52.662Z'
+                    updatedAt: '2024-04-29T17:01:52.662Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 17:07:43 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c0e3d1de5305a9-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"31-ECl8iiAeka0ynaiMhKo/ZdbvFbI"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 341178f9-64ee-4194
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Savings not added!
+  /savings:
+    get:
+      tags:
+        - Savings
+      summary: All Savings
+      description: >-
+        This endpoint returns all the saving for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/savings
+
+
+        Query Parameter: User UUID
+
+
+        The response is JSON object that contains all the user's savings. An
+        individual saving contains:
+
+
+        - desc (string) - A description of the saving goal
+
+        - goalAmount (number) - The goal
+
+        - currency (string) - The user's preference
+
+        - currentAmount (number) - the current amount saved
+
+        - _id - the unique identifier of the saving
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{user_id}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 18:05:26 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1385c9e0f8233-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b0-AejV7vmf02i002hJKbnIT1PAJAM"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: a3c65d03-c6dc-4b94
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                savings:
+                  - desc: New Car
+                    goal: '950000'
+                    currency: KSH
+                    _id: 662fd2808f1d17198913a0c8
+                    createdAt: '2024-04-29T17:01:52.662Z'
+                    updatedAt: '2024-04-29T17:01:52.662Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 18:06:33 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c13a03dae587ac-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"31-wE7TdP4tZfzikMv+JWNQ7IfOa2M"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 4023e1b4-de77-416c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Savings not found.
+  /savings/{id}:
+    get:
+      tags:
+        - Savings
+      summary: Saving
+      description: >-
+        This endpoint returns all the saving for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/savings/:id
+
+
+        Query Parameter: User UUID
+
+
+        Path Parameter: Savings ID
+
+
+        The response is JSON object that contains the specified savings. An
+        individual saving contains:
+
+
+        - desc (string) - A description of the saving goal
+            
+        - goalAmount (number) - The goal
+            
+        - currency (string) - The user's preference
+            
+        - currentAmount (number) - the current amount saved
+            
+        - _id - the unique identifier of the saving
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{user_id}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662fd2808f1d17198913a0c8
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 18:09:31 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c13e59abc907c7-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"f-JVjQUjkkA/fwwRB8ZyWhmeM6qqQ"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 5e69d04c-6a73-401e
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Error
+                  value:
+                    saving: null
+                example-1:
+                  summary: Success
+                  value:
+                    saving:
+                      desc: New Car
+                      goal: '950000'
+                      currency: KSH
+                      _id: 662fd2808f1d17198913a0c8
+                      createdAt: '2024-04-29T17:01:52.662Z'
+                      updatedAt: '2024-04-29T17:01:52.662Z'
+    put:
+      tags:
+        - Savings
+      summary: Update Saving
+      description: >-
+        This endpoint updates the specified saving.
+
+
+        Enpoint: https://cashboard-f5x2.onrender.com/savings/:id
+
+
+        Query Parameter: User UUID
+
+
+        Path Parameter: Savings ID
+
+
+        The response is JSON object that contains all the user's savings. An
+        individual saving contains:
+
+
+        - desc (string) - A description of the saving goal
+
+        - goalAmount (number) - The goal
+
+        - currency (string) - The user's preference
+
+        - currentAmount (number) - the current amount saved
+
+        - _id - the unique identifier of the saving
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                amount: 50000
+                account: 662fbf9eac827e370c18d4b9
+                date: 01/12/2024
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{user_id}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662fed844c9c64845b5d085c
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:35:03 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1bba20d4987a1-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"17b-GLRzLWVnbZg5e8R2gF0c0YL3GLk"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 4d320f1d-6d72-497c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                savings:
+                  - currentAmount: 0
+                    desc: New Car
+                    goal: '950000'
+                    currency: KSH
+                    _id: 662fd2808f1d17198913a0c8
+                    createdAt: '2024-04-29T17:01:52.662Z'
+                    updatedAt: '2024-04-29T17:01:52.662Z'
+                  - desc: New Car
+                    goal: '950000'
+                    currentAmount: 50000
+                    currency: KSH
+                    _id: 662fed844c9c64845b5d085c
+                    createdAt: '2024-04-29T18:57:08.338Z'
+                    updatedAt: '2024-04-29T19:35:03.034Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:37:37 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1bf674a578286-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"32-8lOmjdDeZmqYYoh5r2c75jrvcYI"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 0e482a8a-16e0-462b
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Saving not updated!
+    delete:
+      tags:
+        - Savings
+      summary: Saving
+      description: >-
+        This endpoint is used to deletes the saving for a specific user.
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/saving/:id](https://cashboard-f5x2.onrender.com/saving/:id)  
+
+        Query Parameter: User's UUID
+
+
+        Path Parameter: Saving ID
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+
+        - message(string) - provides details
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{user_id}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662fd2808f1d17198913a0c8
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 18:54:41 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c18085aead82aa-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3d-sWmL9t3pYUerwrjaNxVBhluDnHM"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: bf910617-a434-4b2b
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              examples:
+                example-0:
+                  summary: Success
+                  value:
+                    status: success
+                    message: Saving successfully deleted!
+                example-1:
+                  summary: Error
+                  value:
+                    status: error
+                    message: Saving not deleted!
+  /investment/add:
+    post:
+      tags:
+        - Investments
+      summary: Create an Investment
+      description: >-
+        This endpoint is used to create an investment.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/investment/add
+
+
+        Query Parameter: User UUID
+
+
+        The request body contains:
+
+
+        - desc (string) - A description of the investment account
+
+        - category (string) - Category for the investment
+
+        - currentAmount (number) - the investment's balance
+            
+
+        The response body is a JSON object that contains an array of all
+        investments. An individual investment includes:
+
+
+        - desc (string) - A description of the investment account
+            
+        - category (string) - Category for the investment
+            
+        - currentAmount (number) - the investment's balance
+            
+        - _id (string) - the unique identifier for the investment
+            
+        - createdAt (timestamp) - whenthe investment was created
+            
+        - updatedAt (timestamp) - when the investment was last updated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                desc: Bitcoin
+                category: Cryptocurrency
+                account: 662fbf9eac827e370c18d4b9
+                date: 03/21/2024
+                amount: 5000
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:53:29 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1d6a09bd79c16-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"22b-bC4UAFQ+wh2+YnfuCqrsPisQuIk"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: bc3e66e0-f1c0-4e98
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                investments:
+                  - desc: Bitcoin
+                    currentAmount: 95000
+                    category: Cryptocurrency
+                    _id: 662ff8a5712cd9fd793e1fb7
+                    createdAt: '2024-04-29T19:44:37.441Z'
+                    updatedAt: '2024-04-29T19:44:37.441Z'
+                  - desc: Bitcoin
+                    currentAmount: 5000
+                    category: Cryptocurrency
+                    _id: 662ff9e36e0d87944a3c4cf7
+                    createdAt: '2024-04-29T19:49:55.065Z'
+                    updatedAt: '2024-04-29T19:49:55.065Z'
+                  - desc: Bitcoin
+                    currentAmount: 5000
+                    category: Cryptocurrency
+                    _id: 662ffab8df4fbf42a526c6d5
+                    createdAt: '2024-04-29T19:53:28.755Z'
+                    updatedAt: '2024-04-29T19:53:28.755Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:42:11 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1c6161b6f0821-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3d-ho10A4fYqnx8/QwCzEmfNIRFXpc"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 14587ba1-6083-4e8f
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Investment could not be added!
+  /investment:
+    get:
+      tags:
+        - Investments
+      summary: All Investments
+      description: >-
+        This endpoint gets all the investments for the specified user.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/investment/
+
+
+        Query Parameters: User UUID
+
+
+        The response body is a JSON object that contains an array of all the
+        user's investments. An individual investment includes:
+
+
+        - desc (string) - A description of the investment account
+            
+        - category (string) - Category for the investment
+            
+        - currentAmount (number) - the investment's balance
+            
+        - _id (string) - the unique identifier for the investment
+            
+        - createdAt (timestamp) - whenthe investment was created
+            
+        - updatedAt (timestamp) - when the investment was last updated
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:54:53 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1d8b34e1e20d0-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"22b-bC4UAFQ+wh2+YnfuCqrsPisQuIk"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: dda26966-65f9-4ba5
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                investments:
+                  - desc: Bitcoin
+                    currentAmount: 95000
+                    category: Cryptocurrency
+                    _id: 662ff8a5712cd9fd793e1fb7
+                    createdAt: '2024-04-29T19:44:37.441Z'
+                    updatedAt: '2024-04-29T19:44:37.441Z'
+                  - desc: Bitcoin
+                    currentAmount: 5000
+                    category: Cryptocurrency
+                    _id: 662ff9e36e0d87944a3c4cf7
+                    createdAt: '2024-04-29T19:49:55.065Z'
+                    updatedAt: '2024-04-29T19:49:55.065Z'
+                  - desc: Bitcoin
+                    currentAmount: 5000
+                    category: Cryptocurrency
+                    _id: 662ffab8df4fbf42a526c6d5
+                    createdAt: '2024-04-29T19:53:28.755Z'
+                    updatedAt: '2024-04-29T19:53:28.755Z'
+        '404':
+          description: Not Found
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:55:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1d9c17f44884e-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"2e-oQO4lZT2heHpHvUB9NQ5LglXtqI"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: d91361ef-4fdf-4d5a
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: User not found!
+  /investment/{id}:
+    get:
+      tags:
+        - Investments
+      summary: Investment
+      description: >-
+        This endpoint returns the specified investment.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/investment/:id
+
+
+        Query Parameters: User UUID
+
+
+        Path Parameters: Investment ID
+
+
+        The response body is a JSON object that contains the specified
+        investment with the following details:
+
+
+        - desc (string) - A description of the investment account
+            
+        - category (string) - Category for the investment
+            
+        - currentAmount (number) - the investment's balance
+            
+        - _id (string) - the unique identifier for the investment
+            
+        - createdAt (timestamp) - whenthe investment was created
+            
+        - updatedAt (timestamp) - when the investment was last updated
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662ff8a5712cd9fd793e1fb7
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:57:07 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1dbf88adb205e-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b3-VBCqXYw7JJAfnyEikdRUukk4IHo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 17e007c9-491d-4f5c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                desc: Bitcoin
+                currentAmount: 95000
+                category: Cryptocurrency
+                _id: 662ff8a5712cd9fd793e1fb7
+                createdAt: '2024-04-29T19:44:37.441Z'
+                updatedAt: '2024-04-29T19:44:37.441Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:56:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1db35db3d8205-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3b-NPibye38wpywAVvvDHgmIZo5rWU"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 89d75afd-012a-453b
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Could not find an investment
+    put:
+      tags:
+        - Investments
+      summary: Update Investment
+      description: >-
+        This endpoint updates an investment's balance by incrementing its value.
+        It can be used for crediting an investment account.
+
+
+        Endpoint: https://cashboard-f5x2.onrender.com/investment/:id
+
+
+        Query Parameters: User UUID
+
+
+        Path Parameters: Investment ID
+
+
+        The response body is a JSON object that contains:
+
+
+        - desc (string) - A description of the investment account
+            
+        - category (string) - Category for the investment
+            
+        - currentAmount (number) - the investment's balance
+            
+        - _id (string) - the unique identifier for the investment
+            
+        - createdAt (timestamp) - whenthe investment was created
+            
+        - updatedAt (timestamp) - when the investment was last updated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              example:
+                amount: 12000
+                account: 662fbf9eac827e370c18d4b9
+                date: 04/27/2024
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662ff8a5712cd9fd793e1fb7
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:59:18 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1df280a382028-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"c3-5SFPIoEZcmlj1kjCqdOCpQlqyWg"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 58d3e66a-53bb-43e5
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                investment:
+                  desc: Bitcoin
+                  currentAmount: 107000
+                  category: Cryptocurrency
+                  _id: 662ff8a5712cd9fd793e1fb7
+                  createdAt: '2024-04-29T19:44:37.441Z'
+                  updatedAt: '2024-04-29T19:59:18.070Z'
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:58:12 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1dd900f5e3922-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"36-RuiVu6xbE99ypi8Ue9/iHaOgAqw"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 704a6fbb-75fa-41e1
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Investment not updated.
+    delete:
+      tags:
+        - Investments
+      summary: Investment
+      description: >-
+        This endpoint deletes the specified investment for a user. All the
+        associated transactions will also be deleted.
+
+
+        Endpoint:
+        [https://cashboard-f5x2.onrender.com/investment/:id](https://cashboard-f5x2.onrender.com/investment/:id)  
+
+        Query Parameter: User's UUID
+
+
+        Path Parameter: Investment ID
+
+
+        The response will be a JSON object that includes details of the query.
+        The properties include:
+
+
+        - status(string) - indicates whether it was successful or not
+
+        - message(string) - provides details
+      parameters:
+        - name: user
+          in: query
+          schema:
+            type: string
+          example: '{{uuid}}'
+        - name: id
+          in: path
+          schema:
+            type: string
+          required: true
+          example: 662ff8a5712cd9fd793e1fb7
+      responses:
+        '200':
+          description: OK
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:57:07 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1dbf88adb205e-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"b3-VBCqXYw7JJAfnyEikdRUukk4IHo"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 17e007c9-491d-4f5c
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            Content-Encoding:
+              schema:
+                type: string
+                example: br
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: success
+                message: Investment successfully deleted!
+        '500':
+          description: Internal Server Error
+          headers:
+            Date:
+              schema:
+                type: string
+                example: Mon, 29 Apr 2024 19:56:36 GMT
+            Content-Type:
+              schema:
+                type: string
+                example: application/json; charset=utf-8
+            Transfer-Encoding:
+              schema:
+                type: string
+                example: chunked
+            Connection:
+              schema:
+                type: string
+                example: keep-alive
+            CF-Ray:
+              schema:
+                type: string
+                example: 87c1db35db3d8205-IAD
+            CF-Cache-Status:
+              schema:
+                type: string
+                example: DYNAMIC
+            ETag:
+              schema:
+                type: string
+                example: W/"3b-NPibye38wpywAVvvDHgmIZo5rWU"
+            Vary:
+              schema:
+                type: string
+                example: Origin, Accept-Encoding
+            rndr-id:
+              schema:
+                type: string
+                example: 89d75afd-012a-453b
+            x-powered-by:
+              schema:
+                type: string
+                example: Express
+            x-render-origin-server:
+              schema:
+                type: string
+                example: Render
+            Server:
+              schema:
+                type: string
+                example: cloudflare
+            alt-svc:
+              schema:
+                type: string
+                example: h3=":443"; ma=86400
+          content:
+            application/json:
+              schema:
+                type: object
+              example:
+                status: error
+                message: Investment not deleted.

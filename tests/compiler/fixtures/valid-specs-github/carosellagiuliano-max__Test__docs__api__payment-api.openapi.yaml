@@ -1,0 +1,882 @@
+openapi: 3.0.3
+info:
+  title: Coiffeur Platform Payment API
+  description: |
+    Comprehensive payment integration API for the Coiffeur Platform supporting both Stripe and SumUp payment providers.
+
+    ## Features
+    - Stripe Checkout Sessions with Swiss VAT compliance
+    - SumUp API Payment Switch with deep linking
+    - Webhook handling with signature verification
+    - Idempotency key support for safe retries
+    - Stock reservation system for in-store payments
+    - Comprehensive audit logging
+
+    ## Swiss VAT Compliance
+    All payments automatically calculate and apply Swiss VAT rates:
+    - Standard: 8.1% (normal services)
+    - Reduced: 2.6% (accommodation)
+    - Special: 3.8% (food, books, medicine)
+
+    ## Authentication
+    All endpoints require authentication via Bearer token in the Authorization header.
+
+    ## Idempotency
+    Payment creation endpoints support idempotency keys to prevent duplicate charges.
+
+  version: 1.0.0
+  contact:
+    name: Coiffeur Platform API Support
+    email: api-support@coiffeur.example.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.coiffeur.example.com/v1
+    description: Production server
+  - url: https://staging-api.coiffeur.example.com/v1
+    description: Staging server
+  - url: http://localhost:3000/api
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Stripe Payments
+    description: Stripe payment processing endpoints
+  - name: SumUp Payments
+    description: SumUp payment processing endpoints
+  - name: Webhooks
+    description: Payment provider webhook endpoints
+  - name: Payment Status
+    description: Payment status and tracking endpoints
+
+paths:
+  /payments/stripe/checkout:
+    post:
+      tags:
+        - Stripe Payments
+      summary: Create Stripe Checkout Session
+      description: |
+        Creates a new Stripe Checkout Session for appointment payment with Swiss VAT calculation.
+
+        ## Features
+        - Automatic Swiss VAT calculation based on service types
+        - Support for both payment and setup modes
+        - Comprehensive metadata tracking
+        - Idempotency key support
+
+        ## VAT Calculation
+        Each service's VAT is calculated based on its `vatRate`:
+        - STANDARD: 8.1%
+        - REDUCED: 2.6%
+        - SPECIAL: 3.8%
+
+      operationId: createStripeCheckout
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Unique key to prevent duplicate payments
+          required: false
+          schema:
+            type: string
+            example: "stripe_apt123_1640995200_abc123"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StripeCheckoutRequest'
+            examples:
+              basic_payment:
+                summary: Basic appointment payment
+                value:
+                  appointmentId: "550e8400-e29b-41d4-a716-446655440000"
+                  services:
+                    - id: "service-1"
+                      name: "Haarschnitt"
+                      price: 5000
+                      vatRate: "STANDARD"
+                      description: "Standard Haarschnitt"
+                      duration: 60
+                    - id: "service-2"
+                      name: "Föhnen"
+                      price: 2500
+                      vatRate: "STANDARD"
+                      description: "Föhnen und Styling"
+                      duration: 30
+                  customerInfo:
+                    email: "customer@example.com"
+                    name: "Max Mustermann"
+                    phone: "+41791234567"
+                  mode: "payment"
+                  successUrl: "https://app.example.com/success"
+                  cancelUrl: "https://app.example.com/cancel"
+                  metadata:
+                    source: "web_app"
+                    version: "1.0"
+      responses:
+        '200':
+          description: Checkout session created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StripeCheckoutResponse'
+              examples:
+                success:
+                  value:
+                    success: true
+                    sessionId: "cs_test_1234567890"
+                    sessionUrl: "https://checkout.stripe.com/pay/cs_test_1234567890"
+                    paymentId: "payment-uuid-1234"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/sumup/create:
+    post:
+      tags:
+        - SumUp Payments
+      summary: Create SumUp Payment
+      description: |
+        Creates a new SumUp payment with deep linking support for mobile payments or QR codes for in-store payments.
+
+        ## Payment Types
+        - `in_store`: For payments made at the salon with QR code
+        - `remote`: For mobile payments with deep linking
+
+        ## Stock Reservation
+        In-store payments can include automatic stock reservation with TTL (Time To Live) functionality.
+
+        ## Deep Linking
+        Mobile payments generate deep links for the SumUp merchant app:
+        `sumupmerchant://pay/1.0?checkout-id={id}&callback={url}`
+
+      operationId: createSumUpPayment
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          description: Unique key to prevent duplicate payments
+          required: false
+          schema:
+            type: string
+            example: "sumup_apt123_1640995200_def456"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SumUpPaymentRequest'
+            examples:
+              in_store_payment:
+                summary: In-store payment with stock reservation
+                value:
+                  appointmentId: "550e8400-e29b-41d4-a716-446655440000"
+                  services:
+                    - id: "service-1"
+                      name: "Haarschnitt"
+                      price: 5000
+                      vatRate: "STANDARD"
+                  customerInfo:
+                    email: "customer@example.com"
+                    name: "Max Mustermann"
+                  paymentType: "in_store"
+                  reservationTtlMinutes: 30
+              mobile_payment:
+                summary: Mobile payment with deep linking
+                value:
+                  appointmentId: "550e8400-e29b-41d4-a716-446655440000"
+                  services:
+                    - id: "service-1"
+                      name: "Haarschnitt"
+                      price: 5000
+                      vatRate: "STANDARD"
+                  customerInfo:
+                    email: "customer@example.com"
+                    name: "Max Mustermann"
+                  paymentType: "remote"
+      responses:
+        '200':
+          description: SumUp payment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SumUpPaymentResponse'
+              examples:
+                in_store_success:
+                  value:
+                    success: true
+                    paymentId: "payment-uuid-5678"
+                    checkoutId: "sumup-checkout-123"
+                    checkoutReference: "apt_550e8400_1640995200"
+                    deepLink: "sumupmerchant://pay/1.0?checkout-id=sumup-checkout-123&callback=https%3A%2F%2Fapp.example.com%2Fcallback"
+                    qrCodeData: "https://api.sumup.com/v0.1/checkouts/sumup-checkout-123"
+                    amount: 5405
+                    currency: "CHF"
+                    expiresAt: "2025-01-01T12:30:00Z"
+                    reservationExpiresAt: "2025-01-01T12:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /payments/{paymentId}/status:
+    get:
+      tags:
+        - Payment Status
+      summary: Get Payment Status
+      description: |
+        Retrieves the current status of a payment along with detailed information.
+
+        ## Status Values
+        - `pending`: Payment created but not yet processed
+        - `processing`: Payment is being processed
+        - `completed`: Payment successfully completed
+        - `failed`: Payment failed
+        - `cancelled`: Payment was cancelled
+        - `refunded`: Payment was refunded
+
+      operationId: getPaymentStatus
+      parameters:
+        - name: paymentId
+          in: path
+          required: true
+          description: Unique payment identifier
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Payment status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentStatusResponse'
+              examples:
+                completed_payment:
+                  value:
+                    paymentId: "550e8400-e29b-41d4-a716-446655440000"
+                    status: "completed"
+                    provider: "stripe"
+                    amount: 5405
+                    currency: "chf"
+                    createdAt: "2025-01-01T10:00:00Z"
+                    paidAt: "2025-01-01T10:05:00Z"
+                    appointmentId: "660e8400-e29b-41d4-a716-446655440001"
+                    vatBreakdown:
+                      - serviceName: "Haarschnitt"
+                        baseAmount: 5000
+                        vatRate: "STANDARD"
+                        vatAmount: 405
+                        totalAmount: 5405
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /webhooks/stripe:
+    post:
+      tags:
+        - Webhooks
+      summary: Stripe Webhook Endpoint
+      description: |
+        Handles Stripe webhook events with signature verification and event deduplication.
+
+        ## Supported Events
+        - `checkout.session.completed`: Payment session completed
+        - `payment_intent.succeeded`: Payment intent succeeded
+        - `payment_intent.payment_failed`: Payment intent failed
+        - `invoice.payment_succeeded`: Invoice payment succeeded
+        - `customer.subscription.*`: Subscription events
+
+        ## Security
+        - Webhook signature verification using HMAC-SHA256
+        - Event deduplication to prevent duplicate processing
+        - Automatic retry handling for failed events
+
+      operationId: handleStripeWebhook
+      parameters:
+        - name: stripe-signature
+          in: header
+          required: true
+          description: Stripe webhook signature for verification
+          schema:
+            type: string
+            example: "t=1640995200,v1=abc123..."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StripeWebhookEvent'
+            examples:
+              checkout_completed:
+                summary: Checkout session completed
+                value:
+                  id: "evt_1234567890"
+                  type: "checkout.session.completed"
+                  data:
+                    object:
+                      id: "cs_test_1234567890"
+                      payment_intent: "pi_test_1234567890"
+                      payment_status: "paid"
+                      amount_total: 5405
+                      currency: "chf"
+                      customer_email: "customer@example.com"
+                      metadata:
+                        appointment_id: "550e8400-e29b-41d4-a716-446655440000"
+                        payment_id: "660e8400-e29b-41d4-a716-446655440001"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid webhook signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /webhooks/sumup:
+    post:
+      tags:
+        - Webhooks
+      summary: SumUp Webhook Endpoint
+      description: |
+        Handles SumUp webhook events with signature verification.
+
+        ## Supported Events
+        - `CHECKOUT_STATUS_CHANGED`: Checkout status changed
+        - `TRANSACTION_COMPLETED`: Transaction completed
+        - `TRANSACTION_FAILED`: Transaction failed
+        - `REFUND_COMPLETED`: Refund completed
+
+        ## Stock Management
+        Automatically handles stock reservations based on payment status:
+        - Completed payments mark reservations as completed
+        - Failed payments release stock reservations
+
+      operationId: handleSumUpWebhook
+      parameters:
+        - name: x-sumup-signature
+          in: header
+          required: true
+          description: SumUp webhook signature for verification
+          schema:
+            type: string
+            example: "sha256=abc123..."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SumUpWebhookEvent'
+            examples:
+              status_changed:
+                summary: Checkout status changed to paid
+                value:
+                  id: "event_1234567890"
+                  event_type: "CHECKOUT_STATUS_CHANGED"
+                  resource_type: "checkout"
+                  resource_id: "checkout_1234567890"
+                  event_data:
+                    checkout_id: "checkout_1234567890"
+                    status: "PAID"
+                    amount: 54.05
+                    currency: "CHF"
+                    transaction_id: "txn_1234567890"
+                  timestamp: "2025-01-01T10:05:00Z"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid webhook signature or payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from authentication endpoint
+
+  schemas:
+    VATRateType:
+      type: string
+      enum: [STANDARD, REDUCED, SPECIAL]
+      description: |
+        Swiss VAT rate types:
+        - STANDARD: 8.1% (normal services)
+        - REDUCED: 2.6% (accommodation)
+        - SPECIAL: 3.8% (food, books, medicine)
+
+    PaymentProvider:
+      type: string
+      enum: [stripe, sumup]
+      description: Payment provider identifier
+
+    PaymentStatus:
+      type: string
+      enum: [pending, processing, completed, failed, cancelled, refunded]
+      description: Current payment status
+
+    ServiceItem:
+      type: object
+      required: [id, name, price, vatRate]
+      properties:
+        id:
+          type: string
+          description: Unique service identifier
+          example: "service-1"
+        name:
+          type: string
+          description: Service display name
+          example: "Haarschnitt"
+        price:
+          type: integer
+          minimum: 1
+          description: Service price in cents (Swiss Rappen)
+          example: 5000
+        vatRate:
+          $ref: '#/components/schemas/VATRateType'
+        description:
+          type: string
+          description: Service description
+          example: "Standard Haarschnitt für alle Haarlängen"
+        duration:
+          type: integer
+          minimum: 1
+          description: Service duration in minutes
+          example: 60
+
+    CustomerInfo:
+      type: object
+      required: [email, name]
+      properties:
+        email:
+          type: string
+          format: email
+          description: Customer email address
+          example: "customer@example.com"
+        name:
+          type: string
+          minLength: 1
+          description: Customer full name
+          example: "Max Mustermann"
+        phone:
+          type: string
+          description: Customer phone number
+          example: "+41791234567"
+        address:
+          $ref: '#/components/schemas/Address'
+
+    Address:
+      type: object
+      required: [line1, city, postalCode, country]
+      properties:
+        line1:
+          type: string
+          description: Street address line 1
+          example: "Bahnhofstrasse 123"
+        line2:
+          type: string
+          description: Street address line 2
+          example: "Apt 4B"
+        city:
+          type: string
+          description: City name
+          example: "Zürich"
+        postalCode:
+          type: string
+          pattern: '^[1-9][0-9]{3}$'
+          description: Swiss postal code (4 digits)
+          example: "8001"
+        country:
+          type: string
+          enum: [CH]
+          description: Country code (Switzerland only)
+          example: "CH"
+
+    StripeCheckoutRequest:
+      type: object
+      required: [appointmentId, services, customerInfo, mode, successUrl, cancelUrl]
+      properties:
+        appointmentId:
+          type: string
+          format: uuid
+          description: Appointment UUID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        services:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ServiceItem'
+        customerInfo:
+          $ref: '#/components/schemas/CustomerInfo'
+        mode:
+          type: string
+          enum: [payment, setup]
+          description: Stripe checkout mode
+          example: "payment"
+        successUrl:
+          type: string
+          format: uri
+          description: URL to redirect on successful payment
+          example: "https://app.example.com/success?session_id={CHECKOUT_SESSION_ID}"
+        cancelUrl:
+          type: string
+          format: uri
+          description: URL to redirect on cancelled payment
+          example: "https://app.example.com/cancel"
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata for the payment
+
+    StripeCheckoutResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+        sessionId:
+          type: string
+          description: Stripe checkout session ID
+          example: "cs_test_1234567890"
+        sessionUrl:
+          type: string
+          format: uri
+          description: Stripe checkout URL
+          example: "https://checkout.stripe.com/pay/cs_test_1234567890"
+        paymentId:
+          type: string
+          format: uuid
+          description: Internal payment record ID
+          example: "payment-uuid-1234"
+        error:
+          type: string
+          description: Error message if success is false
+        code:
+          type: string
+          description: Error code if success is false
+
+    SumUpPaymentRequest:
+      type: object
+      required: [appointmentId, services, customerInfo, paymentType]
+      properties:
+        appointmentId:
+          type: string
+          format: uuid
+          description: Appointment UUID
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        services:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ServiceItem'
+        customerInfo:
+          $ref: '#/components/schemas/CustomerInfo'
+        paymentType:
+          type: string
+          enum: [in_store, remote]
+          description: Type of payment
+          example: "in_store"
+        reservationTtlMinutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+          description: Stock reservation TTL in minutes (for in_store payments)
+          example: 30
+        metadata:
+          type: object
+          additionalProperties:
+            type: string
+          description: Additional metadata for the payment
+
+    SumUpPaymentResponse:
+      type: object
+      required: [success]
+      properties:
+        success:
+          type: boolean
+          description: Whether the operation was successful
+        paymentId:
+          type: string
+          format: uuid
+          description: Internal payment record ID
+          example: "payment-uuid-5678"
+        checkoutId:
+          type: string
+          description: SumUp checkout ID
+          example: "sumup-checkout-123"
+        checkoutReference:
+          type: string
+          description: SumUp checkout reference
+          example: "apt_550e8400_1640995200"
+        deepLink:
+          type: string
+          format: uri
+          description: Deep link for SumUp merchant app
+          example: "sumupmerchant://pay/1.0?checkout-id=checkout-123&callback=https%3A%2F%2Fapp.example.com%2Fcallback"
+        qrCodeData:
+          type: string
+          format: uri
+          description: QR code data for in-store payments
+          example: "https://api.sumup.com/v0.1/checkouts/checkout-123"
+        amount:
+          type: integer
+          description: Total amount in cents including VAT
+          example: 5405
+        currency:
+          type: string
+          description: Currency code
+          example: "CHF"
+        expiresAt:
+          type: string
+          format: date-time
+          description: Payment expiry time
+          example: "2025-01-01T12:30:00Z"
+        reservationExpiresAt:
+          type: string
+          format: date-time
+          description: Stock reservation expiry time
+          example: "2025-01-01T12:30:00Z"
+        error:
+          type: string
+          description: Error message if success is false
+        code:
+          type: string
+          description: Error code if success is false
+
+    PaymentStatusResponse:
+      type: object
+      required: [paymentId, status, provider, amount, currency, createdAt]
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+          description: Payment identifier
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        provider:
+          $ref: '#/components/schemas/PaymentProvider'
+        amount:
+          type: integer
+          description: Payment amount in cents
+          example: 5405
+        currency:
+          type: string
+          description: Currency code
+          example: "chf"
+        createdAt:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+          example: "2025-01-01T10:00:00Z"
+        paidAt:
+          type: string
+          format: date-time
+          description: Payment completion timestamp
+          example: "2025-01-01T10:05:00Z"
+        failedAt:
+          type: string
+          format: date-time
+          description: Payment failure timestamp
+        appointmentId:
+          type: string
+          format: uuid
+          description: Related appointment ID
+          example: "660e8400-e29b-41d4-a716-446655440001"
+        errorMessage:
+          type: string
+          description: Error message for failed payments
+        vatBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/VATBreakdownItem'
+
+    VATBreakdownItem:
+      type: object
+      required: [serviceName, baseAmount, vatRate, vatAmount, totalAmount]
+      properties:
+        serviceName:
+          type: string
+          description: Service name
+          example: "Haarschnitt"
+        baseAmount:
+          type: integer
+          description: Base amount before VAT in cents
+          example: 5000
+        vatRate:
+          $ref: '#/components/schemas/VATRateType'
+        vatAmount:
+          type: integer
+          description: VAT amount in cents
+          example: 405
+        totalAmount:
+          type: integer
+          description: Total amount including VAT in cents
+          example: 5405
+
+    StripeWebhookEvent:
+      type: object
+      required: [id, type, data]
+      properties:
+        id:
+          type: string
+          description: Stripe event ID
+          example: "evt_1234567890"
+        type:
+          type: string
+          description: Event type
+          example: "checkout.session.completed"
+        data:
+          type: object
+          description: Event data object
+        created:
+          type: integer
+          description: Unix timestamp of event creation
+
+    SumUpWebhookEvent:
+      type: object
+      required: [id, event_type, resource_type, resource_id, event_data, timestamp]
+      properties:
+        id:
+          type: string
+          description: SumUp event ID
+          example: "event_1234567890"
+        event_type:
+          type: string
+          description: Event type
+          example: "CHECKOUT_STATUS_CHANGED"
+        resource_type:
+          type: string
+          description: Resource type
+          example: "checkout"
+        resource_id:
+          type: string
+          description: Resource ID
+          example: "checkout_1234567890"
+        event_data:
+          type: object
+          description: Event data
+        timestamp:
+          type: string
+          format: date-time
+          description: Event timestamp
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        code:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        details:
+          type: object
+          description: Additional error details
+        field:
+          type: string
+          description: Field that caused the validation error
+
+  responses:
+    BadRequest:
+      description: Bad request - invalid parameters
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_amount:
+              value:
+                error: "Amount must be greater than 0"
+                code: "VALIDATION_ERROR"
+                field: "services[0].price"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            missing_token:
+              value:
+                error: "Missing authorization header"
+                code: "UNAUTHORIZED"
+
+    ValidationError:
+      description: Validation error - request data validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalid_email:
+              value:
+                error: "Valid email address is required"
+                code: "VALIDATION_ERROR"
+                field: "customerInfo.email"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            payment_not_found:
+              value:
+                error: "Payment not found"
+                code: "NOT_FOUND"
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            server_error:
+              value:
+                error: "An internal server error occurred"
+                code: "INTERNAL_ERROR"

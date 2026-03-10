@@ -1,0 +1,412 @@
+openapi: 3.0.3
+info:
+  title: プロジェクト管理API
+  description: プロジェクトとタスクを管理するためのRESTful API
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8080
+    description: 開発環境
+
+paths:
+  /api/projects:
+    get:
+      summary: プロジェクト一覧を取得
+      description: 全てのプロジェクトの一覧を取得します
+      tags:
+        - プロジェクト
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクト一覧を取得します"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+    post:
+      summary: プロジェクトを作成
+      description: 新しいプロジェクトを作成します
+      tags:
+        - プロジェクト
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトを作成します"
+                  data:
+                    $ref: '#/components/schemas/Project'
+
+  /api/projects/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: プロジェクトID
+        schema:
+          type: string
+    put:
+      summary: プロジェクトを更新
+      description: 指定されたIDのプロジェクトを更新します
+      tags:
+        - プロジェクト
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトID {id} を更新します"
+                  data:
+                    $ref: '#/components/schemas/Project'
+        '404':
+          description: プロジェクトが見つかりません
+    delete:
+      summary: プロジェクトを削除
+      description: 指定されたIDのプロジェクトを削除します
+      tags:
+        - プロジェクト
+      responses:
+        '200':
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "プロジェクトID {id} を削除します"
+                  data:
+                    type: object
+        '404':
+          description: プロジェクトが見つかりません
+
+  /api/tasks:
+    get:
+      summary: タスク一覧を取得
+      description: 全てのタスクの一覧を取得します
+      tags:
+        - タスク
+      parameters:
+        - name: project_id
+          in: query
+          description: プロジェクトIDでフィルタリング
+          schema:
+            type: string
+        - name: status
+          in: query
+          description: ステータスでフィルタリング
+          schema:
+            type: string
+            enum: [pending, in_progress, completed]
+      responses:
+        '200':
+          description: 成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "タスク一覧を取得します"
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Task'
+    post:
+      summary: タスクを作成
+      description: 新しいタスクを作成します
+      tags:
+        - タスク
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: 作成成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "タスクを作成します"
+                  data:
+                    $ref: '#/components/schemas/Task'
+
+  /api/tasks/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: タスクID
+        schema:
+          type: string
+    put:
+      summary: タスクを更新
+      description: 指定されたIDのタスクを更新します
+      tags:
+        - タスク
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "タスクID {id} を更新します"
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '404':
+          description: タスクが見つかりません
+    delete:
+      summary: タスクを削除
+      description: 指定されたIDのタスクを削除します
+      tags:
+        - タスク
+      responses:
+        '200':
+          description: 削除成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "タスクID {id} を削除します"
+                  data:
+                    type: object
+        '404':
+          description: タスクが見つかりません
+
+components:
+  schemas:
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: プロジェクトの一意識別子
+        name:
+          type: string
+          description: プロジェクト名
+          maxLength: 255
+        description:
+          type: string
+          description: プロジェクトの説明
+        status:
+          type: string
+          enum: [active, completed, archived]
+          description: プロジェクトのステータス
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新日時
+      required:
+        - id
+        - name
+        - status
+        - created_at
+        - updated_at
+
+    CreateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: プロジェクト名
+          maxLength: 255
+        description:
+          type: string
+          description: プロジェクトの説明
+        status:
+          type: string
+          enum: [active, completed, archived]
+          default: active
+          description: プロジェクトのステータス
+      required:
+        - name
+
+    UpdateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: プロジェクト名
+          maxLength: 255
+        description:
+          type: string
+          description: プロジェクトの説明
+        status:
+          type: string
+          enum: [active, completed, archived]
+          description: プロジェクトのステータス
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: タスクの一意識別子
+        title:
+          type: string
+          description: タスクのタイトル
+          maxLength: 255
+        description:
+          type: string
+          description: タスクの説明
+        project_id:
+          type: string
+          format: uuid
+          description: 所属するプロジェクトのID
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          description: タスクのステータス
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: タスクの優先度
+        due_date:
+          type: string
+          format: date
+          description: 期限日
+        created_at:
+          type: string
+          format: date-time
+          description: 作成日時
+        updated_at:
+          type: string
+          format: date-time
+          description: 更新日時
+      required:
+        - id
+        - title
+        - project_id
+        - status
+        - created_at
+        - updated_at
+
+    CreateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: タスクのタイトル
+          maxLength: 255
+        description:
+          type: string
+          description: タスクの説明
+        project_id:
+          type: string
+          format: uuid
+          description: 所属するプロジェクトのID
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          default: pending
+          description: タスクのステータス
+        priority:
+          type: string
+          enum: [low, medium, high]
+          default: medium
+          description: タスクの優先度
+        due_date:
+          type: string
+          format: date
+          description: 期限日
+      required:
+        - title
+        - project_id
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          description: タスクのタイトル
+          maxLength: 255
+        description:
+          type: string
+          description: タスクの説明
+        project_id:
+          type: string
+          format: uuid
+          description: 所属するプロジェクトのID
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          description: タスクのステータス
+        priority:
+          type: string
+          enum: [low, medium, high]
+          description: タスクの優先度
+        due_date:
+          type: string
+          format: date
+          description: 期限日
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+tags:
+  - name: プロジェクト
+    description: プロジェクト管理に関するエンドポイント
+  - name: タスク
+    description: タスク管理に関するエンドポイント 

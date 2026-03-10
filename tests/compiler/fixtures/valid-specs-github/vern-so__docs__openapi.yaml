@@ -1,0 +1,427 @@
+openapi: 3.0.3
+info:
+  title: Vern API
+  description: |
+    The Vern API allows you to run tasks and retrieve task execution results.
+  version: 1.0.0
+servers:
+  - url: https://vern.so/api/v1
+    description: Production server
+security:
+  - ApiKeyAuth: []
+paths:
+  /runs:
+    post:
+      summary: Create a new task run
+      description: Executes a task with the provided inputs
+      operationId: createRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunInput'
+      responses:
+        '200':
+          description: Task run created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the run
+                  queued_at:
+                    type: string
+                    format: date-time
+                    description: Timestamp when the run was queued
+                  inputs:
+                    type: object
+                    description: The inputs provided for the task
+                    additionalProperties: true
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests, rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codeSamples:
+        - lang: JavaScript
+          source: |-
+            import Vern from 'vern';
+
+            const client = new Vern({
+              apiKey: process.env['VERN_SDK_API_KEY'], // This is the default and can be omitted
+            });
+
+            async function main() {
+              const run = await client.runs.create({ taskId: 'enterInventoryItem' });
+
+              console.log(run.id);
+            }
+
+            main();
+        - lang: Python
+          source: |-
+            import os
+            from vern import Vern
+
+            client = Vern(
+                api_key=os.environ.get("VERN_SDK_API_KEY"),  # This is the default and can be omitted
+            )
+            run = client.runs.create(
+                task_id="enterInventoryItem",
+            )
+            print(run.id)
+        - lang: Go
+          source: |
+            package main
+
+            import (
+              "context"
+              "fmt"
+
+              "github.com/vern-so/sdk-go"
+              "github.com/vern-so/sdk-go/option"
+            )
+
+            func main() {
+              client := vernsdk.NewClient(
+                option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("VERN_SDK_API_KEY")
+              )
+              run, err := client.Runs.New(context.TODO(), vernsdk.RunNewParams{
+                TaskID: "enterInventoryItem",
+              })
+              if err != nil {
+                panic(err.Error())
+              }
+              fmt.Printf("%+v\n", run.ID)
+            }
+        - lang: Java
+          source: |-
+            package com.vern_sdk.api.example;
+
+            import com.vern_sdk.api.client.VernClient;
+            import com.vern_sdk.api.client.okhttp.VernOkHttpClient;
+            import com.vern_sdk.api.models.runs.RunCreateParams;
+            import com.vern_sdk.api.models.runs.RunCreateResponse;
+
+            public final class Main {
+                private Main() {}
+
+                public static void main(String[] args) {
+                    // Configures using the `VERN_SDK_API_KEY` and `VERN_BASE_URL` environment variables
+                    VernClient client = VernOkHttpClient.fromEnv();
+
+                    RunCreateParams params = RunCreateParams.builder()
+                        .taskId("enterInventoryItem")
+                        .build();
+                    RunCreateResponse run = client.runs().create(params);
+                }
+            }
+        - lang: Ruby
+          source: |-
+            require "vern_sdk"
+
+            vern = VernSDK::Client.new(
+              api_key: ENV["VERN_SDK_API_KEY"] # This is the default and can be omitted
+            )
+
+            run = vern.runs.create(task_id: "enterInventoryItem")
+
+            puts(run)
+    options:
+      summary: CORS support
+      description: Handles CORS preflight requests
+      responses:
+        '204':
+          description: CORS preflight response
+  /runs/{id}:
+    get:
+      summary: Get a task run by ID
+      description: Retrieves the details of a specific task run
+      operationId: getRun
+      parameters:
+        - name: id
+          in: path
+          description: The ID of the run to retrieve
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Run details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunDetails'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid or missing API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Unauthorized access to the run
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests, rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      x-codeSamples:
+        - lang: JavaScript
+          source: |-
+            import Vern from 'vern';
+
+            const client = new Vern({
+              apiKey: process.env['VERN_SDK_API_KEY'], // This is the default and can be omitted
+            });
+
+            async function main() {
+              const run = await client.runs.retrieve('id');
+
+              console.log(run.id);
+            }
+
+            main();
+        - lang: Python
+          source: |-
+            import os
+            from vern import Vern
+
+            client = Vern(
+                api_key=os.environ.get("VERN_SDK_API_KEY"),  # This is the default and can be omitted
+            )
+            run = client.runs.retrieve(
+                "id",
+            )
+            print(run.id)
+        - lang: Go
+          source: |
+            package main
+
+            import (
+              "context"
+              "fmt"
+
+              "github.com/vern-so/sdk-go"
+              "github.com/vern-so/sdk-go/option"
+            )
+
+            func main() {
+              client := vernsdk.NewClient(
+                option.WithAPIKey("My API Key"), // defaults to os.LookupEnv("VERN_SDK_API_KEY")
+              )
+              run, err := client.Runs.Get(context.TODO(), "id")
+              if err != nil {
+                panic(err.Error())
+              }
+              fmt.Printf("%+v\n", run.ID)
+            }
+        - lang: Java
+          source: |-
+            package com.vern_sdk.api.example;
+
+            import com.vern_sdk.api.client.VernClient;
+            import com.vern_sdk.api.client.okhttp.VernOkHttpClient;
+            import com.vern_sdk.api.models.runs.RunRetrieveParams;
+            import com.vern_sdk.api.models.runs.RunRetrieveResponse;
+
+            public final class Main {
+                private Main() {}
+
+                public static void main(String[] args) {
+                    // Configures using the `VERN_SDK_API_KEY` and `VERN_BASE_URL` environment variables
+                    VernClient client = VernOkHttpClient.fromEnv();
+
+                    RunRetrieveResponse run = client.runs().retrieve("id");
+                }
+            }
+        - lang: Ruby
+          source: |-
+            require "vern_sdk"
+
+            vern = VernSDK::Client.new(
+              api_key: ENV["VERN_SDK_API_KEY"] # This is the default and can be omitted
+            )
+
+            run = vern.runs.retrieve("id")
+
+            puts(run)
+    options:
+      summary: CORS support
+      description: Handles CORS preflight requests
+      responses:
+        '204':
+          description: CORS preflight response
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: x-api-key
+  schemas:
+    RunInput:
+      type: object
+      required:
+        - taskId
+      properties:
+        taskId:
+          type: string
+          description: The ID of the task to execute
+        profileId:
+          type: string
+          description: Optional user-specified UID for a profile linked via magic link
+        inputs:
+          type: object
+          description: The inputs required for the task
+          additionalProperties: true
+        url:
+          type: string
+          format: uri
+          description: An optional URL to be processed by the task
+      example:
+        taskId: enterInventoryItem
+        inputs:
+          prompt: Analyze the sentiment of this text
+          text: I really enjoyed this product, it exceeded my expectations!
+    RunDetails:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the run
+        task:
+          type: string
+          description: The name of the task that was executed
+        inputs:
+          type: object
+          description: The inputs provided for the task
+          additionalProperties: true
+        status:
+          type: string
+          enum:
+            - queued
+            - running
+            - complete
+            - failed
+          description: The current status of the run
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run was created
+        started_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run started executing
+        completed_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run completed
+        response:
+          type: object
+          description: The response data from the task execution
+          additionalProperties: true
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        status:
+          type: string
+          description: Error status
+    RunCompleted:
+      type: object
+      required:
+        - id
+        - task
+        - inputs
+        - response
+        - status
+        - created_at
+        - started_at
+        - completed_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for this run instance.
+        task:
+          type: string
+          description: Human-readable name of the task executed.
+        inputs:
+          type: object
+          description: User-defined input payload (arbitrary key/value pairs).
+          additionalProperties: true
+        response:
+          type: object
+          description: User-defined response payload (arbitrary key/value pairs).
+          additionalProperties: true
+        status:
+          type: string
+          enum:
+            - completed
+            - failed
+            - running
+          description: Final status of the run.
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run record was created.
+        started_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run actually started.
+        completed_at:
+          type: string
+          format: date-time
+          description: Timestamp when the run finished.
+x-webhooks:
+  run.completed:
+    summary: Emitted when a run/task has completed.
+    description: >
+      This webhook is emitted when a task run completes. The `inputs` and `response` sections are free-form
+      and entirely defined by the user.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RunCompleted'

@@ -1,0 +1,321 @@
+openapi: 3.0.3
+info:
+  title: RestCountriesAPI
+  description: |
+    Ultra-complete API to get detailed information about all countries in the world. RapidAPI compatible. Includes advanced search, filtering, sorting, export, and specialized endpoints (borders, similar countries, stats).
+    
+    **All endpoints require RapidAPI proxy headers (`x-rapidapi-host` or `x-rapidapi-user`).**
+  version: "2.0.0"
+servers:
+  - url: https://YOUR_RAPIDAPI_URL
+    description: RapidAPI proxy endpoint
+components:
+  securitySchemes:
+    RapidAPIKey:
+      type: apiKey
+      in: header
+      name: x-rapidapi-host
+  schemas:
+    Country:
+      type: object
+      properties:
+        name:
+          type: string
+        code:
+          type: string
+        capital:
+          type: string
+        region:
+          type: string
+        subregion:
+          type: string
+          nullable: true
+        population:
+          type: integer
+        area:
+          type: number
+          nullable: true
+        flag:
+          type: string
+          nullable: true
+        flag_svg:
+          type: string
+          nullable: true
+        languages:
+          type: array
+          items:
+            type: string
+        currencies:
+          type: array
+          items:
+            type: string
+        timezones:
+          type: array
+          items:
+            type: string
+        tld:
+          type: array
+          items:
+            type: string
+        calling_codes:
+          type: array
+          items:
+            type: string
+        borders:
+          type: array
+          items:
+            type: string
+  parameters:
+    RapidAPIHeader:
+      name: x-rapidapi-host
+      in: header
+      required: true
+      schema:
+        type: string
+      description: RapidAPI proxy header
+security:
+  - RapidAPIKey: []
+paths:
+  /countries:
+    get:
+      tags: [Countries]
+      summary: List, filter, sort and paginate countries
+      description: Returns a paginated, filterable and sortable list of countries.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+        - name: region
+          in: query
+          schema: { type: string }
+        - name: subregion
+          in: query
+          schema: { type: string }
+        - name: language
+          in: query
+          schema: { type: string }
+        - name: currency
+          in: query
+          schema: { type: string }
+        - name: capital
+          in: query
+          schema: { type: string }
+        - name: tld
+          in: query
+          schema: { type: string }
+        - name: calling_code
+          in: query
+          schema: { type: string }
+        - name: border
+          in: query
+          schema: { type: string }
+        - name: name
+          in: query
+          schema: { type: string }
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [name, nom, population, area]
+        - name: desc
+          in: query
+          schema: { type: boolean, default: false }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1, minimum: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 10, minimum: 1, maximum: 100 }
+      responses:
+        '200':
+          description: List of countries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+        '401':
+          description: RapidAPI proxy required
+  /country:
+    get:
+      tags: [Country]
+      summary: Get details of a country by code, name or capital
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+        - name: code
+          in: query
+          schema: { type: string }
+        - name: name
+          in: query
+          schema: { type: string }
+        - name: capital
+          in: query
+          schema: { type: string }
+      responses:
+        '200':
+          description: Country details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Country'
+        '404':
+          description: Country not found
+        '401':
+          description: RapidAPI proxy required
+  /borders:
+    get:
+      tags: [Special]
+      summary: Get bordering countries by country code
+      description: |
+        Returns the list of countries that share a border with the specified country code.
+        
+        **Query parameter:**
+        - `code` (string, required): The ISO code of the country (e.g. `FR`, `DE`, `US`).
+        
+        **Example:** `/borders?code=FR` returns all countries bordering France.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The ISO code of the country (e.g. FR, DE, US)
+      responses:
+        '200':
+          description: List of bordering countries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country:
+                    type: string
+                  borders:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: Country not found
+        '401':
+          description: RapidAPI proxy required
+  /similar:
+    get:
+      tags: [Special]
+      summary: Get similar countries by region or language
+      description: |
+        Returns a list of countries similar to the specified country, by region or language.
+        
+        **Query parameters:**
+        - `code` (string, required): The ISO code of the country (e.g. `FR`, `DE`, `US`).
+        - `by` (string, optional): Similarity criterion (`region` or `language`). Default: `region`.
+        
+        **Example:** `/similar?code=FR&by=language` returns countries sharing a language with France.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+          description: The ISO code of the country (e.g. FR, DE, US)
+        - name: by
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [region, language]
+            default: region
+          description: Similarity criterion (region or language)
+      responses:
+        '200':
+          description: List of similar countries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  country:
+                    type: string
+                  similar:
+                    type: array
+                    items:
+                      type: string
+        '404':
+          description: Country not found
+        '401':
+          description: RapidAPI proxy required
+  /stats:
+    get:
+      tags: [Stats]
+      summary: Get global statistics
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+      responses:
+        '200':
+          description: Global statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_countries:
+                    type: integer
+                  total_population:
+                    type: integer
+                  total_area:
+                    type: number
+                  countries_by_region:
+                    type: object
+                    additionalProperties:
+                      type: integer
+        '401':
+          description: RapidAPI proxy required
+  /export:
+    get:
+      tags: [Export]
+      summary: Export the full list of countries (JSON, CSV, XML)
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum: [json, csv, xml]
+          description: Export format
+      responses:
+        '200':
+          description: Exported data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Country'
+            text/csv:
+              schema:
+                type: string
+            application/xml:
+              schema:
+                type: string
+        '401':
+          description: RapidAPI proxy required
+  /ping:
+    get:
+      tags: [Special]
+      summary: Healthcheck endpoint (ping)
+      description: Returns 'pong' if the API is up and RapidAPI proxy header is present.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHeader'
+      responses:
+        '200':
+          description: Pong response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ping:
+                    type: string
+                    example: pong
+        '401':
+          description: RapidAPI proxy required 

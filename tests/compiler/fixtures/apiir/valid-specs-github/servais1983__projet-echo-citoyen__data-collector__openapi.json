@@ -1,0 +1,586 @@
+{
+  "api": {
+    "title": "ECHO Data Collector API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Sources",
+      "key": "sources",
+      "operations": [
+        {
+          "id": "GET:/sources",
+          "method": "GET",
+          "kind": "list",
+          "path": "/sources",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "Identifiant unique de la source"
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Nom de la source"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "twitter",
+                    "facebook",
+                    "news",
+                    "rss"
+                  ],
+                  "description": "Type de source"
+                },
+                "config": {
+                  "type": "object",
+                  "description": "Configuration de la source"
+                },
+                "is_active": {
+                  "type": "boolean",
+                  "description": "État d'activation"
+                },
+                "last_collection": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Dernière collecte réussie"
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Date de création"
+                },
+                "updated_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Dernière mise à jour"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/sources/{source_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/sources/{source_id}",
+          "identifierParam": "source_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la source"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nom de la source"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "twitter",
+                  "facebook",
+                  "news",
+                  "rss"
+                ],
+                "description": "Type de source"
+              },
+              "config": {
+                "type": "object",
+                "description": "Configuration de la source"
+              },
+              "is_active": {
+                "type": "boolean",
+                "description": "État d'activation"
+              },
+              "last_collection": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière collecte réussie"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Date de création"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière mise à jour"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/sources",
+          "method": "POST",
+          "kind": "create",
+          "path": "/sources",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "config"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nom de la source de données"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "twitter",
+                  "facebook",
+                  "news",
+                  "rss"
+                ],
+                "description": "Type de source de données"
+              },
+              "config": {
+                "type": "object",
+                "description": "Configuration spécifique à la source"
+              },
+              "is_active": {
+                "type": "boolean",
+                "default": true,
+                "description": "État d'activation de la source"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la source"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nom de la source"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "twitter",
+                  "facebook",
+                  "news",
+                  "rss"
+                ],
+                "description": "Type de source"
+              },
+              "config": {
+                "type": "object",
+                "description": "Configuration de la source"
+              },
+              "is_active": {
+                "type": "boolean",
+                "description": "État d'activation"
+              },
+              "last_collection": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière collecte réussie"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Date de création"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière mise à jour"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/sources/{source_id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/sources/{source_id}",
+          "identifierParam": "source_id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "type",
+              "config"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Nom de la source de données"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "twitter",
+                  "facebook",
+                  "news",
+                  "rss"
+                ],
+                "description": "Type de source de données"
+              },
+              "config": {
+                "type": "object",
+                "description": "Configuration spécifique à la source"
+              },
+              "is_active": {
+                "type": "boolean",
+                "default": true,
+                "description": "État d'activation de la source"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la source"
+              },
+              "name": {
+                "type": "string",
+                "description": "Nom de la source"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "twitter",
+                  "facebook",
+                  "news",
+                  "rss"
+                ],
+                "description": "Type de source"
+              },
+              "config": {
+                "type": "object",
+                "description": "Configuration de la source"
+              },
+              "is_active": {
+                "type": "boolean",
+                "description": "État d'activation"
+              },
+              "last_collection": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière collecte réussie"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Date de création"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière mise à jour"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stats",
+      "key": "stats",
+      "operations": [
+        {
+          "id": "GET:/stats",
+          "method": "GET",
+          "kind": "list",
+          "path": "/stats",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "total_sources": {
+                "type": "integer",
+                "description": "Nombre total de sources"
+              },
+              "active_sources": {
+                "type": "integer",
+                "description": "Nombre de sources actives"
+              },
+              "total_tasks": {
+                "type": "integer",
+                "description": "Nombre total de tâches"
+              },
+              "active_tasks": {
+                "type": "integer",
+                "description": "Nombre de tâches actives"
+              },
+              "last_24h_collections": {
+                "type": "integer",
+                "description": "Nombre de collectes dans les 24h"
+              },
+              "sources_by_type": {
+                "type": "object",
+                "properties": {
+                  "twitter": {
+                    "type": "integer"
+                  },
+                  "facebook": {
+                    "type": "integer"
+                  },
+                  "news": {
+                    "type": "integer"
+                  },
+                  "rss": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "GET:/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/tasks",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "Identifiant unique de la tâche"
+                },
+                "source_id": {
+                  "type": "integer",
+                  "description": "ID de la source associée"
+                },
+                "schedule": {
+                  "type": "string",
+                  "description": "Expression cron"
+                },
+                "parameters": {
+                  "type": "object",
+                  "description": "Paramètres de collecte"
+                },
+                "last_run": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Dernière exécution"
+                },
+                "next_run": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Prochaine exécution planifiée"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "active",
+                    "paused",
+                    "error"
+                  ],
+                  "description": "État de la tâche"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/tasks/{task_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la tâche"
+              },
+              "source_id": {
+                "type": "integer",
+                "description": "ID de la source associée"
+              },
+              "schedule": {
+                "type": "string",
+                "description": "Expression cron"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Paramètres de collecte"
+              },
+              "last_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière exécution"
+              },
+              "next_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Prochaine exécution planifiée"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "paused",
+                  "error"
+                ],
+                "description": "État de la tâche"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "source_id",
+              "schedule"
+            ],
+            "properties": {
+              "source_id": {
+                "type": "integer",
+                "description": "ID de la source de données"
+              },
+              "schedule": {
+                "type": "string",
+                "description": "Expression cron pour la planification"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Paramètres spécifiques à la collecte"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la tâche"
+              },
+              "source_id": {
+                "type": "integer",
+                "description": "ID de la source associée"
+              },
+              "schedule": {
+                "type": "string",
+                "description": "Expression cron"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Paramètres de collecte"
+              },
+              "last_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière exécution"
+              },
+              "next_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Prochaine exécution planifiée"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "paused",
+                  "error"
+                ],
+                "description": "État de la tâche"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/tasks/{task_id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/tasks/{task_id}",
+          "identifierParam": "task_id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "source_id",
+              "schedule"
+            ],
+            "properties": {
+              "source_id": {
+                "type": "integer",
+                "description": "ID de la source de données"
+              },
+              "schedule": {
+                "type": "string",
+                "description": "Expression cron pour la planification"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Paramètres spécifiques à la collecte"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "Identifiant unique de la tâche"
+              },
+              "source_id": {
+                "type": "integer",
+                "description": "ID de la source associée"
+              },
+              "schedule": {
+                "type": "string",
+                "description": "Expression cron"
+              },
+              "parameters": {
+                "type": "object",
+                "description": "Paramètres de collecte"
+              },
+              "last_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Dernière exécution"
+              },
+              "next_run": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Prochaine exécution planifiée"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "paused",
+                  "error"
+                ],
+                "description": "État de la tâche"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

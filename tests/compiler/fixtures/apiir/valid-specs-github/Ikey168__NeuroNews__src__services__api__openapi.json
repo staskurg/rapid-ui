@@ -1,0 +1,547 @@
+{
+  "api": {
+    "title": "NeuroNews Services API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Question Answering",
+      "key": "question-answering",
+      "operations": [
+        {
+          "id": "askQuestion",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 500,
+                "description": "The question to answer",
+                "example": "What are the latest developments in AI technology?"
+              },
+              "k": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20,
+                "default": 5,
+                "description": "Number of documents to retrieve for context"
+              },
+              "filters": {
+                "type": "object",
+                "description": "Filters to apply during document retrieval",
+                "properties": {
+                  "source": {
+                    "type": "string",
+                    "description": "Filter by news source",
+                    "example": "bbc"
+                  },
+                  "date_from": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Filter articles from this date (YYYY-MM-DD)",
+                    "example": "2025-08-01"
+                  },
+                  "date_to": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "Filter articles until this date (YYYY-MM-DD)",
+                    "example": "2025-08-28"
+                  },
+                  "language": {
+                    "type": "string",
+                    "enum": [
+                      "en",
+                      "es",
+                      "fr",
+                      "de",
+                      "it"
+                    ],
+                    "description": "Filter by article language"
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "politics",
+                      "business",
+                      "technology",
+                      "sports",
+                      "entertainment",
+                      "health",
+                      "science"
+                    ],
+                    "description": "Filter by article category"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "rerank_on": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether to enable reranking of retrieved documents"
+              },
+              "fusion": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether to enable query fusion for better retrieval"
+              },
+              "provider": {
+                "type": "string",
+                "enum": [
+                  "openai",
+                  "anthropic",
+                  "cohere",
+                  "huggingface"
+                ],
+                "default": "openai",
+                "description": "Answer generation provider to use"
+              }
+            },
+            "additionalProperties": false
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "question",
+              "answer",
+              "citations",
+              "metadata",
+              "request_id",
+              "tracked_in_mlflow"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "description": "The original question that was asked"
+              },
+              "answer": {
+                "type": "string",
+                "description": "The generated answer to the question"
+              },
+              "citations": {
+                "type": "array",
+                "description": "List of citations with sources used to generate the answer",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "citation_id",
+                    "title",
+                    "source",
+                    "url",
+                    "relevance_score",
+                    "published_date",
+                    "excerpt",
+                    "citation_strength"
+                  ],
+                  "properties": {
+                    "citation_id": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "description": "Unique citation identifier within the response"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "Title of the source article"
+                    },
+                    "source": {
+                      "type": "string",
+                      "description": "News source or publisher name"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "URL of the source article"
+                    },
+                    "relevance_score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Relevance score of the document to the query (0-1)"
+                    },
+                    "published_date": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Publication date of the article (ISO 8601 format)"
+                    },
+                    "excerpt": {
+                      "type": "string",
+                      "description": "Relevant excerpt from the article"
+                    },
+                    "citation_strength": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Strength of the citation in supporting the answer (0-1)"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "required": [
+                  "total_time_ms",
+                  "documents_found",
+                  "provider_used"
+                ],
+                "properties": {
+                  "total_time_ms": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Total response time in milliseconds"
+                  },
+                  "retrieval_time_ms": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Document retrieval time in milliseconds"
+                  },
+                  "generation_time_ms": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "Answer generation time in milliseconds"
+                  },
+                  "documents_found": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of documents found for the query"
+                  },
+                  "documents_used": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Number of documents actually used for answer generation"
+                  },
+                  "reranked": {
+                    "type": "boolean",
+                    "description": "Whether documents were reranked"
+                  },
+                  "query_fusion_used": {
+                    "type": "boolean",
+                    "description": "Whether query fusion was applied"
+                  },
+                  "provider_used": {
+                    "type": "string",
+                    "description": "The answer generation provider that was used"
+                  }
+                },
+                "additionalProperties": true
+              },
+              "request_id": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                "description": "Unique request identifier (UUID format)"
+              },
+              "tracked_in_mlflow": {
+                "type": "boolean",
+                "description": "Whether this request was logged to MLflow for tracking"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        {
+          "id": "askQuestionsBatch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask/batch",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "questions"
+            ],
+            "properties": {
+              "questions": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 10,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "question"
+                  ],
+                  "properties": {
+                    "question": {
+                      "type": "string",
+                      "minLength": 3,
+                      "maxLength": 500,
+                      "description": "The question to answer",
+                      "example": "What are the latest developments in AI technology?"
+                    },
+                    "k": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 20,
+                      "default": 5,
+                      "description": "Number of documents to retrieve for context"
+                    },
+                    "filters": {
+                      "type": "object",
+                      "description": "Filters to apply during document retrieval",
+                      "properties": {
+                        "source": {
+                          "type": "string",
+                          "description": "Filter by news source",
+                          "example": "bbc"
+                        },
+                        "date_from": {
+                          "type": "string",
+                          "format": "date",
+                          "description": "Filter articles from this date (YYYY-MM-DD)",
+                          "example": "2025-08-01"
+                        },
+                        "date_to": {
+                          "type": "string",
+                          "format": "date",
+                          "description": "Filter articles until this date (YYYY-MM-DD)",
+                          "example": "2025-08-28"
+                        },
+                        "language": {
+                          "type": "string",
+                          "enum": [
+                            "en",
+                            "es",
+                            "fr",
+                            "de",
+                            "it"
+                          ],
+                          "description": "Filter by article language"
+                        },
+                        "category": {
+                          "type": "string",
+                          "enum": [
+                            "politics",
+                            "business",
+                            "technology",
+                            "sports",
+                            "entertainment",
+                            "health",
+                            "science"
+                          ],
+                          "description": "Filter by article category"
+                        }
+                      },
+                      "additionalProperties": false
+                    },
+                    "rerank_on": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "Whether to enable reranking of retrieved documents"
+                    },
+                    "fusion": {
+                      "type": "boolean",
+                      "default": true,
+                      "description": "Whether to enable query fusion for better retrieval"
+                    },
+                    "provider": {
+                      "type": "string",
+                      "enum": [
+                        "openai",
+                        "anthropic",
+                        "cohere",
+                        "huggingface"
+                      ],
+                      "default": "openai",
+                      "description": "Answer generation provider to use"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "description": "List of questions to process in batch"
+              },
+              "parallel": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether to process questions in parallel"
+              }
+            },
+            "additionalProperties": false
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "responses",
+              "batch_metadata"
+            ],
+            "properties": {
+              "responses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "question",
+                    "answer",
+                    "citations",
+                    "metadata",
+                    "request_id",
+                    "tracked_in_mlflow"
+                  ],
+                  "properties": {
+                    "question": {
+                      "type": "string",
+                      "description": "The original question that was asked"
+                    },
+                    "answer": {
+                      "type": "string",
+                      "description": "The generated answer to the question"
+                    },
+                    "citations": {
+                      "type": "array",
+                      "description": "List of citations with sources used to generate the answer",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "citation_id",
+                          "title",
+                          "source",
+                          "url",
+                          "relevance_score",
+                          "published_date",
+                          "excerpt",
+                          "citation_strength"
+                        ],
+                        "properties": {
+                          "citation_id": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "description": "Unique citation identifier within the response"
+                          },
+                          "title": {
+                            "type": "string",
+                            "description": "Title of the source article"
+                          },
+                          "source": {
+                            "type": "string",
+                            "description": "News source or publisher name"
+                          },
+                          "url": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "URL of the source article"
+                          },
+                          "relevance_score": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Relevance score of the document to the query (0-1)"
+                          },
+                          "published_date": {
+                            "type": "string",
+                            "format": "date-time",
+                            "description": "Publication date of the article (ISO 8601 format)"
+                          },
+                          "excerpt": {
+                            "type": "string",
+                            "description": "Relevant excerpt from the article"
+                          },
+                          "citation_strength": {
+                            "type": "number",
+                            "minimum": 0,
+                            "maximum": 1,
+                            "description": "Strength of the citation in supporting the answer (0-1)"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "required": [
+                        "total_time_ms",
+                        "documents_found",
+                        "provider_used"
+                      ],
+                      "properties": {
+                        "total_time_ms": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Total response time in milliseconds"
+                        },
+                        "retrieval_time_ms": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Document retrieval time in milliseconds"
+                        },
+                        "generation_time_ms": {
+                          "type": "number",
+                          "minimum": 0,
+                          "description": "Answer generation time in milliseconds"
+                        },
+                        "documents_found": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Number of documents found for the query"
+                        },
+                        "documents_used": {
+                          "type": "integer",
+                          "minimum": 0,
+                          "description": "Number of documents actually used for answer generation"
+                        },
+                        "reranked": {
+                          "type": "boolean",
+                          "description": "Whether documents were reranked"
+                        },
+                        "query_fusion_used": {
+                          "type": "boolean",
+                          "description": "Whether query fusion was applied"
+                        },
+                        "provider_used": {
+                          "type": "string",
+                          "description": "The answer generation provider that was used"
+                        }
+                      },
+                      "additionalProperties": true
+                    },
+                    "request_id": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$",
+                      "description": "Unique request identifier (UUID format)"
+                    },
+                    "tracked_in_mlflow": {
+                      "type": "boolean",
+                      "description": "Whether this request was logged to MLflow for tracking"
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "description": "List of individual question responses"
+              },
+              "batch_metadata": {
+                "type": "object",
+                "properties": {
+                  "total_questions": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "successful_responses": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "failed_responses": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_batch_time_ms": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                },
+                "required": [
+                  "total_questions",
+                  "successful_responses",
+                  "failed_responses",
+                  "total_batch_time_ms"
+                ]
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      ]
+    }
+  ]
+}

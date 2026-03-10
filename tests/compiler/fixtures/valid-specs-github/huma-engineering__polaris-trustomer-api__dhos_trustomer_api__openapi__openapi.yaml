@@ -1,0 +1,373 @@
+openapi: 3.0.3
+info:
+  description: The DHOS Trustomer API is responsible for managing trustomer configuration
+  title: DHOS Trustomer API
+  version: 1.0.0
+paths:
+  /running:
+    get:
+      summary: Verify service is running
+      description: Verifies that the service is running. Used for monitoring in kubernetes.
+      tags:
+      - monitoring
+      responses:
+        '200':
+          description: If we respond, we are running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  running:
+                    type: boolean
+                    example: true
+      operationId: flask_batteries_included.blueprint_monitoring.app_running
+  /version:
+    get:
+      summary: Get version information
+      description: Get the version number, circleci build number, and git hash.
+      tags:
+      - monitoring
+      responses:
+        '200':
+          description: Version numbers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  circle:
+                    type: string
+                    example: '1234'
+                  hash:
+                    type: string
+                    example: 366c204
+      operationId: flask_batteries_included.blueprint_monitoring.app_version
+  /dhos/v1/trustomer:
+    get:
+      summary: Get a trustomer's config
+      description: Get a trustomer's configuration including product-specific settings
+      tags:
+      - trustomer
+      parameters:
+      - description: Trustomer code
+        in: header
+        name: X-Trustomer
+        required: true
+        schema:
+          example: ouh
+          type: string
+      responses:
+        '200':
+          description: The requested trustomer's config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustomerConfigSchema'
+        default:
+          description: Error, e.g. 404 Not Found, 503 Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: dhos_trustomer_api.blueprint_api.get_trustomer_config
+      deprecated: true
+  /dhos/v1/escalation_policy/{policy_name}:
+    get:
+      summary: Get a trustomer's escalation policy
+      description: Get a trustomer's escalation policy
+      tags:
+      - trustomer
+      parameters:
+      - name: policy_name
+        in: path
+        required: true
+        description: Policy name
+        schema:
+          type: string
+          example: news2
+      - description: Trustomer code
+        in: header
+        name: X-Trustomer
+        required: true
+        schema:
+          example: ouh
+          type: string
+      responses:
+        '200':
+          description: The trustomer's escalation policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EscalationPolicySchema'
+        default:
+          description: Error, e.g. 404 Not Found, 503 Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: dhos_trustomer_api.blueprint_api.get_escalation_policy_content
+      deprecated: true
+  /dhos/v1/parse_patient_barcode:
+    post:
+      summary: Parse a patient barcode
+      description: Parse a patient barcode into its constituent parts, including name
+        and identifiers
+      tags:
+      - trustomer
+      parameters:
+      - description: Trustomer code
+        in: header
+        name: X-Trustomer
+        required: true
+        schema:
+          example: ouh
+          type: string
+      requestBody:
+        description: Data for creation of patient barcode
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatientBarcodeSchema'
+      responses:
+        '200':
+          description: Parsed barcode successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PatientBarcodeResponseSchema'
+        default:
+          description: Error, e.g. 404 Not Found, 503 Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: dhos_trustomer_api.blueprint_api.parse_patient_barcode
+      deprecated: true
+  /dhos/v1/trustomer/{customer_code}:
+    get:
+      summary: Get config for the specified trustomer
+      description: Get specified trustomer's configuration including product-specific
+        settings
+      tags:
+      - trustomer
+      parameters:
+      - description: Customer code
+        in: path
+        name: customer_code
+        required: true
+        schema:
+          example: ouh
+          type: string
+      - description: Trustomer code
+        in: header
+        name: X-Trustomer
+        required: true
+        schema:
+          example: ouh
+          type: string
+      - description: Product name
+        in: header
+        name: X-Product
+        required: true
+        schema:
+          example: gdm
+          type: string
+      responses:
+        '200':
+          description: The requested trustomer's config
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrustomerConfigSchema'
+        default:
+          description: Error, e.g. 404 Not Found, 503 Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      operationId: dhos_trustomer_api.blueprint_api.get_trustomer_config_by_code
+components:
+  schemas:
+    PatientBarcodeSchema:
+      type: object
+      properties:
+        barcode:
+          type: string
+          description: Patient barcode
+          example: '12345'
+      required:
+      - barcode
+      title: Patient barcode format
+      additionalProperties: true
+    PatientBarcodeResponseSchema:
+      type: object
+      properties:
+        firstname:
+          type: string
+          description: Patient's first name
+          example: John
+        lastname:
+          type: string
+          description: Patient's last name
+          example: Smith
+        sex:
+          type: string
+          description: Patient's sex
+          example: M
+          enum:
+          - M
+          - F
+          - U
+        nhs:
+          type: string
+          description: Patient's NHS Number
+          example: '111222333'
+        mrn:
+          type: string
+          description: Patient's Medical Record Number
+          example: '111222333'
+      title: Parsed patient barcode
+      additionalProperties: true
+    TrustomerConfigSchema:
+      type: object
+      properties:
+        gdm_config:
+          type: object
+        send_config:
+          type: object
+        gdm_clinician_terms_content:
+          type: string
+          description: Clinician terms of use (HTML)
+          example: Lorem ipsum
+        gdm_clinician_terms_version:
+          type: string
+          description: Version number of clinician terms of use
+          example: '1'
+        gdm_terms_content:
+          type: string
+          description: Patient terms of use (HTML)
+          example: Lorem ipsum
+        gdm_terms_version:
+          type: string
+          description: Version number of patient terms of use
+          example: '1'
+        hl7_config:
+          type: object
+        measurement_system:
+          type: string
+          description: System of measurement
+          example: metric
+        created:
+          type: string
+          format: date-time
+          description: Record creation date/time
+          example: '2017-09-23T08:29:19.123+00:00'
+        gdm_phone_midwife:
+          type: string
+          description: Midwife telephone number
+          example: '07777777777'
+        gdm_phone_ward:
+          type: string
+          description: Ward telephone number
+          example: '01276777777'
+        modified:
+          type: string
+          format: date-time
+          description: Record modification date/time
+          example: '2017-09-23T08:29:19.123+00:00'
+        name:
+          type: string
+          description: Trust description
+          example: Forest NHS Foundation Trust
+        uuid:
+          type: string
+          description: UUID of the Trustomer configuration record
+          example: 2c4f1d24-2952-4d4e-b1d1-3637e33cc161
+      required:
+      - created
+      - gdm_clinician_terms_content
+      - gdm_clinician_terms_version
+      - gdm_config
+      - gdm_phone_midwife
+      - gdm_phone_ward
+      - gdm_terms_content
+      - gdm_terms_version
+      - hl7_config
+      - measurement_system
+      - modified
+      - name
+      - send_config
+      - uuid
+      title: Trustomer details
+      additionalProperties: true
+    EscalationPolicySchema:
+      type: object
+      properties:
+        routine_monitoring:
+          type: string
+          description: Routine monitoring instructions
+          example: Do something
+        low_monitoring:
+          type: string
+          description: Low monitoring instructions
+          example: Do something
+        low_medium_monitoring:
+          type: string
+          description: Low medium monitoring instructions
+          example: Do something
+        medium_monitoring:
+          type: string
+          description: Medium monitoring instructions
+          example: Do something
+        high_monitoring:
+          type: string
+          description: High monitoring instructions
+          example: Do something
+      title: Trustomer escalation policy
+      additionalProperties: true
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+          description: HTTP response code
+          example: 404
+        message:
+          type: string
+          description: Message attached to response
+          example: Not Found
+      required:
+      - code
+      description: An error response in json format
+  responses:
+    BadRequest:
+      description: Bad or malformed request was received
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: The specified resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServiceUnavailable:
+      description: Service or dependent resource not available
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

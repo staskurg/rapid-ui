@@ -1,0 +1,298 @@
+{
+  "api": {
+    "title": "Edge Computing",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "connectorAPI",
+      "key": "connectorapi",
+      "operations": [
+        {
+          "id": "getPZData",
+          "method": "POST",
+          "kind": "create",
+          "path": "/getPZData",
+          "requestSchema": {
+            "type": "object",
+            "description": "Privacy zone properties",
+            "properties": {
+              "data_provider": {
+                "type": "string",
+                "description": "Unique reference/ID of the data provider"
+              },
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Describe the privacy zone information related to the DataProvider and PrivateData",
+            "required": [
+              "private_data",
+              "zones"
+            ],
+            "properties": {
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "zones": {
+                "type": "array",
+                "description": "Collection of permitted privacy zones",
+                "items": {
+                  "type": "string",
+                  "description": "Unique identifier of a privacy zone"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "requestFunction",
+          "method": "POST",
+          "kind": "create",
+          "path": "/requestFunction",
+          "requestSchema": {
+            "type": "object",
+            "description": "Function properties",
+            "properties": {
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "func_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Description of the exact function",
+            "required": [
+              "function",
+              "func_provider",
+              "uri"
+            ],
+            "properties": {
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "func_provider": {
+                "type": "string",
+                "description": "Unique reference/ID of the function provider"
+              },
+              "uri": {
+                "type": "string",
+                "description": "Location description of function resources"
+              },
+              "configs": {
+                "type": "array",
+                "description": "Optional parameters of the function instance",
+                "items": {
+                  "type": "object",
+                  "description": "Config parameter"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "requestPrivacyPreservingData",
+          "method": "POST",
+          "kind": "create",
+          "path": "/requestPrivacyPreservingData",
+          "requestSchema": {
+            "type": "object",
+            "description": "Data properties",
+            "properties": {
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "data_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              },
+              "consent": {
+                "type": "string",
+                "description": "Unique consent ID"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "Description of the exact private data",
+            "required": [
+              "private_data",
+              "data_provider",
+              "uri"
+            ],
+            "properties": {
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "data_provider": {
+                "type": "string",
+                "description": "Unique reference/ID of the data provider"
+              },
+              "uri": {
+                "type": "string",
+                "description": "Location description of the private data"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "customerAPI",
+      "key": "customerapi",
+      "operations": [
+        {
+          "id": "requestEdgeProc",
+          "method": "POST",
+          "kind": "create",
+          "path": "/requestEdgeProc",
+          "requestSchema": {
+            "type": "object",
+            "description": "Function execution parameters",
+            "properties": {
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "data_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              },
+              "func_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "The result of the function execution on data",
+            "required": [
+              "uuid",
+              "function",
+              "data"
+            ],
+            "properties": {
+              "uuid": {
+                "type": "string",
+                "description": "Unique operation identifier"
+              },
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "metrics": {
+                "type": "object",
+                "description": "Collected execution metrics",
+                "properties": {
+                  "ret": {
+                    "type": "integer",
+                    "description": "Return value of the function"
+                  },
+                  "elapsedTime": {
+                    "type": "integer",
+                    "description": "Elapsed time of the function"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "requestPrivacyEdgeProc",
+          "method": "POST",
+          "kind": "create",
+          "path": "/requestPrivacyEdgeProc",
+          "requestSchema": {
+            "type": "object",
+            "description": "Function execution parameters",
+            "properties": {
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "data_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              },
+              "func_contract": {
+                "type": "string",
+                "description": "Unique contract ID"
+              },
+              "consent": {
+                "type": "string",
+                "description": "Unique consent ID"
+              },
+              "token": {
+                "type": "string",
+                "description": "Unique token created by the DataProvider related to the user's consent"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "description": "The result of the function execution on data",
+            "required": [
+              "uuid",
+              "function",
+              "private_data"
+            ],
+            "properties": {
+              "uuid": {
+                "type": "string",
+                "description": "Unique operation identifier"
+              },
+              "function": {
+                "type": "string",
+                "description": "Unique reference/ID of the function to be applied to the private data"
+              },
+              "private_data": {
+                "type": "string",
+                "description": "Unique reference/ID of the private / NOT private data"
+              },
+              "metrics": {
+                "type": "object",
+                "description": "Collected execution metrics",
+                "properties": {
+                  "ret": {
+                    "type": "integer",
+                    "description": "Return value of the function"
+                  },
+                  "elapsedTime": {
+                    "type": "integer",
+                    "description": "Elapsed time of the function"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

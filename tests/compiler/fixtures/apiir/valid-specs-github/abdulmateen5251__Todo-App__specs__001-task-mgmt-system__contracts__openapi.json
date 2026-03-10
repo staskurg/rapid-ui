@@ -1,0 +1,166 @@
+{
+  "api": {
+    "title": "Task Management System API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "alice@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "SecurePassword123!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string",
+                "description": "JWT token for authenticated requests",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "user_id": {
+                "type": "integer",
+                "example": 42
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "alice@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "minLength": 8,
+                "example": "SecurePassword123!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "integer",
+                "example": 42
+              },
+              "email": {
+                "type": "string",
+                "example": "alice@example.com"
+              },
+              "access_token": {
+                "type": "string",
+                "description": "JWT token for authenticated requests",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "sendChatMessage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/chat",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "message"
+            ],
+            "properties": {
+              "message": {
+                "type": "string",
+                "description": "User's natural language input",
+                "example": "Create a task to finish the project report by Friday",
+                "minLength": 1,
+                "maxLength": 2000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "string",
+                "enum": [
+                  "assistant"
+                ],
+                "description": "Always \"assistant\" for responses"
+              },
+              "content": {
+                "type": "string",
+                "description": "The AI agent's textual response",
+                "example": "I've created a task titled 'Finish project report' with a due date of Friday. Anything else you'd like to add?"
+              },
+              "tool_calls": {
+                "type": "array",
+                "description": "List of MCP tools invoked (for transparency)",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "add_task"
+                    },
+                    "arguments": {
+                      "type": "object",
+                      "example": {
+                        "title": "Finish project report",
+                        "due_date": "2026-01-31"
+                      }
+                    }
+                  }
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of the response"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

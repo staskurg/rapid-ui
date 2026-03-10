@@ -1,0 +1,272 @@
+openapi: 3.1.0
+info:
+  title: Task Management System API
+  description: Conversational AI-powered task management with stateless backend
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production server
+  - url: http://localhost:8000/v1
+    description: Development server
+
+tags:
+  - name: Chat
+    description: Conversational interface endpoints
+  - name: Auth
+    description: Authentication and user management (Better Auth)
+
+paths:
+  /api/chat:
+    post:
+      tags:
+        - Chat
+      summary: Send a message to the AI task management agent
+      description: |
+        Accepts a natural language message, processes it through the OpenAI Agents SDK
+        with MCP tools enabled, and returns the assistant's response. All conversation
+        history is fetched from and stored to the database (stateless request handling).
+      
+      operationId: sendChatMessage
+      
+      security:
+        - BearerAuth: []
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                  description: User's natural language input
+                  example: "Create a task to finish the project report by Friday"
+                  minLength: 1
+                  maxLength: 2000
+      
+      responses:
+        '200':
+          description: Successful response from AI agent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: string
+                    enum: [assistant]
+                    description: Always "assistant" for responses
+                  content:
+                    type: string
+                    description: The AI agent's textual response
+                    example: "I've created a task titled 'Finish project report' with a due date of Friday. Anything else you'd like to add?"
+                  tool_calls:
+                    type: array
+                    description: List of MCP tools invoked (for transparency)
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "add_task"
+                        arguments:
+                          type: object
+                          example: {"title": "Finish project report", "due_date": "2026-01-31"}
+                  created_at:
+                    type: string
+                    format: date-time
+                    description: Timestamp of the response
+              examples:
+                task_created:
+                  summary: Task creation response
+                  value:
+                    role: "assistant"
+                    content: "I've created a task titled 'Buy groceries'. Would you like to set a due date?"
+                    tool_calls: [{"name": "add_task", "arguments": {"title": "Buy groceries"}}]
+                    created_at: "2026-01-26T10:15:01Z"
+                
+                tasks_listed:
+                  summary: Task list response
+                  value:
+                    role: "assistant"
+                    content: "You have 3 pending tasks:\n1. Buy groceries\n2. Finish project report (due Friday)\n3. Call dentist"
+                    tool_calls: [{"name": "list_tasks", "arguments": {"status": "pending"}}]
+                    created_at: "2026-01-26T10:20:05Z"
+        
+        '401':
+          description: Unauthorized - invalid or missing authentication token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Invalid authentication"
+                detail: "The provided token is expired or malformed"
+        
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Too many requests"
+                detail: "Please wait a moment before trying again"
+        
+        '503':
+          description: Service unavailable - AI service or database temporarily down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: "Service temporarily unavailable"
+                detail: "The AI service is taking longer than usual. Please try again in a moment."
+
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user account
+      description: Creates a new user with email and password (managed by Better Auth)
+      
+      operationId: registerUser
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "alice@example.com"
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: "SecurePassword123!"
+      
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: integer
+                    example: 42
+                  email:
+                    type: string
+                    example: "alice@example.com"
+                  access_token:
+                    type: string
+                    description: JWT token for authenticated requests
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        
+        '400':
+          description: Invalid input (e.g., weak password, invalid email format)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        
+        '409':
+          description: Email already registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Authenticate an existing user
+      description: Returns a JWT token for accessing protected endpoints
+      
+      operationId: loginUser
+      
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "alice@example.com"
+                password:
+                  type: string
+                  format: password
+                  example: "SecurePassword123!"
+      
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT token for authenticated requests
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  user_id:
+                    type: integer
+                    example: 42
+        
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Better Auth login/register endpoints
+  
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        detail:
+          type: string
+          description: Additional context about the error
+        code:
+          type: string
+          description: Machine-readable error code
+      example:
+        error: "Invalid authentication"
+        detail: "The provided token is expired"
+        code: "AUTH_TOKEN_EXPIRED"

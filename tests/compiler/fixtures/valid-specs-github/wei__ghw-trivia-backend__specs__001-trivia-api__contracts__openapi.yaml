@@ -1,0 +1,607 @@
+openapi: 3.0.0
+info:
+  title: Trivia API
+  description: |
+    REST API for managing trivia question sessions, user answer submissions, and leaderboard rankings.
+    
+    **Admin Authentication**: All admin endpoints require `X-API-Key` header with the admin API key from `.env`.
+    
+    **Features**:
+    - Admin can start/end trivia sessions with questions and correct answers
+    - Users can retrieve current question and submit answers
+    - Automatic scoring with case-insensitive answer matching
+    - User score persistence across sessions
+    - Leaderboard with tie-breaking by earliest score acquisition
+    - Complete audit trail of all answer attempts with timestamps
+  version: 1.0.0
+  contact:
+    name: Trivia API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://trivia-api.example.com
+    description: Production server
+
+paths:
+  /api/trivia/session/start:
+    post:
+      operationId: startTriviaSession
+      summary: Start a new trivia session
+      description: |
+        Admin endpoint to start a new trivia question session. Returns error if a session 
+        is already active. Only one session can be active at a time.
+      tags:
+        - Session Management
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionStartRequest'
+            example:
+              question: "What is the capital of France?"
+              correct_answer: "Paris"
+      responses:
+        '200':
+          description: Session successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionStartResponse'
+              example:
+                status: success
+                session_id: "550e8400-e29b-41d4-a716-446655440000"
+                message: "Trivia session started"
+                question: "What is the capital of France?"
+        '400':
+          description: Bad request - validation error or session already active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyFields:
+                  value:
+                    status: error
+                    message: "Question and answer text are required"
+                activeSession:
+                  value:
+                    status: error
+                    message: "A trivia session is already active"
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                message: "Admin access required"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/trivia/question:
+    get:
+      operationId: getCurrentQuestion
+      summary: Retrieve the current trivia question
+      description: |
+        Get the currently active trivia question. If the session is active, the correct answer 
+        is not revealed. If the session has ended, the correct answer is included. Returns null 
+        if no session exists.
+      tags:
+        - Questions
+      responses:
+        '200':
+          description: Successfully retrieved question
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuestionResponse'
+              examples:
+                activeSession:
+                  value:
+                    status: success
+                    question: "What is the capital of France?"
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                    is_active: true
+                endedSession:
+                  value:
+                    status: success
+                    question: "What is the capital of France?"
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                    is_active: false
+                    correct_answer: "Paris"
+                noSession:
+                  value:
+                    status: success
+                    question: null
+                    message: "No active trivia session"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/trivia/answer:
+    post:
+      operationId: submitAnswer
+      summary: Submit an answer to the current trivia question
+      description: |
+        User endpoint to submit an answer to the active trivia session. Returns immediate 
+        feedback (correct/incorrect). If correct, increments user's cumulative score. 
+        Prevents duplicate answers from the same user in the same session.
+      tags:
+        - Answers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnswerSubmitRequest'
+            example:
+              username: "john_doe"
+              answer: "Paris"
+      responses:
+        '200':
+          description: Answer evaluated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnswerResponse'
+              examples:
+                correct:
+                  value:
+                    status: success
+                    is_correct: true
+                    message: "Correct!"
+                    score: 5
+                incorrect:
+                  value:
+                    status: success
+                    is_correct: false
+                    message: "Incorrect!"
+        '400':
+          description: Bad request - validation error or session/answer error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                missingFields:
+                  value:
+                    status: error
+                    message: "Username and answer are required"
+                alreadyAnswered:
+                  value:
+                    status: error
+                    message: "You have already answered this question"
+                noSession:
+                  value:
+                    status: error
+                    message: "No active trivia session"
+                sessionEnded:
+                  value:
+                    status: error
+                    message: "Session has ended"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/trivia/attempts:
+    get:
+      operationId: getAttempts
+      summary: Retrieve all answer attempts
+      description: |
+        Get complete history of all answer submissions for the current session, ordered 
+        chronologically with most recent first. Includes timestamp, username, and correctness 
+        status for each attempt.
+      tags:
+        - Attempts
+      responses:
+        '200':
+          description: Successfully retrieved attempts history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttemptsResponse'
+              example:
+                status: success
+                attempts:
+                  - username: "john_doe"
+                    is_correct: true
+                    timestamp: "2025-11-11T14:30:45Z"
+                  - username: "jane_smith"
+                    is_correct: false
+                    timestamp: "2025-11-11T14:31:20Z"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/trivia/leaderboard:
+    get:
+      operationId: getLeaderboard
+      summary: Retrieve the leaderboard
+      description: |
+        Get ranked leaderboard of top scorers across all trivia sessions. Users are ranked 
+        by cumulative score in descending order. Tie-breaking by earliest score acquisition 
+        timestamp (users with same score but earlier first correct answer ranked higher).
+      tags:
+        - Leaderboard
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of leaderboard entries to return (default 100)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+          example: 10
+        - name: offset
+          in: query
+          description: Number of entries to skip for pagination (default 0)
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+          example: 0
+      responses:
+        '200':
+          description: Successfully retrieved leaderboard
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LeaderboardResponse'
+              example:
+                status: success
+                leaderboard:
+                  - rank: 1
+                    username: "john_doe"
+                    score: 15
+                  - rank: 2
+                    username: "jane_smith"
+                    score: 12
+                  - rank: 3
+                    username: "bob_jones"
+                    score: 12
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/trivia/session/end:
+    post:
+      operationId: endTriviaSession
+      summary: End the current trivia session
+      description: |
+        Admin endpoint to close the active trivia session and reveal the correct answer. 
+        After calling this endpoint, no new answers will be accepted for this session. 
+        Returns error if no session is active.
+      tags:
+        - Session Management
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Session successfully ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionEndResponse'
+              example:
+                status: success
+                message: "Trivia session ended"
+                correct_answer: "Paris"
+                successful_attempts: ["john_doe", "alice_smith"]
+        '400':
+          description: Bad request - no active session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                message: "No active trivia session"
+        '403':
+          description: Forbidden - admin access required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                message: "Admin access required"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Admin API key from `.env` ADMIN_API_KEY variable
+
+  schemas:
+    SessionStartRequest:
+      type: object
+      required:
+        - question
+        - correct_answer
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: The trivia question text
+          example: "What is the capital of France?"
+        correct_answer:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: The correct answer (case will be normalized to lowercase for matching)
+          example: "Paris"
+
+    SessionStartResponse:
+      type: object
+      required:
+        - status
+        - session_id
+        - message
+        - question
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        session_id:
+          type: string
+          format: uuid
+          description: Unique identifier for the trivia session
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        message:
+          type: string
+          example: "Trivia session started"
+        question:
+          type: string
+          description: The question text for confirmation
+          example: "What is the capital of France?"
+
+    QuestionResponse:
+      type: object
+      required:
+        - status
+        - question
+        - session_id
+        - is_active
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        question:
+          type: string
+          nullable: true
+          description: Question text or null if no session exists
+          example: "What is the capital of France?"
+        session_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: UUID of current session
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        is_active:
+          type: boolean
+          description: Whether session is currently active
+          example: true
+        correct_answer:
+          type: string
+          nullable: true
+          description: Correct answer only included if session has ended
+          example: "Paris"
+        message:
+          type: string
+          nullable: true
+          description: Message if no session exists
+          example: "No active trivia session"
+
+    AnswerSubmitRequest:
+      type: object
+      required:
+        - username
+        - answer
+      properties:
+        username:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Username of the participant (case-sensitive for identity)
+          example: "john_doe"
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: The answer being submitted (case-insensitive matching)
+          example: "Paris"
+
+    AnswerResponse:
+      type: object
+      required:
+        - status
+        - is_correct
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        is_correct:
+          type: boolean
+          description: Whether the answer is correct
+          example: true
+        message:
+          type: string
+          description: User-friendly feedback message
+          example: "Correct!"
+        score:
+          type: integer
+          nullable: true
+          minimum: 0
+          description: Updated cumulative score (only included for correct answers)
+          example: 5
+
+    AttemptRecord:
+      type: object
+      required:
+        - username
+        - is_correct
+        - timestamp
+      properties:
+        username:
+          type: string
+          description: Username who made the attempt
+          example: "john_doe"
+        is_correct:
+          type: boolean
+          description: Whether the submitted answer was correct
+          example: true
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 UTC timestamp when answer was submitted
+          example: "2025-11-11T14:30:45Z"
+
+    AttemptsResponse:
+      type: object
+      required:
+        - status
+        - attempts
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        attempts:
+          type: array
+          description: List of all answer attempts ordered chronologically (newest first)
+          items:
+            $ref: '#/components/schemas/AttemptRecord'
+
+    LeaderboardEntry:
+      type: object
+      required:
+        - rank
+        - username
+        - score
+      properties:
+        rank:
+          type: integer
+          minimum: 1
+          description: Position on leaderboard (1-indexed)
+          example: 1
+        username:
+          type: string
+          description: Username of leaderboard entry
+          example: "john_doe"
+        score:
+          type: integer
+          minimum: 0
+          description: Cumulative score across all sessions
+          example: 15
+
+    LeaderboardResponse:
+      type: object
+      required:
+        - status
+        - leaderboard
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        leaderboard:
+          type: array
+          description: Ranked list of top scorers
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+
+    SessionEndResponse:
+      type: object
+      required:
+        - status
+        - message
+        - correct_answer
+        - successful_attempts
+      properties:
+        status:
+          type: string
+          enum: ["success", "error"]
+          example: "success"
+        message:
+          type: string
+          example: "Trivia session ended"
+        correct_answer:
+          type: string
+          description: The correct answer now revealed
+          example: "Paris"
+        successful_attempts:
+          type: array
+          description: List of usernames who answered correctly in this session
+          items:
+            type: string
+          example: ["john_doe", "alice_smith"]
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+          example: "error"
+        message:
+          type: string
+          description: Descriptive error message
+          example: "A trivia session is already active"
+
+tags:
+  - name: Session Management
+    description: Admin endpoints for managing trivia sessions
+  - name: Questions
+    description: Retrieve current trivia question
+  - name: Answers
+    description: User endpoints for answering questions
+  - name: Attempts
+    description: View all answer attempts
+  - name: Leaderboard
+    description: View user rankings and scores

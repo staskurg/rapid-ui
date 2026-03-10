@@ -569,6 +569,382 @@ describe("canonicalization and hashing", () => {
     expect(result.success).toBe(true);
   });
 
+  it("annotation stripping: description, deprecated, xml, externalDocs, uniqueItems produce identical canonical output", () => {
+    const base = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        tags: {
+                          type: "array",
+                          items: { type: "string" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+    const withAllAnnotations = {
+      ...base,
+      paths: {
+        "/items": {
+          get: {
+            description: "List items",
+            deprecated: true,
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      description: "Item schema",
+                      deprecated: false,
+                      properties: {
+                        id: { type: "string", description: "ID field" },
+                        tags: {
+                          type: "array",
+                          items: { type: "string" },
+                          uniqueItems: true,
+                          xml: { name: "tag" },
+                          externalDocs: { url: "https://example.com" },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(base);
+    const validateB = validateSubset(withAllAnnotations);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(base);
+    const resolveB = resolveRefs(withAllAnnotations);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const strA = canonicalStringify(resolveA.doc);
+    const strB = canonicalStringify(resolveB.doc);
+    expect(strA).toBe(strB);
+  });
+
+  it("media type ordering: application/xml first vs application/json first produces same canonical output", () => {
+    const schema = { type: "object", properties: { id: { type: "string" } } };
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/xml": { schema: { ...schema } },
+                  "application/json": { schema: { ...schema } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": { schema: { ...schema } },
+                  "application/xml": { schema: { ...schema } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const strA = canonicalStringify(resolveA.doc);
+    const strB = canonicalStringify(resolveB.doc);
+    expect(strA).toBe(strB);
+  });
+
+  it("media-type noise: application/xml + application/json vs application/json only produce same ApiIR hash", () => {
+    const schema = { type: "object", properties: { id: { type: "string" } } };
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/xml": { schema: { ...schema } },
+                  "application/json": { schema: { ...schema } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": { schema: { ...schema } },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
+  });
+
+  it("contract change detection: add/remove field produces different ApiIR hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        name: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).not.toBe(hashB);
+  });
+
+  it("parameter ordering noise: limit,offset vs offset,limit produce same ApiIR hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            parameters: [
+              { name: "limit", in: "query", schema: { type: "integer" } },
+              { name: "offset", in: "query", schema: { type: "integer" } },
+            ],
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { id: { type: "string" } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/items": {
+          get: {
+            parameters: [
+              { name: "offset", in: "query", schema: { type: "integer" } },
+              { name: "limit", in: "query", schema: { type: "integer" } },
+            ],
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: { id: { type: "string" } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
+  });
+
+  it("property order noise: id,name vs name,id produce same ApiIR hash", () => {
+    const specA = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        id: { type: "string" },
+                        name: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const specB = {
+      openapi: "3.0.0",
+      info: { title: "T", version: "1" },
+      paths: {
+        "/x": {
+          get: {
+            responses: {
+              "200": {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        id: { type: "string" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    } as Record<string, unknown>;
+    const validateA = validateSubset(specA);
+    const validateB = validateSubset(specB);
+    expect(validateA.success && validateB.success).toBe(true);
+    if (!validateA.success || !validateB.success) return;
+    const resolveA = resolveRefs(specA);
+    const resolveB = resolveRefs(specB);
+    expect(resolveA.success && resolveB.success).toBe(true);
+    if (!resolveA.success || !resolveB.success) return;
+    const hashA = docToApiIrHash(resolveA.doc);
+    const hashB = docToApiIrHash(resolveB.doc);
+    expect(hashA).toBe(hashB);
+  });
+
   it("operations order get,post vs post,get produce identical ApiIR hash", () => {
     const specA = {
       openapi: "3.0.0",

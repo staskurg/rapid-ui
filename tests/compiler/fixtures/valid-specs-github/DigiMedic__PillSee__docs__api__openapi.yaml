@@ -1,0 +1,588 @@
+openapi: 3.0.0
+info:
+  title: PillSee API
+  version: 1.0.0
+  description: |
+    # PillSee - Anonymní AI asistent pro české léky
+
+    PillSee je AI-powered chatovací platforma poskytující informace o léčivých přípravcích
+    registrovaných v České republice. API využívá pokročilé RAG (Retrieval-Augmented Generation)
+    techniky s napojením na oficiální databázi SÚKL (Státní ústav pro kontrolu léčiv).
+
+    ## Klíčové vlastnosti
+
+    - **Anonymní použití**: Žádná registrace ani osobní údaje
+    - **GDPR Compliant**: Všechna data anonymizována před zpracováním
+    - **MDR Class I**: Splňuje požadavky EU Medical Device Regulation
+    - **Rate Limited**: Ochrana proti zneužití (10 text/min, 5 image/min)
+    - **Multi-modal**: Textové dotazy i rozpoznávání obrázků léků
+
+    ## Technologie
+
+    - **Backend**: FastAPI + LangChain/LangGraph
+    - **AI Models**: OpenAI GPT-4o-mini (text), GPT-4 Vision (obrázky)
+    - **Vector Store**: Supabase pgvector (1536D embeddings)
+    - **Database**: PostgreSQL s 9 specializovanými tabulkami
+
+    ## Bezpečnost a compliance
+
+    - IP-based rate limiting pro anonymní přístup
+    - Žádné cookies ani session tracking
+    - 90-day data retention policy
+    - Medical disclaimer u všech odpovědí
+    - Audit trail pro compliance
+
+  contact:
+    name: PillSee Support
+    email: support@pillsee.cz
+  license:
+    name: Proprietary
+    url: https://pillsee.cz/license
+
+servers:
+  - url: https://api.pillsee.cz/v1
+    description: Production server
+  - url: http://localhost:8000
+    description: Development server
+
+tags:
+  - name: Health
+    description: Health check a monitoring endpoints
+  - name: Query
+    description: Hlavní API endpointy pro dotazy na léky
+  - name: Search
+    description: Vyhledávání v databázi SÚKL (plánováno)
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check
+      description: |
+        Kontrola stavu služby a jejích závislostí.
+
+        Tento endpoint nevrací žádné citlivé informace a je určen pro monitoring.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Služba je funkční
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheckResponse'
+              example:
+                status: healthy
+                service: PillSee API
+                version: 1.0.0
+                timestamp: "2024-01-15T10:30:00Z"
+                dependencies:
+                  openai: connected
+                  database: connected
+                  sukl_data: pending
+
+  /api/query/text:
+    post:
+      tags:
+        - Query
+      summary: Textový dotaz na lék
+      description: |
+        Zpracování textového dotazu v češtině o léčivém přípravku.
+
+        ## Podporované dotazy
+
+        - Obecné informace o léku: "Co je Paralen?"
+        - Účinné látky: "Jakou obsahuje účinnou látku Ibalgin?"
+        - Dávkování: "Jak se dávkuje Aspirin?"
+        - Nežádoucí účinky: "Jaké má Brufen vedlejší účinky?"
+        - Interakce: "Můžu brát Paralen s Ibalgin?"
+        - Kontraindikace: "Kdo nesmí brát Warfarin?"
+
+        ## RAG Pipeline
+
+        1. **Query Classification**: Identifikace typu dotazu
+        2. **Vector Search**: Sémantické vyhledání v SPC/PIL dokumentech
+        3. **Contextual Retrieval**: Získání relevantních sekcí
+        4. **LLM Generation**: Vytvoření strukturované odpovědi
+        5. **Safety Check**: Kontrola medical disclaimeru
+
+        ## Rate Limiting
+
+        - **Limit**: 10 dotazů za minutu per IP adresa
+        - **Response**: 429 Too Many Requests při překročení
+
+      operationId: textQuery
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TextQuery'
+            examples:
+              general_info:
+                summary: Obecné informace o léku
+                value:
+                  query: "Co je Paralen a k čemu se používá?"
+              dosage:
+                summary: Dotaz na dávkování
+                value:
+                  query: "Jak se dávkuje Ibalgin 400mg?"
+              interactions:
+                summary: Dotaz na interakce
+                value:
+                  query: "Můžu brát Paralen současně s Ibalgin?"
+              side_effects:
+                summary: Dotaz na nežádoucí účinky
+                value:
+                  query: "Jaké má Brufen vedlejší účinky?"
+      responses:
+        '200':
+          description: Úspěšné zpracování dotazu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              examples:
+                success_response:
+                  summary: Úspěšná odpověď
+                  value:
+                    status: success
+                    data:
+                      answer: "Paralen je analgetikum-antipyretikum..."
+                      sources:
+                        - "SPC Paralen 500mg"
+                        - "PIL Paralen"
+                      confidence: high
+                    disclaimer: "UPOZORNĚNÍ: Tyto informace slouží pouze..."
+                    timestamp: "2024-01-15T10:30:00Z"
+        '400':
+          description: Neplatný dotaz
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error_code: INVALID_QUERY
+                error_message: "Dotaz nemůže být prázdný"
+                timestamp: "2024-01-15T10:30:00Z"
+        '429':
+          description: Překročení rate limitu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error_code: RATE_LIMIT_EXCEEDED
+                error_message: "Překročili jste limit dotazů. Zkuste to prosím za chvíli."
+                timestamp: "2024-01-15T10:30:00Z"
+        '500':
+          description: Interní chyba serveru
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/query/image:
+    post:
+      tags:
+        - Query
+      summary: Rozpoznání léku z obrázku
+      description: |
+        Identifikace léčivého přípravku z fotografie obalu pomocí GPT-4 Vision.
+
+        ## Podporované formáty
+
+        - **JPEG** (.jpg, .jpeg)
+        - **PNG** (.png)
+        - **WebP** (.webp)
+
+        ## Vstupní formát
+
+        - **Base64 encoded** string včetně data URL prefix
+        - **Max velikost**: 10 MB
+        - **Doporučené**: Ostré foto s dobrým osvětlením
+
+        ## Vision Processing Pipeline
+
+        1. **Image Validation**: Kontrola formátu a velikosti
+        2. **GPT-4 Vision Analysis**: Extrakce textu z obalu
+        3. **SÚKL Validation**: Ověření proti databázi
+        4. **Confidence Scoring**: Vyhodnocení spolehlivosti
+        5. **Structured Response**: Vrácení strukturovaných dat
+
+        ## Rozpoznávané informace
+
+        - Název léku
+        - Účinná látka (pokud viditelná)
+        - Síla/dávka
+        - Léková forma
+        - Výrobce
+        - Registrační číslo
+
+        ## Rate Limiting
+
+        - **Limit**: 5 dotazů za minutu per IP adresa
+        - **Důvod**: Vyšší výpočetní náročnost GPT-4 Vision
+
+      operationId: imageQuery
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImageQuery'
+            example:
+              image_data: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA..."
+      responses:
+        '200':
+          description: Úspěšné rozpoznání
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/APIResponse'
+              examples:
+                high_confidence:
+                  summary: Vysoká spolehlivost
+                  value:
+                    status: success
+                    data:
+                      name: "Paralen 500mg"
+                      active_ingredient: "Paracetamolum"
+                      strength: "500mg"
+                      form: "Tablety"
+                      manufacturer: "Zentiva"
+                      registration_number: "16/123/45-C"
+                      confidence_score: 0.95
+                      validated: true
+                      sukl_matches:
+                        - name: "Paralen 500mg tablety"
+                          sukl_code: "0016123"
+                    disclaimer: "UPOZORNĚNÍ: Tyto informace slouží pouze..."
+                    timestamp: "2024-01-15T10:30:00Z"
+                low_confidence:
+                  summary: Nízká spolehlivost (rozmazaný obrázek)
+                  value:
+                    status: success
+                    data:
+                      name: "Paralen"
+                      active_ingredient: "není viditelné"
+                      strength: "není viditelné"
+                      confidence_score: 0.45
+                      warning: "Nízká spolehlivost rozpoznání. Zkuste lepší foto."
+                      validated: false
+                    disclaimer: "UPOZORNĚNÍ: Tyto informace slouží pouze..."
+                    timestamp: "2024-01-15T10:30:00Z"
+        '400':
+          description: Neplatný obrázek
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                error_code: INVALID_IMAGE
+                error_message: "Neplatný formát obrázku"
+                timestamp: "2024-01-15T10:30:00Z"
+        '429':
+          description: Překročení rate limitu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Interní chyba serveru
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TextQuery:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Textový dotaz v češtině
+          example: "Co je Paralen a k čemu se používá?"
+
+    ImageQuery:
+      type: object
+      required:
+        - image_data
+      properties:
+        image_data:
+          type: string
+          format: byte
+          description: Base64 encoded obrázek obalu léku (včetně data URL prefix)
+          example: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA..."
+
+    APIResponse:
+      type: object
+      required:
+        - status
+        - data
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [success, error]
+          description: Status odpovědi
+          example: success
+        data:
+          type: object
+          description: Data odpovědi (struktura závisí na typu dotazu)
+          additionalProperties: true
+        error:
+          type: string
+          description: Chybová zpráva (pouze při status=error)
+          default: ""
+        disclaimer:
+          type: string
+          description: Povinný zdravotní disclaimer (MDR compliance)
+          example: "UPOZORNĚNÍ: Tyto informace slouží pouze pro informativní účely..."
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp odpovědi (ISO 8601)
+          example: "2024-01-15T10:30:00Z"
+
+    MedicationInfo:
+      type: object
+      description: Strukturované informace o léčivém přípravku z databáze SÚKL
+      properties:
+        name:
+          type: string
+          nullable: true
+          description: Obchodní název léku
+          example: "Paralen 500mg tablety"
+        active_ingredient:
+          type: string
+          nullable: true
+          description: Účinná látka (INN)
+          example: "Paracetamolum"
+        strength:
+          type: string
+          nullable: true
+          description: Síla léku
+          example: "500mg"
+        form:
+          type: string
+          nullable: true
+          description: Léková forma
+          example: "Potahované tablety"
+        manufacturer:
+          type: string
+          nullable: true
+          description: Výrobce/držitel rozhodnutí
+          example: "Zentiva k.s."
+        registration_number:
+          type: string
+          nullable: true
+          description: Registrační číslo SÚKL
+          example: "16/123/45-C"
+        atc_code:
+          type: string
+          nullable: true
+          description: ATC kód (WHO klasifikace)
+          example: "N02BE01"
+        indication:
+          type: string
+          nullable: true
+          description: Terapeutické indikace
+        contraindication:
+          type: string
+          nullable: true
+          description: Kontraindikace
+        side_effects:
+          type: string
+          nullable: true
+          description: Nežádoucí účinky
+        interactions:
+          type: string
+          nullable: true
+          description: Interakce s jinými léky
+        dosage:
+          type: string
+          nullable: true
+          description: Dávkování
+        price:
+          type: string
+          nullable: true
+          description: Orientační cena
+        prescription_required:
+          type: string
+          nullable: true
+          description: Předpisovost (Rx/OTC/částečně hrazeno)
+
+    VisionResult:
+      type: object
+      required:
+        - name
+        - confidence_score
+      description: Výsledek rozpoznání léku z obrázku pomocí GPT-4 Vision
+      properties:
+        name:
+          type: string
+          description: Rozpoznaný název léku
+          example: "Paralen 500mg"
+        active_ingredient:
+          type: string
+          default: "není viditelné"
+          description: Rozpoznaná účinná látka
+          example: "Paracetamolum"
+        strength:
+          type: string
+          default: "není viditelné"
+          description: Rozpoznaná síla
+          example: "500mg"
+        form:
+          type: string
+          default: "není viditelné"
+          description: Rozpoznaná léková forma
+          example: "Tablety"
+        manufacturer:
+          type: string
+          default: "není viditelné"
+          description: Rozpoznaný výrobce
+          example: "Zentiva"
+        registration_number:
+          type: string
+          default: "není viditelné"
+          description: Rozpoznané registrační číslo
+          example: "16/123/45-C"
+        confidence_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Spolehlivost rozpoznání (0-1)
+          example: 0.95
+        warning:
+          type: string
+          nullable: true
+          description: Varování při nízké spolehlivosti
+          example: "Nízká spolehlivost rozpoznání. Zkuste lepší foto s dobrým osvětlením."
+        validated:
+          type: boolean
+          nullable: true
+          description: Validováno proti databázi SÚKL
+          example: true
+        sukl_matches:
+          type: array
+          nullable: true
+          description: Nalezené shody v SÚKL databázi
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              sukl_code:
+                type: string
+
+    TextProcessingResult:
+      type: object
+      required:
+        - answer
+        - confidence
+      description: Výsledek zpracování textového dotazu
+      properties:
+        answer:
+          type: string
+          description: Strukturovaná odpověď na dotaz
+          example: "Paralen je analgetikum-antipyretikum obsahující účinnou látku paracetamol..."
+        sources:
+          type: array
+          items:
+            type: string
+          description: Zdroje informací (SPC/PIL dokumenty)
+          example: ["SPC Paralen 500mg", "PIL Paralen"]
+        confidence:
+          type: string
+          enum: [high, medium, low]
+          description: Míra spolehlivosti odpovědi
+          example: high
+
+    HealthCheckResponse:
+      type: object
+      required:
+        - status
+        - service
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Celkový stav služby
+          example: healthy
+        service:
+          type: string
+          description: Název služby
+          example: PillSee API
+        version:
+          type: string
+          description: Verze API
+          example: 1.0.0
+        timestamp:
+          type: string
+          format: date-time
+          description: Čas kontroly
+          example: "2024-01-15T10:30:00Z"
+        dependencies:
+          type: object
+          description: Stav externích závislostí
+          additionalProperties:
+            type: string
+          example:
+            openai: connected
+            database: connected
+            sukl_data: pending
+
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error_code
+        - error_message
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [error]
+          description: Vždy 'error'
+          example: error
+        error_code:
+          type: string
+          description: Kód chyby pro programatické zpracování
+          example: RATE_LIMIT_EXCEEDED
+          enum:
+            - INVALID_QUERY
+            - INVALID_IMAGE
+            - RATE_LIMIT_EXCEEDED
+            - INTERNAL_ERROR
+            - SERVICE_UNAVAILABLE
+        error_message:
+          type: string
+          description: Lidsky čitelný popis chyby
+          example: "Překročili jste limit dotazů. Zkuste to prosím za chvíli."
+        details:
+          type: string
+          nullable: true
+          description: Podrobnosti chyby (pouze v development mode)
+        timestamp:
+          type: string
+          format: date-time
+          description: Čas chyby
+          example: "2024-01-15T10:30:00Z"
+
+  securitySchemes: {}
+  # API je zcela anonymní, žádná autentizace není vyžadována

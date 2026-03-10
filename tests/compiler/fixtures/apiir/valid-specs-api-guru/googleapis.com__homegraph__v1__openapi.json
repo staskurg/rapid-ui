@@ -1,0 +1,362 @@
+{
+  "api": {
+    "title": "HomeGraph API",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "agentUsers",
+      "key": "agentusers",
+      "operations": [
+        {
+          "id": "homegraph.agentUsers.delete",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/v1/{agentUserId}",
+          "identifierParam": "agentUserId",
+          "queryParamCount": 12,
+          "responseSchema": {
+            "description": "A generic empty message that you can re-use to avoid defining duplicated empty messages in your APIs. A typical example is to use it as the request or the response type of an API method. For instance: service Foo { rpc Bar(google.protobuf.Empty) returns (google.protobuf.Empty); }",
+            "properties": {},
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "devices",
+      "key": "devices",
+      "operations": [
+        {
+          "id": "homegraph.devices.query",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/devices:query",
+          "queryParamCount": 11,
+          "requestSchema": {
+            "description": "Request type for the [`Query`](#google.home.graph.v1.HomeGraphApiService.Query) call.",
+            "properties": {
+              "agentUserId": {
+                "description": "Required. Third-party user ID.",
+                "type": "string"
+              },
+              "inputs": {
+                "description": "Required. Inputs containing third-party device IDs for which to get the device states.",
+                "items": {
+                  "description": "Device ID inputs to QueryRequest.",
+                  "properties": {
+                    "payload": {
+                      "description": "Payload containing device IDs.",
+                      "properties": {
+                        "devices": {
+                          "description": "Third-party device IDs for which to get the device states.",
+                          "items": {
+                            "description": "Third-party device ID for one device.",
+                            "properties": {
+                              "id": {
+                                "description": "Third-party device ID.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "requestId": {
+                "description": "Request ID used for debugging.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "Response type for the [`Query`](#google.home.graph.v1.HomeGraphApiService.Query) call. This should follow the same format as the Google smart home `action.devices.QUERY` [response](https://developers.home.google.com/cloud-to-cloud/intents/query). Example: ```json { \"requestId\": \"ff36a3cc-ec34-11e6-b1a0-64510650abcf\", \"payload\": { \"devices\": { \"123\": { \"on\": true, \"online\": true }, \"456\": { \"on\": true, \"online\": true, \"brightness\": 80, \"color\": { \"name\": \"cerulean\", \"spectrumRGB\": 31655 } } } } } ```",
+            "properties": {
+              "payload": {
+                "description": "Payload containing device states information.",
+                "properties": {
+                  "devices": {
+                    "additionalProperties": {
+                      "additionalProperties": {
+                        "description": "Properties of the object."
+                      },
+                      "type": "object"
+                    },
+                    "description": "States of the devices. Map of third-party device ID to struct of device states.",
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "requestId": {
+                "description": "Request ID used for debugging. Copied from the request.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "homegraph.devices.reportStateAndNotification",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/devices:reportStateAndNotification",
+          "queryParamCount": 11,
+          "requestSchema": {
+            "description": "Request type for the [`ReportStateAndNotification`](#google.home.graph.v1.HomeGraphApiService.ReportStateAndNotification) call. It may include states, notifications, or both. States and notifications are defined per `device_id` (for example, \"123\" and \"456\" in the following example). Example: ```json { \"requestId\": \"ff36a3cc-ec34-11e6-b1a0-64510650abcf\", \"agentUserId\": \"1234\", \"payload\": { \"devices\": { \"states\": { \"123\": { \"on\": true }, \"456\": { \"on\": true, \"brightness\": 10 } }, } } } ```",
+            "properties": {
+              "agentUserId": {
+                "description": "Required. Third-party user ID.",
+                "type": "string"
+              },
+              "eventId": {
+                "description": "Unique identifier per event (for example, a doorbell press).",
+                "type": "string"
+              },
+              "followUpToken": {
+                "deprecated": true,
+                "description": "Deprecated.",
+                "type": "string"
+              },
+              "payload": {
+                "description": "Payload containing the state and notification information for devices.",
+                "properties": {
+                  "devices": {
+                    "description": "The states and notifications specific to a device.",
+                    "properties": {
+                      "notifications": {
+                        "additionalProperties": {
+                          "description": "Properties of the object."
+                        },
+                        "description": "Notifications metadata for devices. See the **Device NOTIFICATIONS** section of the individual trait [reference guides](https://developers.home.google.com/cloud-to-cloud/traits).",
+                        "type": "object"
+                      },
+                      "states": {
+                        "additionalProperties": {
+                          "description": "Properties of the object."
+                        },
+                        "description": "States of devices to update. See the **Device STATES** section of the individual trait [reference guides](https://developers.home.google.com/cloud-to-cloud/traits).",
+                        "type": "object"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "requestId": {
+                "description": "Request ID used for debugging.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "Response type for the [`ReportStateAndNotification`](#google.home.graph.v1.HomeGraphApiService.ReportStateAndNotification) call.",
+            "properties": {
+              "requestId": {
+                "description": "Request ID copied from ReportStateAndNotificationRequest.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "homegraph.devices.requestSync",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/devices:requestSync",
+          "queryParamCount": 11,
+          "requestSchema": {
+            "description": "Request type for the [`RequestSyncDevices`](#google.home.graph.v1.HomeGraphApiService.RequestSyncDevices) call.",
+            "properties": {
+              "agentUserId": {
+                "description": "Required. Third-party user ID.",
+                "type": "string"
+              },
+              "async": {
+                "description": "Optional. If set, the request will be added to a queue and a response will be returned immediately. This enables concurrent requests for the given `agent_user_id`, but the caller will not receive any error responses.",
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "Response type for the [`RequestSyncDevices`](#google.home.graph.v1.HomeGraphApiService.RequestSyncDevices) call. Intentionally empty upon success. An HTTP response code is returned with more details upon failure.",
+            "properties": {},
+            "type": "object"
+          }
+        },
+        {
+          "id": "homegraph.devices.sync",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/devices:sync",
+          "queryParamCount": 11,
+          "requestSchema": {
+            "description": "Request type for the [`Sync`](#google.home.graph.v1.HomeGraphApiService.Sync) call.",
+            "properties": {
+              "agentUserId": {
+                "description": "Required. Third-party user ID.",
+                "type": "string"
+              },
+              "requestId": {
+                "description": "Request ID used for debugging.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "Response type for the [`Sync`](#google.home.graph.v1.HomeGraphApiService.Sync) call. This should follow the same format as the Google smart home `action.devices.SYNC` [response](https://developers.home.google.com/cloud-to-cloud/intents/sync). Example: ```json { \"requestId\": \"ff36a3cc-ec34-11e6-b1a0-64510650abcf\", \"payload\": { \"agentUserId\": \"1836.15267389\", \"devices\": [{ \"id\": \"123\", \"type\": \"action.devices.types.OUTLET\", \"traits\": [ \"action.devices.traits.OnOff\" ], \"name\": { \"defaultNames\": [\"My Outlet 1234\"], \"name\": \"Night light\", \"nicknames\": [\"wall plug\"] }, \"willReportState\": false, \"deviceInfo\": { \"manufacturer\": \"lights-out-inc\", \"model\": \"hs1234\", \"hwVersion\": \"3.2\", \"swVersion\": \"11.4\" }, \"customData\": { \"fooValue\": 74, \"barValue\": true, \"bazValue\": \"foo\" } }] } } ```",
+            "properties": {
+              "payload": {
+                "description": "Payload containing device information.",
+                "properties": {
+                  "agentUserId": {
+                    "description": "Third-party user ID",
+                    "type": "string"
+                  },
+                  "devices": {
+                    "description": "Devices associated with the third-party user.",
+                    "items": {
+                      "description": "Third-party device definition.",
+                      "properties": {
+                        "attributes": {
+                          "additionalProperties": {
+                            "description": "Properties of the object."
+                          },
+                          "description": "Attributes for the traits supported by the device.",
+                          "type": "object"
+                        },
+                        "customData": {
+                          "additionalProperties": {
+                            "description": "Properties of the object."
+                          },
+                          "description": "Custom device attributes stored in Home Graph and provided to your smart home Action in each [QUERY](https://developers.home.google.com/cloud-to-cloud/intents/query) and [EXECUTE](https://developers.home.google.com/cloud-to-cloud/intents/execute) intent. Data in this object has a few constraints: No sensitive information, including but not limited to Personally Identifiable Information.",
+                          "type": "object"
+                        },
+                        "deviceInfo": {
+                          "description": "Device information.",
+                          "properties": {
+                            "hwVersion": {
+                              "description": "Device hardware version.",
+                              "type": "string"
+                            },
+                            "manufacturer": {
+                              "description": "Device manufacturer.",
+                              "type": "string"
+                            },
+                            "model": {
+                              "description": "Device model.",
+                              "type": "string"
+                            },
+                            "swVersion": {
+                              "description": "Device software version.",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "id": {
+                          "description": "Third-party device ID.",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Identifiers used to describe the device.",
+                          "properties": {
+                            "defaultNames": {
+                              "description": "List of names provided by the manufacturer rather than the user, such as serial numbers, SKUs, etc.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            },
+                            "name": {
+                              "description": "Primary name of the device, generally provided by the user.",
+                              "type": "string"
+                            },
+                            "nicknames": {
+                              "description": "Additional names provided by the user for the device.",
+                              "items": {
+                                "type": "string"
+                              },
+                              "type": "array"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "notificationSupportedByAgent": {
+                          "description": "Indicates whether your smart home Action will report notifications to Google for this device via ReportStateAndNotification. If your smart home Action enables users to control device notifications, you should update this field and call RequestSyncDevices.",
+                          "type": "boolean"
+                        },
+                        "otherDeviceIds": {
+                          "description": "Alternate IDs associated with this device. This is used to identify cloud synced devices enabled for [local fulfillment](https://developers.home.google.com/local-home/overview).",
+                          "items": {
+                            "description": "Alternate third-party device ID.",
+                            "properties": {
+                              "agentId": {
+                                "description": "Project ID for your smart home Action.",
+                                "type": "string"
+                              },
+                              "deviceId": {
+                                "description": "Unique third-party device ID.",
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "roomHint": {
+                          "description": "Suggested name for the room where this device is installed. Google attempts to use this value during user setup.",
+                          "type": "string"
+                        },
+                        "structureHint": {
+                          "description": "Suggested name for the structure where this device is installed. Google attempts to use this value during user setup.",
+                          "type": "string"
+                        },
+                        "traits": {
+                          "description": "Traits supported by the device. See [device traits](https://developers.home.google.com/cloud-to-cloud/traits).",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "type": {
+                          "description": "Hardware type of the device. See [device types](https://developers.home.google.com/cloud-to-cloud/guides).",
+                          "type": "string"
+                        },
+                        "willReportState": {
+                          "description": "Indicates whether your smart home Action will report state of this device to Google via ReportStateAndNotification.",
+                          "type": "boolean"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  }
+                },
+                "type": "object"
+              },
+              "requestId": {
+                "description": "Request ID used for debugging. Copied from the request.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

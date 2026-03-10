@@ -1,0 +1,318 @@
+openapi: 3.0.3
+info:
+  title: User Authentication API
+  description: API contracts for user authentication with username/password
+  version: 1.0.0
+  contact:
+    name: Table Read Team
+
+servers:
+  - url: /api/auth
+    description: Authentication API base path
+
+paths:
+  /signin:
+    post:
+      summary: Sign in with username and password
+      operationId: signIn
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: Unique username
+                  example: "johndoe"
+                password:
+                  type: string
+                  format: password
+                  description: User password
+                  example: "SecurePassword123!"
+                redirect:
+                  type: boolean
+                  default: true
+                  description: Whether to redirect after sign in
+                callbackUrl:
+                  type: string
+                  format: uri
+                  description: URL to redirect after sign in
+      responses:
+        '200':
+          description: Successful sign in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  error:
+                    type: string
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /signup:
+    post:
+      summary: Register a new user account
+      operationId: signUp
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  description: Unique username
+                  example: "johndoe"
+                password:
+                  type: string
+                  format: password
+                  description: Password meeting security requirements
+                  example: "SecurePassword123!"
+                name:
+                  type: string
+                  description: Display name
+                  example: "John Doe"
+                email:
+                  type: string
+                  format: email
+                  description: Email address
+                  example: "john@example.com"
+      responses:
+        '201':
+          description: User account created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  status:
+                    type: integer
+                    example: 201
+                  ok:
+                    type: boolean
+                    example: true
+        '400':
+          description: Validation error or username taken
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /signout:
+    post:
+      summary: Sign out current user
+      operationId: signOut
+      tags:
+        - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                redirect:
+                  type: boolean
+                  default: true
+                callbackUrl:
+                  type: string
+                  format: uri
+      responses:
+        '200':
+          description: Successfully signed out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                  status:
+                    type: integer
+                    example: 200
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session:
+    get:
+      summary: Get current user session
+      operationId: getSession
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Current session information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                    nullable: true
+                  expires:
+                    type: string
+                    format: date-time
+                    nullable: true
+                  status:
+                    type: integer
+                    example: 200
+                  ok:
+                    type: boolean
+                    example: true
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    nullable: true
+                    example: null
+                  expires:
+                    type: string
+                    nullable: true
+                    example: null
+                  status:
+                    type: integer
+                    example: 401
+                  ok:
+                    type: boolean
+                    example: false
+
+  /csrf:
+    get:
+      summary: Get CSRF token
+      operationId: getCsrfToken
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: CSRF token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken:
+                    type: string
+                  status:
+                    type: integer
+                    example: 200
+                  ok:
+                    type: boolean
+                    example: true
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+          example: "clx123abc456"
+        username:
+          type: string
+          description: Unique username
+          example: "johndoe"
+        name:
+          type: string
+          nullable: true
+          description: Display name
+          example: "John Doe"
+        email:
+          type: string
+          format: email
+          nullable: true
+          description: Email address
+          example: "john@example.com"
+        image:
+          type: string
+          format: uri
+          nullable: true
+          description: Profile image URL
+        createdAt:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+          example: "2025-12-10T10:00:00Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - status
+        - ok
+      properties:
+        error:
+          type: string
+          description: Error code
+          example: "CredentialsSignin"
+        message:
+          type: string
+          description: User-friendly error message
+          example: "Invalid username or password"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 401
+        ok:
+          type: boolean
+          example: false
+
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: Session cookie for authenticated requests
+
+security:
+  - sessionCookie: []
+

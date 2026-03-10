@@ -1,0 +1,127 @@
+{
+  "api": {
+    "title": "Vern API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Runs",
+      "key": "runs",
+      "operations": [
+        {
+          "id": "getRun",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/runs/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the run"
+              },
+              "task": {
+                "type": "string",
+                "description": "The name of the task that was executed"
+              },
+              "inputs": {
+                "type": "object",
+                "description": "The inputs provided for the task",
+                "additionalProperties": true
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "queued",
+                  "running",
+                  "complete",
+                  "failed"
+                ],
+                "description": "The current status of the run"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the run was created"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the run started executing"
+              },
+              "completed_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the run completed"
+              },
+              "response": {
+                "type": "object",
+                "description": "The response data from the task execution",
+                "additionalProperties": true
+              }
+            }
+          }
+        },
+        {
+          "id": "createRun",
+          "method": "POST",
+          "kind": "create",
+          "path": "/runs",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "taskId"
+            ],
+            "properties": {
+              "taskId": {
+                "type": "string",
+                "description": "The ID of the task to execute"
+              },
+              "profileId": {
+                "type": "string",
+                "description": "Optional user-specified UID for a profile linked via magic link"
+              },
+              "inputs": {
+                "type": "object",
+                "description": "The inputs required for the task",
+                "additionalProperties": true
+              },
+              "url": {
+                "type": "string",
+                "format": "uri",
+                "description": "An optional URL to be processed by the task"
+              }
+            },
+            "example": {
+              "taskId": "enterInventoryItem",
+              "inputs": {
+                "prompt": "Analyze the sentiment of this text",
+                "text": "I really enjoyed this product, it exceeded my expectations!"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for the run"
+              },
+              "queued_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp when the run was queued"
+              },
+              "inputs": {
+                "type": "object",
+                "description": "The inputs provided for the task",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

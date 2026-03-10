@@ -1,0 +1,362 @@
+{
+  "api": {
+    "title": "CKR Digital Engine API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "AI & RAG",
+      "key": "ai-rag",
+      "operations": [
+        {
+          "id": "chat_with_rag",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat-with-rag",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "messages"
+            ],
+            "properties": {
+              "messages": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "role": {
+                      "type": "string",
+                      "enum": [
+                        "system",
+                        "user",
+                        "assistant"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "conversationType": {
+                "type": "string",
+                "enum": [
+                  "customer_support",
+                  "quote_assistant",
+                  "internal"
+                ],
+                "default": "customer_support"
+              },
+              "useRag": {
+                "type": "boolean",
+                "default": true
+              },
+              "ragOptions": {
+                "type": "object",
+                "properties": {
+                  "matchThreshold": {
+                    "type": "number"
+                  },
+                  "matchCount": {
+                    "type": "integer"
+                  },
+                  "filterCategory": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string",
+                "description": "AI assistant response"
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "conversationType": {
+                    "type": "string"
+                  },
+                  "ragUsed": {
+                    "type": "boolean"
+                  },
+                  "contextsRetrieved": {
+                    "type": "integer"
+                  },
+                  "contexts": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "rag_search",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rag-search",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Search query text",
+                "example": "What is the pricing for tile roof restoration?"
+              },
+              "matchThreshold": {
+                "type": "number",
+                "format": "float",
+                "description": "Similarity threshold (0.0-1.0)",
+                "default": 0.7
+              },
+              "matchCount": {
+                "type": "integer",
+                "description": "Maximum number of results",
+                "default": 5
+              },
+              "filterCategory": {
+                "type": "string",
+                "description": "Filter by knowledge category",
+                "example": "pricing"
+              },
+              "sourceTypes": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Source tables to search",
+                "example": [
+                  "master_knowledge",
+                  "pricing_items"
+                ]
+              },
+              "enableKFRouting": {
+                "type": "boolean",
+                "description": "Enable Knowledge File priority routing",
+                "default": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "query": {
+                "type": "string"
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "source_table": {
+                      "type": "string"
+                    },
+                    "similarity": {
+                      "type": "number"
+                    },
+                    "metadata": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "context": {
+                "type": "string",
+                "description": "Concatenated context for LLM"
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "totalMatches": {
+                    "type": "integer"
+                  },
+                  "threshold": {
+                    "type": "number"
+                  },
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRM",
+      "key": "crm",
+      "operations": [
+        {
+          "id": "send_lead_notification",
+          "method": "POST",
+          "kind": "create",
+          "path": "/send-lead-notification",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "phone",
+              "suburb",
+              "service"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Customer full name",
+                "example": "John Smith"
+              },
+              "phone": {
+                "type": "string",
+                "description": "Australian mobile format",
+                "example": "0435900709"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "Optional email for follow-up",
+                "example": "john@example.com"
+              },
+              "suburb": {
+                "type": "string",
+                "description": "SE Melbourne suburb name",
+                "example": "Berwick"
+              },
+              "service": {
+                "type": "string",
+                "description": "Requested service type",
+                "example": "Roof Restoration"
+              },
+              "message": {
+                "type": "string",
+                "description": "Additional notes from customer"
+              },
+              "urgency": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "emergency"
+                ],
+                "description": "Lead urgency level"
+              },
+              "source": {
+                "type": "string",
+                "description": "Form source identifier",
+                "example": "homepage_hero_form"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "leadReference": {
+                "type": "string",
+                "example": "LEAD-1699999999-ABC123"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "send_quote",
+          "method": "POST",
+          "kind": "create",
+          "path": "/send-quote",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "customer_name",
+              "customer_email",
+              "customer_phone",
+              "site_address",
+              "scope",
+              "quote_amount"
+            ],
+            "properties": {
+              "customer_name": {
+                "type": "string"
+              },
+              "customer_email": {
+                "type": "string",
+                "format": "email"
+              },
+              "customer_phone": {
+                "type": "string"
+              },
+              "site_address": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "description": "Work scope description"
+              },
+              "quote_amount": {
+                "type": "number",
+                "format": "decimal",
+                "description": "Total quote amount (AUD)"
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "message": {
+                "type": "string"
+              },
+              "quote_id": {
+                "type": "string"
+              },
+              "lead_id": {
+                "type": "string"
+              },
+              "job_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

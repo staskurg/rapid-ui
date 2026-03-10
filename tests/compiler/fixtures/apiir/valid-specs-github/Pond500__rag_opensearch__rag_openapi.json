@@ -1,0 +1,129 @@
+{
+  "api": {
+    "title": "RAG Document Q&A API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "RAG",
+      "key": "rag",
+      "operations": [
+        {
+          "id": "chatWithContext",
+          "method": "POST",
+          "kind": "create",
+          "path": "/chat",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question",
+              "session_id"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "description": "Question or message to send",
+                "example": "มีระยะเวลาเท่าไหร่"
+              },
+              "session_id": {
+                "type": "string",
+                "description": "Unique session identifier for conversation",
+                "example": "user123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string"
+              },
+              "source_nodes": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "queryDocuments",
+          "method": "POST",
+          "kind": "create",
+          "path": "/query",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "description": "Question to ask about the documents",
+                "example": "สัญญานี้เกี่ยวกับอะไร"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "Generated answer from the LLM"
+              },
+              "source_nodes": {
+                "type": "array",
+                "description": "Source document chunks with metadata",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "file_name": {
+                      "type": "string"
+                    },
+                    "page_number": {
+                      "type": "integer"
+                    },
+                    "score": {
+                      "type": "number",
+                      "format": "float"
+                    },
+                    "text_content": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "key": "system",
+      "operations": [
+        {
+          "id": "getSystemHealth",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "timestamp": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

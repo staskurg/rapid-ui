@@ -1,0 +1,563 @@
+openapi: 3.0.0
+info:
+  title: My API
+  version: 1.0.0
+  description: |
+    This API provides functionality for managing collaborations, logging operations, retrieving operations for collaborations, and versioning collaborations.
+
+paths:
+  /api/collaborations/create:
+    post:
+      summary: Create a new collaboration
+      description: |
+        This endpoint allows the creation of a new collaboration. It validates the provided name and password, checks if the collaboration already exists, and if not, hashes the password and creates the collaboration.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - password
+              properties:
+                name:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "CollaborationName"
+                password:
+                  type: string
+                  description: The password for the collaboration.
+                  example: "securePassword123"
+      responses:
+        '201':
+          description: Collaboration created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The name of the created collaboration.
+                    example: "CollaborationName"
+        '400':
+          description: Invalid request body. Missing name or password.
+        '409':
+          description: A collaboration with the specified name already exists.
+        '422':
+          description: Invalid name or password. Only allowed characters are letters, numbers, and specific symbols.
+        '500':
+          description: An error occurred while creating the collaboration.
+
+  /api/collaborations/join:
+    post:
+      summary: Join an existing collaboration
+      description: |
+        This endpoint allows a user to join an existing collaboration by providing the collaboration name and password. The provided password is validated against the stored password.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - password
+              properties:
+                name:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "CollaborationName"
+                password:
+                  type: string
+                  description: The password for the collaboration.
+                  example: "securePassword123"
+      responses:
+        '200':
+          description: Successfully joined the collaboration
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: The name of the collaboration the user joined.
+                    example: "CollaborationName"
+        '400':
+          description: Invalid request body. Missing name or password.
+        '401':
+          description: Incorrect name or password.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/operations/log:
+    post:
+      summary: Log an operation for a collaboration
+      description: |
+        This endpoint allows a user to log an operation for a collaboration. It requires collaboration ID, operation type, details, and other operation-related data. Optionally, the operation can be split into multiple parts.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - collabName
+                - operationType
+                - details
+                - operation_part
+                - operation_max_part
+              properties:
+                collabName:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "CollaborationName"
+                operationType:
+                  type: string
+                  description: |
+                    The type of the operation. Valid values are 'add', 'update', 'delete', and 'init'.
+                  example: "add"
+                details:
+                  type: object
+                  description: Additional details about the operation.
+                  example: { taskId: 5, parentId: 1 }
+                operation_part:
+                  type: integer
+                  description: The part number of the operation if it's split into multiple parts.
+                  example: 1
+                operation_max_part:
+                  type: integer
+                  description: The maximum part number for the operation.
+                  example: 3
+                socket_id:
+                  type: string
+                  description: The socket ID to exclude from the pusher trigger.
+                  example: "101010.101010"
+      responses:
+        '201':
+          description: Operation logged successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collabName:
+                    type: string
+                    description: The name of the collaboration.
+                    example: "CollaborationName"
+                  operationType:
+                    type: string
+                    description: The type of the operation.
+                    example: "add"
+                  details:
+                    type: object
+                    description: The details of the operation.
+                    example: { taskId: 5, parentId: 1 }
+                  operation_part:
+                    type: integer
+                    description: The part number of the operation.
+                    example: 1
+                  operation_max_part:
+                    type: integer
+                    description: The maximum part number of the operation.
+                    example: 3
+                  createdAt:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the operation was created.
+                    example: "2024-11-12T12:34:56Z"
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    description: The timestamp when the operation was last updated.
+                    example: "2024-11-12T12:34:56Z"
+        '400':
+          description: Invalid request body. Missing required fields.
+        '422':
+          description: Invalid operationType. Allowed values are 'add', 'update', 'delete', or 'init'.
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/operations/get:
+    post:
+      summary: Get operations for a collaboration
+      description: |
+        This endpoint allows a user to retrieve a list of operations performed within a collaboration. Optionally, it can filter operations based on a provided timestamp.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - collabName
+              properties:
+                collabName:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "CollaborationName"
+                timestamp:
+                  type: integer
+                  description: An optional timestamp to filter operations performed after the given time.
+                  example: 1609459200000
+      responses:
+        '200':
+          description: Operations retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    collabName:
+                      type: string
+                      description: The name of the collaboration.
+                      example: "CollaborationName"
+                    operationType:
+                      type: string
+                      description: The type of operation.
+                      example: "add"
+                    details:
+                      type: object
+                      description: The details of the operation.
+                      example: { taskId: 5, parentId: 1 }
+                    createdAt:
+                      type: string
+                      format: date-time
+                      description: The timestamp of the operation.
+                      example: "2024-11-12T12:34:56Z"
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      description: The timestamp when the operation was last updated.
+                      example: "2024-11-12T12:34:56Z"
+        '400':
+          description: Invalid request body. Missing collabName.
+        '410':
+          description: No operations found for the specified timestamp.
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/version-controller/current-version:
+    post:
+      summary: Request the current version of a collaboration
+      description: Checks if a current version request is already pending. If not, initiates a request for the current version.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collabName:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "project-alpha"
+                socket_id:
+                  type: string
+                  description: The socket ID of the user making the request.
+                  example: "abc123socketID"
+              required:
+                - collabName
+                - socket_id
+      responses:
+        '200':
+          description: Request successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    description: Indicates whether a version provider is available.
+                    example: true
+                  message:
+                    type: string
+                    description: Informational message about the request status.
+                    example: "Somone may provide current version"
+
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid request body"
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/version-controller/provide/establish-connection:
+    post:
+      summary: Establish a connection for version provision
+      description: Establishes a connection if a current version request is pending.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collabName:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "project-alpha"
+                socket_id:
+                  type: string
+                  description: The socket ID of the user making the request.
+                  example: "abc123socketID"
+              required:
+                - collabName
+                - socket_id
+      responses:
+        '200':
+          description: Connection successfully established
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid request body."
+        '409':
+          description: Connection conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Data has already been provided"
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/version-controller/provide:
+    post:
+      summary: Provide the current version of a collaboration
+      description: Supplies the current version of a collaboration if a connection is already established.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                collabName:
+                  type: string
+                  description: The name of the collaboration.
+                  example: "project-alpha"
+                socket_id:
+                  type: string
+                  description: The socket ID of the user making the request.
+                  example: "abc123socketID"
+                tasks:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Task'
+                timestamp:
+                  type: integer
+                  format: int64
+                  description: The timestamp when the version was provided.
+                  example: 1672531200
+              required:
+                - collabName
+                - socket_id
+                - tasks
+                - timestamp
+      responses:
+        '200':
+          description: Version provided successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Invalid request body."
+        '401':
+          description: Unauthorized socket_id
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Wrong socket_id"
+        '409':
+          description: Connection required before providing version
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Establish connection first"
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /pusher/auth:
+    post:
+      summary: Authorizes a user to access a private Pusher channel
+      description: |
+        Validates the incoming request to ensure the session is initialized,
+        the required parameters (`socket_id` and `channel_name`) are present,
+        and that the `channel_name` corresponds to the user's collaboration name.
+        If all checks pass, it uses the Pusher client to authorize the channel.
+        The `collabAuthMiddleware` ensures that the user is authenticated and authorized to access the specified collaboration.
+      operationId: authorizeChannel
+      requestBody:
+        description: Authorization details for the Pusher channel
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                socket_id:
+                  type: string
+                  description: The socket ID of the user attempting to connect to the channel.
+                channel_name:
+                  type: string
+                  description: The name of the channel the user is trying to access.
+                collabName:
+                  type: string
+                  description: The collaboration name the user is trying to access (optional, alternative to `channel_name`).
+              required:
+                - socket_id
+                - channel_name
+      responses:
+        '200':
+          description: Request successful; returns the authorization data for the channel.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  auth:
+                    type: string
+                    description: The authorization token for the channel.
+        '400':
+          description: Invalid request body. Either `socket_id` or `channel_name` is missing or malformed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message indicating the issue with the request.
+        '440':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the task.
+          example: "Implement UI updates"
+        flexIndex:
+          type: integer
+          description: The flex position (order) of the task in its column.
+          example: 2
+        status:
+          type: integer
+          description: The status of the task, must match a value from TaskManager.TASK_STATUSES.
+          example: 1
+        parentId:
+          type: integer
+          description: The ID of the task’s parent task, if applicable.
+          example: 1001
+        description:
+          type: string
+          description: Detailed description of the task.
+          example: "This task includes updating the styles and layout for the main UI screen."
+        collabName:
+          type: string
+          nullable: true
+          description: The name of the collaboration (if any), defaults to null.
+          example: "project-alpha"
+        collabTaskId:
+          type: string
+          description: The UUID of the task in the collaboration.
+          example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+        id:
+          type: integer
+          nullable: true
+          description: Task ID, auto-incremented.
+          example: 42
+      required:
+        - name
+        - flexIndex
+        - status
+        - parentId
+        - description
+
+  responses:
+    Unauthorized:
+      description: "Login Time-out: You do not have permission to access this channel."
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: "Login Time-out: You do not have permission to access this channel."
+
+    InternalServerError:
+      description: "Internal server error when authorization fails or an unexpected error occurs."
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                description: "Internal Server Error: An unexpected issue occurred while processing the request."
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: session

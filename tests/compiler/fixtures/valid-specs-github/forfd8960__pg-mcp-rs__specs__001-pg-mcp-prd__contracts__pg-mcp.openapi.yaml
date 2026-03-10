@@ -1,0 +1,207 @@
+openapi: 3.1.0
+info:
+  title: Postgres MCP Server API
+  version: 1.0.0
+  description: REST-style contract representing MCP tool behaviors.
+servers:
+  - url: http://localhost:3000
+paths:
+  /query:
+    post:
+      summary: Generate SQL or return query results
+      operationId: postQuery
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: SQL or results response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: Invalid request or unsafe SQL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /schema:
+    get:
+      summary: Get cached schema for a database
+      operationId: getSchema
+      parameters:
+        - in: query
+          name: database_id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Schema snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaSnapshot'
+        '404':
+          description: Database not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /schema/refresh:
+    post:
+      summary: Refresh schema cache for a database
+      operationId: refreshSchema
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchemaRefreshRequest'
+      responses:
+        '200':
+          description: Refresh status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaRefreshResponse'
+  /databases:
+    get:
+      summary: List configured databases
+      operationId: listDatabases
+      responses:
+        '200':
+          description: Databases list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatabaseList'
+components:
+  schemas:
+    QueryRequest:
+      type: object
+      required: [query, output_mode, database_id]
+      properties:
+        query:
+          type: string
+          description: Natural-language query
+        output_mode:
+          type: string
+          enum: [sql, results]
+        database_id:
+          type: string
+    QueryResponse:
+      type: object
+      required: [request_id, output_mode]
+      properties:
+        request_id:
+          type: string
+        output_mode:
+          type: string
+          enum: [sql, results]
+        sql:
+          type: string
+          description: Generated SQL (when output_mode=sql)
+        results:
+          type: object
+          description: Result set (when output_mode=results)
+          properties:
+            rows:
+              type: array
+              items:
+                type: object
+            row_count:
+              type: integer
+            truncated:
+              type: boolean
+    SchemaSnapshot:
+      type: object
+      required: [database_id, version, refreshed_at, objects]
+      properties:
+        database_id:
+          type: string
+        version:
+          type: string
+        refreshed_at:
+          type: string
+          format: date-time
+        objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaObject'
+    SchemaObject:
+      type: object
+      required: [schema, name, kind]
+      properties:
+        schema:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [table, view, materialized_view, foreign_table, type, index]
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaColumn'
+        type_definition:
+          type: string
+        index_definition:
+          type: string
+    SchemaColumn:
+      type: object
+      required: [name, data_type]
+      properties:
+        name:
+          type: string
+        data_type:
+          type: string
+        not_null:
+          type: boolean
+        default_expr:
+          type: string
+    SchemaRefreshRequest:
+      type: object
+      required: [database_id]
+      properties:
+        database_id:
+          type: string
+    SchemaRefreshResponse:
+      type: object
+      required: [database_id, status]
+      properties:
+        database_id:
+          type: string
+        status:
+          type: string
+          enum: [refreshed, no_changes]
+    DatabaseList:
+      type: object
+      required: [databases]
+      properties:
+        databases:
+          type: array
+          items:
+            $ref: '#/components/schemas/DatabaseConnection'
+    DatabaseConnection:
+      type: object
+      required: [id, name, read_only]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        read_only:
+          type: boolean
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+        message:
+          type: string

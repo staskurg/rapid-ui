@@ -1,0 +1,1226 @@
+{
+  "api": {
+    "title": "Islamic Open Finance (IOF) Platform API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "AML/CFT",
+      "key": "amlcft",
+      "operations": [
+        {
+          "id": "listAMLAlerts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/aml/alerts",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "alert_id": {
+                      "type": "string"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "LOW",
+                        "MEDIUM",
+                        "HIGH",
+                        "CRITICAL"
+                      ]
+                    },
+                    "alert_type": {
+                      "type": "string"
+                    },
+                    "entity_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "OPEN",
+                        "INVESTIGATING",
+                        "RESOLVED",
+                        "FALSE_POSITIVE"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createAMLScreening",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/aml/screening",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "entity_type",
+              "entity_id"
+            ],
+            "properties": {
+              "entity_type": {
+                "type": "string",
+                "enum": [
+                  "CUSTOMER",
+                  "TRANSACTION",
+                  "MERCHANT"
+                ]
+              },
+              "entity_id": {
+                "type": "string"
+              },
+              "screening_type": {
+                "type": "string",
+                "enum": [
+                  "SANCTIONS",
+                  "PEP",
+                  "ADVERSE_MEDIA"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "screening_id": {
+                "type": "string"
+              },
+              "entity_type": {
+                "type": "string"
+              },
+              "entity_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PENDING",
+                  "PASSED",
+                  "FAILED",
+                  "REVIEW_REQUIRED"
+                ]
+              },
+              "matches": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "match_type": {
+                      "type": "string"
+                    },
+                    "confidence_score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    },
+                    "details": {
+                      "type": "object"
+                    }
+                  }
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cards",
+      "key": "cards",
+      "operations": [
+        {
+          "id": "listCards",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/cards",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "customer_id": {
+                      "type": "string"
+                    },
+                    "card_type": {
+                      "type": "string"
+                    },
+                    "masked_pan": {
+                      "type": "string",
+                      "pattern": "^\\\\d{4}\\\\s\\\\*{4}\\\\s\\\\*{4}\\\\s\\\\d{4}$"
+                    },
+                    "expiry_date": {
+                      "type": "string",
+                      "pattern": "^\\\\d{2}/\\\\d{2}$"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "BLOCKED",
+                        "EXPIRED",
+                        "CANCELLED"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getCardAuthorizations",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/cards/{id}/authorizations",
+          "identifierParam": "id",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "auth_id": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number"
+                    },
+                    "merchant": {
+                      "type": "string"
+                    },
+                    "mcc": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "APPROVED",
+                        "DECLINED",
+                        "SETTLED"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "issueCard",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/cards",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "customer_id",
+              "card_type",
+              "account_id"
+            ],
+            "properties": {
+              "customer_id": {
+                "type": "string"
+              },
+              "card_type": {
+                "type": "string",
+                "enum": [
+                  "DEBIT",
+                  "CHARGE"
+                ]
+              },
+              "account_id": {
+                "type": "string"
+              },
+              "embossed_name": {
+                "type": "string"
+              },
+              "limits": {
+                "type": "object",
+                "properties": {
+                  "single_transaction": {
+                    "type": "number"
+                  },
+                  "daily_limit": {
+                    "type": "number"
+                  },
+                  "monthly_limit": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "customer_id": {
+                "type": "string"
+              },
+              "card_type": {
+                "type": "string"
+              },
+              "masked_pan": {
+                "type": "string",
+                "pattern": "^\\\\d{4}\\\\s\\\\*{4}\\\\s\\\\*{4}\\\\s\\\\d{4}$"
+              },
+              "expiry_date": {
+                "type": "string",
+                "pattern": "^\\\\d{2}/\\\\d{2}$"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "BLOCKED",
+                  "EXPIRED",
+                  "CANCELLED"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Contracts",
+      "key": "contracts",
+      "operations": [
+        {
+          "id": "listMurabahaContracts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/contracts/murabaha",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "tenant_id": {
+                      "type": "string"
+                    },
+                    "workspace_id": {
+                      "type": "string"
+                    },
+                    "customer_id": {
+                      "type": "string"
+                    },
+                    "asset_description": {
+                      "type": "string"
+                    },
+                    "cost_price": {
+                      "type": "number"
+                    },
+                    "profit_amount": {
+                      "type": "number"
+                    },
+                    "total_amount": {
+                      "type": "number"
+                    },
+                    "installment_count": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "DRAFT",
+                        "PENDING_ASSET_PURCHASE",
+                        "ASSET_PURCHASED",
+                        "ACTIVE",
+                        "COMPLETED",
+                        "CANCELLED"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getMurabahaContract",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/contracts/murabaha/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "tenant_id": {
+                "type": "string"
+              },
+              "workspace_id": {
+                "type": "string"
+              },
+              "customer_id": {
+                "type": "string"
+              },
+              "asset_description": {
+                "type": "string"
+              },
+              "cost_price": {
+                "type": "number"
+              },
+              "profit_amount": {
+                "type": "number"
+              },
+              "total_amount": {
+                "type": "number"
+              },
+              "installment_count": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "DRAFT",
+                  "PENDING_ASSET_PURCHASE",
+                  "ASSET_PURCHASED",
+                  "ACTIVE",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "createMurabahaContract",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/contracts/murabaha",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "customer_id",
+              "asset_description",
+              "cost_price",
+              "profit_amount",
+              "installment_count"
+            ],
+            "properties": {
+              "customer_id": {
+                "type": "string"
+              },
+              "asset_description": {
+                "type": "string"
+              },
+              "asset_category": {
+                "type": "string",
+                "enum": [
+                  "REAL_ESTATE",
+                  "VEHICLE",
+                  "EQUIPMENT",
+                  "COMMODITY"
+                ]
+              },
+              "cost_price": {
+                "type": "number",
+                "minimum": 0
+              },
+              "profit_amount": {
+                "type": "number",
+                "minimum": 0
+              },
+              "installment_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 360
+              },
+              "currency": {
+                "type": "string",
+                "minLength": 3,
+                "maxLength": 3,
+                "pattern": "^[A-Z]{3}$"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "tenant_id": {
+                "type": "string"
+              },
+              "workspace_id": {
+                "type": "string"
+              },
+              "customer_id": {
+                "type": "string"
+              },
+              "asset_description": {
+                "type": "string"
+              },
+              "cost_price": {
+                "type": "number"
+              },
+              "profit_amount": {
+                "type": "number"
+              },
+              "total_amount": {
+                "type": "number"
+              },
+              "installment_count": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "DRAFT",
+                  "PENDING_ASSET_PURCHASE",
+                  "ASSET_PURCHASED",
+                  "ACTIVE",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Metadata",
+      "key": "metadata",
+      "operations": [
+        {
+          "id": "searchEntityMetadata",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/metadata/entities",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entity": {
+                      "type": "object"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "tags": {
+                      "type": "object"
+                    },
+                    "labels": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "classification": {
+                      "type": "object"
+                    },
+                    "provenance": {
+                      "type": "object"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getEntityLineage",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/metadata/lineage",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "root_entity": {
+                "type": "object"
+              },
+              "edges": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "object"
+                    },
+                    "derived": {
+                      "type": "object"
+                    },
+                    "edge_type": {
+                      "type": "string",
+                      "enum": [
+                        "DERIVED_FROM",
+                        "SETTLED_BY",
+                        "EVIDENCED_BY",
+                        "POSTED_TO_LEDGER"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createEntityMetadata",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/metadata/entities",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "entity",
+              "classification",
+              "provenance"
+            ],
+            "properties": {
+              "entity": {
+                "type": "object",
+                "required": [
+                  "tenant_id",
+                  "workspace_id",
+                  "rail",
+                  "entity_type",
+                  "entity_id"
+                ],
+                "properties": {
+                  "tenant_id": {
+                    "type": "string"
+                  },
+                  "workspace_id": {
+                    "type": "string"
+                  },
+                  "rail": {
+                    "type": "string"
+                  },
+                  "entity_type": {
+                    "type": "string"
+                  },
+                  "entity_id": {
+                    "type": "string"
+                  }
+                }
+              },
+              "classification": {
+                "type": "object",
+                "required": [
+                  "confidentiality",
+                  "pii",
+                  "secrecy_tier"
+                ],
+                "properties": {
+                  "confidentiality": {
+                    "type": "string",
+                    "enum": [
+                      "PUBLIC",
+                      "INTERNAL",
+                      "CONFIDENTIAL",
+                      "RESTRICTED"
+                    ]
+                  },
+                  "pii": {
+                    "type": "string",
+                    "enum": [
+                      "NONE",
+                      "LOW",
+                      "MODERATE",
+                      "HIGH"
+                    ]
+                  },
+                  "secrecy_tier": {
+                    "type": "string",
+                    "enum": [
+                      "T0",
+                      "T1",
+                      "T2",
+                      "T3"
+                    ]
+                  }
+                }
+              },
+              "provenance": {
+                "type": "object",
+                "required": [
+                  "producer",
+                  "trace_id"
+                ],
+                "properties": {
+                  "producer": {
+                    "type": "string"
+                  },
+                  "trace_id": {
+                    "type": "string"
+                  },
+                  "source_system": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "entity": {
+                "type": "object"
+              },
+              "version": {
+                "type": "integer"
+              },
+              "tags": {
+                "type": "object"
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "classification": {
+                "type": "object"
+              },
+              "provenance": {
+                "type": "object"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Shariah",
+      "key": "shariah",
+      "operations": [
+        {
+          "id": "listShariahRules",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/shariah/rules",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "category": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "DEPRECATED"
+                      ]
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "evaluateShariahCompliance",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/shariah/evaluations",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "entity_type",
+              "entity_data"
+            ],
+            "properties": {
+              "entity_type": {
+                "type": "string",
+                "enum": [
+                  "CONTRACT",
+                  "TRANSACTION",
+                  "INVESTMENT",
+                  "FEE"
+                ]
+              },
+              "entity_data": {
+                "type": "object"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "evaluation_id": {
+                "type": "string"
+              },
+              "entity_type": {
+                "type": "string"
+              },
+              "compliant": {
+                "type": "boolean"
+              },
+              "rules_evaluated": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "rule_name": {
+                      "type": "string"
+                    },
+                    "result": {
+                      "type": "string",
+                      "enum": [
+                        "PASS",
+                        "FAIL"
+                      ]
+                    }
+                  }
+                }
+              },
+              "breaches": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "rule_id": {
+                      "type": "string"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "LOW",
+                        "MEDIUM",
+                        "HIGH",
+                        "CRITICAL"
+                      ]
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Taxonomy",
+      "key": "taxonomy",
+      "operations": [
+        {
+          "id": "searchTerms",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/taxonomy/terms",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "term_id": {
+                      "type": "string"
+                    },
+                    "taxonomy_id": {
+                      "type": "string"
+                    },
+                    "label": {
+                      "type": "string"
+                    },
+                    "definition": {
+                      "type": "string"
+                    },
+                    "parent_id": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "ACTIVE",
+                        "DEPRECATED"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "meta": {
+                "type": "object",
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "total": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "total_pages": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createTaxonomy",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/taxonomy/taxonomies",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "taxonomy_id",
+              "name"
+            ],
+            "properties": {
+              "taxonomy_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "taxonomy_id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "DEPRECATED"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "createTerm",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/taxonomy/terms",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "taxonomy_id",
+              "term_id",
+              "label"
+            ],
+            "properties": {
+              "taxonomy_id": {
+                "type": "string"
+              },
+              "term_id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "string"
+              },
+              "parent_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "term_id": {
+                "type": "string"
+              },
+              "taxonomy_id": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "definition": {
+                "type": "string"
+              },
+              "parent_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "DEPRECATED"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

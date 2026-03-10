@@ -1,0 +1,443 @@
+{
+  "api": {
+    "title": "Woorton Market-Maker OTC API",
+    "version": "1.1"
+  },
+  "resources": [
+    {
+      "name": "History",
+      "key": "history",
+      "operations": [
+        {
+          "id": "GET:/balances",
+          "method": "GET",
+          "kind": "list",
+          "path": "/balances",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "title": "Balances",
+              "type": "object",
+              "properties": {
+                "USD": {
+                  "type": "number",
+                  "example": 0
+                },
+                "EUR": {
+                  "type": "number",
+                  "example": 0
+                },
+                "BTC": {
+                  "type": "number",
+                  "example": 0
+                },
+                "LTC": {
+                  "type": "number",
+                  "example": 0
+                },
+                "XRP": {
+                  "type": "number",
+                  "example": 0
+                },
+                "BCH": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/ledger",
+          "method": "GET",
+          "kind": "list",
+          "path": "/ledger",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "title": "Ledger",
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/trades",
+          "method": "GET",
+          "kind": "list",
+          "path": "/trades",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "title": "Trade",
+              "type": "object",
+              "properties": {
+                "request_id": {
+                  "type": "string"
+                },
+                "client_request_id": {
+                  "type": "string"
+                },
+                "total": {
+                  "type": "string",
+                  "example": "3123.12345678"
+                },
+                "amount": {
+                  "type": "string",
+                  "default": "1.0"
+                },
+                "instrument": {
+                  "type": "string",
+                  "example": "BTCEUR.SPOT"
+                },
+                "direction": {
+                  "type": "string",
+                  "example": "buy"
+                },
+                "state": {
+                  "type": "string",
+                  "enum": [
+                    "executed",
+                    "canceled",
+                    "pending_quote"
+                  ],
+                  "example": "executed"
+                },
+                "created_at": {
+                  "type": "string",
+                  "example": "2018-12-23T21:51:25.001122Z"
+                },
+                "executed_at": {
+                  "type": "string",
+                  "example": "2018-12-23T21:51:34.001122Z"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Misc",
+      "key": "misc",
+      "operations": [
+        {
+          "id": "GET:/exposures",
+          "method": "GET",
+          "kind": "list",
+          "path": "/exposures",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "title": "Exposures",
+              "type": "object",
+              "properties": {
+                "USD": {
+                  "type": "number",
+                  "example": 0
+                },
+                "EUR": {
+                  "type": "number",
+                  "example": 0
+                },
+                "BTC": {
+                  "type": "number",
+                  "example": 0
+                },
+                "LTC": {
+                  "type": "number",
+                  "example": 0
+                },
+                "XRP": {
+                  "type": "number",
+                  "example": 0
+                },
+                "BCH": {
+                  "type": "number",
+                  "example": 0
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/instruments",
+          "method": "GET",
+          "kind": "list",
+          "path": "/instruments",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "title": "Instruments",
+              "type": "array",
+              "example": {
+                "instrumennts": [
+                  "ETHBTC.SPOT",
+                  "ETHUSD.SPOT",
+                  "ETHEUR.SPOT",
+                  "BTCEUR.SPOT",
+                  "BTCUSD.SPOT",
+                  "LTCUSD.SPOT",
+                  "LTCEUR.SPOT",
+                  "BCHUSD.SPOT"
+                ]
+              },
+              "items": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "title": "Order",
+            "type": "object",
+            "properties": {
+              "client_request_id": {
+                "type": "string",
+                "default": "some-uuid"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "requested_price": {
+                "type": "string",
+                "default": "6500.45"
+              },
+              "order_type": {
+                "type": "string",
+                "example": "FOK"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              }
+            }
+          },
+          "responseSchema": {
+            "title": "Trade",
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string"
+              },
+              "client_request_id": {
+                "type": "string"
+              },
+              "total": {
+                "type": "string",
+                "example": "3123.12345678"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "executed",
+                  "canceled",
+                  "pending_quote"
+                ],
+                "example": "executed"
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:25.001122Z"
+              },
+              "executed_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:34.001122Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Quotes",
+      "key": "quotes",
+      "operations": [
+        {
+          "id": "POST:/request_quotes",
+          "method": "POST",
+          "kind": "create",
+          "path": "/request_quotes",
+          "requestSchema": {
+            "title": "Request for Quote Request",
+            "type": "object",
+            "properties": {
+              "client_request_id": {
+                "type": "string",
+                "default": "d83b5b1a-4d2c-4582-955c-d01abbad9e01"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              }
+            },
+            "required": [
+              "client_request_id",
+              "amount",
+              "instrument",
+              "direction"
+            ]
+          },
+          "responseSchema": {
+            "title": "Request for Quote Response",
+            "type": "object",
+            "properties": {
+              "client_request_id": {
+                "type": "string",
+                "default": "some-client-uuid"
+              },
+              "request_id": {
+                "type": "string",
+                "default": "some-uuid"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "total": {
+                "type": "number",
+                "example": "3123.12"
+              },
+              "price": {
+                "type": "number",
+                "example": "3123.12"
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:34.001122Z"
+              },
+              "expires_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:34.001122Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/trades",
+          "method": "POST",
+          "kind": "create",
+          "path": "/trades",
+          "requestSchema": {
+            "title": "Trade",
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string",
+                "default": "some-uuid"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "total": {
+                "type": "string",
+                "default": "3123.12345678"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              }
+            }
+          },
+          "responseSchema": {
+            "title": "Trade",
+            "type": "object",
+            "properties": {
+              "request_id": {
+                "type": "string"
+              },
+              "client_request_id": {
+                "type": "string"
+              },
+              "total": {
+                "type": "string",
+                "example": "3123.12345678"
+              },
+              "amount": {
+                "type": "string",
+                "default": "1.0"
+              },
+              "instrument": {
+                "type": "string",
+                "example": "BTCEUR.SPOT"
+              },
+              "direction": {
+                "type": "string",
+                "example": "buy"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "executed",
+                  "canceled",
+                  "pending_quote"
+                ],
+                "example": "executed"
+              },
+              "created_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:25.001122Z"
+              },
+              "executed_at": {
+                "type": "string",
+                "example": "2018-12-23T21:51:34.001122Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

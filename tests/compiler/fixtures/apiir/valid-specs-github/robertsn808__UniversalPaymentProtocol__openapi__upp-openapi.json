@@ -1,0 +1,102 @@
+{
+  "api": {
+    "title": "Universal Payment Protocol API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Process-payment",
+      "key": "process-payment",
+      "operations": [
+        {
+          "id": "POST:/api/process-payment",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/process-payment",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "amount",
+              "deviceType",
+              "deviceId",
+              "description"
+            ],
+            "properties": {
+              "amount": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0.01
+              },
+              "deviceType": {
+                "type": "string",
+                "example": "smartphone"
+              },
+              "deviceId": {
+                "type": "string",
+                "example": "device_abc123"
+              },
+              "description": {
+                "type": "string",
+                "example": "Order"
+              },
+              "customerEmail": {
+                "type": "string",
+                "format": "email"
+              },
+              "metadata": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "transactionId": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string",
+                "example": "USD"
+              },
+              "error": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "key": "webhooks",
+      "operations": [
+        {
+          "id": "POST:/webhooks/stripe",
+          "method": "POST",
+          "kind": "create",
+          "path": "/webhooks/stripe",
+          "requestSchema": {
+            "type": "object",
+            "description": "Stripe event payload"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "received": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

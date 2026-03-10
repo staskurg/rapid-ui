@@ -335,7 +335,7 @@ describe("subset validator", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_INVALID_RESPONSE_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("application/json"))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes("JSON schema"))).toBe(true);
   });
 
   it("rejects POST with requestBody content but missing schema", () => {
@@ -474,7 +474,7 @@ describe("subset validator", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("at least one success"))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes("success response with JSON schema"))).toBe(true);
   });
 
   it("rejects path param with non-primitive schema", () => {
@@ -555,6 +555,7 @@ describe("subset validator", () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.errors.some((e) => e.code === "OAS_UNSUPPORTED_SCHEMA_KEYWORD")).toBe(true);
+    expect(result.errors.some((e) => e.message.includes("polymorphic schemas"))).toBe(true);
   });
 
   it("rejects root success schema with primitive type (string)", () => {

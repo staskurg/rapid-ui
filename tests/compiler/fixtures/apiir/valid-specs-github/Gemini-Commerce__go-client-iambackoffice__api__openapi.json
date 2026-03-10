@@ -1,0 +1,2771 @@
+{
+  "api": {
+    "title": "IamBackoffice Service",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "IamBackoffice",
+      "key": "iambackoffice",
+      "operations": [
+        {
+          "id": "IamBackoffice_AssignRoles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/AssignRoles",
+          "requestSchema": {
+            "properties": {
+              "loginId": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "roleCodes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "roleCodes": [
+                "roleCodes",
+                "roleCodes"
+              ]
+            },
+            "properties": {
+              "roleCodes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_AssignUserToGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/AssignUserToGroup",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "groupId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_CreateGroup",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/CreateGroup",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "data": {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "group": {
+                "id": "id"
+              }
+            },
+            "properties": {
+              "group": {
+                "example": {
+                  "id": "id"
+                },
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_DisableUserMfa",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/DisableUserMfa",
+          "requestSchema": {
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "methodId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "success": true
+            },
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_EnableUserMfa",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/EnableUserMfa",
+          "requestSchema": {
+            "properties": {
+              "userId": {
+                "type": "string"
+              },
+              "secret": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "success": true
+            },
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_GenerateSecretForQR",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/GenerateSecretForQR",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "secret": "secret"
+            },
+            "properties": {
+              "secret": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_GetUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/GetUser",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "username": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "user": {
+                "lastName": "lastName",
+                "twoFactor": {
+                  "methods": [
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    },
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    }
+                  ],
+                  "recoveryCodes": [
+                    "recoveryCodes",
+                    "recoveryCodes"
+                  ]
+                },
+                "passwordChangeRequired": true,
+                "lastUpdateInstant": "lastUpdateInstant",
+                "registrations": [
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  },
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  }
+                ],
+                "data": {
+                  "key": "data"
+                },
+                "timezone": "timezone",
+                "verified": true,
+                "active": true,
+                "fullName": "fullName",
+                "birthDate": "birthDate",
+                "firstName": "firstName",
+                "password": "password",
+                "lastLoginInstant": "lastLoginInstant",
+                "mobilePhone": "mobilePhone",
+                "imageUrl": "imageUrl",
+                "preferredLanguages": [
+                  "preferredLanguages",
+                  "preferredLanguages"
+                ],
+                "insertInstant": "insertInstant",
+                "middleName": "middleName",
+                "id": "id",
+                "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                "email": "email",
+                "username": "username"
+              }
+            },
+            "properties": {
+              "user": {
+                "example": {
+                  "lastName": "lastName",
+                  "twoFactor": {
+                    "methods": [
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      },
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      }
+                    ],
+                    "recoveryCodes": [
+                      "recoveryCodes",
+                      "recoveryCodes"
+                    ]
+                  },
+                  "passwordChangeRequired": true,
+                  "lastUpdateInstant": "lastUpdateInstant",
+                  "registrations": [
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    },
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    }
+                  ],
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "verified": true,
+                  "active": true,
+                  "fullName": "fullName",
+                  "birthDate": "birthDate",
+                  "firstName": "firstName",
+                  "password": "password",
+                  "lastLoginInstant": "lastLoginInstant",
+                  "mobilePhone": "mobilePhone",
+                  "imageUrl": "imageUrl",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ],
+                  "insertInstant": "insertInstant",
+                  "middleName": "middleName",
+                  "id": "id",
+                  "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                  "email": "email",
+                  "username": "username"
+                },
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "birthDate": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "insertInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastLoginInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "lastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "mobilePhone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordChangeRequired": {
+                    "type": "boolean"
+                  },
+                  "passwordLastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "registrations": {
+                    "items": {
+                      "example": {
+                        "data": {
+                          "key": "data"
+                        },
+                        "timezone": "timezone",
+                        "roles": [
+                          "roles",
+                          "roles"
+                        ],
+                        "tenantId": "tenantId",
+                        "preferredLanguages": [
+                          "preferredLanguages",
+                          "preferredLanguages"
+                        ]
+                      },
+                      "properties": {
+                        "tenantId": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "preferredLanguages": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "roles": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "twoFactor": {
+                    "example": {
+                      "methods": [
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        },
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        }
+                      ],
+                      "recoveryCodes": [
+                        "recoveryCodes",
+                        "recoveryCodes"
+                      ]
+                    },
+                    "properties": {
+                      "methods": {
+                        "items": {
+                          "example": {
+                            "method": "method",
+                            "mobilePhone": "mobilePhone",
+                            "id": "id",
+                            "secret": "secret",
+                            "authenticator": {
+                              "codeLength": 0,
+                              "timeStep": 6,
+                              "algorithm": "algorithm"
+                            },
+                            "email": "email"
+                          },
+                          "properties": {
+                            "authenticator": {
+                              "example": {
+                                "codeLength": 0,
+                                "timeStep": 6,
+                                "algorithm": "algorithm"
+                              },
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string"
+                                },
+                                "codeLength": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "timeStep": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "mobilePhone": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "recoveryCodes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "verified": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_Login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/Login",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "ipAddress": {
+                "type": "string"
+              },
+              "loginId": {
+                "type": "string"
+              },
+              "metaData": {
+                "properties": {
+                  "device": {
+                    "properties": {
+                      "description": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "deviceType": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "noTokens": {
+                "type": "boolean"
+              },
+              "password": {
+                "type": "string"
+              },
+              "twoFactorTrustId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "twoFactorId": "twoFactorId",
+              "methods": [
+                {
+                  "method": "method",
+                  "mobilePhone": "mobilePhone",
+                  "id": "id",
+                  "secret": "secret",
+                  "authenticator": {
+                    "codeLength": 0,
+                    "timeStep": 6,
+                    "algorithm": "algorithm"
+                  },
+                  "email": "email"
+                },
+                {
+                  "method": "method",
+                  "mobilePhone": "mobilePhone",
+                  "id": "id",
+                  "secret": "secret",
+                  "authenticator": {
+                    "codeLength": 0,
+                    "timeStep": 6,
+                    "algorithm": "algorithm"
+                  },
+                  "email": "email"
+                }
+              ],
+              "tenantId": "tenantId",
+              "tokens": {
+                "@type": "@type"
+              },
+              "user": {
+                "lastName": "lastName",
+                "twoFactor": {
+                  "methods": [
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    },
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    }
+                  ],
+                  "recoveryCodes": [
+                    "recoveryCodes",
+                    "recoveryCodes"
+                  ]
+                },
+                "passwordChangeRequired": true,
+                "lastUpdateInstant": "lastUpdateInstant",
+                "registrations": [
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  },
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  }
+                ],
+                "data": {
+                  "key": "data"
+                },
+                "timezone": "timezone",
+                "verified": true,
+                "active": true,
+                "fullName": "fullName",
+                "birthDate": "birthDate",
+                "firstName": "firstName",
+                "password": "password",
+                "lastLoginInstant": "lastLoginInstant",
+                "mobilePhone": "mobilePhone",
+                "imageUrl": "imageUrl",
+                "preferredLanguages": [
+                  "preferredLanguages",
+                  "preferredLanguages"
+                ],
+                "insertInstant": "insertInstant",
+                "middleName": "middleName",
+                "id": "id",
+                "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                "email": "email",
+                "username": "username"
+              }
+            },
+            "properties": {
+              "tokens": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+                "example": {
+                  "@type": "@type"
+                },
+                "properties": {
+                  "@type": {
+                    "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "user": {
+                "example": {
+                  "lastName": "lastName",
+                  "twoFactor": {
+                    "methods": [
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      },
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      }
+                    ],
+                    "recoveryCodes": [
+                      "recoveryCodes",
+                      "recoveryCodes"
+                    ]
+                  },
+                  "passwordChangeRequired": true,
+                  "lastUpdateInstant": "lastUpdateInstant",
+                  "registrations": [
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    },
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    }
+                  ],
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "verified": true,
+                  "active": true,
+                  "fullName": "fullName",
+                  "birthDate": "birthDate",
+                  "firstName": "firstName",
+                  "password": "password",
+                  "lastLoginInstant": "lastLoginInstant",
+                  "mobilePhone": "mobilePhone",
+                  "imageUrl": "imageUrl",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ],
+                  "insertInstant": "insertInstant",
+                  "middleName": "middleName",
+                  "id": "id",
+                  "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                  "email": "email",
+                  "username": "username"
+                },
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "birthDate": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "insertInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastLoginInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "lastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "mobilePhone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordChangeRequired": {
+                    "type": "boolean"
+                  },
+                  "passwordLastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "registrations": {
+                    "items": {
+                      "example": {
+                        "data": {
+                          "key": "data"
+                        },
+                        "timezone": "timezone",
+                        "roles": [
+                          "roles",
+                          "roles"
+                        ],
+                        "tenantId": "tenantId",
+                        "preferredLanguages": [
+                          "preferredLanguages",
+                          "preferredLanguages"
+                        ]
+                      },
+                      "properties": {
+                        "tenantId": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "preferredLanguages": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "roles": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "twoFactor": {
+                    "example": {
+                      "methods": [
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        },
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        }
+                      ],
+                      "recoveryCodes": [
+                        "recoveryCodes",
+                        "recoveryCodes"
+                      ]
+                    },
+                    "properties": {
+                      "methods": {
+                        "items": {
+                          "example": {
+                            "method": "method",
+                            "mobilePhone": "mobilePhone",
+                            "id": "id",
+                            "secret": "secret",
+                            "authenticator": {
+                              "codeLength": 0,
+                              "timeStep": 6,
+                              "algorithm": "algorithm"
+                            },
+                            "email": "email"
+                          },
+                          "properties": {
+                            "authenticator": {
+                              "example": {
+                                "codeLength": 0,
+                                "timeStep": 6,
+                                "algorithm": "algorithm"
+                              },
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string"
+                                },
+                                "codeLength": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "timeStep": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "mobilePhone": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "recoveryCodes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "verified": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "methods": {
+                "items": {
+                  "example": {
+                    "method": "method",
+                    "mobilePhone": "mobilePhone",
+                    "id": "id",
+                    "secret": "secret",
+                    "authenticator": {
+                      "codeLength": 0,
+                      "timeStep": 6,
+                      "algorithm": "algorithm"
+                    },
+                    "email": "email"
+                  },
+                  "properties": {
+                    "authenticator": {
+                      "example": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "properties": {
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "codeLength": {
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "timeStep": {
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "method": {
+                      "type": "string"
+                    },
+                    "mobilePhone": {
+                      "type": "string"
+                    },
+                    "secret": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "twoFactorId": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_LoginMfa",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/LoginMfa",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "code": {
+                "type": "string"
+              },
+              "twoFactorId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "twoFactorId": "twoFactorId",
+              "methods": [
+                {
+                  "method": "method",
+                  "mobilePhone": "mobilePhone",
+                  "id": "id",
+                  "secret": "secret",
+                  "authenticator": {
+                    "codeLength": 0,
+                    "timeStep": 6,
+                    "algorithm": "algorithm"
+                  },
+                  "email": "email"
+                },
+                {
+                  "method": "method",
+                  "mobilePhone": "mobilePhone",
+                  "id": "id",
+                  "secret": "secret",
+                  "authenticator": {
+                    "codeLength": 0,
+                    "timeStep": 6,
+                    "algorithm": "algorithm"
+                  },
+                  "email": "email"
+                }
+              ],
+              "tenantId": "tenantId",
+              "tokens": {
+                "@type": "@type"
+              },
+              "user": {
+                "lastName": "lastName",
+                "twoFactor": {
+                  "methods": [
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    },
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    }
+                  ],
+                  "recoveryCodes": [
+                    "recoveryCodes",
+                    "recoveryCodes"
+                  ]
+                },
+                "passwordChangeRequired": true,
+                "lastUpdateInstant": "lastUpdateInstant",
+                "registrations": [
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  },
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  }
+                ],
+                "data": {
+                  "key": "data"
+                },
+                "timezone": "timezone",
+                "verified": true,
+                "active": true,
+                "fullName": "fullName",
+                "birthDate": "birthDate",
+                "firstName": "firstName",
+                "password": "password",
+                "lastLoginInstant": "lastLoginInstant",
+                "mobilePhone": "mobilePhone",
+                "imageUrl": "imageUrl",
+                "preferredLanguages": [
+                  "preferredLanguages",
+                  "preferredLanguages"
+                ],
+                "insertInstant": "insertInstant",
+                "middleName": "middleName",
+                "id": "id",
+                "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                "email": "email",
+                "username": "username"
+              }
+            },
+            "properties": {
+              "tokens": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+                "example": {
+                  "@type": "@type"
+                },
+                "properties": {
+                  "@type": {
+                    "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "user": {
+                "example": {
+                  "lastName": "lastName",
+                  "twoFactor": {
+                    "methods": [
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      },
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      }
+                    ],
+                    "recoveryCodes": [
+                      "recoveryCodes",
+                      "recoveryCodes"
+                    ]
+                  },
+                  "passwordChangeRequired": true,
+                  "lastUpdateInstant": "lastUpdateInstant",
+                  "registrations": [
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    },
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    }
+                  ],
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "verified": true,
+                  "active": true,
+                  "fullName": "fullName",
+                  "birthDate": "birthDate",
+                  "firstName": "firstName",
+                  "password": "password",
+                  "lastLoginInstant": "lastLoginInstant",
+                  "mobilePhone": "mobilePhone",
+                  "imageUrl": "imageUrl",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ],
+                  "insertInstant": "insertInstant",
+                  "middleName": "middleName",
+                  "id": "id",
+                  "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                  "email": "email",
+                  "username": "username"
+                },
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "birthDate": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "insertInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastLoginInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "lastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "mobilePhone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordChangeRequired": {
+                    "type": "boolean"
+                  },
+                  "passwordLastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "registrations": {
+                    "items": {
+                      "example": {
+                        "data": {
+                          "key": "data"
+                        },
+                        "timezone": "timezone",
+                        "roles": [
+                          "roles",
+                          "roles"
+                        ],
+                        "tenantId": "tenantId",
+                        "preferredLanguages": [
+                          "preferredLanguages",
+                          "preferredLanguages"
+                        ]
+                      },
+                      "properties": {
+                        "tenantId": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "preferredLanguages": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "roles": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "twoFactor": {
+                    "example": {
+                      "methods": [
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        },
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        }
+                      ],
+                      "recoveryCodes": [
+                        "recoveryCodes",
+                        "recoveryCodes"
+                      ]
+                    },
+                    "properties": {
+                      "methods": {
+                        "items": {
+                          "example": {
+                            "method": "method",
+                            "mobilePhone": "mobilePhone",
+                            "id": "id",
+                            "secret": "secret",
+                            "authenticator": {
+                              "codeLength": 0,
+                              "timeStep": 6,
+                              "algorithm": "algorithm"
+                            },
+                            "email": "email"
+                          },
+                          "properties": {
+                            "authenticator": {
+                              "example": {
+                                "codeLength": 0,
+                                "timeStep": 6,
+                                "algorithm": "algorithm"
+                              },
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string"
+                                },
+                                "codeLength": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "timeStep": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "mobilePhone": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "recoveryCodes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "verified": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "methods": {
+                "items": {
+                  "example": {
+                    "method": "method",
+                    "mobilePhone": "mobilePhone",
+                    "id": "id",
+                    "secret": "secret",
+                    "authenticator": {
+                      "codeLength": 0,
+                      "timeStep": 6,
+                      "algorithm": "algorithm"
+                    },
+                    "email": "email"
+                  },
+                  "properties": {
+                    "authenticator": {
+                      "example": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "properties": {
+                        "algorithm": {
+                          "type": "string"
+                        },
+                        "codeLength": {
+                          "format": "int32",
+                          "type": "integer"
+                        },
+                        "timeStep": {
+                          "format": "int32",
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "email": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "method": {
+                      "type": "string"
+                    },
+                    "mobilePhone": {
+                      "type": "string"
+                    },
+                    "secret": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "twoFactorId": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_Logout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/Logout",
+          "requestSchema": {
+            "properties": {
+              "global": {
+                "type": "boolean"
+              },
+              "tokens": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+                "example": {
+                  "@type": "@type"
+                },
+                "properties": {
+                  "@type": {
+                    "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "success": true
+            },
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_Register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/Register",
+          "requestSchema": {
+            "properties": {
+              "registration": {
+                "example": {
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "roles": [
+                    "roles",
+                    "roles"
+                  ],
+                  "tenantId": "tenantId",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ]
+                },
+                "properties": {
+                  "tenantId": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "sendSetPasswordEmail": {
+                "type": "boolean"
+              },
+              "skipRegistrationVerification": {
+                "type": "boolean"
+              },
+              "skipVerification": {
+                "type": "boolean"
+              },
+              "user": {
+                "example": {
+                  "lastName": "lastName",
+                  "twoFactor": {
+                    "methods": [
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      },
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      }
+                    ],
+                    "recoveryCodes": [
+                      "recoveryCodes",
+                      "recoveryCodes"
+                    ]
+                  },
+                  "passwordChangeRequired": true,
+                  "lastUpdateInstant": "lastUpdateInstant",
+                  "registrations": [
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    },
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    }
+                  ],
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "verified": true,
+                  "active": true,
+                  "fullName": "fullName",
+                  "birthDate": "birthDate",
+                  "firstName": "firstName",
+                  "password": "password",
+                  "lastLoginInstant": "lastLoginInstant",
+                  "mobilePhone": "mobilePhone",
+                  "imageUrl": "imageUrl",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ],
+                  "insertInstant": "insertInstant",
+                  "middleName": "middleName",
+                  "id": "id",
+                  "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                  "email": "email",
+                  "username": "username"
+                },
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "birthDate": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "insertInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastLoginInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "lastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "mobilePhone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordChangeRequired": {
+                    "type": "boolean"
+                  },
+                  "passwordLastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "registrations": {
+                    "items": {
+                      "example": {
+                        "data": {
+                          "key": "data"
+                        },
+                        "timezone": "timezone",
+                        "roles": [
+                          "roles",
+                          "roles"
+                        ],
+                        "tenantId": "tenantId",
+                        "preferredLanguages": [
+                          "preferredLanguages",
+                          "preferredLanguages"
+                        ]
+                      },
+                      "properties": {
+                        "tenantId": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "preferredLanguages": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "roles": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "twoFactor": {
+                    "example": {
+                      "methods": [
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        },
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        }
+                      ],
+                      "recoveryCodes": [
+                        "recoveryCodes",
+                        "recoveryCodes"
+                      ]
+                    },
+                    "properties": {
+                      "methods": {
+                        "items": {
+                          "example": {
+                            "method": "method",
+                            "mobilePhone": "mobilePhone",
+                            "id": "id",
+                            "secret": "secret",
+                            "authenticator": {
+                              "codeLength": 0,
+                              "timeStep": 6,
+                              "algorithm": "algorithm"
+                            },
+                            "email": "email"
+                          },
+                          "properties": {
+                            "authenticator": {
+                              "example": {
+                                "codeLength": 0,
+                                "timeStep": 6,
+                                "algorithm": "algorithm"
+                              },
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string"
+                                },
+                                "codeLength": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "timeStep": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "mobilePhone": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "recoveryCodes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "verified": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              },
+              "tenantId": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "tokens": {
+                "@type": "@type"
+              },
+              "registration": {
+                "data": {
+                  "key": "data"
+                },
+                "timezone": "timezone",
+                "roles": [
+                  "roles",
+                  "roles"
+                ],
+                "tenantId": "tenantId",
+                "preferredLanguages": [
+                  "preferredLanguages",
+                  "preferredLanguages"
+                ]
+              },
+              "user": {
+                "lastName": "lastName",
+                "twoFactor": {
+                  "methods": [
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    },
+                    {
+                      "method": "method",
+                      "mobilePhone": "mobilePhone",
+                      "id": "id",
+                      "secret": "secret",
+                      "authenticator": {
+                        "codeLength": 0,
+                        "timeStep": 6,
+                        "algorithm": "algorithm"
+                      },
+                      "email": "email"
+                    }
+                  ],
+                  "recoveryCodes": [
+                    "recoveryCodes",
+                    "recoveryCodes"
+                  ]
+                },
+                "passwordChangeRequired": true,
+                "lastUpdateInstant": "lastUpdateInstant",
+                "registrations": [
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  },
+                  {
+                    "data": {
+                      "key": "data"
+                    },
+                    "timezone": "timezone",
+                    "roles": [
+                      "roles",
+                      "roles"
+                    ],
+                    "tenantId": "tenantId",
+                    "preferredLanguages": [
+                      "preferredLanguages",
+                      "preferredLanguages"
+                    ]
+                  }
+                ],
+                "data": {
+                  "key": "data"
+                },
+                "timezone": "timezone",
+                "verified": true,
+                "active": true,
+                "fullName": "fullName",
+                "birthDate": "birthDate",
+                "firstName": "firstName",
+                "password": "password",
+                "lastLoginInstant": "lastLoginInstant",
+                "mobilePhone": "mobilePhone",
+                "imageUrl": "imageUrl",
+                "preferredLanguages": [
+                  "preferredLanguages",
+                  "preferredLanguages"
+                ],
+                "insertInstant": "insertInstant",
+                "middleName": "middleName",
+                "id": "id",
+                "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                "email": "email",
+                "username": "username"
+              }
+            },
+            "properties": {
+              "tokens": {
+                "additionalProperties": {
+                  "type": "object"
+                },
+                "description": "`Any` contains an arbitrary serialized protocol buffer message along with a\nURL that describes the type of the serialized message.\n\nProtobuf library provides support to pack/unpack Any values in the form\nof utility functions or additional generated methods of the Any type.\n\nExample 1: Pack and unpack a message in C++.\n\n    Foo foo = ...;\n    Any any;\n    any.PackFrom(foo);\n    ...\n    if (any.UnpackTo(&foo)) {\n      ...\n    }\n\nExample 2: Pack and unpack a message in Java.\n\n    Foo foo = ...;\n    Any any = Any.pack(foo);\n    ...\n    if (any.is(Foo.class)) {\n      foo = any.unpack(Foo.class);\n    }\n\nExample 3: Pack and unpack a message in Python.\n\n    foo = Foo(...)\n    any = Any()\n    any.Pack(foo)\n    ...\n    if any.Is(Foo.DESCRIPTOR):\n      any.Unpack(foo)\n      ...\n\nExample 4: Pack and unpack a message in Go\n\n     foo := &pb.Foo{...}\n     any, err := anypb.New(foo)\n     if err != nil {\n       ...\n     }\n     ...\n     foo := &pb.Foo{}\n     if err := any.UnmarshalTo(foo); err != nil {\n       ...\n     }\n\nThe pack methods provided by protobuf library will by default use\n'type.googleapis.com/full.type.name' as the type URL and the unpack\nmethods only use the fully qualified type name after the last '/'\nin the type URL, for example \"foo.bar.com/x/y.z\" will yield type\nname \"y.z\".\n\n\nJSON\n\nThe JSON representation of an `Any` value uses the regular\nrepresentation of the deserialized, embedded message, with an\nadditional field `@type` which contains the type URL. Example:\n\n    package google.profile;\n    message Person {\n      string first_name = 1;\n      string last_name = 2;\n    }\n\n    {\n      \"@type\": \"type.googleapis.com/google.profile.Person\",\n      \"firstName\": <string>,\n      \"lastName\": <string>\n    }\n\nIf the embedded message type is well-known and has a custom JSON\nrepresentation, that representation will be embedded adding a field\n`value` which holds the custom JSON in addition to the `@type`\nfield. Example (for message [google.protobuf.Duration][]):\n\n    {\n      \"@type\": \"type.googleapis.com/google.protobuf.Duration\",\n      \"value\": \"1.212s\"\n    }",
+                "example": {
+                  "@type": "@type"
+                },
+                "properties": {
+                  "@type": {
+                    "description": "A URL/resource name that uniquely identifies the type of the serialized\nprotocol buffer message. This string must contain at least\none \"/\" character. The last segment of the URL's path must represent\nthe fully qualified name of the type (as in\n`path/google.protobuf.Duration`). The name should be in a canonical form\n(e.g., leading \".\" is not accepted).\n\nIn practice, teams usually precompile into the binary all types that they\nexpect it to use in the context of Any. However, for URLs which use the\nscheme `http`, `https`, or no scheme, one can optionally set up a type\nserver that maps type URLs to message definitions as follows:\n\n* If no scheme is provided, `https` is assumed.\n* An HTTP GET on the URL must yield a [google.protobuf.Type][]\n  value in binary format, or produce an error.\n* Applications are allowed to cache lookup results based on the\n  URL, or have them precompiled into a binary to avoid any\n  lookup. Therefore, binary compatibility needs to be preserved\n  on changes to types. (Use versioned type names to manage\n  breaking changes.)\n\nNote: this functionality is not currently available in the official\nprotobuf release, and it is not used for type URLs beginning with\ntype.googleapis.com.\n\nSchemes other than `http`, `https` (or the empty scheme) might be\nused with implementation specific semantics.",
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "registration": {
+                "example": {
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "roles": [
+                    "roles",
+                    "roles"
+                  ],
+                  "tenantId": "tenantId",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ]
+                },
+                "properties": {
+                  "tenantId": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "roles": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "user": {
+                "example": {
+                  "lastName": "lastName",
+                  "twoFactor": {
+                    "methods": [
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      },
+                      {
+                        "method": "method",
+                        "mobilePhone": "mobilePhone",
+                        "id": "id",
+                        "secret": "secret",
+                        "authenticator": {
+                          "codeLength": 0,
+                          "timeStep": 6,
+                          "algorithm": "algorithm"
+                        },
+                        "email": "email"
+                      }
+                    ],
+                    "recoveryCodes": [
+                      "recoveryCodes",
+                      "recoveryCodes"
+                    ]
+                  },
+                  "passwordChangeRequired": true,
+                  "lastUpdateInstant": "lastUpdateInstant",
+                  "registrations": [
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    },
+                    {
+                      "data": {
+                        "key": "data"
+                      },
+                      "timezone": "timezone",
+                      "roles": [
+                        "roles",
+                        "roles"
+                      ],
+                      "tenantId": "tenantId",
+                      "preferredLanguages": [
+                        "preferredLanguages",
+                        "preferredLanguages"
+                      ]
+                    }
+                  ],
+                  "data": {
+                    "key": "data"
+                  },
+                  "timezone": "timezone",
+                  "verified": true,
+                  "active": true,
+                  "fullName": "fullName",
+                  "birthDate": "birthDate",
+                  "firstName": "firstName",
+                  "password": "password",
+                  "lastLoginInstant": "lastLoginInstant",
+                  "mobilePhone": "mobilePhone",
+                  "imageUrl": "imageUrl",
+                  "preferredLanguages": [
+                    "preferredLanguages",
+                    "preferredLanguages"
+                  ],
+                  "insertInstant": "insertInstant",
+                  "middleName": "middleName",
+                  "id": "id",
+                  "passwordLastUpdateInstant": "passwordLastUpdateInstant",
+                  "email": "email",
+                  "username": "username"
+                },
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "birthDate": {
+                    "type": "string"
+                  },
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "firstName": {
+                    "type": "string"
+                  },
+                  "fullName": {
+                    "type": "string"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "imageUrl": {
+                    "type": "string"
+                  },
+                  "insertInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastLoginInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "lastName": {
+                    "type": "string"
+                  },
+                  "lastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "middleName": {
+                    "type": "string"
+                  },
+                  "mobilePhone": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  },
+                  "passwordChangeRequired": {
+                    "type": "boolean"
+                  },
+                  "passwordLastUpdateInstant": {
+                    "format": "int64",
+                    "type": "string"
+                  },
+                  "preferredLanguages": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "registrations": {
+                    "items": {
+                      "example": {
+                        "data": {
+                          "key": "data"
+                        },
+                        "timezone": "timezone",
+                        "roles": [
+                          "roles",
+                          "roles"
+                        ],
+                        "tenantId": "tenantId",
+                        "preferredLanguages": [
+                          "preferredLanguages",
+                          "preferredLanguages"
+                        ]
+                      },
+                      "properties": {
+                        "tenantId": {
+                          "type": "string"
+                        },
+                        "data": {
+                          "additionalProperties": {
+                            "type": "string"
+                          },
+                          "type": "object"
+                        },
+                        "preferredLanguages": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "roles": {
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "type": "array"
+                  },
+                  "timezone": {
+                    "type": "string"
+                  },
+                  "twoFactor": {
+                    "example": {
+                      "methods": [
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        },
+                        {
+                          "method": "method",
+                          "mobilePhone": "mobilePhone",
+                          "id": "id",
+                          "secret": "secret",
+                          "authenticator": {
+                            "codeLength": 0,
+                            "timeStep": 6,
+                            "algorithm": "algorithm"
+                          },
+                          "email": "email"
+                        }
+                      ],
+                      "recoveryCodes": [
+                        "recoveryCodes",
+                        "recoveryCodes"
+                      ]
+                    },
+                    "properties": {
+                      "methods": {
+                        "items": {
+                          "example": {
+                            "method": "method",
+                            "mobilePhone": "mobilePhone",
+                            "id": "id",
+                            "secret": "secret",
+                            "authenticator": {
+                              "codeLength": 0,
+                              "timeStep": 6,
+                              "algorithm": "algorithm"
+                            },
+                            "email": "email"
+                          },
+                          "properties": {
+                            "authenticator": {
+                              "example": {
+                                "codeLength": 0,
+                                "timeStep": 6,
+                                "algorithm": "algorithm"
+                              },
+                              "properties": {
+                                "algorithm": {
+                                  "type": "string"
+                                },
+                                "codeLength": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                },
+                                "timeStep": {
+                                  "format": "int32",
+                                  "type": "integer"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "email": {
+                              "type": "string"
+                            },
+                            "id": {
+                              "type": "string"
+                            },
+                            "method": {
+                              "type": "string"
+                            },
+                            "mobilePhone": {
+                              "type": "string"
+                            },
+                            "secret": {
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        },
+                        "type": "array"
+                      },
+                      "recoveryCodes": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "username": {
+                    "type": "string"
+                  },
+                  "verified": {
+                    "type": "boolean"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_SearchGroups",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/SearchGroups",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "type": "string"
+              },
+              "filters": {
+                "properties": {
+                  "data": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              },
+              "filtersMask": {
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "groups": [
+                {
+                  "id": "id"
+                },
+                {
+                  "id": "id"
+                }
+              ]
+            },
+            "properties": {
+              "groups": {
+                "items": {
+                  "example": {
+                    "id": "id"
+                  },
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "IamBackoffice_UnassignRoles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/iambackoffice.IamBackoffice/UnassignRoles",
+          "requestSchema": {
+            "properties": {
+              "loginId": {
+                "type": "string"
+              },
+              "tenantId": {
+                "type": "string"
+              },
+              "roleCodes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "roleCodes": [
+                "roleCodes",
+                "roleCodes"
+              ]
+            },
+            "properties": {
+              "roleCodes": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

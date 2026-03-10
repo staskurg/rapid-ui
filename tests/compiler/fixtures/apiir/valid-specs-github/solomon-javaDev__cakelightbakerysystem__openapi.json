@@ -1,0 +1,411 @@
+{
+  "api": {
+    "title": "Sales Management API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "createGuestOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/public/orders/guest",
+          "requestSchema": {
+            "type": "object",
+            "description": "Request payload for creating a guest customer order",
+            "required": [
+              "customerName",
+              "customerPhone",
+              "outletId",
+              "deliveryDate",
+              "totalPrice"
+            ],
+            "properties": {
+              "customerName": {
+                "type": "string",
+                "description": "Full name of the guest customer",
+                "example": "John Doe",
+                "minLength": 1,
+                "maxLength": 255
+              },
+              "customerPhone": {
+                "type": "string",
+                "description": "Contact phone number for the customer",
+                "example": "+1-555-0123",
+                "pattern": "^\\+?[1-9]\\d{1,14}$"
+              },
+              "customerEmail": {
+                "type": "string",
+                "description": "Customer email address (optional)",
+                "format": "email",
+                "example": "john@example.com"
+              },
+              "outletId": {
+                "type": "integer",
+                "format": "int64",
+                "description": "The outlet ID where the order will be fulfilled",
+                "example": 1
+              },
+              "deliveryDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Requested delivery date for the order",
+                "example": "2025-12-15"
+              },
+              "orderDetails": {
+                "type": "string",
+                "description": "Additional details or special instructions for the order",
+                "example": "Extra napkins please",
+                "maxLength": 1000
+              },
+              "units": {
+                "type": "integer",
+                "format": "int32",
+                "description": "Number of units ordered",
+                "example": 5,
+                "minimum": 1
+              },
+              "totalPrice": {
+                "type": "number",
+                "format": "double",
+                "description": "Total price for the order",
+                "example": 149.95,
+                "minimum": 0
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "integer",
+                "format": "int64",
+                "example": 98765
+              },
+              "customerName": {
+                "type": "string"
+              },
+              "deliveryDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "totalPrice": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "getProductsApi",
+          "method": "GET",
+          "kind": "list",
+          "path": "/public/api/products",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Product information with availability and pricing",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Unique product identifier",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Product name",
+                      "example": "Premium Coffee Beans"
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "double",
+                      "description": "Current selling price",
+                      "example": 29.99,
+                      "minimum": 0
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "Current stock quantity at this outlet",
+                      "example": 50,
+                      "minimum": 0
+                    },
+                    "minimumStockLevel": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "Minimum threshold before reordering is triggered",
+                      "example": 10,
+                      "minimum": 0
+                    },
+                    "outlet": {
+                      "type": "object",
+                      "description": "Outlet or store location information",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64",
+                          "description": "Unique outlet identifier",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Outlet name or store name",
+                          "example": "Downtown Branch"
+                        },
+                        "location": {
+                          "type": "string",
+                          "description": "Physical location or address",
+                          "example": "123 Main Street, Downtown"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "count": {
+                "type": "integer",
+                "example": 10
+              }
+            }
+          }
+        },
+        {
+          "id": "getProductsByOutlet",
+          "method": "GET",
+          "kind": "list",
+          "path": "/sales/products",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Product information with availability and pricing",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Unique product identifier",
+                  "example": 1
+                },
+                "name": {
+                  "type": "string",
+                  "description": "Product name",
+                  "example": "Premium Coffee Beans"
+                },
+                "price": {
+                  "type": "number",
+                  "format": "double",
+                  "description": "Current selling price",
+                  "example": 29.99,
+                  "minimum": 0
+                },
+                "quantity": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Current stock quantity at this outlet",
+                  "example": 50,
+                  "minimum": 0
+                },
+                "minimumStockLevel": {
+                  "type": "integer",
+                  "format": "int32",
+                  "description": "Minimum threshold before reordering is triggered",
+                  "example": 10,
+                  "minimum": 0
+                },
+                "outlet": {
+                  "type": "object",
+                  "description": "Outlet or store location information",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Unique outlet identifier",
+                      "example": 1
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Outlet name or store name",
+                      "example": "Downtown Branch"
+                    },
+                    "location": {
+                      "type": "string",
+                      "description": "Physical location or address",
+                      "example": "123 Main Street, Downtown"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sales",
+      "key": "sales",
+      "operations": [
+        {
+          "id": "getRecentSales",
+          "method": "GET",
+          "kind": "list",
+          "path": "/sales/recent",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "saleId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "outletId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "totalAmount": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getTodaysSales",
+          "method": "GET",
+          "kind": "list",
+          "path": "/sales/today",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "saleId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "outletId": {
+                  "type": "integer",
+                  "format": "int64"
+                },
+                "totalAmount": {
+                  "type": "number",
+                  "format": "double"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createSale",
+          "method": "POST",
+          "kind": "create",
+          "path": "/sales",
+          "queryParamCount": 1,
+          "requestSchema": {
+            "type": "object",
+            "description": "Request payload for creating a sale transaction",
+            "required": [
+              "items"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "description": "List of items included in this sale",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "description": "Individual item in a sale transaction",
+                  "required": [
+                    "productId",
+                    "quantity",
+                    "unitPrice"
+                  ],
+                  "properties": {
+                    "productId": {
+                      "type": "integer",
+                      "format": "int64",
+                      "description": "Unique identifier of the product being sold",
+                      "example": 1
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "Number of units sold",
+                      "example": 2,
+                      "minimum": 1
+                    },
+                    "unitPrice": {
+                      "type": "number",
+                      "format": "double",
+                      "description": "Price per unit at the time of sale",
+                      "example": 29.99,
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "example": {
+              "items": [
+                {
+                  "productId": 1,
+                  "quantity": 2,
+                  "unitPrice": 29.99
+                },
+                {
+                  "productId": 3,
+                  "quantity": 1,
+                  "unitPrice": 15.5
+                }
+              ]
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "saleId": {
+                "type": "integer",
+                "format": "int64",
+                "example": 12345
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "totalAmount": {
+                "type": "number",
+                "format": "double"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

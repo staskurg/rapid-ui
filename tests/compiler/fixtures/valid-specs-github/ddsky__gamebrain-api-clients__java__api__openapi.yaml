@@ -1,0 +1,1394 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: mail@gamebrain.co
+    name: David Urbansky
+  description: GameBrain API
+  termsOfService: https://gamebrain.co/api/terms
+  title: GameBrain API
+  version: 1.0.1
+servers:
+- url: https://api.gamebrain.co/v1
+security:
+- apiKey: []
+- headerApiKey: []
+paths:
+  /games:
+    get:
+      description: "Search hundreds of thousands of video games from over 70 platforms.\
+        \ The query can be a game name, a platform, a genre, or any combination"
+      operationId: search
+      parameters:
+      - description: "The search query, e.g., game name, platform, genre, or any combination."
+        explode: true
+        in: query
+        name: query
+        required: true
+        schema:
+          example: rpg for PC
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      - description: The number of results to skip before starting to collect the
+          result set. Between 0 and 1000.
+        explode: true
+        in: query
+        name: offset
+        required: true
+        schema:
+          default: 0
+          format: int32
+          type: integer
+        style: form
+      - description: The maximum number of results to return between 1 and 10.
+        explode: true
+        in: query
+        name: limit
+        required: true
+        schema:
+          default: 10
+          format: int32
+          type: integer
+        style: form
+      - description: JSON array of filter objects to apply to the search.
+        explode: true
+        in: query
+        name: filters
+        required: true
+        schema:
+          default: "[]"
+          example: "[{\"key\":\"platform\",\"values\":[{\"value\":\"pc\"}],\"connection\"\
+            :\"OR\"},{\"key\":\"genre\",\"values\":[{\"value\":\"action\"}]}]"
+          maxLength: 3000
+          pattern: .*
+          type: string
+        style: form
+      - description: "The field by which to sort the results, either computed_rating,\
+          \ price, or release_date"
+        explode: true
+        in: query
+        name: sort
+        required: true
+        schema:
+          example: computed_rating
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      - description: "The sort order: 'asc' for ascending or 'desc' for descending."
+        explode: true
+        in: query
+        name: sort-order
+        required: true
+        schema:
+          default: asc
+          example: asc
+          maxLength: 4
+          pattern: (asc|desc)
+          type: string
+        style: form
+      - description: Whether to generate filter options in the response.
+        explode: true
+        in: query
+        name: generate-filter-options
+        required: true
+        schema:
+          default: true
+          type: boolean
+        style: form
+      - description: Your API key for authentication.
+        explode: true
+        in: query
+        name: api-key
+        required: true
+        schema:
+          example: abc123
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+          description: OK
+      summary: Search Games
+      x-accepts:
+      - application/json
+  /games/suggestions:
+    get:
+      description: "Get game suggestions based on (partial) search queries. For example,\
+        \ the query 'gt' will return games like GTA."
+      operationId: suggest
+      parameters:
+      - description: The partial search query to get suggestions for.
+        explode: true
+        in: query
+        name: query
+        required: true
+        schema:
+          example: gt
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      - description: The maximum number of suggestions to return.
+        explode: true
+        in: query
+        name: limit
+        required: true
+        schema:
+          default: 10
+          format: int32
+          type: integer
+        style: form
+      - description: Your API key for authentication.
+        explode: true
+        in: query
+        name: api-key
+        required: true
+        schema:
+          example: abc123
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchSuggestionResponse'
+          description: OK
+      summary: Get Game Suggestions
+      x-accepts:
+      - application/json
+  /games/{id}:
+    get:
+      description: "Get all the details about a game given its id. Details include\
+        \ screenshots, ratings, release dates, videos, description, tags, and much\
+        \ more."
+      operationId: detail
+      parameters:
+      - description: The unique identifier of the game.
+        explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: simple
+      - description: Your API key for authentication.
+        explode: true
+        in: query
+        name: api-key
+        required: true
+        schema:
+          example: abc123
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameResponse'
+          description: OK
+      summary: Get Game Details
+      x-accepts:
+      - application/json
+  /games/{id}/similar:
+    get:
+      description: Get games that are similar to the given one.
+      operationId: similar
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: simple
+      - explode: true
+        in: query
+        name: limit
+        required: true
+        schema:
+          default: 10
+          format: int32
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: api-key
+        required: true
+        schema:
+          example: abc123
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimilarGamesResponse'
+          description: OK
+      summary: Get Similar Games
+      x-accepts:
+      - application/json
+  /games/{id}/news:
+    get:
+      description: Get news related to the given game.
+      operationId: news
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: int32
+          type: integer
+        style: simple
+      - explode: true
+        in: query
+        name: offset
+        required: true
+        schema:
+          default: 0
+          format: int32
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: true
+        schema:
+          default: 10
+          format: int32
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: api-key
+        required: true
+        schema:
+          example: abc123
+          maxLength: 300
+          pattern: .*
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameNewsResponse'
+          description: OK
+      summary: Get Game News
+      x-accepts:
+      - application/json
+components:
+  schemas:
+    SearchResponse:
+      example:
+        active_filter_options:
+        - values:
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          connection: connection
+          key: key
+        - values:
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          connection: connection
+          key: key
+        - values:
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          connection: connection
+          key: key
+        - values:
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          connection: connection
+          key: key
+        - values:
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          - match: match
+            value: value
+          connection: connection
+          key: key
+        offset: 1
+        sorting:
+          key: key
+          direction: direction
+        query: query
+        limit: 6
+        results:
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        sorting_options:
+        - name: name
+          sort: sort
+          key: key
+        - name: name
+          sort: sort
+          key: key
+        - name: name
+          sort: sort
+          key: key
+        - name: name
+          sort: sort
+          key: key
+        - name: name
+          sort: sort
+          key: key
+        total_results: 0
+        filter_options:
+        - values:
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          name: name
+          key: key
+        - values:
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          name: name
+          key: key
+        - values:
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          name: name
+          key: key
+        - values:
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          name: name
+          key: key
+        - values:
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          - name: name
+            count: 9.301444243932576
+            key: key
+          name: name
+          key: key
+      properties:
+        sorting:
+          $ref: '#/components/schemas/SearchResponse_sorting'
+        active_filter_options:
+          items:
+            $ref: '#/components/schemas/SearchResponse_active_filter_options_inner'
+          maxItems: 100
+          type: array
+        query:
+          type: string
+        total_results:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer
+        results:
+          items:
+            $ref: '#/components/schemas/SearchResponse_results_inner'
+          maxItems: 100
+          type: array
+        filter_options:
+          items:
+            $ref: '#/components/schemas/SearchResponse_filter_options_inner'
+          maxItems: 100
+          type: array
+        sorting_options:
+          items:
+            $ref: '#/components/schemas/SearchResponse_sorting_options_inner'
+          maxItems: 100
+          type: array
+      type: object
+    SearchSuggestionResponse:
+      example:
+        results:
+        - image: https://openapi-generator.tech
+          year: 6.027456183070403
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 0
+          adult_only: true
+        - image: https://openapi-generator.tech
+          year: 6.027456183070403
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 0
+          adult_only: true
+        - image: https://openapi-generator.tech
+          year: 6.027456183070403
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 0
+          adult_only: true
+        - image: https://openapi-generator.tech
+          year: 6.027456183070403
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 0
+          adult_only: true
+        - image: https://openapi-generator.tech
+          year: 6.027456183070403
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 0
+          adult_only: true
+      properties:
+        results:
+          items:
+            $ref: '#/components/schemas/SearchSuggestionResponse_results_inner'
+          maxItems: 100
+          type: array
+      type: object
+    GameResponse:
+      example:
+        offers:
+        - price:
+            initial: 6.846853
+            currency: currency
+            discount_percent: 1.0246457
+            value: 1.4894159
+          store_name: store_name
+          title: title
+          platform: platform
+          url: https://openapi-generator.tech
+        - price:
+            initial: 6.846853
+            currency: currency
+            discount_percent: 1.0246457
+            value: 1.4894159
+          store_name: store_name
+          title: title
+          platform: platform
+          url: https://openapi-generator.tech
+        - price:
+            initial: 6.846853
+            currency: currency
+            discount_percent: 1.0246457
+            value: 1.4894159
+          store_name: store_name
+          title: title
+          platform: platform
+          url: https://openapi-generator.tech
+        - price:
+            initial: 6.846853
+            currency: currency
+            discount_percent: 1.0246457
+            value: 1.4894159
+          store_name: store_name
+          title: title
+          platform: platform
+          url: https://openapi-generator.tech
+        - price:
+            initial: 6.846853
+            currency: currency
+            discount_percent: 1.0246457
+            value: 1.4894159
+          store_name: store_name
+          title: title
+          platform: platform
+          url: https://openapi-generator.tech
+        image: https://openapi-generator.tech
+        short_description: short_description
+        link: https://openapi-generator.tech
+        rating:
+          mean_players: 5.962134
+          mean: 6.0274563
+          count: 1
+          count_critics: 7
+          mean_critics: 2.302136
+          count_players: 5
+        description: description
+        videos:
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        playtime:
+          percentiles:
+          - 9
+          - 9
+          - 9
+          - 9
+          - 9
+          min: 3
+          median: 2
+          max: 4
+          mean: 7.386282
+          mentions: 1
+        adult_only: true
+        screenshots:
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        x_url: https://openapi-generator.tech
+        platforms:
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        tags:
+        - tags
+        - tags
+        - tags
+        - tags
+        - tags
+        themes:
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        play_modes:
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        official_stores:
+        - source: source
+          url: https://openapi-generator.tech
+        - source: source
+          url: https://openapi-generator.tech
+        - source: source
+          url: https://openapi-generator.tech
+        - source: source
+          url: https://openapi-generator.tech
+        - source: source
+          url: https://openapi-generator.tech
+        micro_trailer: https://openapi-generator.tech
+        release_date: 2000-01-23
+        genres:
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        - name: name
+          value: value
+        name: name
+        genre: genre
+        developer: developer
+        id: 0
+        gameplay: https://openapi-generator.tech
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        image:
+          format: uri
+          type: string
+        gameplay:
+          format: uri
+          type: string
+        link:
+          format: uri
+          type: string
+        x_url:
+          format: uri
+          type: string
+        rating:
+          $ref: '#/components/schemas/GameResponse_rating'
+        description:
+          type: string
+        short_description:
+          type: string
+        release_date:
+          format: date
+          type: string
+        developer:
+          type: string
+        playtime:
+          $ref: '#/components/schemas/GameResponse_playtime'
+        platforms:
+          items:
+            $ref: '#/components/schemas/GameResponse_platforms_inner'
+          maxItems: 100
+          type: array
+        tags:
+          items:
+            type: string
+          maxItems: 100
+          type: array
+        genres:
+          items:
+            $ref: '#/components/schemas/GameResponse_platforms_inner'
+          maxItems: 100
+          type: array
+        genre:
+          type: string
+        themes:
+          items:
+            $ref: '#/components/schemas/GameResponse_platforms_inner'
+          maxItems: 100
+          type: array
+        adult_only:
+          type: boolean
+        play_modes:
+          items:
+            $ref: '#/components/schemas/GameResponse_platforms_inner'
+          maxItems: 100
+          type: array
+        screenshots:
+          items:
+            format: uri
+            type: string
+          maxItems: 100
+          type: array
+        videos:
+          items:
+            format: uri
+            type: string
+          maxItems: 100
+          type: array
+        offers:
+          items:
+            $ref: '#/components/schemas/GameResponse_offers_inner'
+          maxItems: 100
+          type: array
+        official_stores:
+          items:
+            $ref: '#/components/schemas/GameResponse_official_stores_inner'
+          maxItems: 100
+          type: array
+        micro_trailer:
+          format: uri
+          type: string
+      type: object
+    SimilarGamesResponse:
+      example:
+        results:
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          short_description: short_description
+          micro_trailer: https://openapi-generator.tech
+          year: 5.637376656633329
+          name: name
+          genre: genre
+          link: link
+          rating:
+            mean: 2.3021358869347655
+            count: 7.061401241503109
+          id: 5
+          adult_only: true
+          screenshots:
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          - https://openapi-generator.tech
+          gameplay: https://openapi-generator.tech
+      properties:
+        results:
+          items:
+            $ref: '#/components/schemas/SearchResponse_results_inner'
+          maxItems: 100
+          type: array
+      type: object
+    GameNewsResponse:
+      example:
+        news:
+        - image: https://openapi-generator.tech
+          source: source
+          published: 2000-01-23
+          title: title
+          url: https://openapi-generator.tech
+        - image: https://openapi-generator.tech
+          source: source
+          published: 2000-01-23
+          title: title
+          url: https://openapi-generator.tech
+      properties:
+        news:
+          items:
+            $ref: '#/components/schemas/GameNewsItem'
+          type: array
+      required:
+      - news
+      type: object
+    GameNewsItem:
+      example:
+        image: https://openapi-generator.tech
+        source: source
+        published: 2000-01-23
+        title: title
+        url: https://openapi-generator.tech
+      properties:
+        title:
+          type: string
+        url:
+          format: uri
+          type: string
+        source:
+          type: string
+        image:
+          format: uri
+          type: string
+        published:
+          format: date
+          type: string
+      required:
+      - published
+      - source
+      - title
+      - url
+      type: object
+    SearchResponse_sorting:
+      example:
+        key: key
+        direction: direction
+      properties:
+        key:
+          nullable: true
+          type: string
+        direction:
+          nullable: true
+          type: string
+      type: object
+    SearchResponse_active_filter_options_inner_values_inner:
+      example:
+        match: match
+        value: value
+      properties:
+        match:
+          type: string
+        value:
+          type: string
+      type: object
+    SearchResponse_active_filter_options_inner:
+      example:
+        values:
+        - match: match
+          value: value
+        - match: match
+          value: value
+        - match: match
+          value: value
+        - match: match
+          value: value
+        - match: match
+          value: value
+        connection: connection
+        key: key
+      properties:
+        key:
+          type: string
+        connection:
+          type: string
+        values:
+          items:
+            $ref: '#/components/schemas/SearchResponse_active_filter_options_inner_values_inner'
+          maxItems: 100
+          type: array
+      type: object
+    SearchResponse_results_inner_rating:
+      example:
+        mean: 2.3021358869347655
+        count: 7.061401241503109
+      properties:
+        mean:
+          type: number
+        count:
+          type: number
+      type: object
+    SearchResponse_results_inner:
+      example:
+        image: https://openapi-generator.tech
+        short_description: short_description
+        micro_trailer: https://openapi-generator.tech
+        year: 5.637376656633329
+        name: name
+        genre: genre
+        link: link
+        rating:
+          mean: 2.3021358869347655
+          count: 7.061401241503109
+        id: 5
+        adult_only: true
+        screenshots:
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        - https://openapi-generator.tech
+        gameplay: https://openapi-generator.tech
+      properties:
+        id:
+          type: integer
+        year:
+          type: number
+        name:
+          type: string
+        genre:
+          type: string
+        image:
+          format: uri
+          type: string
+        link:
+          type: string
+        rating:
+          $ref: '#/components/schemas/SearchResponse_results_inner_rating'
+        adult_only:
+          type: boolean
+        screenshots:
+          items:
+            format: uri
+            type: string
+          maxItems: 100
+          type: array
+        micro_trailer:
+          format: uri
+          type: string
+        gameplay:
+          format: uri
+          type: string
+        short_description:
+          type: string
+      type: object
+    SearchResponse_filter_options_inner_values_inner:
+      example:
+        name: name
+        count: 9.301444243932576
+        key: key
+      properties:
+        name:
+          type: string
+        key:
+          type: string
+        count:
+          type: number
+      type: object
+    SearchResponse_filter_options_inner:
+      example:
+        values:
+        - name: name
+          count: 9.301444243932576
+          key: key
+        - name: name
+          count: 9.301444243932576
+          key: key
+        - name: name
+          count: 9.301444243932576
+          key: key
+        - name: name
+          count: 9.301444243932576
+          key: key
+        - name: name
+          count: 9.301444243932576
+          key: key
+        name: name
+        key: key
+      properties:
+        name:
+          type: string
+        key:
+          type: string
+        values:
+          items:
+            $ref: '#/components/schemas/SearchResponse_filter_options_inner_values_inner'
+          maxItems: 100
+          type: array
+      type: object
+    SearchResponse_sorting_options_inner:
+      example:
+        name: name
+        sort: sort
+        key: key
+      properties:
+        name:
+          type: string
+        sort:
+          type: string
+        key:
+          type: string
+      type: object
+    SearchSuggestionResponse_results_inner:
+      example:
+        image: https://openapi-generator.tech
+        year: 6.027456183070403
+        name: name
+        genre: genre
+        link: link
+        rating:
+          mean: 2.3021358869347655
+          count: 7.061401241503109
+        id: 0
+        adult_only: true
+      properties:
+        id:
+          type: integer
+        year:
+          type: number
+        name:
+          type: string
+        genre:
+          type: string
+        image:
+          format: uri
+          type: string
+        link:
+          type: string
+        rating:
+          $ref: '#/components/schemas/SearchResponse_results_inner_rating'
+        adult_only:
+          type: boolean
+      type: object
+    GameResponse_rating:
+      example:
+        mean_players: 5.962134
+        mean: 6.0274563
+        count: 1
+        count_critics: 7
+        mean_critics: 2.302136
+        count_players: 5
+      properties:
+        mean:
+          format: float
+          nullable: true
+          type: number
+        count:
+          type: integer
+        mean_players:
+          format: float
+          nullable: true
+          type: number
+        count_players:
+          type: integer
+        mean_critics:
+          format: float
+          nullable: true
+          type: number
+        count_critics:
+          type: integer
+      type: object
+    GameResponse_playtime:
+      example:
+        percentiles:
+        - 9
+        - 9
+        - 9
+        - 9
+        - 9
+        min: 3
+        median: 2
+        max: 4
+        mean: 7.386282
+        mentions: 1
+      properties:
+        percentiles:
+          items:
+            type: integer
+          maxItems: 100
+          type: array
+        min:
+          type: integer
+        median:
+          type: integer
+        max:
+          type: integer
+        mean:
+          format: float
+          type: number
+        mentions:
+          type: integer
+      type: object
+    GameResponse_platforms_inner:
+      example:
+        name: name
+        value: value
+      properties:
+        value:
+          type: string
+        name:
+          type: string
+      type: object
+    GameResponse_offers_inner_price:
+      example:
+        initial: 6.846853
+        currency: currency
+        discount_percent: 1.0246457
+        value: 1.4894159
+      properties:
+        currency:
+          type: string
+        discount_percent:
+          format: float
+          type: number
+        value:
+          format: float
+          type: number
+        initial:
+          format: float
+          type: number
+      type: object
+    GameResponse_offers_inner:
+      example:
+        price:
+          initial: 6.846853
+          currency: currency
+          discount_percent: 1.0246457
+          value: 1.4894159
+        store_name: store_name
+        title: title
+        platform: platform
+        url: https://openapi-generator.tech
+      properties:
+        price:
+          $ref: '#/components/schemas/GameResponse_offers_inner_price'
+        store_name:
+          type: string
+        platform:
+          type: string
+        title:
+          type: string
+        url:
+          format: uri
+          type: string
+      type: object
+    GameResponse_official_stores_inner:
+      example:
+        source: source
+        url: https://openapi-generator.tech
+      properties:
+        source:
+          type: string
+        url:
+          format: uri
+          type: string
+      type: object
+  securitySchemes:
+    apiKey:
+      in: query
+      name: api-key
+      type: apiKey
+    headerApiKey:
+      in: header
+      name: x-api-key
+      type: apiKey
+

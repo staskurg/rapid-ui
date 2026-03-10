@@ -1,0 +1,240 @@
+{
+  "api": {
+    "title": "Eclipse XFSC TRAIN Trusted Content Resolver",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "TrustedContentResolver",
+      "key": "trustedcontentresolver",
+      "operations": [
+        {
+          "id": "resolveTrustList",
+          "method": "POST",
+          "kind": "create",
+          "path": "/resolve",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "issuer": {
+                "description": "Issuer details from the VC/VP (e.g., DID/URI)",
+                "type": "string"
+              },
+              "trustSchemePointers": {
+                "description": "Trust Framework Pointers (e.g., example.federation1.de)",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "endpointTypes": {
+                "description": "Service endpoint types to be considered during the resolving",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "issuer",
+              "trustSchemePointers"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "trustSchemePointers": {
+                "description": "Trust Framework Pointers (e.g., example.federation1.de)",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "pointer": {
+                      "description": "Trust Framework Pointer (e.g., example.federation1.de)",
+                      "type": "string"
+                    },
+                    "dids": {
+                      "description": "DIDs resolved from the pointer",
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "pointer"
+                  ]
+                }
+              },
+              "resolvedResults": {
+                "description": "PTR Resolution results",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "did": {
+                      "description": "Corresponding DID mapped to Trust Framework Pointer",
+                      "type": "string"
+                    },
+                    "resolvedDoc": {
+                      "type": "object",
+                      "properties": {
+                        "document": {
+                          "description": "DID Document of the DID",
+                          "type": "object"
+                        },
+                        "endpoints": {
+                          "description": "Resolved Trust List VC endpoints",
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "vcUri": {
+                                "description": "Resolved VC endpoint URI",
+                                "type": "string"
+                              },
+                              "tlUri": {
+                                "description": "Resolved Trust List URI",
+                                "type": "string"
+                              },
+                              "trustList": {
+                                "description": "Trust List structure",
+                                "type": "object"
+                              },
+                              "vcVerified": {
+                                "description": "VC signature verified and VC hash matches Trust List content",
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "vcVerified"
+                            ]
+                          }
+                        },
+                        "didVerified": {
+                          "description": "Well-known did-configuration verification result",
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "document",
+                        "didVerified"
+                      ]
+                    },
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string"
+                        },
+                        "message": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "did"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "trustSchemePointers"
+            ]
+          }
+        },
+        {
+          "id": "validateTrustList",
+          "method": "POST",
+          "kind": "create",
+          "path": "/validate",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "issuer": {
+                "description": "Issuer details from the VC/VP (e.g., DID/URI)",
+                "type": "string"
+              },
+              "did": {
+                "description": "DID resolved from Trust Pointer",
+                "type": "string"
+              },
+              "endpoints": {
+                "description": "Resolved Trust List VC endpoints",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "issuer",
+              "did",
+              "endpoints"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "didVerified": {
+                "description": "DID verified via well-known did-configuration",
+                "type": "boolean"
+              },
+              "endpoints": {
+                "description": "If Issuer details are found, display meta data information, public keys, schema from the trust list..?",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "vcUri": {
+                      "description": "Resolved VC endpoint URI",
+                      "type": "string"
+                    },
+                    "tlUri": {
+                      "description": "Resolved Trust List URI",
+                      "type": "string"
+                    },
+                    "trustList": {
+                      "description": "Trust List structure",
+                      "type": "object"
+                    },
+                    "vcVerified": {
+                      "description": "VC signature verified and VC hash matches Trust List content",
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "vcVerified"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "didVerified"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

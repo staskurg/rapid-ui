@@ -1,0 +1,412 @@
+openapi: 3.0.3
+info:
+  title: SDG19 Final API
+  version: 0.1.0
+  description: API para registro, autenticación y órdenes.
+servers:
+  - url: https://{baseUrl}
+    description: Base URL por entorno
+    variables:
+      baseUrl:
+        default: finalapi.javierba3.com
+paths:
+  /auth/register:
+    post:
+      summary: Registrar usuario y devolver tokens JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Solicitud invalida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/login:
+    post:
+      summary: Iniciar sesion y devolver tokens JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sesion iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Credenciales invalidas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /auth/refresh:
+    post:
+      summary: Renovar tokens JWT con refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Tokens renovados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Token invalido
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /products:
+    get:
+      summary: Listar productos disponibles
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Lista paginada de productos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProducts'
+        '400':
+          description: Parametros de paginacion invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /orders:
+    post:
+      summary: Crear una orden para el usuario autenticado
+      security:
+        - CognitoJWT: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '201':
+          description: Orden creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      summary: Listar ordenes del usuario autenticado
+      security:
+        - CognitoJWT: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/NextTokenParam'
+      responses:
+        '200':
+          description: Lista paginada de ordenes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrders'
+        '400':
+          description: Parametros de paginacion invalidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: No autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    CognitoJWT:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    LimitParam:
+      in: query
+      name: limit
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      description: Maximo de items por pagina.
+    NextTokenParam:
+      in: query
+      name: nextToken
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 1024
+      description: Cursor de paginacion devuelto por la respuesta previa.
+  schemas:
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+          maxLength: 256
+        name:
+          type: string
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+          maxLength: 256
+    RefreshRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+          minLength: 20
+          maxLength: 4096
+          pattern: '^[A-Za-z0-9+/=._-]+$'
+          description: Token opaco de Cognito (formato base64-like).
+    AuthResponse:
+      type: object
+      required:
+        - userId
+        - accessToken
+        - idToken
+      properties:
+        userId:
+          type: string
+        accessToken:
+          type: string
+        idToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          format: int32
+    # PaginationQuery removed; use parameters LimitParam and NextTokenParam.
+    PaginatedProducts:
+      type: object
+      required:
+        - items
+        - limit
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Product'
+        nextToken:
+          type: string
+        limit:
+          type: integer
+        returnedCount:
+          type: integer
+    PaginatedOrders:
+      type: object
+      required:
+        - items
+        - limit
+      properties:
+        items:
+          type: array
+          maxItems: 100
+          items:
+            $ref: '#/components/schemas/Order'
+        nextToken:
+          type: string
+        limit:
+          type: integer
+        returnedCount:
+          type: integer
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - availableQuantity
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+        price:
+          type: integer
+          format: int64
+          description: Precio en centavos (ej. 1000 = $10.00).
+          example: 2999
+        currency:
+          type: string
+          enum:
+            - USD
+            - EUR
+            - GTQ
+          example: USD
+        availableQuantity:
+          type: integer
+          minimum: 0
+          description: Number of units currently available
+          example: 12
+    CreateOrderRequest:
+      type: object
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        notes:
+          type: string
+          maxLength: 10000
+    OrderItem:
+      type: object
+      required:
+        - productId
+        - quantity
+      properties:
+        productId:
+          type: string
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          maximum: 1000
+        unitPrice:
+          type: integer
+          format: int64
+          description: Precio unitario en centavos.
+          example: 2999
+    Order:
+      type: object
+      required:
+        - orderId
+        - status
+        - createdAt
+        - items
+        - total
+        - currency
+      properties:
+        orderId:
+          type: string
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        createdAt:
+          type: string
+          format: date-time
+        items:
+          type: array
+          maxItems: 50
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        total:
+          type: integer
+          format: int64
+          description: Total de la orden en centavos.
+          example: 5999
+        currency:
+          type: string
+          enum:
+            - USD
+            - EUR
+            - GTQ
+          example: USD
+    OrderStatus:
+      type: string
+      enum:
+        - CREATED
+        - PENDING
+        - FAILED
+        - COMPLETED
+      example: CREATED
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        code:
+          type: string
+          description: Identificador del error para manejo programatico.
+          example: INVALID_REQUEST
+        message:
+          type: string

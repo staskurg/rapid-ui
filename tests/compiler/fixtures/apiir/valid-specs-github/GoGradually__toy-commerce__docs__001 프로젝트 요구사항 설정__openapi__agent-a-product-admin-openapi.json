@@ -1,0 +1,531 @@
+{
+  "api": {
+    "title": "Toy Commerce API",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Admin Products",
+      "key": "admin-products",
+      "operations": [
+        {
+          "id": "POST:/api/admin/products",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/admin/products",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "레고 스타터 세트"
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "example": 15900
+              },
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 50
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "INACTIVE"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "price",
+              "stock",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "레고 스타터 세트"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 15900
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price",
+                  "stock",
+                  "status"
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        {
+          "id": "PATCH:/api/admin/products/{productId}",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/admin/products/{productId}",
+          "identifierParam": "productId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "레고 프로 세트"
+              },
+              "price": {
+                "type": "number",
+                "format": "decimal",
+                "example": 25900
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "INACTIVE"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "price",
+              "status"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "레고 스타터 세트"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 15900
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price",
+                  "stock",
+                  "status"
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        {
+          "id": "PATCH:/api/admin/products/{productId}/stock",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/api/admin/products/{productId}/stock",
+          "identifierParam": "productId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "stock": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 12
+              }
+            },
+            "required": [
+              "stock"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "레고 스타터 세트"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 15900
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price",
+                  "stock",
+                  "status"
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        {
+          "id": "DELETE:/api/admin/products/{productId}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/admin/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "nullable": true
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public Products",
+      "key": "public-products",
+      "operations": [
+        {
+          "id": "GET:/api/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/products",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "format": "int64",
+                          "example": 1
+                        },
+                        "name": {
+                          "type": "string",
+                          "example": "레고 스타터 세트"
+                        },
+                        "price": {
+                          "type": "number",
+                          "format": "decimal",
+                          "example": 15900
+                        },
+                        "stock": {
+                          "type": "integer",
+                          "example": 50
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "ACTIVE",
+                            "INACTIVE"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "name",
+                        "price",
+                        "stock",
+                        "status"
+                      ]
+                    }
+                  },
+                  "page": {
+                    "type": "integer",
+                    "example": 0
+                  },
+                  "size": {
+                    "type": "integer",
+                    "example": 20
+                  },
+                  "totalElements": {
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                  },
+                  "totalPages": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "hasNext": {
+                    "type": "boolean",
+                    "example": false
+                  }
+                },
+                "required": [
+                  "products",
+                  "page",
+                  "size",
+                  "totalElements",
+                  "totalPages",
+                  "hasNext"
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        },
+        {
+          "id": "GET:/api/products/{productId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/products/{productId}",
+          "identifierParam": "productId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "format": "int64",
+                    "example": 1
+                  },
+                  "name": {
+                    "type": "string",
+                    "example": "레고 스타터 세트"
+                  },
+                  "price": {
+                    "type": "number",
+                    "format": "decimal",
+                    "example": 15900
+                  },
+                  "stock": {
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "ACTIVE",
+                      "INACTIVE"
+                    ]
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "price",
+                  "stock",
+                  "status"
+                ]
+              },
+              "error": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string",
+                    "example": "PRODUCT-404"
+                  },
+                  "message": {
+                    "type": "string",
+                    "example": "상품을 찾을 수 없습니다."
+                  }
+                },
+                "required": [
+                  "code",
+                  "message"
+                ]
+              }
+            },
+            "required": [
+              "success"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

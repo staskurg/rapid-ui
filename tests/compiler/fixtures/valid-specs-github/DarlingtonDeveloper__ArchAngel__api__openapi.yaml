@@ -1,0 +1,760 @@
+openapi: 3.0.3
+info:
+  title: CodeHawk API
+  description: |
+    CodeHawk API for code analysis, linting, and AI-powered code suggestions.
+    This API allows developers to analyze code, retrieve issues, and get intelligent code improvement suggestions.
+  version: 1.0.0
+  contact:
+    name: CodeHawk Support
+    url: https://codehawk.dev/support
+    email: support@codehawk.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.codehawk.dev/api/v1
+    description: Production server
+  - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: Authentication operations
+  - name: Analysis
+    description: Code analysis operations
+  - name: Issues
+    description: Issue management operations
+  - name: Suggestions
+    description: AI-powered code suggestions
+  - name: Languages
+    description: Supported languages and linting rules
+  - name: Organizations
+    description: Organization management
+  - name: Users
+    description: User management
+  - name: Webhooks
+    description: Webhook notifications
+
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login to the API
+      description: Authenticate and retrieve an API token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                  expires_at:
+                    type: string
+                    format: date-time
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /analyze:
+    post:
+      tags:
+        - Analysis
+      summary: Analyze code
+      description: Submit code for analysis and get linting issues and suggestions
+      operationId: analyzeCode
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalysisRequest'
+      responses:
+        '200':
+          description: Successful analysis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Too many requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /analysis/{id}:
+    get:
+      tags:
+        - Analysis
+      summary: Get analysis by ID
+      description: Retrieve the results of a previous analysis
+      operationId: getAnalysisById
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Analysis ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Analysis results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisResponse'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /analyses:
+    get:
+      tags:
+        - Analysis
+      summary: List analyses
+      description: Retrieve a list of analyses for the authenticated user or organization
+      operationId: listAnalyses
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: organization_id
+          in: query
+          description: Filter by organization ID
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Maximum number of results to return
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+        - name: offset
+          in: query
+          description: Number of results to skip
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: List of analyses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  analyses:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AnalysisSummary'
+                  total:
+                    type: integer
+                  limit:
+                    type: integer
+                  offset:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /analysis/{id}/issues:
+    get:
+      tags:
+        - Issues
+      summary: Get issues for an analysis
+      description: Retrieve the issues found in a specific analysis
+      operationId: getIssuesForAnalysis
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Analysis ID
+          required: true
+          schema:
+            type: string
+        - name: severity
+          in: query
+          description: Filter by severity
+          schema:
+            type: string
+            enum:
+              - error
+              - warning
+              - suggestion
+              - info
+        - name: rule_id
+          in: query
+          description: Filter by rule ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of issues
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  issues:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Issue'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /analysis/{id}/suggestions:
+    get:
+      tags:
+        - Suggestions
+      summary: Get suggestions for an analysis
+      description: Retrieve AI-powered suggestions for a specific analysis
+      operationId: getSuggestionsForAnalysis
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          description: Analysis ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of suggestions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  suggestions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Suggestion'
+        '404':
+          description: Analysis not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /languages:
+    get:
+      tags:
+        - Languages
+      summary: List supported languages
+      description: Retrieve a list of supported programming languages
+      operationId: listLanguages
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of supported languages
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  languages:
+                    type: array
+                    items:
+                      type: string
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /rules/{language}:
+    get:
+      tags:
+        - Languages
+      summary: Get rules for a language
+      description: Retrieve linting rules for a specific programming language
+      operationId: getRulesForLanguage
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      parameters:
+        - name: language
+          in: path
+          description: Programming language
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of rules
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rules:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Rule'
+        '404':
+          description: Language not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /organizations:
+    get:
+      tags:
+        - Organizations
+      summary: List organizations
+      description: Retrieve a list of organizations the authenticated user belongs to
+      operationId: listOrganizations
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: List of organizations
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  organizations:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Organization'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Organizations
+      summary: Create organization
+      description: Create a new organization
+      operationId: createOrganization
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  description: Organization name
+      responses:
+        '201':
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /users:
+    get:
+      tags:
+        - Users
+      summary: List users
+      description: Retrieve a list of users (admin only)
+      operationId: listUsers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: organization_id
+          in: query
+          description: Filter by organization ID
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  
+  /webhook/notify:
+    post:
+      tags:
+        - Webhooks
+      summary: Send webhook notification
+      description: Notify external systems about analysis results
+      operationId: sendWebhookNotification
+      security:
+        - ApiKeyAuth: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - analysis_id
+                - event
+              properties:
+                analysis_id:
+                  type: string
+                event:
+                  type: string
+                  enum:
+                    - analysis_completed
+                    - issues_found
+                    - suggestions_generated
+      responses:
+        '200':
+          description: Notification sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    AnalysisRequest:
+      type: object
+      required:
+        - code
+        - language
+      properties:
+        code:
+          type: string
+          description: Code to analyze
+        language:
+          type: string
+          description: Programming language
+        context:
+          type: string
+          description: Additional context for the analysis
+        options:
+          type: object
+          description: Analysis options
+          additionalProperties: true
+    
+    AnalysisResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Analysis ID
+        status:
+          type: string
+          enum:
+            - success
+            - error
+            - pending
+        language:
+          type: string
+          description: Programming language
+        context:
+          type: string
+          description: Additional context for the analysis
+        timestamp:
+          type: string
+          format: date-time
+        issues:
+          type: array
+          items:
+            $ref: '#/components/schemas/Issue'
+        suggestions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Suggestion'
+    
+    AnalysisSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        language:
+          type: string
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        issue_count:
+          type: integer
+        suggestion_count:
+          type: integer
+    
+    Issue:
+      type: object
+      properties:
+        line:
+          type: integer
+          description: Line number
+        column:
+          type: integer
+          description: Column number
+        message:
+          type: string
+          description: Issue description
+        severity:
+          type: string
+          enum:
+            - error
+            - warning
+            - suggestion
+            - info
+        rule_id:
+          type: string
+          description: Rule identifier
+        context:
+          type: string
+          description: Code context
+        fix:
+          type: object
+          properties:
+            description:
+              type: string
+            replacement:
+              type: string
+    
+    Suggestion:
+      type: object
+      properties:
+        line:
+          type: integer
+          description: Line number
+        column:
+          type: integer
+          description: Column number
+        message:
+          type: string
+          description: Suggestion description
+        severity:
+          type: string
+          default: suggestion
+        rule_id:
+          type: string
+          description: Rule identifier
+        context:
+          type: string
+          description: Code context
+        fix:
+          type: object
+          properties:
+            description:
+              type: string
+            replacement:
+              type: string
+    
+    Rule:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Rule identifier
+        name:
+          type: string
+          description: Rule name
+        description:
+          type: string
+          description: Rule description
+        severity:
+          type: string
+          enum:
+            - error
+            - warning
+            - suggestion
+            - info
+    
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        api_key:
+          type: string
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        organization_id:
+          type: string
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+        active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    Error:
+      type: object
+      properties:
+        status:
+          type: string
+          default: error
+        message:
+          type: string
+        code:
+          type: string

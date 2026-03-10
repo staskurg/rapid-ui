@@ -1,0 +1,133 @@
+{
+  "api": {
+    "title": "GitLab ML Recommendation Engine API",
+    "version": "0.3.3"
+  },
+  "resources": [
+    {
+      "name": "recommendations",
+      "key": "recommendations",
+      "operations": [
+        {
+          "id": "generateRecommendations",
+          "method": "POST",
+          "kind": "create",
+          "path": "/recommendations/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "customer_id"
+            ],
+            "properties": {
+              "customer_id": {
+                "type": "string",
+                "description": "Customer identifier"
+              },
+              "context": {
+                "type": "object",
+                "description": "Additional context for recommendations"
+              },
+              "limit": {
+                "type": "integer",
+                "default": 10,
+                "description": "Maximum number of recommendations"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "recommendations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "priority": {
+                      "type": "string"
+                    },
+                    "confidence": {
+                      "type": "number"
+                    },
+                    "source": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "customer_health_score": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "semanticSearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search/semantic",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Search query text"
+              },
+              "top_k": {
+                "type": "integer",
+                "default": 5,
+                "description": "Number of results to return"
+              },
+              "filters": {
+                "type": "object",
+                "description": "Additional filters for search"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "text": {
+                      "type": "string"
+                    },
+                    "score": {
+                      "type": "number"
+                    },
+                    "metadata": {
+                      "type": "object"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

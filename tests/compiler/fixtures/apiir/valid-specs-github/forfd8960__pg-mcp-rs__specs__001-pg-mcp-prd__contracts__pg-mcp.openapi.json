@@ -1,0 +1,257 @@
+{
+  "api": {
+    "title": "Postgres MCP Server API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Databases",
+      "key": "databases",
+      "operations": [
+        {
+          "id": "listDatabases",
+          "method": "GET",
+          "kind": "list",
+          "path": "/databases",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "databases"
+            ],
+            "properties": {
+              "databases": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "name",
+                    "read_only"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "read_only": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "postQuery",
+          "method": "POST",
+          "kind": "create",
+          "path": "/query",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query",
+              "output_mode",
+              "database_id"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Natural-language query"
+              },
+              "output_mode": {
+                "type": "string",
+                "enum": [
+                  "sql",
+                  "results"
+                ]
+              },
+              "database_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "request_id",
+              "output_mode"
+            ],
+            "properties": {
+              "request_id": {
+                "type": "string"
+              },
+              "output_mode": {
+                "type": "string",
+                "enum": [
+                  "sql",
+                  "results"
+                ]
+              },
+              "sql": {
+                "type": "string",
+                "description": "Generated SQL (when output_mode=sql)"
+              },
+              "results": {
+                "type": "object",
+                "description": "Result set (when output_mode=results)",
+                "properties": {
+                  "rows": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "row_count": {
+                    "type": "integer"
+                  },
+                  "truncated": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Schema",
+      "key": "schema",
+      "operations": [
+        {
+          "id": "getSchema",
+          "method": "GET",
+          "kind": "list",
+          "path": "/schema",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "database_id",
+              "version",
+              "refreshed_at",
+              "objects"
+            ],
+            "properties": {
+              "database_id": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              },
+              "refreshed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "objects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "schema",
+                    "name",
+                    "kind"
+                  ],
+                  "properties": {
+                    "schema": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "table",
+                        "view",
+                        "materialized_view",
+                        "foreign_table",
+                        "type",
+                        "index"
+                      ]
+                    },
+                    "columns": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "name",
+                          "data_type"
+                        ],
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "data_type": {
+                            "type": "string"
+                          },
+                          "not_null": {
+                            "type": "boolean"
+                          },
+                          "default_expr": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "type_definition": {
+                      "type": "string"
+                    },
+                    "index_definition": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshSchema",
+          "method": "POST",
+          "kind": "create",
+          "path": "/schema/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "database_id"
+            ],
+            "properties": {
+              "database_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "database_id",
+              "status"
+            ],
+            "properties": {
+              "database_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "refreshed",
+                  "no_changes"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

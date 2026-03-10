@@ -1,0 +1,357 @@
+openapi: 3.1.0
+info:
+  title: "Policy Service API"
+  version: "1.0.0"
+  description: |
+    Infrastructure service for policy snapshot management, distribution, and versioning.
+    Provides signed policy snapshots to Edge Agents and client services.
+
+    **Service Type**: Infrastructure (Shared Services)
+    **Implementation**: Python/FastAPI
+servers:
+  - url: https://policy-registry.example.com
+    description: Production Policy Registry
+  - url: http://localhost:8000
+    description: Local development server
+paths:
+  /api/v1/policies/current:
+    get:
+      summary: Get current active policy snapshot
+      description: |
+        Returns the currently active policy snapshot with signature and metadata.
+        Used by Edge Agents and client services to fetch the latest policy.
+      operationId: getCurrentPolicy
+      tags:
+        - policies
+      responses:
+        '200':
+          description: Current policy snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicySnapshotResponse'
+        '404':
+          description: No active policy found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/policies/history:
+    get:
+      summary: List policy snapshot history
+      description: |
+        Returns a list of policy snapshots with version history.
+        Used for rollback operations and policy version management.
+      operationId: getPolicyHistory
+      tags:
+        - policies
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of snapshots to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: offset
+          in: query
+          description: Number of snapshots to skip
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Policy snapshot history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyHistoryResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/policies/activate:
+    post:
+      summary: Activate a policy snapshot
+      description: |
+        Activates a specific policy snapshot version.
+        Requires appropriate authorization and updates the current active policy.
+      operationId: activatePolicy
+      tags:
+        - policies
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActivatePolicyRequest'
+      responses:
+        '200':
+          description: Policy activated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyActivationResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Policy snapshot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/trust/crl/revoke:
+    post:
+      summary: Revoke a policy snapshot via CRL
+      description: |
+        Revokes a policy snapshot by adding it to the Certificate Revocation List (CRL).
+        Used for rollback operations and security incidents.
+      operationId: revokePolicy
+      tags:
+        - trust
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokePolicyRequest'
+      responses:
+        '200':
+          description: Policy revoked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokePolicyResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns service health status
+      operationId: healthCheck
+      tags:
+        - health
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+components:
+  schemas:
+    PolicySnapshotResponse:
+      type: object
+      description: Current active policy snapshot with signature
+      properties:
+        snapshot_id:
+          type: string
+          description: Unique snapshot identifier
+          example: "SNAP.INIT.policy_snapshot.v1"
+        policy_id:
+          type: string
+          description: Policy identifier
+          example: "default"
+        version:
+          type: string
+          description: Policy version
+          example: "1.0.0"
+        snapshot_hash:
+          type: string
+          description: SHA256 hash of policy snapshot
+          pattern: "^sha256:[0-9a-f]{64}$"
+          example: "sha256:0842dedf52f07d3fea199dc9a18b24f887beb1e7def17202f3acefc453a79b1c"
+        policy_content:
+          type: object
+          description: Policy content (structure varies by policy type)
+          additionalProperties: true
+        timestamp_utc:
+          type: string
+          format: date-time
+          description: UTC timestamp when snapshot was created
+          example: "2025-01-27T12:00:00Z"
+        signature:
+          type: string
+          description: Cryptographic signature of the snapshot
+          example: "base64:PLACEHOLDER"
+        kid:
+          type: string
+          description: Key identifier used for signature
+          example: "KID:zero-ui-product:ed25519:2025-10"
+        effective_from:
+          type: string
+          format: date-time
+          description: When this snapshot becomes effective
+          example: "2025-01-27T12:00:00Z"
+        metadata:
+          type: object
+          description: Optional metadata
+          properties:
+            author:
+              type: string
+            description:
+              type: string
+            tags:
+              type: array
+              items:
+                type: string
+      required:
+        - snapshot_id
+        - policy_id
+        - version
+        - snapshot_hash
+        - policy_content
+        - timestamp_utc
+        - signature
+        - kid
+        - effective_from
+    PolicyHistoryResponse:
+      type: object
+      properties:
+        snapshots:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicySnapshotResponse'
+        total:
+          type: integer
+          description: Total number of snapshots
+        limit:
+          type: integer
+          description: Maximum number returned
+        offset:
+          type: integer
+          description: Number skipped
+      required:
+        - snapshots
+        - total
+    ActivatePolicyRequest:
+      type: object
+      properties:
+        snapshot_id:
+          type: string
+          description: Snapshot identifier to activate
+          example: "SNAP.INIT.policy_snapshot.v0"
+        effective_from:
+          type: string
+          format: date-time
+          description: When activation should take effect (defaults to now)
+          example: "2025-01-27T12:00:00Z"
+      required:
+        - snapshot_id
+    PolicyActivationResponse:
+      type: object
+      properties:
+        snapshot_id:
+          type: string
+        activated_at:
+          type: string
+          format: date-time
+        effective_from:
+          type: string
+          format: date-time
+      required:
+        - snapshot_id
+        - activated_at
+        - effective_from
+    RevokePolicyRequest:
+      type: object
+      properties:
+        kid:
+          type: string
+          description: Key identifier
+          example: "KID:zero-ui-product:ed25519:2025-01"
+        snapshot_id:
+          type: string
+          description: Snapshot identifier to revoke
+          example: "SNAP.INIT.policy_snapshot.v1"
+        reason:
+          type: string
+          description: Reason for revocation
+          example: "rollback"
+        revoked_at:
+          type: string
+          format: date-time
+          description: When revocation takes effect (defaults to now)
+          example: "2025-01-27T12:00:00Z"
+      required:
+        - kid
+        - snapshot_id
+        - reason
+    RevokePolicyResponse:
+      type: object
+      properties:
+        snapshot_id:
+          type: string
+        revoked_at:
+          type: string
+          format: date-time
+        crl_updated:
+          type: boolean
+      required:
+        - snapshot_id
+        - revoked_at
+        - crl_updated
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["healthy", "degraded", "unhealthy"]
+        timestamp:
+          type: string
+          format: date-time
+        version:
+          type: string
+      required:
+        - status
+        - timestamp
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+              additionalProperties: true
+          required:
+            - code
+            - message
+      required:
+        - error

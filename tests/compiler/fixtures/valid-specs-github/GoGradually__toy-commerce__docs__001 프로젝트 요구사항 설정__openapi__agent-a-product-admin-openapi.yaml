@@ -1,0 +1,266 @@
+openapi: 3.0.3
+info:
+  title: Toy Commerce API
+  version: v1
+  description: 상품 조회 + 관리자 상품/재고 CRUD API
+servers:
+  - url: http://localhost:8080
+tags:
+  - name: Public Products
+    description: 사용자 상품 조회 API
+  - name: Admin Products
+    description: 관리자 상품/재고 관리 API
+paths:
+  /api/products:
+    get:
+      tags: [ Public Products ]
+      summary: 상품 목록 조회
+      parameters:
+        - in: query
+          name: page
+          schema: { type: integer, minimum: 0, default: 0 }
+        - in: query
+          name: size
+          schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+        - in: query
+          name: sortBy
+          schema:
+            type: string
+            enum: [ id, name, price, createdAt ]
+            default: createdAt
+        - in: query
+          name: direction
+          schema:
+            type: string
+            enum: [ asc, desc ]
+            default: desc
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductListApiResponse'
+        '400':
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+  /api/products/{productId}:
+    get:
+      tags: [ Public Products ]
+      summary: 상품 상세 조회
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      responses:
+        '200':
+          description: 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductApiResponse'
+        '404':
+          description: 상품 미존재
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+  /api/admin/products:
+    post:
+      tags: [ Admin Products ]
+      summary: 상품 생성
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProductRequest'
+      responses:
+        '201':
+          description: 생성 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductApiResponse'
+        '400':
+          description: 잘못된 요청
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+  /api/admin/products/{productId}:
+    patch:
+      tags: [ Admin Products ]
+      summary: 상품 수정
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductApiResponse'
+        '404':
+          description: 상품 미존재
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+    delete:
+      tags: [ Admin Products ]
+      summary: 상품 삭제
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      responses:
+        '200':
+          description: 삭제 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VoidApiResponse'
+        '404':
+          description: 상품 미존재
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+  /api/admin/products/{productId}/stock:
+    patch:
+      tags: [ Admin Products ]
+      summary: 상품 재고 수정
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProductStockRequest'
+      responses:
+        '200':
+          description: 수정 성공
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductApiResponse'
+        '404':
+          description: 상품 미존재
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorApiResponse'
+components:
+  schemas:
+    ProductStatus:
+      type: string
+      enum: [ ACTIVE, INACTIVE ]
+    Product:
+      type: object
+      properties:
+        id: { type: integer, format: int64, example: 1 }
+        name: { type: string, example: 레고 스타터 세트 }
+        price: { type: number, format: decimal, example: 15900 }
+        stock: { type: integer, example: 50 }
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+      required: [ id, name, price, stock, status ]
+    ProductList:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page: { type: integer, example: 0 }
+        size: { type: integer, example: 20 }
+        totalElements: { type: integer, format: int64, example: 1 }
+        totalPages: { type: integer, example: 1 }
+        hasNext: { type: boolean, example: false }
+      required: [ products, page, size, totalElements, totalPages, hasNext ]
+    ApiError:
+      type: object
+      properties:
+        code: { type: string, example: PRODUCT-404 }
+        message: { type: string, example: 상품을 찾을 수 없습니다. }
+      required: [ code, message ]
+    ProductApiResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          $ref: '#/components/schemas/Product'
+        error:
+          nullable: true
+          $ref: '#/components/schemas/ApiError'
+      required: [ success ]
+    ProductListApiResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          $ref: '#/components/schemas/ProductList'
+        error:
+          nullable: true
+          $ref: '#/components/schemas/ApiError'
+      required: [ success ]
+    VoidApiResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: true }
+        data:
+          nullable: true
+        error:
+          nullable: true
+          $ref: '#/components/schemas/ApiError'
+      required: [ success ]
+    ErrorApiResponse:
+      type: object
+      properties:
+        success: { type: boolean, example: false }
+        data:
+          nullable: true
+        error:
+          $ref: '#/components/schemas/ApiError'
+      required: [ success, error ]
+    CreateProductRequest:
+      type: object
+      properties:
+        name: { type: string, example: 레고 스타터 세트 }
+        price: { type: number, format: decimal, example: 15900 }
+        stock: { type: integer, minimum: 0, example: 50 }
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+      required: [ name, price, stock, status ]
+    UpdateProductRequest:
+      type: object
+      properties:
+        name: { type: string, example: 레고 프로 세트 }
+        price: { type: number, format: decimal, example: 25900 }
+        status:
+          $ref: '#/components/schemas/ProductStatus'
+      required: [ name, price, status ]
+    UpdateProductStockRequest:
+      type: object
+      properties:
+        stock: { type: integer, minimum: 0, example: 12 }
+      required: [ stock ]

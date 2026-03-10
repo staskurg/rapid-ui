@@ -1,0 +1,1570 @@
+openapi: 3.1.0
+info:
+  title: Pre-Alert API
+  version: 1.0.0
+  description: |
+    # Pre-Alert API
+
+    This API enables external partners to submit **parcel** and **manifest** declarations for shipments destined to **Chile** and **Peru**. It is designed to provide a unified integration experience across our service tiers with a single, consistent interface.
+    - Systems requiring parcel and manifest declaration capabilities for Chile-bound and Peru-bound shipments
+    - Clients utilizing the generic pre-alert flow (identified by `x-client-code` header) with Basic Auth token authentication
+
+    ## Authentication
+
+    All API requests require authentication using a Basic Auth token obtained from our IAM service.
+
+    ### Obtaining an Access Token
+
+    Before using the Pre-Alert API, you must obtain a Basic Auth token via the machine-to-machine (M2M) authentication endpoint. Both internal services and external clients use this method.
+
+    **Token Endpoint:**
+    ```
+    POST https://api.serhafen-staging.andinolabs.tech/iam-service/v0/auth/m2m/token
+    ```
+    **Request Example:**
+    ```bash
+    curl -X POST "https://api.serhafen-staging.andinolabs.tech/iam-service/v0/auth/m2m/token" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "clientId": "mm_ninety-nine_minutes-1772470713354",
+        "clientSecret": "5fVPuuPxSeFrPcXem7yvfU8m2xihj8YU"
+      }' | jq .
+    ```
+    **Response:**
+    The endpoint returns a JSON object containing an access token, which you will use as the authorization token in subsequent API requests.
+
+    ### Using the Access Token
+
+    Once you have obtained the token, include it in all Pre-Alert API requests using these headers:
+
+    - **Authorization header** (required): Token obtained from the IAM service.
+    - **x-client-code header** (required): Your unique client identifier (e.g., `CLX`)
+
+    Authentication failures will result in an HTTP `401 Unauthorized` response.
+
+    ## Idempotency and Duplicate Prevention
+
+    To ensure data integrity and prevent duplicate submissions:
+
+    - **Unique trackingId**: Each parcel declaration must use a unique `trackingId`. This identifier serves as the idempotency key for parcel submissions.
+    - **Duplicate detection**: The API automatically detects and rejects duplicate parcel declarations with the same `trackingId`.
+    - **Manifest uniqueness**: Ensure `mawbNumber` and `manifestNumber` combinations are unique per submission.
+
+    Duplicate submissions may be rejected with an HTTP `400 Bad Request` response or silently ignored depending on the processing state.
+
+    ## Processing Workflow
+
+    When a declaration is submitted, the API executes the following stages:
+
+    1. **Synchronous Validation**: The API authenticates the client credentials, validates the JSON structure against the OpenAPI schema, and verifies all mandatory headers and payload fields are present and correctly formatted.
+    2. **Secure Storage**: The complete payload is persisted securely to our data vault. At this stage, the API returns an HTTP `200 OK` or `202 Accepted` response to acknowledge receipt and close the connection promptly.
+    3. **Asynchronous Processing**: The backend system independently processes the stored manifest, unpacks individual parcels, and routes them for last-mile integration and customs clearance without blocking the client connection.
+
+    ## Required Call Sequence
+
+    **Endpoints must be called in the following order:**
+
+    1. **Step 1: Parcel Declaration** — Call `POST /parcels/cl` (for Chile) or `POST /parcels/pe` (for Peru) for each parcel (or batch of parcels). This creates HAWB (House Air Waybill) records and registers parcel-level details with customs authorities.
+    2. **Step 2: Manifest Declaration** — After all parcels have been successfully declared, call `POST /mawbs/cl` (for Chile) or `POST /mawbs/pe` (for Peru) once to submit the manifest. This creates the MAWB (Master Air Waybill) and associates the previously declared parcels with the flight or shipment. **Note:** The `trackingId` included in the manifest's `itemList` MUST exactly match the `trackingId` used in the corresponding parcel declarations.
+
+    Submitting the manifest before declaring all parcels may result in validation errors, incomplete customs data, or processing delays.
+
+    ## API Environments
+
+    | Environment   | Base URL                                                 | Purpose                                |
+    |---------------|----------------------------------------------------------|----------------------------------------|
+    | **Production**| `https://api.serhafen-net.andinolabs.tech/pre-alert`     | Live traffic and real declarations     |
+    | **Staging**   | `https://api.serhafen-staging.andinolabs.tech/pre-alert` | Testing and integration validation     |
+    | **Local**     | `/pre-alert` (relative to your host)                     | Development and local testing only     |
+  contact:
+    name: Platform Support
+    email: platform-support@serhafen.com
+
+servers:
+  - url: https://api.serhafen-net.andinolabs.tech/pre-alert
+    description: Production – use for live declarations
+  - url: https://api.serhafen-staging.andinolabs.tech/pre-alert
+    description: Staging – use for testing and integration
+  - url: /pre-alert
+    description: Local/Development
+
+tags:
+  - name: Pre-Alert Chile
+    description: Generic pre-alert declaration endpoints for Chile
+  - name: Pre-Alert Peru
+    description: Generic pre-alert declaration endpoints for Peru
+
+paths:
+  /mawbs/cl:
+    post:
+      tags:
+        - Pre-Alert Chile
+      operationId: submitManifestDeclareChile
+      summary: Submit Manifest Declaration (Chile)
+      x-public: true
+      x-audience: pre-alert
+      x-category: Pre-Alert Chile
+      description: |
+        Submits a **manifest** (MAWB) declaration for Chile.
+
+        **Call this only after** you have submitted all related parcels via `POST /parcels/cl`. The manifest links previously declared parcels to the flight/shipment.
+        
+        **Country code validation**: The `destinationCountryCode` field must be set to `CL` for this endpoint. The API will validate and reject requests with any other country code.
+      parameters:
+        - $ref: '#/components/parameters/XClientCodeHeader'
+        - $ref: '#/components/parameters/AuthorizationHeader'
+        - $ref: '#/components/parameters/TraceparentHeader'
+      requestBody:
+        required: true
+        description: Manifest declaration data for Chile
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManifestDeclareRequest'
+            examples:
+              standard_manifest:
+                summary: Standard Manifest Declaration
+                value:
+                  mawbNumber: "MAWB-2025-500"
+                  manifestNumber: "MAN-2025-500"
+                  destinationCountryCode: "CL"
+                  customsType: "INWARD"
+                  transportType: "AIR"
+                  transportNumber: "5Y8052"
+                  fromPortCode: "HKG"
+                  toPortCode: "SCL"
+                  eta: "2026-03-20T14:30:00Z"
+                  etd: "2026-03-18T08:15:00Z"
+                  totalPackages: 1
+                  totalWeight: 458
+                  totalValue: 15000
+                  currency: "USD"
+                  customsClearanceMode: "STANDARD"
+                  clientReferenceNumber: "CLIENT-REF-001"
+                  exportLicense: "EXP2024001"
+                  shipperInfo:
+                    name: "Yang Ke"
+                    address: "Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building 1"
+                    city: "Shaoxing"
+                    country: "CN"
+                    state: "Zhejiang"
+                    street: "Tangpu Town, Room 301, Building 1"
+                    email: "442699119@qq.com"
+                    phone: "+86-21-12345678"
+                    companyName: "happiness childhood Store"
+                    taxId: "91330100MA2XXXXXXX"
+                  itemList:
+                    - trackingId: "889000"
+                      bigBagNumber: "BIGBAG508"
+      responses:
+        '200':
+          description: Manifest declaration received and processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestDeclareResponse'
+              examples:
+                success:
+                  summary: Successful manifest declaration
+                  value:
+                    success: true
+                    message: Request processed successfully
+                    mawbNumber: '2024001'
+                    totalParcels: 3
+                    processedParcels: 3                    
+        '400':
+          description: Bad request - Invalid data format or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '401':
+          description: Unauthorized - Invalid client credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized Example
+                  value:
+                    success: false
+                    error:
+                      code: "UnauthorizedException"
+                      message: "Unauthorized"
+                      details: []
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                internal_error:
+                  summary: Internal Server Error Example
+                  value:
+                    success: false
+                    error:
+                      code: "InternalServerErrorException"
+                      message: "Internal server error"
+                      details: []
+  /parcels/cl:
+    post:
+      tags:
+        - Pre-Alert Chile
+      operationId: submitParcelDeclareChile
+      summary: Submit Parcel Declaration (Chile)
+      x-public: true
+      x-audience: pre-alert
+      x-category: Pre-Alert Chile
+      description: |
+        Submits a **parcel** (HAWB) declaration for Chile. **Call this first** before submitting the manifest.
+
+        This endpoint creates HAWB records and registers parcel-level details. After all parcels for a shipment are declared, use `POST /mawbs/cl` to submit the manifest.
+
+        **Country code validation**: The `destinationCountryCode` field must be set to `CL` for this endpoint. The API will validate and reject requests with any other country code.
+
+        **Chile-specific requirements:**
+        - Consignee `city` field is required (communa)
+        - `identificationType` should be `RUT` for Chilean nationals
+        - SII tax fields (`taxCompanyId`, `taxCompanyName`) for customs compliance
+        - FOB/CIF valuation breakdown supported at parcel and item level
+        - `trackingId` must be unique across all parcel declarations
+      parameters:
+        - $ref: '#/components/parameters/XClientCodeHeader'
+        - $ref: '#/components/parameters/AuthorizationHeader'
+        - $ref: '#/components/parameters/TraceparentHeader'
+      requestBody:
+        required: true
+        description: Parcel declaration data for Chile
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParcelDeclareRequest'
+            examples:
+              standard_parcel:
+                summary: Standard Parcel Declaration for Chile
+                value:
+                  destinationCountryCode: "CL"
+                  trackingId: "889000"
+                  clientTrackingNumber: "HAWB-1"
+                  grossWeight: "0.246"
+                  declaredValue: 10.14
+                  pieces: 1
+                  currency: "USD"
+                  senderInfo:
+                    name: "Yang Ke"
+                    address: "CN, Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building A"
+                    city: "Shaoxing"
+                    country: "CN"
+                    state: "Zhejiang Province"
+                    zipCode: "312000"
+                    email: "442699119@qq.com"
+                    phone: "15137736988"
+                    companyName: "happiness childhood Store"
+                    taxId: "91330100MA2XXXXXXX"
+                  consigneeInfo:
+                    name: "lydia Escobar Cotal"
+                    address: "Valparaiso, Vina del Mar, altos del mar psje3 casa103 reñaca alto paradero 8 casa"
+                    city: "Vina del Mar"
+                    country: "CL"
+                    state: "Valparaiso"
+                    zipCode: "2520000"
+                    email: "lya.escobar1986@gmail.com"
+                    phone: "+56984904074"
+                    identificationType: "RUT"
+                    identificationNumber: "16331648-K"
+                  itemsList:
+                    - itemNumber: "1005005824455795_1"
+                      itemName: "Ropa Set, cosas"
+                      packageDescription: "Children clothing set including shirt and pants, cotton material"
+                      quantity: 1
+                      unitPrice: 10.14
+                      totalPrice: 10.14
+                      currency: "USD"
+                      hsCode: "6203420000"
+                      country: "CN"
+                      productUrl: "http://www.aliexpress.com/item/1005005824455795.html"
+                  customsClearanceMode: "STANDARD"
+                  netWeight: "0.246"
+                  freightPrice: 0.5
+                  insurancePrice: 0
+                  weightUom: "KG"
+                  dangerousGoods: false
+                  logisticsOrderCode: "LP00718526345882"
+                  lastmilePartnerCode: "DISTRIBUTOR_30710422"
+                  customsReference: "CUSTOMS_REF_002"
+                  invoiceNumber: "INV2024001"
+                  taxCompanyId: "76546789-K"
+                  taxCompanyName: "Importadora Chile SpA"
+                  taxHasBeenPaid: "IVA_YES"
+                  returnInfo:
+                    name: "lydia Escobar Cotal"
+                    address: "Valparaiso, Vina del Mar, altos del mar psje3 casa103 reñaca alto paradero 8 casa"
+                    city: "Vina del Mar"
+                    country: "CL"
+                    state: "Valparaiso"
+                    zipCode: "2820000"
+                    email: "lya.escobar1986@gmail.com"
+                    phone: "+56984904074"
+                  uniqueReferences:
+                    - key: "ORDER_ID"
+                      value: "ORD123456789"
+      responses:
+        '200':
+          description: Parcel declaration received and processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelDeclareResponse'
+              examples:
+                success:
+                  summary: Successful parcel declaration
+                  value:
+                    success: true
+                    message: Request processed successfully
+                    trackingId: "99M003041663"
+                    status: PROCESSED                    
+        '400':
+          description: Bad request - Invalid data format or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '401':
+          description: Unauthorized - Invalid client credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized Example
+                  value:
+                    success: false
+                    error:
+                      code: "UnauthorizedException"
+                      message: "Unauthorized"
+                      details: []
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                internal_error:
+                  summary: Internal Server Error Example
+                  value:
+                    success: false
+                    error:
+                      code: "InternalServerErrorException"
+                      message: "Internal server error"
+                      details: []
+  /mawbs/pe:
+    post:
+      tags:
+        - Pre-Alert Peru
+      operationId: submitManifestDeclarePeru
+      summary: Submit Manifest Declaration (Peru)
+      x-public: true
+      x-audience: pre-alert
+      x-category: Pre-Alert Peru
+      description: |
+        Submits a **manifest** (MAWB) declaration for Peru.
+
+        **Call this only after** you have submitted all related parcels via `POST /parcels/pe`. The manifest links previously declared parcels to the flight/shipment.
+        
+        **Country code validation**: The `destinationCountryCode` field must be set to `PE` for this endpoint. The API will validate and reject requests with any other country code.
+      parameters:
+        - $ref: '#/components/parameters/XClientCodeHeader'
+        - $ref: '#/components/parameters/AuthorizationHeader'
+        - $ref: '#/components/parameters/TraceparentHeader'
+      requestBody:
+        required: true
+        description: Manifest declaration data for Peru
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ManifestDeclareRequest'
+            examples:
+              standard_manifest:
+                summary: Standard Manifest Declaration
+                value:
+                  mawbNumber: "MAWB-2025-500"
+                  manifestNumber: "MAN-2025-500"
+                  destinationCountryCode: "PE"
+                  customsType: "INWARD"
+                  transportType: "AIR"
+                  transportNumber: "5Y8052"
+                  fromPortCode: "HKG"
+                  toPortCode: "LIM"
+                  eta: "2026-03-20T14:30:00Z"
+                  etd: "2026-03-18T08:15:00Z"
+                  totalPackages: 1
+                  totalWeight: 458
+                  totalValue: 15000
+                  currency: "USD"
+                  customsClearanceMode: "STANDARD"
+                  clientReferenceNumber: "CLIENT-REF-001"
+                  exportLicense: "EXP2024001"
+                  shipperInfo:
+                    name: "Yang Ke"
+                    address: "Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building 1"
+                    city: "Shaoxing"
+                    country: "CN"
+                    department: "Zhejiang"
+                    province: "Shaoxing"
+                    district: "Shangyu"
+                    street: "Tangpu Town, Room 301, Building 1"
+                    email: "442699119@qq.com"
+                    phone: "+86-21-12345678"
+                    companyName: "happiness childhood Store"
+                    taxId: "91330100MA2XXXXXXX"
+                  itemList:
+                    - trackingId: "900000"
+                      bigBagNumber: "BIGBAG508"
+      responses:
+        '200':
+          description: Manifest declaration received and processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ManifestDeclareResponse'
+              examples:
+                success:
+                  summary: Successful manifest declaration
+                  value:
+                    success: true
+                    message: Request processed successfully
+                    mawbNumber: '2024001'
+                    totalParcels: 3
+                    processedParcels: 3                    
+        '400':
+          description: Bad request - Invalid data format or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '401':
+          description: Unauthorized - Invalid client credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized Example
+                  value:
+                    success: false
+                    error:
+                      code: "UnauthorizedException"
+                      message: "Unauthorized"
+                      details: []
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                internal_error:
+                  summary: Internal Server Error Example
+                  value:
+                    success: false
+                    error:
+                      code: "InternalServerErrorException"
+                      message: "Internal server error"
+                      details: []
+  /parcels/pe:
+    post:
+      tags:
+        - Pre-Alert Peru
+      operationId: submitParcelDeclarePeru
+      summary: Submit Parcel Declaration (Peru)
+      x-public: true
+      x-audience: pre-alert
+      x-category: Pre-Alert Peru
+      description: |
+        Submits a **parcel** (HAWB) declaration for Peru. **Call this first** before submitting the manifest.
+
+        This endpoint creates HAWB records and registers parcel-level details. After all parcels for a shipment are declared, use `POST /mawbs/pe` to submit the manifest.
+
+        **Country code validation**: The `destinationCountryCode` field must be set to `PE` for this endpoint. The API will validate and reject requests with any other country code.
+
+        **Peru-specific requirements:**
+        - Consignee `department` (Departamento) is required
+        - `province` (Provincia) and `district` (Distrito) for precise addressing
+        - `identificationType` should be `DNI` for Peruvian nationals
+        - `trackingId` must be unique across all parcel declarations
+      parameters:
+        - $ref: '#/components/parameters/XClientCodeHeader'
+        - $ref: '#/components/parameters/AuthorizationHeader'
+        - $ref: '#/components/parameters/TraceparentHeader'
+      requestBody:
+        required: true
+        description: Parcel declaration data for Peru
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ParcelDeclareRequest'
+            examples:
+              standard_parcel:
+                summary: Standard Parcel Declaration for Peru
+                value:
+                  destinationCountryCode: "PE"
+                  trackingId: "900000"
+                  clientTrackingNumber: "HAWB-1"
+                  grossWeight: "0.246"
+                  declaredValue: 10.14
+                  pieces: 1
+                  currency: "USD"
+                  senderInfo:
+                    name: "Yang Ke"
+                    address: "CN, Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building A"
+                    city: "Shaoxing"
+                    country: "CN"
+                    department: "Zhejiang"
+                    province: "Shaoxing"
+                    district: "Shangyu"
+                    zipCode: "312000"
+                    email: "442699119@qq.com"
+                    phone: "15137736988"
+                    companyName: "happiness childhood Store"
+                    taxId: "91330100MA2XXXXXXX"
+                  consigneeInfo:
+                    name: "lydia Escobar Cotal"
+                    address: "Av. Javier Prado Este 1234, San Isidro, Lima"
+                    city: "Lima"
+                    country: "PE"
+                    department: "Lima"
+                    province: "Lima"
+                    district: "San Isidro"
+                    zipCode: "15046"
+                    email: "lya.escobar1986@gmail.com"
+                    phone: "+51984904074"
+                    identificationType: "DNI"
+                    identificationNumber: "12345678"
+                  itemsList:
+                    - itemNumber: 10050058244557952
+                      itemName: "Ropa Set, cosas"
+                      quantity: 1
+                      unitPrice: 10.14
+                      totalPrice: 10.14
+                      currency: "USD"
+                      barCode: ""
+                      hsCode: "6203420000"
+                      country: "CN"
+                      productUrl: "http://www.aliexpress.com/item/1005005824455795.html"
+                  customsClearanceMode: "STANDARD"
+                  netWeight: "0.246"
+                  freightPrice: 0.5
+                  insurancePrice: 0
+                  weightUom: "KG"
+                  dangerousGoods: false
+                  logisticsOrderCode: "LP00718526345882"
+                  lastmilePartnerCode: "DISTRIBUTOR_30710422"
+                  customsReference: "CUSTOMS_REF_002"
+                  invoiceNumber: "INV2024001"
+                  returnInfo:
+                    name: "Returns Warehouse"
+                    address: "Av. Elmer Faucett s/n, Callao"
+                    city: "Callao"
+                    country: "PE"
+                    department: "Callao"
+                    province: "Callao"
+                    district: "Callao"
+                    zipCode: "07031"
+                    email: "returns@company.pe"
+                    phone: "+5112345678"
+                  uniqueReferences:
+                    - key: "ORDER_ID"
+                      value: "ORD123456789"
+                    - key: "PARTNER_REF"
+                      value: "REF987654321"
+      responses:
+        '200':
+          description: Parcel declaration received and processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParcelDeclareResponse'
+              examples:
+                success:
+                  summary: Successful parcel declaration
+                  value:
+                    success: true
+                    message: Request processed successfully
+                    trackingId: "SH-PE-123456789"
+                    status: PROCESSED
+        '400':
+          description: Bad request - Invalid data format or missing required fields
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+        '401':
+          description: Unauthorized - Invalid client credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Unauthorized Example
+                  value:
+                    success: false
+                    error:
+                      code: "UnauthorizedException"
+                      message: "Unauthorized"
+                      details: []
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericErrorResponse'
+              examples:
+                internal_error:
+                  summary: Internal Server Error Example
+                  value:
+                    success: false
+                    error:
+                      code: "InternalServerErrorException"
+                      message: "Internal server error"
+                      details: []
+components:
+  schemas:
+    ManifestDeclareRequest:
+      type: object
+      required:
+        - mawbNumber
+        - destinationCountryCode
+        - customsType
+        - transportType
+        - fromPortCode
+        - toPortCode
+        - totalPackages
+        - totalWeight
+        - totalValue
+        - currency
+        - shipperInfo
+        - itemList
+      properties:
+        mawbNumber:
+          type: string
+          description: Master Air Waybill Number (example 2024001, MAWB-2025-500)
+          maxLength: 50
+          example: '2024001'
+        manifestNumber:
+          type: string
+          description: Unique manifest number (example MANIFEST-2024-001, MAN-2025-500)
+          maxLength: 50
+          pattern: ^[A-Z0-9_-]+$
+          example: MANIFEST-2024-001
+        destinationCountryCode:
+          type: string
+          description: ISO 2-letter destination country code (example PE, CL)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: PE
+        customsType:
+          type: string
+          description: Type of customs declaration (example INWARD, OUTWARD)
+          enum:
+            - INWARD
+            - OUTWARD
+          example: INWARD
+        customsClearanceMode:
+          type: string
+          description: |
+            Customs clearance mode for this manifest:
+            - `STANDARD`: Regular postal/commercial clearance
+            - `EXPRESS`: Expedited/courier clearance
+            - `OVERSEAS_CCC_DIRECT`: Direct cross-border e-commerce clearance
+          enum:
+            - STANDARD
+            - EXPRESS
+            - OVERSEAS_CCC_DIRECT
+          example: STANDARD
+        transportType:
+          type: string
+          description: Type of transport (example AIR, SEA, ROAD, RAIL)
+          enum:
+            - AIR
+            - SEA
+            - ROAD
+            - RAIL
+          example: AIR
+        transportNumber:
+          type: string
+          description: Transport number - flight, vessel, etc. (example 5Y8052, LA600)
+          maxLength: 20
+          example: 5Y8052
+        fromPortCode:
+          type: string
+          description: Origin port/airport code - Use 3-letter IATA code for AIR transport (example HKG, CAN, PVG)
+          maxLength: 8
+          example: HKG
+        toPortCode:
+          type: string
+          description: Destination port/airport code - Use 3-letter IATA code for AIR transport (example LIM, SCL)
+          maxLength: 8
+          example: LIM
+        eta:
+          type: string
+          format: date-time
+          description: Estimated time of arrival (example 2024-01-20T14:30:00Z) - Must be on or after MAWB creation
+          example: '2024-01-20T14:30:00Z'
+        etd:
+          type: string
+          format: date-time
+          description: Estimated time of departure (example 2024-01-18T08:15:00Z) - Must be on or after MAWB creation
+          example: '2024-01-18T08:15:00Z'
+        totalPackages:
+          type: integer
+          description: Total number of parcels (HAWBs) expected in this manifest (example 1060, 154)
+          minimum: 1
+          example: 1060
+        totalWeight:
+          type: number
+          description: Total weight of all packages in kilograms (example 458.0, 1500.50)
+          minimum: 0
+          example: 458.0
+        totalValue:
+          type: number
+          description: Total declared value (example 15000.0)
+          minimum: 0
+          example: 15000.0
+        currency:
+          type: string
+          description: Currency code - ISO 4217 (example USD, EUR, CLP)
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: USD
+        clientReferenceNumber:
+          type: string
+          description: Client reference number (example CLIENT-REF-001, REF-2024-12345)
+          maxLength: 100
+        exportLicense:
+          type: string
+          description: Export license number (example EXP2024001, EXP-2025-500)
+          maxLength: 100
+        shipperInfo:
+          $ref: '#/components/schemas/ShipperInfo'
+        itemList:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ParcelInfo'
+    ManifestDeclareResponse:
+      type: object
+      required:
+        - success
+        - message
+        - mawbNumber
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Request processed successfully
+        manifestNumber:
+          type: string
+          example: MANIFEST-2024-001
+        mawbNumber:
+          type: string
+          example: '2024001'
+        totalParcels:
+          type: integer
+          minimum: 0
+          example: 3
+        processedParcels:
+          type: integer
+          minimum: 0
+          example: 3
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    GenericErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          $ref: '#/components/schemas/ErrorDocument'
+    ParcelDeclareRequest:
+      type: object
+      required:
+        - destinationCountryCode
+        - trackingId
+        - grossWeight
+        - declaredValue
+        - pieces
+        - currency
+        - clientTrackingNumber
+        - senderInfo
+        - consigneeInfo
+        - itemsList
+      properties:
+        destinationCountryCode:
+          type: string
+          description: ISO 2-letter destination country code (example PE, CL)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: PE
+        trackingId:
+          type: string
+          description: Unique tracking identifier (example SH-PE-123456789, 889089) Usually the last-mile carrier tracking number used for local delivery to the end customer.
+          maxLength: 100
+          pattern: ^[A-Z0-9_-]+$
+          example: SH-PE-123456789
+        grossWeight:
+          type: string
+          description: Gross weight of the parcel (example 2.5, 0.246) Must be in the unit specified by weightUom (default KG).
+          pattern: ^[0-9]+\.?[0-9]*$
+          example: '2.5'
+        netWeight:
+          type: string
+          description: Net weight (example 2.0, 0.246)
+          pattern: ^[0-9]+\.?[0-9]*$
+          example: '2.0'
+        weightUom:
+          type: string
+          description: Weight unit of measure (default KG)
+          enum:
+            - KG
+            - LB
+            - G
+            - OZ
+          default: KG
+          example: KG
+        declaredValue:
+          type: number
+          description: FOB value - the declared commercial value of goods at origin port excluding international shipping and insurance (example 25, 10.14)
+          minimum: 0.01
+          example: 25
+        fobValue:
+          type: number
+          description: FOB (Free On Board) value in declared currency (example 10.14)
+          minimum: 0
+          example: 10.14
+        cifValue:
+          type: number
+          description: CIF (Cost, Insurance, Freight) value in declared currency (example 12.50)
+          minimum: 0
+          example: 12.50
+        freightPrice:
+          type: number
+          description: Freight cost (example 0.5)
+          minimum: 0
+          example: 0.5
+        insurancePrice:
+          type: number
+          description: Insurance cost (example 0.0, 2.5)
+          minimum: 0
+          example: 0.0
+        pieces:
+          type: integer
+          description: Number of physical boxes/packages that make up this specific HAWB (example 1, 2)
+          minimum: 1
+          example: 1
+        currency:
+          type: string
+          description: Currency code - ISO 4217 (example USD, CLP, PEN)
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: USD
+        dangerousGoods:
+          type: boolean
+          description: Indicates if the parcel contains dangerous goods
+          default: false
+          example: false
+        bigBagId:
+          type: string
+          description: Big bag identifier (example BB-PE-001, BIGBAG-2026-001)
+          maxLength: 50
+          example: BB-PE-001
+        batchNumber:
+          type: string
+          description: Batch number for grouping (example BATCH-20260308-001)
+          maxLength: 50
+        barcode:
+          type: string
+          description: Parcel barcode (example BAR123456789)
+          maxLength: 100
+        logisticsOrderCode:
+          type: string
+          description: Origin logistics provider's internal order code - e.g., Cainiao LP number (example LP00717258464258)
+          maxLength: 50
+          example: LP00717258464258
+        lastmilePartnerCode:
+          type: string
+          description: Identification code of the final mile delivery partner (example DISTRIBUTOR_30710422)
+          maxLength: 50
+          example: DISTRIBUTOR_30710422
+        customsReference:
+          type: string
+          description: Reference number generated by customs authorities upon clearance (example CUSTOMS_REF_002)
+          maxLength: 100
+        invoiceNumber:
+          type: string
+          description: Commercial invoice number associated with the parcel (example INV2024001)
+          maxLength: 100
+        clientTrackingNumber:
+          type: string
+          description: Client tracking number (example CLIENT-TRACK-001, HAWB-1)
+          maxLength: 100
+          example: CLIENT-TRACK-001
+        taxCompanyId:
+          type: string
+          description: SII registered company ID - RUT (example 76.XXX.XXX-K, 76546789-K)
+          maxLength: 50
+          example: 76.XXX.XXX-K
+        taxCompanyName:
+          type: string
+          description: Company name as registered with SII (example Importadora Chile SpA)
+          maxLength: 255
+          example: Importadora Chile SpA
+        taxHasBeenPaid:
+          type: string
+          description: Whether tax has been paid - IVA_YES or IVA_NO for Chile (example IVA_NO, IVA_YES)
+          enum: ['IVA_YES', 'IVA_NO']
+          example: 'IVA_NO'
+        senderInfo:
+          $ref: '#/components/schemas/SenderInfo'
+        consigneeInfo:
+          $ref: '#/components/schemas/ConsigneeInfo'
+        returnInfo:
+          $ref: '#/components/schemas/ReturnInfo'
+        itemsList:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemInfo'
+        uniqueReferences:
+          type: array
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    ParcelDeclareResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: Request processed successfully
+        trackingId:
+          type: string
+          example: SH-PE-123456789
+        status:
+          type: string
+          enum:
+            - PROCESSED
+            - PENDING
+            - FAILED
+          example: PROCESSED
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          $ref: '#/components/schemas/ErrorObject'
+    ShipperInfo:
+      type: object
+      required:
+        - name
+        - address
+        - city
+        - country
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: Full name of the shipper (example Yang Ke, John Smith)
+          maxLength: 255
+          example: Yang Ke
+        address:
+          type: string
+          description: Full address of the shipper (example Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A)
+          maxLength: 1000
+          example: Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A
+        city:
+          type: string
+          description: City of the shipper (example Shaoxing, Guangzhou, Shanghai)
+          maxLength: 100
+          example: Shaoxing
+        country:
+          type: string
+          description: ISO 2-letter country code (example CN, US, HK)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: CN
+        state:
+          type: string
+          description: State or province (example Zhejiang Province, Guangdong, California)
+          maxLength: 100
+          example: Zhejiang Province
+        street:
+          type: string
+          description: Street address (example Tangpu Town, Room 301, Building 1)
+          maxLength: 500
+        email:
+          type: string
+          description: Email address (example shipper@example.com, company@business.com)
+          format: email
+          maxLength: 255
+          example: shipper@example.com
+        phone:
+          type: string
+          description: Mobile phone number (example +8615137736988, +1234567890)
+          maxLength: 50
+          example: '+8615137736988'
+        companyName:
+          type: string
+          description: Company name (example Temu, Happiness Childhood Store)
+          maxLength: 255
+          example: Temu
+        taxId:
+          type: string
+          description: Tax identification number (example 123456789, 91330100MA2XXXXXXX)
+          maxLength: 50
+          example: 123456789
+        uniqueReferences:
+          type: array
+          description: Optional array of key-value pairs for custom metadata (e.g., internal UUIDs, specific tax IDs).
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    ParcelInfo:
+      type: object
+      required:
+        - trackingId
+        - bigBagNumber
+      properties:
+        trackingId:
+          type: string
+          description: Tracking identifier (example WYB3474845631, 88M0030800)
+          maxLength: 100
+          pattern: ^[A-Z0-9_-]+$
+          example: WYB3474845631
+        bigBagNumber:
+          type: string
+          description: Big bag number (example BIGBAG001, BIGBAG508)
+          maxLength: 50
+          example: BIGBAG001
+    ValidationError:
+      type: object
+      required:
+        - field
+        - error
+        - code
+      properties:
+        field:
+          type: string
+          example: manifestNumber
+        error:
+          type: string
+          example: Manifest number is required
+        code:
+          type: string
+          example: REQUIRED
+    ErrorDocument:
+      type: object
+      required:
+        - code
+        - message
+        - details
+      properties:
+        code:
+          type: string
+          description: High-level error code
+          example: "VAL001"
+        message:
+          type: string
+          description: High-level error message
+          example: "Validation failed"
+        details:
+          type: array
+          description: Array of specific field-level validation errors
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      required:
+        - field
+        - message
+        - code
+      properties:
+        field:
+          type: string
+          description: The field that caused the validation error
+          example: manifestNumber
+        message:
+          type: string
+          description: Detailed error message explaining the validation failure
+          example: Field is required
+        code:
+          type: string
+          description: Machine-readable error code for programmatic handling
+          example: REQUIRED
+    SenderInfo:
+      type: object
+      required:
+        - name
+        - address
+        - city
+        - country
+        - state
+        - zipCode
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: Sender name (example Yang Ke, John Smith)
+          maxLength: 255
+          example: Yang Ke
+        address:
+          type: string
+          description: Sender address (example CN, Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building A)
+          maxLength: 1000
+        city:
+          type: string
+          description: Sender city (example Shaoxing, Shanghai, Guangzhou)
+          maxLength: 100
+          example: Shaoxing
+        country:
+          type: string
+          description: Sender country code (example CN, US, HK)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: CN
+        state:
+          type: string
+          description: Sender state or province (example Zhejiang Province, Guangdong)
+          maxLength: 100
+          example: Zhejiang Province
+        zipCode:
+          type: string
+          description: Sender zip code (example 312000, 100000)
+          maxLength: 20
+          example: '312000'
+        street:
+          type: string
+          description: Sender street address (example Tangpu Town, Room 301, Building A)
+          maxLength: 500
+        email:
+          type: string
+          format: email
+          description: Sender email address
+          maxLength: 255
+        phone:
+          type: string
+          description: Sender phone number (example 15137736988, +8615137736988)
+          maxLength: 50
+          example: '15137736988'
+        companyName:
+          type: string
+          description: Sender company name (example Happiness Childhood Store, Temu Warehouse)
+          maxLength: 255
+        taxId:
+          type: string
+          description: Sender tax ID (example 91330100MA2XXXXXXX)
+          maxLength: 50
+        uniqueReferences:
+          type: array
+          description: Sender unique references
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    ConsigneeInfo:
+      type: object
+      required:
+        - name
+        - address
+        - city
+        - country
+        - state
+        - zipCode
+        - email
+        - phone
+        - identificationType
+        - identificationNumber
+      properties:
+        name:
+          type: string
+          description: Full name of the consignee
+          maxLength: 255
+          example: Juan Pérez González
+        address:
+          type: string
+          description: Full address of the consignee
+          maxLength: 1000
+          example: Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago
+        city:
+          type: string
+          description: City of the consignee
+          maxLength: 100
+          example: San Isidro
+        country:
+          type: string
+          description: Consignee country code
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: CL
+        department:
+          type: string
+          description: Peruvian department (Departamento). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.
+          maxLength: 100
+          example: Lima
+        province:
+          type: string
+          description: Peruvian province (Provincia). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.
+          maxLength: 100
+          example: Lima
+        district:
+          type: string
+          description: Peruvian district (Distrito). Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.
+          maxLength: 100
+          example: Cercado
+        state:
+          type: string
+          description: State or region. For Chile, this is the Región (required). For Peru, this can be used for department or state.
+          maxLength: 100
+          example: Lima
+        zipCode:
+          type: string
+          description: Postal or ZIP code
+          maxLength: 20
+          example: '15046'
+        street:
+          type: string
+          description: Street address
+          maxLength: 500
+          example: Av. Javier Prado Este 1234
+        email:
+          type: string
+          format: email
+          description: Consignee email address
+          maxLength: 255
+          example: juan.perez@example.com
+        phone:
+          type: string
+          description: Consignee phone number
+          maxLength: 50
+          example: '+51912345678'
+        identificationType:
+          type: string
+          description: Type of identification document. DNI is standard for Peruvian nationals. RUT for Chilean nationals. Validated at API level based on destination country.
+          enum:
+            - RUT
+            - DNI
+            - PASSPORT
+            - NATIONAL_ID
+            - DRIVER_LICENSE
+            - CE
+          example: RUT
+        identificationNumber:
+          type: string
+          description: Identification number (e.g. RUT format 12.345.678-9 for Chile, DNI 8 digits for Peru)
+          maxLength: 100
+          example: '12345678'
+        uniqueReferences:
+          type: array
+          description: Unique references for the consignee
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    ReturnInfo:
+      type: object
+      required:
+        - name
+        - address
+        - city
+        - country
+        - state
+        - zipCode
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          description: Name for the return address (example Juan Pérez González, Returns Warehouse)
+          maxLength: 255
+          example: Juan Pérez González
+        address:
+          type: string
+          description: Return address (example Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago)
+          maxLength: 1000
+          example: Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago
+        city:
+          type: string
+          description: City of the return address (example Viña del Mar, Callao, Santiago) For Chile, this is the comuna. For Peru, this is the city name.
+          maxLength: 100
+        country:
+          type: string
+          description: ISO 2-letter country code for the return address (example CL, PE)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+          example: CL
+        state:
+          type: string
+          description: State or region (example Valparaíso, Callao, Lima) For Chile, this is the Región. For Peru, this can be used for department or state.
+          maxLength: 100
+        department:
+          type: string
+          description: Peruvian department - Departamento (example Lima, Callao) Required when destinationCountryCode is PE, optional for other countries. Validated at API level.
+          maxLength: 100
+        province:
+          type: string
+          description: Province (example Lima, Callao) For Peru, this is the Provincia. Required when destinationCountryCode is PE, optional for other countries. Validated at API level.
+          maxLength: 100
+        district:
+          type: string
+          description: Peruvian district - Distrito (example Callao, Cercado) Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.
+          maxLength: 100
+        zipCode:
+          type: string
+          description: Postal or ZIP code (example 2820000, 07031)
+          maxLength: 20
+        street:
+          type: string
+          description: Street address for the return (example Calle Falsa 123, Av. Elmer Faucett s/n)
+          maxLength: 500
+          example: Calle Falsa 123
+        email:
+          type: string
+          format: email
+          description: Email address (example returns@company.pe, devoluciones@empresa.cl)
+          maxLength: 255
+        phone:
+          type: string
+          description: Phone number (example +5112345678, +56912345678)
+          maxLength: 50
+        uniqueReferences:
+          type: array
+          description: Optional array of key-value pairs for custom return metadata
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    ItemInfo:
+      type: object
+      required:
+        - itemNumber
+        - itemName
+        - quantity
+        - unitPrice
+        - totalPrice
+        - currency
+        - hsCode
+      properties:
+        itemNumber:
+          type: string
+          description: Item identifier (example 10050058244557952, 1005005824455795_1)
+          maxLength: 100
+          example: 10050058244557952
+        itemName:
+          type: string
+          description: Name or description of the item (example Smartphone Case, Women's Cotton T-Shirt, Ropa Set)
+          maxLength: 255
+          example: Smartphone Case
+        barCode:
+          type: string
+          description: Identification barcode for the item (example 123456789012, 978-0-123456-78-9)
+          maxLength: 50
+          example: 123456789012
+        quantity:
+          type: integer
+          description: Quantity of the item (example 1, 2, 5)
+          minimum: 1
+          example: 1
+        unitPrice:
+          type: number
+          description: Price per single unit of the item (example 25, 10.14, 12.99)
+          minimum: 0
+          example: 25
+        totalPrice:
+          type: number
+          description: Total price for all units of this item - unitPrice * quantity (example 10.14, 25.98, 50.00)
+          minimum: 0
+          example: 10.14
+        fobValue:
+          type: number
+          description: FOB (Free On Board) value for this item (example 10.14, 20.00)
+          minimum: 0
+          example: 10.14
+        cifValue:
+          type: number
+          description: CIF (Cost, Insurance, Freight) value for this item (example 12.50, 25.98)
+          minimum: 0
+          example: 12.50
+        currency:
+          type: string
+          description: 3-letter ISO 4217 Currency Code (example USD, CLP, PEN)
+          maxLength: 3
+          pattern: ^[A-Z]{3}$
+          example: USD
+        hsCode:
+          type: string
+          description: HS code - Tariff code for the item (example 6203420000, 8517.12.00)
+          maxLength: 20
+          example: '6203420000'
+        country:
+          type: string
+          description: Country of origin (example CN, US, VN)
+          minLength: 2
+          maxLength: 2
+          pattern: ^[A-Z]{2}$
+        productUrl:
+          type: string
+          description: URL to the product page (example https://www.example.com/product/123)
+          maxLength: 500
+          example: https://www.example.com/product/123
+        uniqueReferences:
+          type: array
+          description: Optional array of key-value pairs for custom item metadata
+          items:
+            $ref: '#/components/schemas/UniqueReference'
+    UniqueReference:
+      type: object
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+    ErrorObject:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: ERROR_CODE
+        message:
+          type: string
+          example: ERROR_MESSAGE
+        details:
+          type: object
+          properties:
+            field:
+              type: string
+              example: ERROR_FIELD
+            error:
+              type: string
+              example: ERROR_MESSAGE
+            code:
+              type: string
+              example: ERROR_CODE
+          required:
+            - field
+            - error
+            - code
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: api-key
+      description: API key for authentication
+  responses:
+    BadRequest:
+      description: Bad Request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 400
+            message: Validation failed
+            error: Bad Request
+            details:
+              - path:
+                  - destinationCountry
+                message: 'Must be one of: CL, PE, AR, US'
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            statusCode: 500
+            message: An unexpected error occurred
+            error: Internal Server Error
+  parameters:
+    Authorization:
+      name: Authorization
+      in: header
+      required: true
+      description: Basic Auth token for authentication.
+      schema:
+        type: string
+        pattern: ^Basic\s[a-zA-Z0-9+=]+$
+        example: Basic QWxhZGRpbjpvcGVuIHNlc2FtZQ==
+    ContentType:
+      name: Content-Type
+      in: header
+      required: true
+      description: Content type of the request body.
+      schema:
+        type: string
+        enum:
+          - application/json
+    TraceParent:
+      name: traceparent
+      in: header
+      required: true
+      description: Traceparent header for distributed tracing.
+      schema:
+        type: string
+        pattern: ^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$
+        example: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+    XClientCodeHeader:
+      name: x-client-code
+      in: header
+      required: true
+      description: Client identifier for authentication and routing
+      schema:
+        type: string
+        pattern: ^[A-Z]{2,10}$
+        example: CLX
+    AuthorizationHeader:
+      name: Authorization
+      in: header
+      required: true
+      description: Authorization header containing Basic Auth token
+      schema:
+        type: string
+        example: Basic dXNlcm5hbWU6cGFzc3dvcmQ=
+    TraceparentHeader:
+      name: traceparent
+      in: header
+      required: false
+      description: W3C Trace Context traceparent header for distributed tracing (example 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01)
+      schema:
+        type: string
+        pattern: ^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$
+        example: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01

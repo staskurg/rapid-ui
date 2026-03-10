@@ -1,0 +1,578 @@
+{
+  "api": {
+    "title": "Odynn Multi-Tenant Travel Platform API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Config",
+      "key": "config",
+      "operations": [
+        {
+          "id": "getConfig",
+          "method": "GET",
+          "kind": "list",
+          "path": "/config",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "tenant",
+              "locations"
+            ],
+            "properties": {
+              "tenant": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "name",
+                  "enabledVerticals",
+                  "flightDefaults",
+                  "uxHints"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "description": "Unique tenant identifier"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "Display name"
+                  },
+                  "enabledVerticals": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "enum": [
+                        "flights",
+                        "stays"
+                      ]
+                    },
+                    "description": "Which travel verticals are enabled"
+                  },
+                  "flightDefaults": {
+                    "type": "object",
+                    "properties": {
+                      "cabinClass": {
+                        "type": "string",
+                        "enum": [
+                          "economy",
+                          "premium_economy",
+                          "business",
+                          "first"
+                        ],
+                        "description": "Default cabin class for searches"
+                      },
+                      "maxResults": {
+                        "type": "integer",
+                        "description": "Maximum number of results to return"
+                      },
+                      "sortOrder": {
+                        "type": "string",
+                        "enum": [
+                          "price_asc",
+                          "price_desc",
+                          "duration_asc"
+                        ],
+                        "description": "Default sort order"
+                      },
+                      "preferredAirlines": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        },
+                        "description": "IATA codes of preferred airlines"
+                      }
+                    }
+                  },
+                  "stayDefaults": {
+                    "type": "object",
+                    "properties": {
+                      "minStarRating": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 5,
+                        "description": "Minimum hotel star rating filter"
+                      },
+                      "maxNightlyPrice": {
+                        "type": "number",
+                        "description": "Maximum nightly price filter"
+                      },
+                      "sortOrder": {
+                        "type": "string",
+                        "enum": [
+                          "price_asc",
+                          "price_desc",
+                          "rating_desc"
+                        ],
+                        "description": "Default sort order"
+                      }
+                    }
+                  },
+                  "uxHints": {
+                    "type": "object",
+                    "description": "Frontend rendering hints",
+                    "properties": {
+                      "brandName": {
+                        "type": "string",
+                        "description": "Brand name to display in header"
+                      },
+                      "primaryColor": {
+                        "type": "string",
+                        "description": "Primary brand color (hex)"
+                      },
+                      "layout": {
+                        "type": "string",
+                        "enum": [
+                          "cards",
+                          "table"
+                        ],
+                        "description": "Layout style for search results"
+                      },
+                      "priceEmphasis": {
+                        "type": "string",
+                        "enum": [
+                          "high",
+                          "medium",
+                          "low"
+                        ],
+                        "description": "How prominently to display prices"
+                      },
+                      "showPolicyCompliance": {
+                        "type": "boolean",
+                        "description": "Whether to show policy warnings"
+                      },
+                      "highlightPreferred": {
+                        "type": "boolean",
+                        "description": "Whether to highlight preferred options"
+                      }
+                    }
+                  }
+                }
+              },
+              "locations": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lon": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Flights",
+      "key": "flights",
+      "operations": [
+        {
+          "id": "searchFlights",
+          "method": "POST",
+          "kind": "create",
+          "path": "/flights/search",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "origin",
+              "destination",
+              "departureDate",
+              "passengers"
+            ],
+            "properties": {
+              "origin": {
+                "type": "string",
+                "description": "Origin airport IATA code",
+                "example": "JFK"
+              },
+              "destination": {
+                "type": "string",
+                "description": "Destination airport IATA code",
+                "example": "LAX"
+              },
+              "departureDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Departure date (YYYY-MM-DD)"
+              },
+              "returnDate": {
+                "type": "string",
+                "format": "date",
+                "description": "Return date for round-trip (optional)"
+              },
+              "passengers": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9,
+                "description": "Number of passengers"
+              },
+              "cabinClass": {
+                "type": "string",
+                "enum": [
+                  "economy",
+                  "premium_economy",
+                  "business",
+                  "first"
+                ],
+                "description": "Cabin class (uses tenant default if omitted)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "requestId": {
+                "type": "string",
+                "description": "Duffel request ID"
+              },
+              "offers": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "owner": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "description": "Airline IATA code"
+                        },
+                        "name": {
+                          "type": "string",
+                          "description": "Airline name"
+                        }
+                      }
+                    },
+                    "price": {
+                      "type": "object",
+                      "properties": {
+                        "amount": {
+                          "type": "string"
+                        },
+                        "currency": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "slices": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "origin": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "destination": {
+                            "type": "object",
+                            "properties": {
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "city": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "departureTime": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "arrivalTime": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "duration": {
+                            "type": "string",
+                            "description": "ISO 8601 duration"
+                          },
+                          "segments": {
+                            "type": "array",
+                            "items": {
+                              "type": "object"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "policy": {
+                      "type": "object",
+                      "description": "Policy evaluation result for the offer",
+                      "properties": {
+                        "compliant": {
+                          "type": "boolean",
+                          "description": "False if any 'error' severity violations exist"
+                        },
+                        "violations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "preferred_airline",
+                                  "price_cap",
+                                  "star_rating_min",
+                                  "budget_airline_excluded",
+                                  "role_based_cabin",
+                                  "cashback_promotion",
+                                  "cabin_restriction"
+                                ]
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "severity": {
+                                "type": "string",
+                                "enum": [
+                                  "error",
+                                  "warning",
+                                  "info"
+                                ],
+                                "description": "- error: Hard block (non-compliant)\n- warning: Flagged but allowed\n- info: Informational only\n"
+                              }
+                            }
+                          }
+                        },
+                        "preferred": {
+                          "type": "boolean",
+                          "description": "True if matches preferred vendor criteria"
+                        },
+                        "promotions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object",
+                "properties": {
+                  "searchParams": {
+                    "type": "object"
+                  },
+                  "appliedDefaults": {
+                    "type": "object",
+                    "description": "Defaults that were applied from tenant config"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Stays",
+      "key": "stays",
+      "operations": [
+        {
+          "id": "searchStays",
+          "method": "POST",
+          "kind": "create",
+          "path": "/stays/search",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "locationId",
+              "checkInDate",
+              "checkOutDate",
+              "guests",
+              "rooms"
+            ],
+            "properties": {
+              "locationId": {
+                "type": "string",
+                "description": "Location ID from /config endpoint"
+              },
+              "checkInDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "checkOutDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "guests": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "rooms": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "stays": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "accommodation": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "rating": {
+                          "type": "integer"
+                        },
+                        "photos": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    },
+                    "rates": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string"
+                          },
+                          "price": {
+                            "type": "object",
+                            "properties": {
+                              "amount": {
+                                "type": "string"
+                              },
+                              "currency": {
+                                "type": "string"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "policy": {
+                      "type": "object",
+                      "description": "Policy evaluation result for the offer",
+                      "properties": {
+                        "compliant": {
+                          "type": "boolean",
+                          "description": "False if any 'error' severity violations exist"
+                        },
+                        "violations": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "preferred_airline",
+                                  "price_cap",
+                                  "star_rating_min",
+                                  "budget_airline_excluded",
+                                  "role_based_cabin",
+                                  "cashback_promotion",
+                                  "cabin_restriction"
+                                ]
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "severity": {
+                                "type": "string",
+                                "enum": [
+                                  "error",
+                                  "warning",
+                                  "info"
+                                ],
+                                "description": "- error: Hard block (non-compliant)\n- warning: Flagged but allowed\n- info: Informational only\n"
+                              }
+                            }
+                          }
+                        },
+                        "preferred": {
+                          "type": "boolean",
+                          "description": "True if matches preferred vendor criteria"
+                        },
+                        "promotions": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              },
+                              "value": {
+                                "type": "number"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "metadata": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -4,32 +4,72 @@
  * Reads ApiIR JSON from tests/compiler/fixtures/apiir/valid-specs-{repo}/ (or path arg).
  * With --repo: auto-saves to scripts/corpus-data/reports/pattern-mining-{repo}-{timestamp}.md
  *
- * Usage: npm run corpus:pattern-mining -- --repo REPO [--output PATH]
+ * RUS-v1 acceptance rate is derived from raw corpus run output (raw-{repo}-*.json in
+ * scripts/corpus-data/reports/). Run corpus:run first to produce raw output.
+ *
+ * Usage: npm run corpus:pattern-mining -- --repo REPO [--output PATH] [--debug]
  *   or:  npm run corpus:pattern-mining [path-to-apiir-dir]
  *   REPO: api-guru | github
+ *   --debug: include pattern examples in report
  */
 
 import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync } from "fs";
 import { join, dirname } from "path";
 import type { ApiIR } from "@/lib/compiler/apiir";
 import {
-  mineStructuralPatterns,
-  formatPatternMiningReport,
+  mineComprehensive,
+  formatComprehensiveReport,
 } from "./corpus-data/analyze-apiir";
 
 const FIXTURES_APIIR = join(process.cwd(), "tests/compiler/fixtures/apiir");
+const REPORTS_DIR = join(process.cwd(), "scripts/corpus-data/reports");
+
+interface RawCorpusResult {
+  valid: boolean;
+  parseFailed?: boolean;
+  crashed?: boolean;
+}
+
+interface RawCorpusOutput {
+  meta?: { batch?: unknown; timestamp?: string };
+  results: RawCorpusResult[];
+}
+
+/** Derive RUS-v1 acceptance rate from latest raw corpus run output. */
+function loadAcceptanceRate(repo: string): { valid: number; total: number; corpusLabel: string } | undefined {
+  if (!existsSync(REPORTS_DIR)) return undefined;
+  const prefix = `raw-${repo}-`;
+  const files = readdirSync(REPORTS_DIR)
+    .filter((f) => f.endsWith(".json") && f.startsWith(prefix))
+    .sort((a, b) => b.localeCompare(a));
+  if (files.length === 0) return undefined;
+  try {
+    const data = JSON.parse(readFileSync(join(REPORTS_DIR, files[0]!), "utf-8")) as RawCorpusOutput;
+    const results = data.results ?? [];
+    const total = results.length;
+    if (total === 0) return undefined;
+    const valid = results.filter((r) => r.valid && !r.parseFailed && !r.crashed).length;
+    const label = repo === "api-guru" ? "API-Guru corpus" : "GitHub corpus";
+    return { valid, total, corpusLabel: label };
+  } catch {
+    return undefined;
+  }
+}
 
 function main(): number {
   const args = process.argv.slice(2);
   let dirArg: string | null = null;
   let outputPath: string | null = null;
   let repo: string | null = null;
+  let debug = false;
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === "--repo" && args[i + 1]) {
       repo = args[++i];
     } else if ((args[i] === "--output" || args[i] === "-o") && args[i + 1]) {
       outputPath = args[++i];
+    } else if (args[i] === "--debug") {
+      debug = true;
     } else if (!args[i].startsWith("-")) {
       dirArg = args[i];
     }
@@ -78,13 +118,16 @@ function main(): number {
     return 1;
   }
 
-  const { results, totalResources } = mineStructuralPatterns(entries);
-  const lines = formatPatternMiningReport(results, totalResources);
+  const agg = mineComprehensive(entries);
+  const acceptanceRate = repo ? loadAcceptanceRate(repo) : undefined;
+  const lines = formatComprehensiveReport(agg, {
+    includeExamples: debug,
+    acceptanceRate,
+  });
   const reportContent = lines.join("\n");
 
   let savePath: string | null = outputPath;
   if (!savePath && (repo === "api-guru" || repo === "github")) {
-    const reportsDir = join(process.cwd(), "scripts", "corpus-data", "reports");
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     savePath = `scripts/corpus-data/reports/pattern-mining-${repo}-${timestamp}.md`;
   }

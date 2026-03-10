@@ -1,0 +1,174 @@
+openapi: 3.0.3
+info:
+  title: Natural Language Database Query Tool API
+  description: REST API for the Natural Language Database Query Agent
+  version: 1.0.0
+  contact:
+    name: SQL Tool Team
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+paths:
+  /query:
+    post:
+      summary: Execute a natural language database query
+      description: Submit a question in natural language along with database connection details
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - connection_string
+                - question
+              properties:
+                connection_string:
+                  type: string
+                  description: Database connection string (e.g., mysql://user:pass@host/db)
+                  example: "mysql://user:password@localhost:3306/mydb"
+                question:
+                  type: string
+                  description: Natural language question about the database
+                  example: "How many users are there?"
+                context:
+                  type: object
+                  description: Optional context about expected data structure
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    description: Query results
+                    items:
+                      type: object
+                      additionalProperties: true
+                  summary:
+                    type: string
+                    description: Natural language summary of results
+                    example: "There are 1,250 users in the database."
+                  execution_time:
+                    type: number
+                    description: Time taken to execute query in seconds
+                    example: 2.5
+                  row_count:
+                    type: integer
+                    description: Number of rows returned
+                    example: 1250
+        "400":
+          description: Invalid request or connection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Invalid connection string"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Query execution failed"
+
+  /schema:
+    post:
+      summary: Get database schema information
+      description: Retrieve table and column information from the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - connection_string
+              properties:
+                connection_string:
+                  type: string
+                  description: Database connection string
+                  example: "mysql://user:password@localhost:3306/mydb"
+                table_name:
+                  type: string
+                  description: Optional specific table name
+                  example: "users"
+      responses:
+        "200":
+          description: Schema retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  tables:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                          example: "users"
+                        columns:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                                example: "id"
+                              type:
+                                type: string
+                                example: "INT"
+                              nullable:
+                                type: boolean
+                                example: false
+        "400":
+          description: Invalid connection
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Cannot connect to database"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message

@@ -10,6 +10,15 @@ import { selectJsonContent } from "./content";
 
 const SUCCESS_CODES = ["200", "201"];
 const METHODS_REQUIRING_BODY = ["post", "put", "patch"];
+const SUCCESS_RESPONSE_HINT =
+  "RapidUI requires a JSON response body to generate UI.";
+
+const UNSUPPORTED_HINTS: Record<string, string> = {
+  oneOf: "RapidUI does not support polymorphic schemas.",
+  anyOf: "RapidUI does not support polymorphic schemas.",
+  allOf: "RapidUI does not support schema composition.",
+  discriminator: "RapidUI does not support polymorphic schemas.",
+};
 const METHODS_FORBIDDEN_BODY = ["get", "delete"];
 const METHOD_ORDER = ["get", "post", "put", "patch", "delete"];
 
@@ -146,10 +155,14 @@ function checkSchemaRecursive(
   // Allowlist: unknown schema keyword → error
   for (const key of Object.keys(schema)) {
     if (!ALLOWED_SCHEMA_KEYS.has(key)) {
+      const hint = UNSUPPORTED_HINTS[key] ?? "";
+      const message = hint
+        ? `Unsupported schema keyword: ${key}\n${hint}`
+        : `Unsupported schema keyword: ${key}`;
       return createError(
         "OAS_UNSUPPORTED_SCHEMA_KEYWORD",
         "Subset",
-        `Unsupported schema keyword: ${key}`,
+        message,
         pointer
       );
     }
@@ -493,7 +506,7 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
           createError(
             "OAS_INVALID_OPERATION_STRUCTURE",
             "Subset",
-            "Operation must have at least one success response (200 or 201)",
+            `Operation must have success response with JSON schema\n${SUCCESS_RESPONSE_HINT}`,
             opPath
           )
         );
@@ -558,7 +571,9 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
         }
       }
 
-      // Response validation: validate only the first success response (200 before 201) when multiple exist
+      // Response validation: operation must have success response with JSON schema
+      // Trigger: no success response, no JSON media type, or JSON without schema
+      // Keep separate error for primitive root responses
       if (responses && typeof responses === "object") {
         const firstSuccessCode = SUCCESS_CODES.find((c) => c in responses);
         if (firstSuccessCode) {
@@ -566,35 +581,30 @@ export function validateSubset(doc: Record<string, unknown>): ValidateOutput {
           const r = resp as Record<string, unknown> | undefined;
           const code = firstSuccessCode;
           const contentObj = r?.content as Record<string, unknown> | undefined;
+          const responsePointer = `${opPath}/responses/${code}`;
 
-          // Content negotiation: select JSON media type (application/json, *+json); else reject
           if (!contentObj || typeof contentObj !== "object") {
             errors.push(
               createError(
                 "OAS_INVALID_RESPONSE_STRUCTURE",
                 "Subset",
-                "Success response must have content with application/json or compatible JSON media type",
-                `${opPath}/responses/${code}`
+                `Operation must have success response with JSON schema\n${SUCCESS_RESPONSE_HINT}`,
+                responsePointer
               )
             );
           } else {
             const selected = selectJsonContent(contentObj);
             if (!selected) {
-              const hasJson =
-                "application/json" in contentObj ||
-                Object.keys(contentObj).some((k) => k.endsWith("+json"));
               errors.push(
                 createError(
                   "OAS_INVALID_RESPONSE_STRUCTURE",
                   "Subset",
-                  hasJson
-                    ? "Success response must have schema"
-                    : "Success response content must include application/json or compatible JSON media type",
-                  `${opPath}/responses/${code}/content`
+                  `Operation must have success response with JSON schema\n${SUCCESS_RESPONSE_HINT}`,
+                  `${responsePointer}/content`
                 )
               );
             } else {
-              const schemaPointer = `${opPath}/responses/${code}/content/schema`;
+              const schemaPointer = `${responsePointer}/content/schema`;
               const visited = new Set<string>();
               const err = checkSchemaRecursive(
                 doc,

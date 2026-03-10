@@ -1,0 +1,777 @@
+openapi: 3.0.3
+info:
+  title: Football API
+  version: 1.0.0
+  description: |
+    RapidAPI Football API for European leagues and competitions.
+
+    **CRITICAL: Parameter Types**
+    - ALL league and season parameters MUST be integers, NOT strings
+    - ❌ Wrong: {"league": "39", "season": "2025"}
+    - ✅ Correct: {"league": 39, "season": 2025}
+
+    **Season Calculation (when user doesn't specify):**
+    - Football seasons run August-May/June (e.g., 2025 season = Aug 2025-May 2026)
+    - If current month is January-July: use (current_year - 1)
+    - If current month is August-December: use current_year
+    - Today is November 2025, so current season = 2025
+
+    **COMMON LEAGUE IDs (use directly without calling getLeagues):**
+
+    Top 5 European Leagues:
+    - English Premier League: 39
+    - Spanish La Liga: 140
+    - Italian Serie A: 135
+    - German Bundesliga: 78
+    - French Ligue 1: 61
+
+    European Competitions:
+    - UEFA Champions League: 2
+    - UEFA Europa League: 3
+    - UEFA Nations League: 5
+
+    World Cup & Qualifiers:
+    - FIFA World Cup (Finals): 1
+    - World Cup Qualification - Europe: 32
+    - World Cup Qualification - South America: 34
+    - World Cup Qualification - Asia: 30
+    - World Cup Qualification - Africa: 29
+    - World Cup Qualification - CONCACAF: 31
+    - World Cup Qualification - Oceania: 33
+
+    Continental Championships:
+    - UEFA Euro Championship: 4
+    - UEFA Euro Qualification: 960
+    - Copa America: 9
+    - African Cup of Nations: 6
+    - Asian Cup: 7
+
+    Domestic Cups:
+    - FA Cup (England): 45
+    - Copa del Rey (Spain): 143
+    - Coppa Italia (Italy): 137
+    - DFB Pokal (Germany): 81
+    - Coupe de France (France): 66
+
+    **For ALL other leagues, you MUST use getLeagues tool to discover league IDs:**
+    - Lower divisions (Championship, Segunda División, Serie B, etc.)
+    - Regional leagues (Eredivisie, Primeira Liga, Scottish Premiership, etc.)
+    - Youth competitions (U20, U17, etc.)
+    - Women's competitions
+
+    **Example: Direct usage of World Cup Qualifiers:**
+    ```
+    User asks: "Show World Cup qualifiers Europe matches"
+    → Use directly: getFixtures(league=32, season=2024, last=10)
+    (No need to call getLeagues first, ID 32 is in common leagues)
+    ```
+
+    **Example workflow for truly unknown leagues:**
+    ```
+    User asks: "Show Scottish Premiership standings"
+    Step 1: getLeagues(name="Scottish", country="Scotland") → Find league ID
+    Step 2: getStandings(league=<found_id>, season=2025) → Get standings
+    ```
+
+    **Search strategies:**
+    - By name: getLeagues(name="Championship") for English Championship
+    - By country: getLeagues(country="Portugal") for all Portuguese leagues
+    - Current competitions: getLeagues(name="World Cup", current=true) for active tournaments
+
+servers:
+  - url: https://api-football-v1.p.rapidapi.com/v3
+
+components:
+  parameters:
+    RapidAPIHost:
+      name: x-rapidapi-host
+      in: header
+      required: false
+      schema:
+        type: string
+        default: api-football-v1.p.rapidapi.com
+      description: RapidAPI host header for request routing (auto-populated if not provided)
+
+paths:
+  /fixtures:
+    get:
+      operationId: getFixtures
+      summary: Get football match fixtures, results and schedules
+      description: |
+        Retrieve match fixtures, results and schedules for specified leagues.
+
+        **CRITICAL: All parameters must be correct types (integers, not strings).**
+
+        **Season Calculation (when user doesn't specify):**
+        - Football seasons run August-May/June (e.g., 2025 season = Aug 2025-May 2026)
+        - If current month is January-July: use (current_year - 1)
+        - If current month is August-December: use current_year
+        - Today is November 2025, so current season = 2025
+
+        **Quick Start with Common Leagues:**
+        - Premier League (39): { league: 39, season: 2025, last: 10 }
+        - Champions League (2): { league: 2, season: 2025, next: 5 }
+        - La Liga (140): { league: 140, season: 2025, date: "2025-11-07" }
+
+        **Common Mistakes to Avoid:**
+        - ❌ {"league": "Premier League", "season": "2025"} (strings)
+        - ✅ {"league": 39, "season": 2025} (integers)
+
+        Use 'last' parameter for recent matches, 'next' for upcoming matches.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: league
+          in: query
+          description: |
+            League ID as INTEGER (not league name). Common leagues:
+            Premier League=39, La Liga=140, Serie A=135, Bundesliga=78, Ligue 1=61, Champions League=2
+            IMPORTANT: Use integer ID (e.g., 39), NOT string name (e.g., "Premier League")
+          schema:
+            type: integer
+          example: 39
+        - name: season
+          in: query
+          description: |
+            Season year as INTEGER (e.g., 2025 for 2025/2026 season).
+            IMPORTANT: Must be integer, not string. If user doesn't specify, calculate from current date:
+            - January-July: use (current_year - 1)
+            - August-December: use current_year
+            - Current date is November 2025, so use 2025
+          required: true
+          schema:
+            type: integer
+          example: 2025
+        - name: date
+          in: query
+          description: Match date in YYYY-MM-DD format
+          schema:
+            type: string
+            format: date
+          example: "2024-11-10"
+        - name: last
+          in: query
+          description: Get last N matches (alternative to date)
+          schema:
+            type: integer
+          example: 10
+        - name: next
+          in: query
+          description: Get next N upcoming matches
+          schema:
+            type: integer
+          example: 5
+        - name: status
+          in: query
+          description: Match status filter (e.g., FT, LIVE, NS)
+          schema:
+            type: string
+        - name: team
+          in: query
+          description: Team ID to filter matches for specific team
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with fixtures data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /standings:
+    get:
+      operationId: getStandings
+      summary: Get league standings/table
+      description: |
+        Retrieve current league standings and tables.
+
+        **CRITICAL: All parameters must be correct types (integers, not strings).**
+
+        **Season Calculation (when user doesn't specify):**
+        - Football seasons run August-May/June (e.g., 2025 season = Aug 2025-May 2026)
+        - If current month is January-July: use (current_year - 1)
+        - If current month is August-December: use current_year
+        - Today is November 2025, so current season = 2025
+
+        **Quick Start Examples:**
+        - Premier League table: { league: 39, season: 2025 }
+        - La Liga standings: { league: 140, season: 2025 }
+        - Champions League groups: { league: 2, season: 2025 }
+
+        **Common Mistakes to Avoid:**
+        - ❌ {"league": "39", "season": "2025"} (strings)
+        - ✅ {"league": 39, "season": 2025} (integers)
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: league
+          in: query
+          required: true
+          description: |
+            League ID as INTEGER (required). Common leagues:
+            Premier League=39, La Liga=140, Serie A=135, Bundesliga=78, Ligue 1=61, Champions League=2
+            IMPORTANT: Must be integer (e.g., 39), NOT string (e.g., "Premier League" or "39")
+          schema:
+            type: integer
+          example: 39
+        - name: season
+          in: query
+          required: true
+          description: |
+            Season year as INTEGER (required, e.g., 2025 for 2025/2026 season).
+            IMPORTANT: Must be integer, not string. If user doesn't specify, calculate from current date:
+            - January-July: use (current_year - 1)
+            - August-December: use current_year
+            - Current date is November 2025, so use 2025
+          schema:
+            type: integer
+          example: 2025
+        - name: team
+          in: query
+          description: Team ID to get standings for specific team
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with standings data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /players/topscorers:
+    get:
+      operationId: getTopScorers
+      summary: Get top scorers/goal leaders
+      description: |
+        Retrieve top goal scorers for a league.
+
+        **CRITICAL: All parameters must be correct types (integers, not strings).**
+
+        **Season Calculation (when user doesn't specify):**
+        - Football seasons run August-May/June (e.g., 2025 season = Aug 2025-May 2026)
+        - If current month is January-July: use (current_year - 1)
+        - If current month is August-December: use current_year
+        - Today is November 2025, so current season = 2025
+
+        **Quick Start Examples:**
+        - Premier League top scorers: { league: 39, season: 2025 }
+        - Champions League top scorers: { league: 2, season: 2025 }
+
+        **Common Mistakes to Avoid:**
+        - ❌ {"league": "39", "season": "2025"} (strings)
+        - ✅ {"league": 39, "season": 2025} (integers)
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: league
+          in: query
+          required: true
+          description: |
+            League ID as INTEGER (required). Use common league IDs from tool description.
+            IMPORTANT: Must be integer (e.g., 39), NOT string (e.g., "Premier League" or "39")
+          schema:
+            type: integer
+          example: 39
+        - name: season
+          in: query
+          required: true
+          description: |
+            Season year as INTEGER (required, e.g., 2025 for 2025/2026 season).
+            IMPORTANT: Must be integer, not string. If user doesn't specify, calculate from current date:
+            - January-July: use (current_year - 1)
+            - August-December: use current_year
+            - Current date is November 2025, so use 2025
+          schema:
+            type: integer
+          example: 2025
+      responses:
+        '200':
+          description: Successful response with top scorers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /players/topassists:
+    get:
+      operationId: getTopAssists
+      summary: Get top assists leaders
+      description: |
+        Retrieve players with most assists in a league.
+
+        **CRITICAL: All parameters must be correct types (integers, not strings).**
+
+        **Season Calculation (when user doesn't specify):**
+        - Football seasons run August-May/June (e.g., 2025 season = Aug 2025-May 2026)
+        - If current month is January-July: use (current_year - 1)
+        - If current month is August-December: use current_year
+        - Today is November 2025, so current season = 2025
+
+        **Quick Start Examples:**
+        - Serie A top assists: { league: 135, season: 2025 }
+        - Bundesliga top assists: { league: 78, season: 2025 }
+
+        **Common Mistakes to Avoid:**
+        - ❌ {"league": "135", "season": "2025"} (strings)
+        - ✅ {"league": 135, "season": 2025} (integers)
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: league
+          in: query
+          required: true
+          description: |
+            League ID as INTEGER (required). Use common league IDs from tool description.
+            IMPORTANT: Must be integer (e.g., 135), NOT string (e.g., "Serie A" or "135")
+          schema:
+            type: integer
+          example: 135
+        - name: season
+          in: query
+          required: true
+          description: |
+            Season year as INTEGER (required, e.g., 2025 for 2025/2026 season).
+            IMPORTANT: Must be integer, not string. If user doesn't specify, calculate from current date:
+            - January-July: use (current_year - 1)
+            - August-December: use current_year
+            - Current date is November 2025, so use 2025
+          schema:
+            type: integer
+          example: 2025
+      responses:
+        '200':
+          description: Successful response with top assists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /leagues:
+    get:
+      operationId: getLeagues
+      summary: Search and discover league IDs by name or country
+      description: |
+        **CRITICAL: You MUST use this tool to find league IDs when they are not in the embedded common leagues list.**
+
+        This is the ONLY way to discover league IDs for:
+        - ✅ Lower divisions (Championship, Segunda División, Serie B, 2. Bundesliga, Ligue 2)
+        - ✅ Regional competitions (Eredivisie, Primeira Liga, Scottish Premiership, etc.)
+        - ✅ Domestic cups not listed in common leagues
+        - ✅ Youth competitions (U20, U17, etc.)
+        - ✅ Women's competitions
+        - ✅ Any league when you're unsure of the ID
+
+        **NOTE: World Cup & major continental tournaments are now in common leagues list - use IDs directly!**
+
+        **When to use this tool:**
+        1. User asks about a league NOT in the embedded common leagues
+        2. User asks about lower divisions (Championship, Segunda División, Serie B, etc.)
+        3. User asks about regional leagues (Eredivisie, Primeira Liga, Scottish Premiership, etc.)
+        4. User asks about youth or women's competitions
+        5. You need to confirm a league ID before using it
+
+        **IMPORTANT: World Cup & major tournament IDs are now in common leagues list!**
+        - World Cup Finals (1), all regional qualifiers (32, 34, 30, 29, 31, 33)
+        - Euro Championship (4), Euro Qualification (960)
+        - Copa America (9), African Cup of Nations (6), Asian Cup (7)
+        → Use these IDs directly, do NOT call getLeagues first
+
+        **Real-world example - Scottish Premiership (unknown league):**
+        ```
+        User: "Show me Scottish Premiership standings"
+        Step 1: getLeagues(name="Scottish", country="Scotland")
+        Response: { id: 179, name: "Premiership" }
+        Step 2: getStandings(league=179, season=2025)
+        ```
+
+        **Search strategies:**
+        - By name: getLeagues(name="Championship") → English Championship
+        - By country: getLeagues(country="Portugal") → All Portuguese leagues
+        - By region: getLeagues(country="Scotland") → Scottish leagues
+        - Current competitions: getLeagues(name="U20", current=true) → Active youth tournaments
+
+        **Note:** For top 5 European leagues, major cups, World Cup & qualifiers, and major continental championships (IDs already embedded in schema), you can skip this tool and use IDs directly.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: id
+          in: query
+          description: Specific league ID to get details
+          schema:
+            type: integer
+        - name: name
+          in: query
+          description: Search leagues by name (e.g., "Championship", "Eredivisie")
+          schema:
+            type: string
+        - name: country
+          in: query
+          description: Filter leagues by country (e.g., "England", "Spain", "Portugal")
+          schema:
+            type: string
+        - name: season
+          in: query
+          description: Filter by season year
+          schema:
+            type: integer
+        - name: current
+          in: query
+          description: Filter for currently active leagues (true/false)
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successful response with league information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /fixtures/statistics:
+    get:
+      operationId: getFixtureStatistics
+      summary: Get detailed match statistics
+      description: |
+        Retrieve detailed statistics for a specific match including shots, possession, passes, fouls, cards, etc.
+
+        **How to use:**
+        1. First use getFixtures to find the fixture ID for your desired match
+        2. Then use this endpoint with that fixture ID to get detailed statistics
+
+        **Example workflow:**
+        - Find match: getFixtures(league=39, season=2025, team=<team_id>, last=5)
+        - Get stats: getFixtureStatistics(fixture=<fixture_id>)
+
+        **Statistics included:**
+        - Shots (total, on target, off target, blocked)
+        - Possession percentage
+        - Passes (total, accurate, passing percentage)
+        - Fouls, corners, offsides
+        - Yellow and red cards
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: fixture
+          in: query
+          required: true
+          description: |
+            Fixture ID as INTEGER (required). Get this from getFixtures endpoint.
+            Example: fixture from getFixtures response
+          schema:
+            type: integer
+          example: 1035048
+        - name: team
+          in: query
+          description: |
+            Team ID to get statistics for specific team only (optional).
+            If omitted, returns statistics for both teams.
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with match statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /fixtures/events:
+    get:
+      operationId: getFixtureEvents
+      summary: Get match events timeline
+      description: |
+        Retrieve all events that occurred during a match (goals, cards, substitutions, etc.) with timestamps.
+
+        **How to use:**
+        1. First use getFixtures to find the fixture ID
+        2. Then use this endpoint to get the complete event timeline
+
+        **Example workflow:**
+        - Find match: getFixtures(league=39, season=2025, date="2025-11-10")
+        - Get events: getFixtureEvents(fixture=<fixture_id>)
+
+        **Events included:**
+        - Goals (with scorer and assist information)
+        - Yellow and red cards
+        - Substitutions
+        - VAR decisions
+        - Penalties
+        Each event includes timestamp (minute) and detailed player information.
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: fixture
+          in: query
+          required: true
+          description: |
+            Fixture ID as INTEGER (required). Get this from getFixtures endpoint.
+          schema:
+            type: integer
+          example: 1035048
+        - name: team
+          in: query
+          description: |
+            Team ID to filter events for specific team only (optional).
+          schema:
+            type: integer
+        - name: player
+          in: query
+          description: |
+            Player ID to filter events for specific player only (optional).
+          schema:
+            type: integer
+        - name: type
+          in: query
+          description: |
+            Event type filter (optional). Values: Goal, Card, subst, Var
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response with match events
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /fixtures/lineups:
+    get:
+      operationId: getFixtureLineups
+      summary: Get match lineups and formations
+      description: |
+        Retrieve starting lineups, formations, and substitutes for both teams in a match.
+
+        **How to use:**
+        1. First use getFixtures to find the fixture ID
+        2. Then use this endpoint to get team lineups
+
+        **Example workflow:**
+        - Find match: getFixtures(league=39, season=2025, team=33, last=1)
+        - Get lineups: getFixtureLineups(fixture=<fixture_id>)
+
+        **Information included:**
+        - Team formation (e.g., 4-3-3, 4-4-2)
+        - Starting XI with positions
+        - Substitutes bench
+        - Coach information
+        - Player jersey numbers
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: fixture
+          in: query
+          required: true
+          description: |
+            Fixture ID as INTEGER (required). Get this from getFixtures endpoint.
+          schema:
+            type: integer
+          example: 1035048
+        - name: team
+          in: query
+          description: |
+            Team ID to get lineup for specific team only (optional).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with match lineups
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object
+
+  /fixtures/players:
+    get:
+      operationId: getFixturePlayers
+      summary: Get player performance statistics in a match
+      description: |
+        Retrieve detailed performance statistics for all players in a specific match.
+
+        **How to use:**
+        1. First use getFixtures to find the fixture ID
+        2. Then use this endpoint to get player-by-player statistics
+
+        **Example workflow:**
+        - Find match: getFixtures(league=39, season=2025, date="2025-11-10")
+        - Get player stats: getFixturePlayers(fixture=<fixture_id>)
+
+        **Statistics included per player:**
+        - Minutes played
+        - Rating (match rating out of 10)
+        - Goals and assists
+        - Shots (total, on target)
+        - Passes (total, accurate, key passes)
+        - Dribbles (attempts, success)
+        - Tackles, interceptions, blocks
+        - Fouls committed and drawn
+        - Yellow/red cards
+      parameters:
+        - $ref: '#/components/parameters/RapidAPIHost'
+        - name: fixture
+          in: query
+          required: true
+          description: |
+            Fixture ID as INTEGER (required). Get this from getFixtures endpoint.
+          schema:
+            type: integer
+          example: 1035048
+        - name: team
+          in: query
+          description: |
+            Team ID to get player statistics for specific team only (optional).
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response with player statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  get:
+                    type: string
+                  parameters:
+                    type: object
+                  errors:
+                    type: array
+                    items:
+                      type: object
+                  results:
+                    type: integer
+                  paging:
+                    type: object
+                  response:
+                    type: array
+                    items:
+                      type: object

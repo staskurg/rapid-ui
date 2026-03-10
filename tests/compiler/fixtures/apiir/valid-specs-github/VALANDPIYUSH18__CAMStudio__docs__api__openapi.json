@@ -1,0 +1,840 @@
+{
+  "api": {
+    "title": "Photo CRM SaaS API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password",
+              "subdomain"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "user@example.com"
+              },
+              "password": {
+                "type": "string",
+                "format": "password",
+                "example": "password123"
+              },
+              "subdomain": {
+                "type": "string",
+                "example": "mystudio"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "tokenType": {
+                "type": "string",
+                "example": "Bearer"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "example": 86400
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "example": "John"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Doe"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "STAFF",
+                      "CLIENT"
+                    ],
+                    "example": "ADMIN"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "order:create",
+                      "photo:upload",
+                      "invoice:generate"
+                    ]
+                  },
+                  "lastLoginAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-15T10:30:00Z"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/refresh",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/refresh",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "refreshToken"
+            ],
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "refreshToken": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "tokenType": {
+                "type": "string",
+                "example": "Bearer"
+              },
+              "expiresIn": {
+                "type": "integer",
+                "example": 86400
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "user@example.com"
+                  },
+                  "firstName": {
+                    "type": "string",
+                    "example": "John"
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "example": "Doe"
+                  },
+                  "fullName": {
+                    "type": "string",
+                    "example": "John Doe"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "ADMIN",
+                      "STAFF",
+                      "CLIENT"
+                    ],
+                    "example": "ADMIN"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "example": [
+                      "order:create",
+                      "photo:upload",
+                      "invoice:generate"
+                    ]
+                  },
+                  "lastLoginAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-15T10:30:00Z"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "example": "2024-01-01T00:00:00Z"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gallery",
+      "key": "gallery",
+      "operations": [
+        {
+          "id": "GET:/gallery/{orderId}/public",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/gallery/{orderId}/public",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "photos": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174001"
+                    },
+                    "filename": {
+                      "type": "string",
+                      "example": "IMG_001.jpg"
+                    },
+                    "originalUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/original/IMG_001.jpg"
+                    },
+                    "thumbnailUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/thumbnail/IMG_001.jpg"
+                    },
+                    "previewUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/preview/IMG_001.jpg"
+                    },
+                    "fileSize": {
+                      "type": "integer",
+                      "format": "int64",
+                      "example": 25600000
+                    },
+                    "mimeType": {
+                      "type": "string",
+                      "example": "image/jpeg"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "example": {
+                        "width": 4000,
+                        "height": 3000,
+                        "camera": "Canon EOS R5"
+                      }
+                    },
+                    "uploadedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00Z"
+                    },
+                    "isSelected": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "selectionOrder": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "decimal",
+                      "example": 25
+                    }
+                  }
+                }
+              },
+              "totalPhotos": {
+                "type": "integer",
+                "example": 150
+              },
+              "selectionLimit": {
+                "type": "integer",
+                "example": 50
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 4,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "clientId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174001"
+                    },
+                    "photographerId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174002"
+                    },
+                    "title": {
+                      "type": "string",
+                      "example": "Wedding Photography - Smith Family"
+                    },
+                    "description": {
+                      "type": "string",
+                      "example": "Full day wedding photography package"
+                    },
+                    "eventDate": {
+                      "type": "string",
+                      "format": "date",
+                      "example": "2024-06-15"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "CREATED",
+                        "IN_PROGRESS",
+                        "PHOTOS_UPLOADED",
+                        "CLIENT_REVIEW",
+                        "PAYMENT_PENDING",
+                        "PAID",
+                        "COMPLETED",
+                        "CANCELLED"
+                      ],
+                      "example": "CREATED"
+                    },
+                    "totalAmount": {
+                      "type": "number",
+                      "format": "decimal",
+                      "example": 2500
+                    },
+                    "galleryUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://photocrm.com/gallery/123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "qrCode": {
+                      "type": "string",
+                      "example": "QR_CODE_DATA_FOR_ORDER_123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00Z"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00Z"
+                    }
+                  }
+                }
+              },
+              "totalElements": {
+                "type": "integer",
+                "example": 100
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 5
+              },
+              "size": {
+                "type": "integer",
+                "example": 20
+              },
+              "number": {
+                "type": "integer",
+                "example": 0
+              },
+              "first": {
+                "type": "boolean",
+                "example": true
+              },
+              "last": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/orders/{orderId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "clientId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174001"
+              },
+              "photographerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174002"
+              },
+              "title": {
+                "type": "string",
+                "example": "Wedding Photography - Smith Family"
+              },
+              "description": {
+                "type": "string",
+                "example": "Full day wedding photography package"
+              },
+              "eventDate": {
+                "type": "string",
+                "format": "date",
+                "example": "2024-06-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CREATED",
+                  "IN_PROGRESS",
+                  "PHOTOS_UPLOADED",
+                  "CLIENT_REVIEW",
+                  "PAYMENT_PENDING",
+                  "PAID",
+                  "COMPLETED",
+                  "CANCELLED"
+                ],
+                "example": "CREATED"
+              },
+              "totalAmount": {
+                "type": "number",
+                "format": "decimal",
+                "example": 2500
+              },
+              "galleryUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://photocrm.com/gallery/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "qrCode": {
+                "type": "string",
+                "example": "QR_CODE_DATA_FOR_ORDER_123e4567-e89b-12d3-a456-426614174000"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "clientId",
+              "title"
+            ],
+            "properties": {
+              "clientId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174001"
+              },
+              "title": {
+                "type": "string",
+                "example": "Wedding Photography - Smith Family"
+              },
+              "description": {
+                "type": "string",
+                "example": "Full day wedding photography package"
+              },
+              "eventDate": {
+                "type": "string",
+                "format": "date",
+                "example": "2024-06-15"
+              },
+              "photographerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174002"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "clientId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174001"
+              },
+              "photographerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174002"
+              },
+              "title": {
+                "type": "string",
+                "example": "Wedding Photography - Smith Family"
+              },
+              "description": {
+                "type": "string",
+                "example": "Full day wedding photography package"
+              },
+              "eventDate": {
+                "type": "string",
+                "format": "date",
+                "example": "2024-06-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CREATED",
+                  "IN_PROGRESS",
+                  "PHOTOS_UPLOADED",
+                  "CLIENT_REVIEW",
+                  "PAYMENT_PENDING",
+                  "PAID",
+                  "COMPLETED",
+                  "CANCELLED"
+                ],
+                "example": "CREATED"
+              },
+              "totalAmount": {
+                "type": "number",
+                "format": "decimal",
+                "example": 2500
+              },
+              "galleryUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://photocrm.com/gallery/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "qrCode": {
+                "type": "string",
+                "example": "QR_CODE_DATA_FOR_ORDER_123e4567-e89b-12d3-a456-426614174000"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/orders/{orderId}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "example": "Wedding Photography - Smith Family"
+              },
+              "description": {
+                "type": "string",
+                "example": "Full day wedding photography package"
+              },
+              "eventDate": {
+                "type": "string",
+                "format": "date",
+                "example": "2024-06-15"
+              },
+              "photographerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174002"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174000"
+              },
+              "clientId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174001"
+              },
+              "photographerId": {
+                "type": "string",
+                "format": "uuid",
+                "example": "123e4567-e89b-12d3-a456-426614174002"
+              },
+              "title": {
+                "type": "string",
+                "example": "Wedding Photography - Smith Family"
+              },
+              "description": {
+                "type": "string",
+                "example": "Full day wedding photography package"
+              },
+              "eventDate": {
+                "type": "string",
+                "format": "date",
+                "example": "2024-06-15"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "CREATED",
+                  "IN_PROGRESS",
+                  "PHOTOS_UPLOADED",
+                  "CLIENT_REVIEW",
+                  "PAYMENT_PENDING",
+                  "PAID",
+                  "COMPLETED",
+                  "CANCELLED"
+                ],
+                "example": "CREATED"
+              },
+              "totalAmount": {
+                "type": "number",
+                "format": "decimal",
+                "example": 2500
+              },
+              "galleryUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://photocrm.com/gallery/123e4567-e89b-12d3-a456-426614174000"
+              },
+              "qrCode": {
+                "type": "string",
+                "example": "QR_CODE_DATA_FOR_ORDER_123e4567-e89b-12d3-a456-426614174000"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time",
+                "example": "2024-01-01T00:00:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Photos",
+      "key": "photos",
+      "operations": [
+        {
+          "id": "GET:/photos/order/{orderId}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/photos/order/{orderId}",
+          "identifierParam": "orderId",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "content": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174000"
+                    },
+                    "orderId": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "123e4567-e89b-12d3-a456-426614174001"
+                    },
+                    "filename": {
+                      "type": "string",
+                      "example": "IMG_001.jpg"
+                    },
+                    "originalUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/original/IMG_001.jpg"
+                    },
+                    "thumbnailUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/thumbnail/IMG_001.jpg"
+                    },
+                    "previewUrl": {
+                      "type": "string",
+                      "format": "uri",
+                      "example": "https://s3.amazonaws.com/photocrm-photos/preview/IMG_001.jpg"
+                    },
+                    "fileSize": {
+                      "type": "integer",
+                      "format": "int64",
+                      "example": 25600000
+                    },
+                    "mimeType": {
+                      "type": "string",
+                      "example": "image/jpeg"
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "example": {
+                        "width": 4000,
+                        "height": 3000,
+                        "camera": "Canon EOS R5"
+                      }
+                    },
+                    "uploadedAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-01T00:00:00Z"
+                    },
+                    "isSelected": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "selectionOrder": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "price": {
+                      "type": "number",
+                      "format": "decimal",
+                      "example": 25
+                    }
+                  }
+                }
+              },
+              "totalElements": {
+                "type": "integer",
+                "example": 50
+              },
+              "totalPages": {
+                "type": "integer",
+                "example": 3
+              },
+              "size": {
+                "type": "integer",
+                "example": 20
+              },
+              "number": {
+                "type": "integer",
+                "example": 0
+              },
+              "first": {
+                "type": "boolean",
+                "example": true
+              },
+              "last": {
+                "type": "boolean",
+                "example": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

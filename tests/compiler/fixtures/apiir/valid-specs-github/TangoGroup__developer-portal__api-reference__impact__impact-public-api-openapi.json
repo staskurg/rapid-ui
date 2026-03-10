@@ -1,0 +1,114 @@
+{
+  "api": {
+    "title": "Impact API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Report-outcome",
+      "key": "report-outcome",
+      "operations": [
+        {
+          "id": "POST:/api/v1/report-outcome",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/report-outcome",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "Custom",
+                  "Markdown"
+                ]
+              },
+              "data": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "milestoneKey": {
+                "type": "string"
+              },
+              "offeringId": {
+                "type": "string"
+              },
+              "offeringSessionId": {
+                "type": "string"
+              },
+              "participantIdOrEmail": {
+                "type": "string"
+              },
+              "reportingUserId": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Verify-offering-session-milestone",
+      "key": "verify-offering-session-milestone",
+      "operations": [
+        {
+          "id": "POST:/api/v1/verify-offering-session-milestone",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/verify-offering-session-milestone",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "userIdOrEmail",
+              "milestoneKey"
+            ],
+            "properties": {
+              "userIdOrEmail": {
+                "type": "string"
+              },
+              "milestoneKey": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "status"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "Ready",
+                  "Locked",
+                  "Completed",
+                  "PendingVerification",
+                  "Verified"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

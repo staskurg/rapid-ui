@@ -1,0 +1,2212 @@
+openapi: 3.0.3
+info:
+  title: AERODROME 1.0
+  description: This is a sample Aerodrome Server based on the OpenAPI 3.0 specification.
+  version: 1.0.0
+servers:
+  - url: https://779xgw90ll.execute-api.eu-central-1.amazonaws.com
+tags:
+  - name: login
+    description: Login operations
+  - name: location
+    description: google address lookup
+  - name: customer_payments
+    description: customer payments operations
+paths:
+  /prd/onboard/get_location_address:
+    post:
+      tags:
+        - location
+      summary: Send lat lon for get address
+      description: Send lat lon for get address
+      operationId: get_location_address
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 1234qwert
+                lat:
+                  type: number
+                  default: 30.23
+                lon:
+                  type: number
+                  default: 31.23
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      error:
+                        type: string
+                        default: Shlomo ha-Melekh St 4, Bnei Brak, Israel
+  /prd/onboard/login:
+    post:
+      tags:
+        - login
+      summary: Send for get operaator auth token
+      description: get operator token
+      operationId: loginoperator
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: test1@gmail.com
+                password:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      error:
+                        type: string
+                        enum:
+                          - user_not_found
+                          - user_not_authorized
+                          - user_not_confirmed
+                          - unknown_error
+  /prd/onboard/loginconsumer:
+    post:
+      tags:
+        - login
+      summary: Send for get customer auth token
+      description: get customer token
+      operationId: logincustomer
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                password:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      error:
+                        type: string
+                        enum:
+                          - user_not_found
+                          - user_not_authorized
+                          - user_not_confirmed
+                          - unknown_error
+  /prd/onboard/register_customer:
+    post:
+      tags:
+        - login
+      summary: Send for get customer auth token
+      description: get customer token
+      operationId: registercustomer
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                password:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      error:
+                        type: string
+                        enum:
+                          - user_exists
+                          - unknown_error
+  /prd/onboard/register_operator:
+    post:
+      tags:
+        - login
+      summary: Send for get customer auth token
+      description: get customer token
+      operationId: registeroperator
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                password:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                      error:
+                        type: string
+                        enum:
+                          - user_exists
+                          - unknown_error
+  /prd/onboard/validateoperatortoken:
+    post:
+      tags:
+        - login
+      summary: Validate operator token
+      description: validate operator token vs cognito
+      operationId: validateoperatortoken
+      requestBody:
+        description: send token for check
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        enum:
+                          - test1@gmail.com
+                          - ''
+  /prd/onboard/validatecustomertoken:
+    post:
+      tags:
+        - login
+      summary: Validate customer token
+      description: validate customer token vs cognito
+      operationId: validatecustomertoken
+      requestBody:
+        description: send token for check
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        enum:
+                          - baraktls@gmail.com
+                          - ''
+  /prd/onboard/confirm_cognito_user:
+    post:
+      tags:
+        - login
+      summary: Send for confirm user
+      description: send email and verification code
+      operationId: confirm_cognito_user
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                user_type:
+                  type: string
+                  enum:
+                    - customer
+                    - operator
+                  default: customer
+                verification_code:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: string
+                    default: baraktls@gmail.com
+                  error:
+                    type: string
+                    enum:
+                      - code_mismatch
+                      - code_expired
+                      - unknown_error
+  /prd/onboard/forgot_password:
+    post:
+      tags:
+        - login
+      summary: Send for forgot password
+      description: send email and user type (operator/customer)
+      operationId: forgot_password
+      requestBody:
+        description: Send for getconfirm forgot verification code in email
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                user_type:
+                  type: string
+                  enum:
+                    - customer
+                    - operator
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  forgot_sent:
+                    type: string
+                    default: baraktls@gmail.com
+                  error:
+                    type: string
+                    enum:
+                      - forgot_sent_error
+  /prd/onboard/confirm_forgot_cognito_password:
+    post:
+      tags:
+        - login
+      summary: Send for confirm user
+      description: send email and verification code
+      operationId: confirm_forgot_cognito_password
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                user_type:
+                  type: string
+                  enum:
+                    - customer
+                    - operator
+                  default: customer
+                password:
+                  type: string
+                  default: '12345678'
+                verification_code:
+                  type: string
+                  default: '12345678'
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        default: baraktls@gmail.com
+                      error:
+                        type: string
+                        enum:
+                          - code_expired
+                          - password_not_match_to_policy
+                          - user_not_found
+                          - code_mismatch
+                          - user_not_confirmed
+                          - forgot_confirm_error
+  /prd/onboard/resend_cognito_verification_code:
+    post:
+      tags:
+        - login
+      summary: resend verification code
+      description: resend verification code
+      operationId: resend_cognito_verification_code
+      requestBody:
+        description: send token and user type for send verification code to email
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  default: baraktls@gmail.com
+                user_type:
+                  type: string
+                  enum:
+                    - customer
+                    - operator
+                  default: customer
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sent:
+                     type: string
+                     default: baraktls@gmail.com
+                  error:
+                    type: string
+                    enum:
+                      - ''
+                      - 'error_to_send_verification_code'
+  /prd/onboard/getalltasks:
+    post:
+      tags:
+        - Tasks
+      summary: Get ALL available tasks
+      description:  Get ALL available tasks
+      operationId: getalltasks
+      requestBody:
+          description: Send for get auth token
+          content:
+            application/json:
+               schema:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    default: baraktls@gmail.com
+                  password:
+                    type: string
+                    default: '12345678'
+          required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+                        
+  /prd/onboard/getinvestigation:
+    post:
+      tags:
+        - Tasks
+      summary: get investigation
+      description:  Get ALL available tasks
+      operationId: getinvestigation
+      requestBody:
+          description: Get investigation
+          content:
+            application/json:
+               schema:
+                type: object
+                properties:
+                  user_type:
+                    type: string
+                    default: customer
+                  task_id:
+                    type: string
+                    default: 'gzwFKuo2JtoA'
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+                    
+          required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+                      
+  /prd/onboard/get_user_integrity:
+    post:
+      tags:
+        - get_user_integrity
+      summary: get investigation
+      description:  Get ALL available tasks
+      operationId: get_user_integrity
+      requestBody:
+          description: Get integrity
+          content:
+            application/json:
+               schema:
+                type: object
+                properties:
+                  user_type:
+                    type: string
+                    default: customer
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+          required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        
+                        
+  /prd/onboard/getavailablegear:
+    post:
+      tags: 
+        - Operator equipment
+      summary: Get available hardware
+      description: Get available hardware like Drones
+      operationId: getavailablegear
+      requestBody:
+        description: Get available hardware like Drones
+        content:
+          application/json:
+             schema:
+              type: object
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        
+  /prd/onboard/getusersrevices:
+    post:
+      tags:
+        - Services
+      summary: Get User Services
+      operationId: getusersrevices
+      requestBody:
+        description: Get User Services
+        content:
+          application/json:
+             schema:
+              type: object
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+        
+  /prd/payments/get_connected_account:
+    post:
+      tags:
+        - Payment
+      summary: Get connected account
+      operationId: get_connected_account
+      requestBody:
+        description: Get Connected Account
+        content:
+          application/json:
+             schema:
+              type: object
+              properties:
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        
+  /prd/onboard/updateworkarea:
+    post:
+      tags:
+        - Operator
+      operationId: updateworkarea
+      requestBody:
+        description: update workarea
+        content:
+          application/json:
+             schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+                coordinates:
+                  type: string
+                  default:  {"x": 4429053.083030339,"y": 3082980.921961852,"z": 3388505.0300322818}
+                radius:
+                  type: number
+                  default: 11,000
+                id:
+                  type: number
+                  default: 417
+        required: true
+      responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: object
+                      properties:
+                        message:
+                          type: string
+                          
+  /prd/onboard/getworkarea:
+    post:
+      tags:
+        - Operator
+      operationId: getworkarea
+      requestBody:
+        description: get workareas
+        content:
+          application/json:
+             schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+  
+  /prd/onboard/insertcamera:
+    post:
+      tags:
+        - Operator equipment
+      operationId: insertcamera
+      requestBody:
+        description: insert camera
+        content:
+          application/json:
+             schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+                name:
+                  type: string
+                  default: ZenmuseP1
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        
+  /prd/onboard/getallservices:
+    post:
+      tags:
+        - Operator
+      operationId: getallservices
+      requestBody:
+        description: get all services
+        content:
+          application/json:
+           schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+
+  /prd/onboard/operatorstasksdata:
+    post:
+      tags:
+       - Operator
+      operationId: operatorstasksdata
+      requestBody:
+        description: get all operator tasks data 
+        content:
+          application/json:
+           schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+       
+  /prd/onboard/update_customer_account_info:
+    post:
+      tags:
+        - account info
+      operationId: update_customer_account_info
+      requestBody:
+        description: get all operator tasks data 
+        content:
+          application/json:
+           schema:
+            type: object
+            properties:
+              access_token:
+                type: string
+                default: 123456789asdfgh
+              name:
+                type: string
+                default: John
+              last_name:
+                type: string
+                default: Williams
+              country:
+                type: string
+                default: United States
+              region:
+                type: string
+                default: NY
+              nickname:
+                type: string
+                default: John
+              company:
+                type: string
+                default: Will Co.
+              address:
+                type: string
+                default: 34 Hammilton
+              apartment:
+                type: string
+                default: 34
+              phone:
+                type: string
+                default: "000000"
+              postal_code:
+                type: string
+                default: "000000"
+              email:
+                type: string
+                default: uyt@jhu.com
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        
+  /prd/onboard/get_customer_account_info:
+      post:
+        tags:
+          - account info
+        operationId: get_customer_account_info
+        requestBody:
+          description: get customer account info
+          content:
+            application/json:
+             schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: object
+                      properties:
+                        message:
+                          type: string                        
+  /prd/payments/create_confirm_invoice:
+    post:
+      tags:
+        - customer_payments
+      summary: customer create invoice and pay
+      description: pay per set of tasks by default payment method.
+      operationId: create_confirm_invoice
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: '123456789asdfgh'
+                tasks_data:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Task'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  paid:
+                    type: boolean
+                    default: True
+                  payment_method_type:
+                    type: string
+                    enum:
+                      - 'card'
+                      - 'voucher'
+  /prd/payments/get_customer_payment_methods:
+    post:
+      tags:
+        - customer_payments
+      summary: get customer payments methods
+      description: get customer payments methods.
+      operationId: get_customer_payment_methods
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: '123456789asdfgh'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment_method'
+
+  /prd/payments/get_default_payment_method:
+    post:
+      tags:
+        - customer_payments
+      summary: get customer default payment method id
+      description: get customer default payment method id
+      operationId: get_default_payment_method
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: '123456789asdfgh'
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: string
+  /prd/onboard/change_customer_type:
+    summary: Change Customer Type
+    post:
+      summary: Change Customer Type
+      description: ''
+      operationId: ''
+      requestBody:
+        description: Send auth_token and customer_type to save/update DB
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+                customer_type:
+                  type: string
+                  enum:
+                    - Individual
+                    - Business
+                    - Corporation
+                  default: Individual
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                    changed:
+                      type: string
+                      default: baraktls@gmail.com
+                    error:
+                      type: string
+                      enum:
+                        - ''
+                        - email_not_found
+      tags:
+        - my account
+  /prd/onboard/get_customer_type:
+    summary: Get Customer Type
+    post:
+      summary: Get Customer Type
+      description: ''
+      operationId: ''
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_type:
+                    type: string
+                    default: Individual
+                  error:
+                    type: string
+      tags:
+        - my account
+        
+  /prd/payments/get_customer_invoices:
+    summary: Get Customer Invoices
+    post:
+      summary: Get Customer Invoices
+      description: ''
+      operationId: ''
+      requestBody:
+        description: Send for get auth token
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                access_token:
+                  type: string
+                  default: 123456789asdfgh
+        required: true
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  body:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      object:
+                          type: string
+                          default: 'Invoice'
+                      account_country:
+                        type: string
+                        default: 'US'
+                      account_name:
+                        type: string
+                      account_tax_ids:
+                        type: string
+                        default: 'Aerodrome'
+                        nullable: true
+                      amount_due:
+                        type: integer
+                      amount_paid:
+                        type: integer
+                      amount_remaining:
+                        type: integer
+                      amount_shipping:
+                        type: integer
+                      application:
+                        type: string
+                        nullable: true
+                      application_fee_amount:
+                        type: integer
+                        nullable: true
+                      attempt_count:
+                        type: integer
+                      attempted:
+                        type: boolean
+                      auto_advance:
+                        type: boolean
+                      automatic_tax:
+                        type: object
+                        properties:
+                          enabled:
+                            type: boolean
+                          liability:
+                            type: string
+                            nullable: true
+                          status:
+                            type: string
+                            nullable: true
+                      automatically_finalizes_at:
+                        type: string
+                        nullable: true
+                      billing_reason:
+                        type: string
+                      charge:
+                        type: string
+                        nullable: true
+                      collection_method:
+                        type: string
+                      created:
+                        type: integer
+                      currency:
+                        type: string
+                      custom_fields:
+                        type: string
+                        nullable: true
+                      customer:
+                        type: string
+                      customer_address:
+                        type: object
+                        properties:
+                          city:
+                            type: string
+                          country:
+                            type: string
+                          line1:
+                            type: string
+                          line2:
+                            type: string
+                            nullable: true
+                          postal_code:
+                            type: string
+                          state:
+                            type: string
+                      customer_email:
+                        type: string
+                      customer_name:
+                        type: string
+                      customer_phone:
+                        type: string
+                        nullable: true
+                      customer_shipping:
+                        type: string
+                        nullable: true
+                      customer_tax_exempt:
+                        type: string
+                      customer_tax_ids:
+                        type: array
+                        items:
+                          type: string
+                      default_payment_method:
+                        type: string
+                        nullable: true
+                      default_source:
+                        type: string
+                        nullable: true
+                      default_tax_rates:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            object:
+                              type: string
+                            active:
+                              type: boolean
+                            country:
+                              type: string
+                            created:
+                              type: integer
+                            description:
+                              type: string
+                              nullable: true
+                            display_name:
+                              type: string
+                            effective_percentage:
+                              type: number
+                              format: float
+                            inclusive:
+                              type: boolean
+                            jurisdiction:
+                              type: string
+                              nullable: true
+                            jurisdiction_level:
+                              type: string
+                              nullable: true
+                            livemode:
+                              type: boolean
+                            metadata:
+                              type: object
+                            percentage:
+                              type: number
+                              format: float
+                            state:
+                              type: string
+                              nullable: true
+                            tax_type:
+                              type: string
+                              nullable: true
+                      description:
+                        type: string
+                        nullable: true
+                      discount:
+                        type: string
+                        nullable: true
+                      discounts:
+                        type: array
+                        items:
+                          type: string
+                      due_date:
+                        type: string
+                        nullable: true
+                      effective_at:
+                        type: string
+                        nullable: true
+                      ending_balance:
+                        type: integer
+                        nullable: true
+                      footer:
+                        type: string
+                        nullable: true
+                      from_invoice:
+                        type: string
+                        nullable: true
+                      hosted_invoice_url:
+                        type: string
+                        nullable: true
+                      invoice_pdf:
+                        type: string
+                        nullable: true
+                      issuer:
+                        type: object
+                        properties:
+                          type:
+                            type: string
+                      last_finalization_error:
+                        type: string
+                        nullable: true
+                      latest_revision:
+                        type: string
+                        nullable: true
+                      lines:
+                        type: object
+                        properties:
+                          object:
+                            type: string
+                          data:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                object:
+                                  type: string
+                                amount:
+                                  type: integer
+                                amount_excluding_tax:
+                                  type: integer
+                                currency:
+                                  type: string
+                                description:
+                                  type: string
+                                discount_amounts:
+                                  type: array
+                                  items:
+                                    type: string
+                                discountable:
+                                  type: boolean
+                                discounts:
+                                  type: array
+                                  items:
+                                    type: string
+                                invoice:
+                                  type: string
+                                invoice_item:
+                                  type: string
+                                livemode:
+                                  type: boolean
+                                metadata:
+                                  type: object
+                                period:
+                                  type: object
+                                  properties:
+                                    end:
+                                      type: integer
+                                    start:
+                                      type: integer
+                                plan:
+                                  type: string
+                                  nullable: true
+                                price:
+                                  type: object
+                                  properties:
+                                    id:
+                                      type: string
+                                    object:
+                                      type: string
+                                    active:
+                                      type: boolean
+                                    billing_scheme:
+                                      type: string
+                                    created:
+                                      type: integer
+                                    currency:
+                                      type: string
+                                    custom_unit_amount:
+                                      type: string
+                                      nullable: true
+                                    livemode:
+                                      type: boolean
+                                    lookup_key:
+                                      type: string
+                                      nullable: true
+                                    metadata:
+                                      type: object
+                                    nickname:
+                                      type: string
+                                      nullable: true
+                                    product:
+                                      type: string
+                                    recurring:
+                                      type: string
+                                      nullable: true
+                                    tax_behavior:
+                                      type: string
+                                    tiers_mode:
+                                      type: string
+                                      nullable: true
+                                    transform_quantity:
+                                      type: string
+                                      nullable: true
+                                    type:
+                                      type: string
+                                    unit_amount:
+                                      type: integer
+                                    unit_amount_decimal:
+                                      type: string
+                                proration:
+                                  type: boolean
+                                proration_details:
+                                  type: object
+                                  properties:
+                                    credited_items:
+                                      type: string
+                                      nullable: true
+                                quantity:
+                                  type: integer
+                                subscription:
+                                  type: string
+                                  nullable: true
+                                tax_amounts:
+                                  type: array
+                                  items:
+                                    type: object
+                                    properties:
+                                      amount:
+                                        type: integer
+                                      inclusive:
+                                        type: boolean
+                                      tax_rate:
+                                        type: string
+                                      taxability_reason:
+                                        type: string
+                                        nullable: true
+                                      taxable_amount:
+                                        type: integer
+                                tax_rates:
+                                  type: array
+                                  items:
+                                    type: string
+                                type:
+                                  type: string
+                                unit_amount_excluding_tax:
+                                  type: string
+                          has_more:
+                            type: boolean
+                          total_count:
+                            type: integer
+                          url:
+                            type: string
+                      livemode:
+                        type: boolean
+                      metadata:
+                        type: object
+                      next_payment_attempt:
+                        type: string
+                        nullable: true
+                      number:
+                        type: string
+                        nullable: true
+                      on_behalf_of:
+                        type: string
+                        nullable: true
+                      paid:
+                        type: boolean
+                      paid_out_of_band:
+                        type: boolean
+                      payment_intent:
+                        type: string
+                        nullable: true
+                      payment_settings:
+                        type: object
+                        properties:
+                          default_mandate:
+                            type: string
+                            nullable: true
+                          payment_method_options:
+                            type: string
+                            nullable: true
+                          payment_method_types:
+                            type: string
+                            nullable: true
+                      period_end:
+                        type: integer
+                      period_start:
+                        type: integer
+                      post_payment_credit_notes_amount:
+                        type: integer
+                      pre_payment_credit_notes_amount:
+                        type: integer
+                      quote:
+                        type: string
+                        nullable: true
+                      receipt_number:
+                        type: string
+                        nullable: true
+                      rendering:
+                        type: object
+                        properties:
+                          amount_tax_display:
+                            type: string
+                            nullable: true
+                          pdf:
+                            type: object
+                            properties:
+                              page_size:
+                                type: string
+                      shipping_cost:
+                        type: string
+                        nullable: true
+                      shipping_details:
+                        type: string
+                        nullable: true
+                      starting_balance:
+                        type: integer
+                      statement_descriptor:
+                        type: string
+                        nullable: true
+                      status:
+                        type: string
+                      status_transitions:
+                        type: object
+                        properties:
+                          finalized_at:
+                            type: string
+                            nullable: true
+                          marked_uncollectible_at:
+                            type: string
+                            nullable: true
+                          paid_at:
+                            type: string
+                            nullable: true
+                          voided_at:
+                            type: string
+                            nullable: true
+                      subscription:
+                        type: string
+                        nullable: true
+                      subscription_details:
+                        type: object
+                        properties:
+                          metadata:
+                            type: string
+                            nullable: true
+                      subtotal:
+                        type: integer
+                      subtotal_excluding_tax:
+                        type: integer
+                      tax:
+                        type: integer
+                      test_clock:
+                        type: string
+                        nullable: true
+                      total:
+                        type: integer
+                      total_discount_amounts:
+                        type: array
+                        items:
+                          type: string
+                      total_excluding_tax:
+                        type: integer
+                      total_tax_amounts:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            amount:
+                              type: integer
+                            inclusive:
+                              type: boolean
+                            tax_rate:
+                              type: string
+                            taxability_reason:
+                              type: string
+                              nullable: true
+                            taxable_amount:
+                              type: integer
+                      transfer_data:
+                        type: string
+                        nullable: true
+                      webhooks_delivered_at:
+                        type: integer
+                      error:
+                        type: string
+                        enum: 
+                           - ''
+      tags:
+       - customer_payments
+            
+ 
+           
+  /prd/payments/set_default_payment_method:
+        summary: Set Customer Default Payment Method
+        post:
+          summary: Set Customer Default Payment Method
+          description: ''
+          operationId: ''
+          requestBody:
+            description: Send for get auth token
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    access_token:
+                      type: string
+                      default: 123456789asdfgh
+                    payment_method_id:
+                      type: string
+                      default: 'pm_1PjyXIJ5o5KwE7vrit18QJJr'
+            required: true
+          responses:
+            '200':
+              description: Successful operation
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      body:
+                        type: string
+                      error:
+                          type: string
+                          enum: 
+                          - ''
+          tags:
+            - customer_payments
+  /prd/payments/create_customer_if_not_exist:
+        summary: Create a customer on addinf payment method if doesn't exist
+        post:
+          summary: Create a customer on addinf payment method if doesn't exist
+          description: ''
+          operationId: ''
+          requestBody:
+            description: Send for get auth token
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    access_token:
+                      type: string
+                      default: 123456789asdfgh
+                    address:
+                      type: string
+                    full_name:
+                      type: string
+            required: true
+          responses:
+            '200':
+              description: Successful operation
+              content:
+                application/json:
+                  schema:
+                    type: object
+                    properties:
+                      created:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          object:
+                            type: string
+                          address:
+                            type: object
+                            properties:
+                              city:
+                                type: string
+                              country:
+                                type: string
+                              line1:
+                                type: string
+                              line2:
+                                type: string
+                                nullable: true
+                              postal_code:
+                                type: string
+                              state:
+                                type: string
+                          balance:
+                            type: integer
+                          created:
+                            type: integer
+                          currency:
+                            type: string
+                          default_source:
+                            type: string
+                          delinquent:
+                            type: boolean
+                          description:
+                            type: string
+                            nullable: true
+                          discount:
+                            type: string
+                            nullable: true
+                          email:
+                            type: string
+                          invoice_prefix:
+                            type: string
+                          invoice_settings:
+                            type: object
+                            properties:
+                              custom_fields:
+                                type: string
+                                nullable: true
+                              default_payment_method:
+                                type: string
+                              footer:
+                                type: string
+                                nullable: true
+                              rendering_options:
+                                type: string
+                                nullable: true
+                          livemode:
+                            type: boolean
+                          metadata:
+                            type: object
+                            additionalProperties:
+                              type: string
+                          name:
+                            type: string
+                          next_invoice_sequence:
+                            type: integer
+                          phone:
+                            type: string
+                            nullable: true
+                          preferred_locales:
+                            type: array
+                            items:
+                              type: string
+                          shipping:
+                            type: string
+                            nullable: true
+                          tax_exempt:
+                            type: string
+                          test_clock:
+                            type: string
+                            nullable: true
+                          error:
+                              type: string
+                              enum: 
+                              - ''
+          tags:
+            - customer_payments
+            
+  /prd/payments/delete_customer_payment_methods:
+      summary: Delete Customer Payment Methods
+      post:
+        summary: Delete Customer Payment Methods
+        description: ''
+        operationId: ''
+        requestBody:
+          description: Send for get auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+                  payment_method_id:
+                    type: string
+                    default: 'pm_1PjyXIJ5o5KwE7vrit18QJJr'
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+        tags:
+          - customer_payments
+          
+  /prd/payments/create_setup_payment_method:
+      summary: Get Customer Payments
+      post:
+        summary: Get Customer Payments
+        description: ''
+        operationId: ''
+        requestBody:
+          description: Send for get auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+                  user_type:
+                    type: string
+                    default: 'customer'
+                    enum:
+                    - 'customer'
+                    - 'operator'
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+                    error: 
+                      enum: 
+                      - ''
+        tags:
+          - customer_payments
+          
+  /prd/payments/get_customer_payments:
+      summary: Create Setup Payment Method
+      post:
+        summary: Create Setup Payment Method
+        description: ''
+        operationId: ''
+        requestBody:
+          description: Send for get auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        object:
+                          type: string
+                        amount:
+                          type: integer
+                        amount_capturable:
+                          type: integer
+                        amount_details:
+                          type: object
+                          properties:
+                            tip:
+                              type: object
+                              additionalProperties:
+                                type: string
+                        amount_received:
+                          type: integer
+                        application:
+                          type: string
+                          nullable: true
+                        application_fee_amount:
+                          type: string
+                          nullable: true
+                        automatic_payment_methods:
+                          type: string
+                          nullable: true
+                        canceled_at:
+                          type: string
+                          nullable: true
+                        cancellation_reason:
+                          type: string
+                          nullable: true
+                        capture_method:
+                          type: string
+                        client_secret:
+                          type: string
+                        confirmation_method:
+                          type: string
+                        created:
+                          type: integer
+                        currency:
+                          type: string
+                        customer:
+                          type: string
+                        description:
+                          type: string
+                          nullable: true
+                        invoice:
+                          type: string
+                        last_payment_error:
+                          type: string
+                          nullable: true
+                        latest_charge:
+                          type: string
+                        livemode:
+                          type: boolean
+                        metadata:
+                          type: object
+                          additionalProperties:
+                            type: string
+                        next_action:
+                          type: string
+                          nullable: true
+                        on_behalf_of:
+                          type: string
+                          nullable: true
+                        payment_method:
+                          type: string
+                        payment_method_configuration_details:
+                          type: string
+                          nullable: true
+                        payment_method_options:
+                          type: object
+                          properties:
+                            card:
+                              type: object
+                              properties:
+                                installments:
+                                  type: string
+                                  nullable: true
+                                mandate_options:
+                                  type: string
+                                  nullable: true
+                                network:
+                                  type: string
+                                  nullable: true
+                                request_three_d_secure:
+                                  type: string
+                            cashapp:
+                              type: object
+                              additionalProperties:
+                                type: string
+                            us_bank_account:
+                              type: object
+                              properties:
+                                mandate_options:
+                                  type: object
+                                  additionalProperties:
+                                    type: string
+                                verification_method:
+                                  type: string
+                        payment_method_types:
+                          type: array
+                          items:
+                            type: string
+                        processing:
+                          type: string
+                          nullable: true
+                        receipt_email:
+                          type: string
+                          nullable: true
+                        review:
+                          type: string
+                          nullable: true
+                        setup_future_usage:
+                          type: string
+                          nullable: true
+                        shipping:
+                          type: string
+                          nullable: true
+                        source:
+                          type: string
+                          nullable: true
+                        statement_descriptor:
+                          type: string
+                          nullable: true
+                        statement_descriptor_suffix:
+                          type: string
+                          nullable: true
+                        status:
+                          type: string
+                        transfer_data:
+                          type: string
+                          nullable: true
+                        transfer_group:
+                          type: string
+                          nullable: true
+                        error: 
+                          enum: 
+                          - ''
+        tags:
+          - customer_payments
+          
+  /prd/payments/attach_payment_method:
+      summary: Attach Payment Method
+      post:
+        summary: Attach Payment Method
+        description: ''
+        operationId: ''
+        requestBody:
+          description: Send for get auth token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    default: 123456789asdfgh
+                  user_type:
+                    type: string
+                    default: 'customer'
+                    enum:
+                    - 'customer'
+                    - 'operator'
+                  payment_mthod:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        default: "pm_1PrgRzJ5o5KwE7vrSmfSKjqW"
+                      object:
+                        type: string
+                        default: "payment_method"
+                      allow_redisplay:
+                        type: string
+                        default: "unspecified"
+                      billing_details:
+                        type: object
+                        properties:
+                          address:
+                            type: object
+                            properties:
+                              city:
+                                type: string
+                                nullable: true
+                                default: null
+                              country:
+                                type: string
+                                nullable: true
+                                default: null
+                              line1:
+                                type: string
+                                nullable: true
+                                default: null
+                              line2:
+                                type: string
+                                nullable: true
+                                default: null
+                              postal_code:
+                                type: string
+                                nullable: true
+                                default: null
+                              state:
+                                type: string
+                                nullable: true
+                                default: null
+                          email:
+                            type: string
+                            nullable: true
+                            default: null
+                          name:
+                            type: string
+                            default: "Milana"
+                          phone:
+                            type: string
+                            nullable: true
+                            default: null
+                      card:
+                        type: object
+                        properties:
+                          brand:
+                            type: string
+                            default: "mastercard"
+                          checks:
+                            type: object
+                            properties:
+                              address_line1_check:
+                                type: string
+                                nullable: true
+                                default: null
+                              address_postal_code_check:
+                                type: string
+                                nullable: true
+                                default: null
+                              cvc_check:
+                                type: string
+                                nullable: true
+                                default: null
+                          country:
+                            type: string
+                            nullable: true
+                            default: null
+                          display_brand:
+                            type: string
+                            default: "mastercard"
+                          exp_month:
+                            type: integer
+                            default: 4
+                          exp_year:
+                            type: integer
+                            default: 2040
+                          funding:
+                            type: string
+                            default: "unknown"
+                          generated_from:
+                            type: string
+                            nullable: true
+                            default: null
+                          last4:
+                            type: string
+                            default: "2345"
+                          networks:
+                            type: object
+                            properties:
+                              available:
+                                type: array
+                                items:
+                                  type: string
+                                default:
+                                  - "mastercard"
+                              preferred:
+                                type: string
+                                nullable: true
+                                default: null
+                          three_d_secure_usage:
+                            type: object
+                            properties:
+                              supported:
+                                type: boolean
+                                default: true
+                          wallet:
+                            type: string
+                            nullable: true
+                            default: null
+                      created:
+                        type: integer
+                        default: 1724592347
+                      customer:
+                        type: string
+                        nullable: true
+                        default: null
+                      livemode:
+                        type: boolean
+                        default: false
+                      type:
+                        type: string
+                        default: "card"
+          required: true
+        responses:
+          '200':
+            description: Successful operation
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    body:
+                      type: string
+                    error: 
+                      enum: 
+                      - ''
+        tags:
+          - customer_payments
+components:
+  schemas:
+    Cartesian_point:
+      type: object
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        z:
+          type: number
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        coordinates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Cartesian_point'
+        display_name:
+          type: string
+        GSD:
+          type: number
+        overlap_x:
+          type: integer
+        overlap_y:
+          type: integer
+        prefTime:
+          type: string
+        prefEndTime:
+          type: string
+        price:
+          type: number
+        services:
+          type: array
+          items:
+           enum:
+           - 'Mapping and Measurements'
+           - '3D Modeling Real estate'
+           - '3D Modeling Construction'
+           - 'Line Clearancy'
+           - 'Line Connectors'
+           - '3D Pole Modeling'
+           - 'Tower Inspection'
+    Card:
+      type: object
+      properties:
+        brand:
+          type: string
+          enum:
+            - 'mastercard'
+            - 'visa'
+        last4:
+           type: string
+           default: '4350'
+        exp_month:
+           type: integer
+           default: 12
+        exp_year:
+           type: integer
+           default: 28
+    Payment_method:
+      type: object
+      properties:
+        billing_details:
+          type: object
+          properties:
+            name:
+              type: string
+        card:
+          $ref: '#/components/schemas/Card'                      

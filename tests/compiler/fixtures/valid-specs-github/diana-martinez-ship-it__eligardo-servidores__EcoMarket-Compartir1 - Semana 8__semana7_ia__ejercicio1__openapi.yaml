@@ -1,0 +1,370 @@
+openapi: 3.0.0
+info:
+  title: EcoMarket Products API
+  version: 1.0.0
+  description: API REST para gestión de productos con validación robusta y manejo de errores estandarizado
+
+servers:
+  - url: http://localhost:8000
+    description: Servidor local de desarrollo
+
+paths:
+  /api/v1/products:
+    get:
+      summary: Listar productos
+      description: Obtiene una lista paginada de productos con filtros opcionales
+      tags:
+        - Products
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: currency
+          in: query
+          schema:
+            type: string
+            enum: [MXN, USD, EUR]
+        - name: min_price
+          in: query
+          schema:
+            type: number
+            minimum: 0
+        - name: max_price
+          in: query
+          schema:
+            type: number
+            minimum: 0
+      responses:
+        '200':
+          description: Lista de productos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListResponse'
+        '400':
+          description: Parámetros inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    post:
+      summary: Crear producto
+      description: Crea un nuevo producto con validación completa
+      tags:
+        - Products
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProduct'
+            examples:
+              valid:
+                summary: Producto válido
+                value:
+                  name: "Laptop Ecológica"
+                  price: 899.99
+                  currency: "MXN"
+                  tags: ["tecnología", "sostenible"]
+              invalid_price:
+                summary: Precio negativo (inválido)
+                value:
+                  name: "Producto"
+                  price: -10
+                  currency: "MXN"
+      responses:
+        '201':
+          description: Producto creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Payload muy grande
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/products/{id}:
+    get:
+      summary: Obtener producto
+      description: Obtiene un producto por su ID
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Producto encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    put:
+      summary: Actualizar producto
+      description: Actualiza un producto existente (campos opcionales)
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProduct'
+      responses:
+        '200':
+          description: Producto actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      summary: Eliminar producto
+      description: Elimina un producto por su ID
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Producto eliminado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+        '404':
+          description: Producto no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - price
+        - currency
+        - tags
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+          example: "Laptop Ecológica"
+        price:
+          type: number
+          minimum: 0
+          example: 899.99
+        currency:
+          type: string
+          enum: [MXN, USD, EUR]
+          example: "MXN"
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          example: ["tecnología", "sostenible"]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-18T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-18T12:00:00Z"
+    
+    CreateProduct:
+      type: object
+      required:
+        - name
+        - price
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [MXN, USD, EUR]
+          default: "MXN"
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          default: []
+    
+    UpdateProduct:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 80
+        price:
+          type: number
+          minimum: 0
+        currency:
+          type: string
+          enum: [MXN, USD, EUR]
+        tags:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+    
+    ErrorDetail:
+      type: object
+      properties:
+        field:
+          type: string
+          nullable: true
+        message:
+          type: string
+    
+    ErrorObject:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+            - BAD_REQUEST
+            - VALIDATION_ERROR
+            - NOT_FOUND
+            - CONFLICT
+            - INTERNAL_ERROR
+            - PAYLOAD_TOO_LARGE
+        msg:
+          type: string
+        details:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    
+    SuccessResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        error:
+          type: object
+          nullable: true
+        meta:
+          type: object
+    
+    ListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        error:
+          type: object
+          nullable: true
+        meta:
+          type: object
+          properties:
+            page:
+              type: integer
+            limit:
+              type: integer
+            total:
+              type: integer
+            totalPages:
+              type: integer
+            timestamp:
+              type: string
+              format: date-time
+    
+    DeleteResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            deleted:
+              type: boolean
+            id:
+              type: string
+              format: uuid
+        error:
+          type: object
+          nullable: true
+        meta:
+          type: object
+    
+    ErrorResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          nullable: true
+        error:
+          $ref: '#/components/schemas/ErrorObject'
+        meta:
+          type: object

@@ -1,0 +1,708 @@
+{
+  "api": {
+    "title": "API Kursantów z Autoryzacją JWT",
+    "version": "2.0"
+  },
+  "resources": [
+    {
+      "name": "Admin",
+      "key": "admin",
+      "operations": [
+        {
+          "id": "GET:/admin/users",
+          "method": "GET",
+          "kind": "list",
+          "path": "/admin/users",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "count": {
+                "type": "integer",
+                "example": 5
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "UzytkownikID": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "Username": {
+                      "type": "string",
+                      "example": "admin"
+                    },
+                    "Email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "admin@example.com"
+                    },
+                    "Rola": {
+                      "type": "string",
+                      "enum": [
+                        "admin",
+                        "user"
+                      ],
+                      "example": "admin"
+                    },
+                    "DataRejestracji": {
+                      "type": "string",
+                      "format": "date-time",
+                      "example": "2024-01-15T10:30:00Z"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/admin/users/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/admin/users/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Użytkownik został usunięty"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "GET:/auth/me",
+          "method": "GET",
+          "kind": "list",
+          "path": "/auth/me",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "user"
+                    ],
+                    "example": "admin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "example": "admin"
+              },
+              "password": {
+                "type": "string",
+                "example": "admin123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Zalogowano pomyślnie"
+              },
+              "token": {
+                "type": "string",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "admin@example.com"
+                  },
+                  "role": {
+                    "type": "string",
+                    "enum": [
+                      "admin",
+                      "user"
+                    ],
+                    "example": "admin"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password",
+              "email"
+            ],
+            "properties": {
+              "username": {
+                "type": "string",
+                "minLength": 3,
+                "example": "jan_kowalski"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 6,
+                "example": "bezpieczne_haslo123"
+              },
+              "email": {
+                "type": "string",
+                "format": "email",
+                "example": "jan.kowalski@example.com"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Operacja zakończona pomyślnie"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kursanci",
+      "key": "kursanci",
+      "operations": [
+        {
+          "id": "GET:/kursanci",
+          "method": "GET",
+          "kind": "list",
+          "path": "/kursanci",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "count": {
+                "type": "integer",
+                "example": 15
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "KursantID": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "Imie": {
+                      "type": "string",
+                      "example": "Jan"
+                    },
+                    "Nazwisko": {
+                      "type": "string",
+                      "example": "Kowalski"
+                    },
+                    "Email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "jan.kowalski@example.com"
+                    },
+                    "DataUrodzenia": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "example": "1990-05-15"
+                    },
+                    "Miasto": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "Warszawa"
+                    },
+                    "DodanePrzez": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1,
+                      "description": "ID użytkownika, który dodał kursanta"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/kursanci/random",
+          "method": "GET",
+          "kind": "list",
+          "path": "/kursanci/random",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Wylosowano kursanta"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "KursantID": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "Imie": {
+                    "type": "string",
+                    "example": "Jan"
+                  },
+                  "Nazwisko": {
+                    "type": "string",
+                    "example": "Kowalski"
+                  },
+                  "Email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "jan.kowalski@example.com"
+                  },
+                  "DataUrodzenia": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true,
+                    "example": "1990-05-15"
+                  },
+                  "Miasto": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "Warszawa"
+                  },
+                  "DodanePrzez": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 1,
+                    "description": "ID użytkownika, który dodał kursanta"
+                  }
+                }
+              },
+              "drawn_by": {
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/kursanci/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/kursanci/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "KursantID": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "Imie": {
+                    "type": "string",
+                    "example": "Jan"
+                  },
+                  "Nazwisko": {
+                    "type": "string",
+                    "example": "Kowalski"
+                  },
+                  "Email": {
+                    "type": "string",
+                    "format": "email",
+                    "example": "jan.kowalski@example.com"
+                  },
+                  "DataUrodzenia": {
+                    "type": "string",
+                    "format": "date",
+                    "nullable": true,
+                    "example": "1990-05-15"
+                  },
+                  "Miasto": {
+                    "type": "string",
+                    "nullable": true,
+                    "example": "Warszawa"
+                  },
+                  "DodanePrzez": {
+                    "type": "integer",
+                    "nullable": true,
+                    "example": 1,
+                    "description": "ID użytkownika, który dodał kursanta"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/kursanci/random/{count}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/kursanci/random/{count}",
+          "identifierParam": "count",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Wylosowano 3 kursantów"
+              },
+              "requested": {
+                "type": "integer",
+                "example": 3
+              },
+              "drawn": {
+                "type": "integer",
+                "example": 3
+              },
+              "total_available": {
+                "type": "integer",
+                "example": 15
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "KursantID": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "Imie": {
+                      "type": "string",
+                      "example": "Jan"
+                    },
+                    "Nazwisko": {
+                      "type": "string",
+                      "example": "Kowalski"
+                    },
+                    "Email": {
+                      "type": "string",
+                      "format": "email",
+                      "example": "jan.kowalski@example.com"
+                    },
+                    "DataUrodzenia": {
+                      "type": "string",
+                      "format": "date",
+                      "nullable": true,
+                      "example": "1990-05-15"
+                    },
+                    "Miasto": {
+                      "type": "string",
+                      "nullable": true,
+                      "example": "Warszawa"
+                    },
+                    "DodanePrzez": {
+                      "type": "integer",
+                      "nullable": true,
+                      "example": 1,
+                      "description": "ID użytkownika, który dodał kursanta"
+                    }
+                  }
+                }
+              },
+              "drawn_by": {
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/kursanci",
+          "method": "POST",
+          "kind": "create",
+          "path": "/kursanci",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "Imie",
+              "Nazwisko",
+              "Email"
+            ],
+            "properties": {
+              "Imie": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Jan"
+              },
+              "Nazwisko": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Kowalski"
+              },
+              "Email": {
+                "type": "string",
+                "format": "email",
+                "example": "jan.kowalski@example.com"
+              },
+              "DataUrodzenia": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "example": "1990-05-15"
+              },
+              "Miasto": {
+                "type": "string",
+                "nullable": true,
+                "example": "Warszawa"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Kursant został dodany pomyślnie"
+              },
+              "added_by": {
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/kursanci/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/kursanci/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "Imie",
+              "Nazwisko",
+              "Email"
+            ],
+            "properties": {
+              "Imie": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Jan"
+              },
+              "Nazwisko": {
+                "type": "string",
+                "minLength": 1,
+                "example": "Kowalski"
+              },
+              "Email": {
+                "type": "string",
+                "format": "email",
+                "example": "jan.kowalski@example.com"
+              },
+              "DataUrodzenia": {
+                "type": "string",
+                "format": "date",
+                "nullable": true,
+                "example": "1990-05-15"
+              },
+              "Miasto": {
+                "type": "string",
+                "nullable": true,
+                "example": "Warszawa"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Dane kursanta zostały zaktualizowane"
+              },
+              "updated_by": {
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/kursanci/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/kursanci/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Kursant został usunięty"
+              },
+              "deleted_by": {
+                "type": "string",
+                "example": "admin"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Public",
+      "key": "public",
+      "operations": [
+        {
+          "id": "GET:/",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Witaj w API Kursantów z Autoryzacją JWT!"
+              },
+              "version": {
+                "type": "string",
+                "example": "2.0"
+              },
+              "database": {
+                "type": "string",
+                "example": "SQLite"
+              },
+              "authorization": {
+                "type": "string",
+                "example": "JWT (JSON Web Tokens)"
+              },
+              "endpoints": {
+                "type": "object",
+                "description": "Lista dostępnych endpointów"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "OK"
+              },
+              "database": {
+                "type": "string",
+                "example": "Connected (SQLite)"
+              },
+              "database_path": {
+                "type": "string",
+                "example": "kursanci_auth.db"
+              },
+              "message": {
+                "type": "string",
+                "example": "Połączenie z bazą danych działa poprawnie"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

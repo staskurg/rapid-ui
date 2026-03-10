@@ -1,0 +1,231 @@
+{
+  "api": {
+    "title": "SAGE API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "A2A",
+      "key": "a2a",
+      "operations": [
+        {
+          "id": "sendMessage",
+          "method": "POST",
+          "kind": "create",
+          "path": "/a2a:sendMessage",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "sender_did",
+              "receiver_did",
+              "message",
+              "timestamp",
+              "signature"
+            ],
+            "properties": {
+              "sender_did": {
+                "type": "string",
+                "description": "Sender's Decentralized Identifier",
+                "example": "did:sage:ethereum:0x123..."
+              },
+              "receiver_did": {
+                "type": "string",
+                "description": "Receiver's Decentralized Identifier",
+                "example": "did:sage:ethereum:0x456..."
+              },
+              "message": {
+                "type": "string",
+                "format": "base64",
+                "description": "Encrypted message payload"
+              },
+              "timestamp": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Unix timestamp (seconds)"
+              },
+              "signature": {
+                "type": "string",
+                "format": "base64",
+                "description": "Message signature (Ed25519)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "response": {
+                "type": "string",
+                "format": "base64",
+                "description": "Encrypted response message"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session ID (for subsequent messages)"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Debug",
+      "key": "debug",
+      "operations": [
+        {
+          "id": "getKemPublicKey",
+          "method": "GET",
+          "kind": "list",
+          "path": "/debug/kem-pub",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "kem_public_key": {
+                "type": "string",
+                "format": "base64",
+                "description": "X25519 public key (32 bytes, base64-encoded)"
+              }
+            }
+          }
+        },
+        {
+          "id": "getServerDID",
+          "method": "GET",
+          "kind": "list",
+          "path": "/debug/server-did",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "did": {
+                "type": "string",
+                "example": "did:sage:ethereum:0xABC..."
+              }
+            }
+          }
+        },
+        {
+          "id": "registerAgent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/debug/register-agent",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "did",
+              "public_key",
+              "public_kem_key"
+            ],
+            "properties": {
+              "did": {
+                "type": "string",
+                "description": "Agent's Decentralized Identifier",
+                "example": "did:sage:ethereum:0xABC..."
+              },
+              "name": {
+                "type": "string",
+                "description": "Agent's display name"
+              },
+              "is_active": {
+                "type": "boolean",
+                "default": true
+              },
+              "public_key": {
+                "type": "string",
+                "format": "base64",
+                "description": "Ed25519 public key for signature verification (32 bytes)"
+              },
+              "public_kem_key": {
+                "type": "string",
+                "format": "base64",
+                "description": "X25519 public key for HPKE (32 bytes)"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "agent registered"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/debug/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy"
+                ]
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "sessions": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "type": "integer"
+                  },
+                  "total": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Protected",
+      "key": "protected",
+      "operations": [
+        {
+          "id": "protectedEndpoint",
+          "method": "POST",
+          "kind": "create",
+          "path": "/protected",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "encrypted_data": {
+                "type": "string",
+                "format": "base64"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "decrypted_data": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

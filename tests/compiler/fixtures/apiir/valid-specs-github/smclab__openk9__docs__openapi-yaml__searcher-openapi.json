@@ -1,0 +1,463 @@
+{
+  "api": {
+    "title": "Searcher Service",
+    "version": "3.1.0-SNAPSHOT"
+  },
+  "resources": [
+    {
+      "name": "Query Analysis API",
+      "key": "query-analysis-api",
+      "operations": [
+        {
+          "id": "query-analysis",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/searcher/v1/query-analysis",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "searchText": {
+                "type": "string",
+                "description": "Search text to perform query analysis"
+              },
+              "tokens": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string",
+                      "description": "Text associated to analysis"
+                    },
+                    "start": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "Character offset where analysis starts"
+                    },
+                    "end": {
+                      "type": "integer",
+                      "format": "int32",
+                      "description": "Character offset where analysis ends"
+                    },
+                    "token": {
+                      "type": "object",
+                      "additionalProperties": {},
+                      "description": "List of token associated to analysis"
+                    },
+                    "pos": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int32"
+                      },
+                      "description": "Token position for analysis"
+                    }
+                  }
+                },
+                "description": "List of QueryAnalysisToken accepted by user"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "searchText": {
+                "type": "string",
+                "description": "Search text where performed query analysis"
+              },
+              "analysis": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "text": {
+                      "type": "string"
+                    },
+                    "start": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "end": {
+                      "type": "integer",
+                      "format": "int32"
+                    },
+                    "tokens": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": {}
+                      }
+                    },
+                    "pos": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer",
+                        "format": "int32"
+                      }
+                    }
+                  }
+                },
+                "description": "List of QueryAnalysisToken describing performed analysis"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search API",
+      "key": "search-api",
+      "operations": [
+        {
+          "id": "search",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/searcher/v1/search",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "searchQuery": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entityType": {
+                      "type": "string",
+                      "description": "Used for specify entityType to search in case of tokenType ENTITY"
+                    },
+                    "entityName": {
+                      "type": "string",
+                      "description": "Used for specify entityName to search in case of tokenType ENTITY"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token Type to specify type of ParserSearchToken"
+                    },
+                    "keywordKey": {
+                      "type": "string",
+                      "description": "Used to specify specific keyword field to perform search"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of strings used to perform search. In case of multiple strings, search logic (MUST/SHOULD/...) depends on Openk9 search config"
+                    },
+                    "extra": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Used to specify extra configurations to overwrite default configurations"
+                    },
+                    "filter": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "description": "List of ParserSearchToken to compose search query."
+              },
+              "range": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "description": "List of integer for pagination where first element is start element and second element is page size"
+              },
+              "afterKey": {
+                "type": "string",
+                "description": "After key used for pagination in suggestions endpoint"
+              },
+              "suggestKeyword": {
+                "type": "string",
+                "description": "Keyword used to filter options in suggestions endpoint"
+              },
+              "suggestionCategoryId": {
+                "type": "integer",
+                "format": "uuid",
+                "description": "Unique string that identifies the Suggestion Category to return suggestions"
+              },
+              "order": {
+                "type": "string",
+                "description": "How to order suggestions"
+              },
+              "sort": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": "List of objects to define sort logic"
+              },
+              "sortAfterKey": {
+                "type": "string",
+                "description": "After key used for pagination when sort is present"
+              },
+              "language": {
+                "type": "string",
+                "description": "Language used to apply search in specific language."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "description": "List of results"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Number of results obtained"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Search Query API",
+      "key": "search-query-api",
+      "operations": [
+        {
+          "id": "search-query",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/searcher/v1/search-query",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "searchQuery": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entityType": {
+                      "type": "string",
+                      "description": "Used for specify entityType to search in case of tokenType ENTITY"
+                    },
+                    "entityName": {
+                      "type": "string",
+                      "description": "Used for specify entityName to search in case of tokenType ENTITY"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token Type to specify type of ParserSearchToken"
+                    },
+                    "keywordKey": {
+                      "type": "string",
+                      "description": "Used to specify specific keyword field to perform search"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of strings used to perform search. In case of multiple strings, search logic (MUST/SHOULD/...) depends on Openk9 search config"
+                    },
+                    "extra": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Used to specify extra configurations to overwrite default configurations"
+                    },
+                    "filter": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "description": "List of ParserSearchToken to compose search query."
+              },
+              "range": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "description": "List of integer for pagination where first element is start element and second element is page size"
+              },
+              "afterKey": {
+                "type": "string",
+                "description": "After key used for pagination in suggestions endpoint"
+              },
+              "suggestKeyword": {
+                "type": "string",
+                "description": "Keyword used to filter options in suggestions endpoint"
+              },
+              "suggestionCategoryId": {
+                "type": "integer",
+                "format": "uuid",
+                "description": "Unique string that identifies the Suggestion Category to return suggestions"
+              },
+              "order": {
+                "type": "string",
+                "description": "How to order suggestions"
+              },
+              "sort": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": "List of objects to define sort logic"
+              },
+              "sortAfterKey": {
+                "type": "string",
+                "description": "After key used for pagination when sort is present"
+              },
+              "language": {
+                "type": "string",
+                "description": "Language used to apply search in specific language."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "description": "List of results"
+              },
+              "total": {
+                "type": "integer",
+                "format": "int64",
+                "description": "Number of results obtained"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Suggestions API",
+      "key": "suggestions-api",
+      "operations": [
+        {
+          "id": "suggestions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/searcher/v1/suggestions",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "searchQuery": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "entityType": {
+                      "type": "string",
+                      "description": "Used for specify entityType to search in case of tokenType ENTITY"
+                    },
+                    "entityName": {
+                      "type": "string",
+                      "description": "Used for specify entityName to search in case of tokenType ENTITY"
+                    },
+                    "tokenType": {
+                      "type": "string",
+                      "description": "Token Type to specify type of ParserSearchToken"
+                    },
+                    "keywordKey": {
+                      "type": "string",
+                      "description": "Used to specify specific keyword field to perform search"
+                    },
+                    "values": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "List of strings used to perform search. In case of multiple strings, search logic (MUST/SHOULD/...) depends on Openk9 search config"
+                    },
+                    "extra": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "description": "Used to specify extra configurations to overwrite default configurations"
+                    },
+                    "filter": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "description": "List of ParserSearchToken to compose search query."
+              },
+              "range": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                "description": "List of integer for pagination where first element is start element and second element is page size"
+              },
+              "afterKey": {
+                "type": "string",
+                "description": "After key used for pagination in suggestions endpoint"
+              },
+              "suggestKeyword": {
+                "type": "string",
+                "description": "Keyword used to filter options in suggestions endpoint"
+              },
+              "suggestionCategoryId": {
+                "type": "integer",
+                "format": "uuid",
+                "description": "Unique string that identifies the Suggestion Category to return suggestions"
+              },
+              "order": {
+                "type": "string",
+                "description": "How to order suggestions"
+              },
+              "sort": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "description": "List of objects to define sort logic"
+              },
+              "sortAfterKey": {
+                "type": "string",
+                "description": "After key used for pagination when sort is present"
+              },
+              "language": {
+                "type": "string",
+                "description": "Language used to apply search in specific language."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "result": {
+                "type": "array",
+                "items": {},
+                "description": "List of results"
+              },
+              "afterKey": {
+                "type": "string",
+                "description": "After key used for pagination in suggestions endpoint"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

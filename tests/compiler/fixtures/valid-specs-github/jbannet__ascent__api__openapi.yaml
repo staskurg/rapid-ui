@@ -1,0 +1,519 @@
+openapi: 3.1.0
+info:
+  title: Fitness App API
+  description: REST API for the Ascent Fitness mobile application
+  version: 1.0.0
+  contact:
+    name: Fitness App Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Development server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatus'
+
+  /api/user/register:
+    post:
+      summary: Register a new user
+      operationId: registerUser
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegistration'
+      responses:
+        '200':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/user/login:
+    post:
+      summary: User login
+      operationId: loginUser
+      tags:
+        - User
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLogin'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/onboarding/submit:
+    post:
+      summary: Submit onboarding survey answers
+      operationId: submitOnboardingAnswers
+      tags:
+        - Onboarding
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OnboardingSubmission'
+      responses:
+        '200':
+          description: Onboarding answers processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OnboardingResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/plan/generate:
+    post:
+      summary: Generate a new fitness plan
+      operationId: generateFitnessPlan
+      tags:
+        - Plan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanGenerationRequest'
+      responses:
+        '200':
+          description: Fitness plan generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/plan/{userID}:
+    get:
+      summary: Get user's current fitness plan
+      operationId: getUserPlan
+      tags:
+        - Plan
+      parameters:
+        - name: userID
+          in: path
+          required: true
+          schema:
+            type: string
+          description: User ID
+      responses:
+        '200':
+          description: User's fitness plan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Plan'
+        '404':
+          description: Plan not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required:
+        - status
+        - server
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        server:
+          type: string
+          example: "fitness-server"
+
+    Error:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+
+    Goal:
+      type: string
+      enum:
+        - get_stronger
+        - lose_fat
+        - general_strength_fitness
+        - build_muscle
+        - endurance
+        - mobility_health
+
+    User:
+      type: object
+      required:
+        - id
+        - email
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserRegistration:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+
+    UserLogin:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      required:
+        - token
+        - user
+      properties:
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    OnboardingSubmission:
+      type: object
+      required:
+        - answers
+      properties:
+        answers:
+          type: object
+          additionalProperties: true
+          description: Key-value pairs of question IDs to answers
+
+    OnboardingResponse:
+      type: object
+      required:
+        - status
+        - message
+      properties:
+        status:
+          type: string
+          example: "success"
+        message:
+          type: string
+        user_id:
+          type: string
+
+    PlanGenerationRequest:
+      type: object
+      required:
+        - user_id
+        - goal
+      properties:
+        user_id:
+          type: string
+        goal:
+          $ref: '#/components/schemas/Goal'
+
+    Plan:
+      type: object
+      required:
+        - plan_id
+        - user_id
+        - goal
+        - start_date
+        - weeks
+        - sessions
+      properties:
+        plan_id:
+          type: string
+        user_id:
+          type: string
+        goal:
+          $ref: '#/components/schemas/Goal'
+        start_date:
+          type: string
+          format: date-time
+        weeks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlannedWeek'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/Session'
+        notes_coach:
+          type: string
+          default: ""
+
+    PlannedWeek:
+      type: object
+      required:
+        - week_number
+        - start_date
+        - days
+      properties:
+        week_number:
+          type: integer
+          minimum: 1
+        start_date:
+          type: string
+          format: date-time
+        days:
+          type: array
+          items:
+            $ref: '#/components/schemas/PlannedDay'
+
+    PlannedDay:
+      type: object
+      required:
+        - date
+      properties:
+        date:
+          type: string
+          format: date-time
+        session_id:
+          type: string
+          description: Optional reference to a session for this day
+
+    Session:
+      type: object
+      required:
+        - id
+        - title
+        - blocks
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        blocks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Block'
+
+    BlockType:
+      type: string
+      enum:
+        - warmup
+        - strength
+        - cooldown
+        - cardio
+
+    Block:
+      type: object
+      required:
+        - type
+        - rounds
+        - rest_sec_between_rounds
+        - items
+      properties:
+        label:
+          type: string
+        type:
+          $ref: '#/components/schemas/BlockType'
+        rounds:
+          type: integer
+          minimum: 1
+          default: 1
+        rest_sec_between_rounds:
+          type: integer
+          minimum: 0
+          default: 0
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/BlockStep'
+
+    BlockStepKind:
+      type: string
+      enum:
+        - exercise_prescription
+        - rest
+        - warmup
+        - cooldown
+
+    BlockStep:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          $ref: '#/components/schemas/BlockStepKind'
+        exercise_prescription:
+          $ref: '#/components/schemas/ExercisePrescription'
+        rest_step:
+          $ref: '#/components/schemas/RestStep'
+        warmup_step:
+          $ref: '#/components/schemas/WarmupStep'
+        cooldown_step:
+          $ref: '#/components/schemas/CooldownStep'
+
+    ExercisePrescription:
+      type: object
+      required:
+        - exercise_name
+        - rep_spec
+        - intensity
+      properties:
+        exercise_name:
+          type: string
+        rep_spec:
+          $ref: '#/components/schemas/RepSpec'
+        intensity:
+          $ref: '#/components/schemas/Intensity'
+
+    RepKind:
+      type: string
+      enum:
+        - reps
+        - time
+        - distance
+
+    RepSpec:
+      type: object
+      required:
+        - kind
+      properties:
+        kind:
+          $ref: '#/components/schemas/RepKind'
+        reps:
+          type: integer
+          minimum: 1
+        time_sec:
+          type: integer
+          minimum: 1
+        distance:
+          type: string
+
+    IntensityMode:
+      type: string
+      enum:
+        - rpe
+        - percentage
+        - weight
+
+    Intensity:
+      type: object
+      required:
+        - mode
+      properties:
+        mode:
+          $ref: '#/components/schemas/IntensityMode'
+        rpe:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 10
+        percentage:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 100
+        weight:
+          type: number
+          format: float
+          minimum: 0
+
+    RestStep:
+      type: object
+      required:
+        - duration_sec
+      properties:
+        duration_sec:
+          type: integer
+          minimum: 1
+
+    WarmupStep:
+      type: object
+      required:
+        - description
+        - duration_sec
+      properties:
+        description:
+          type: string
+        duration_sec:
+          type: integer
+          minimum: 1
+
+    CooldownStep:
+      type: object
+      required:
+        - description
+        - duration_sec
+      properties:
+        description:
+          type: string
+        duration_sec:
+          type: integer
+          minimum: 1

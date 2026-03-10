@@ -1,0 +1,826 @@
+{
+  "api": {
+    "title": "base",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "base.RoleService",
+      "key": "baseroleservice",
+      "operations": [
+        {
+          "id": "base.RoleService.CreateRole",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/CreateRole",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "title": "code",
+                "maxLength": 50,
+                "minLength": 1,
+                "description": "角色代码"
+              },
+              "name": {
+                "type": "string",
+                "title": "name",
+                "maxLength": 100,
+                "minLength": 1,
+                "description": "角色名称"
+              },
+              "description": {
+                "type": "string",
+                "title": "description",
+                "maxLength": 500,
+                "description": "角色描述"
+              },
+              "sortOrder": {
+                "type": "integer",
+                "title": "sort_order",
+                "format": "int32",
+                "description": "排序顺序"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "permissions",
+                "description": "权限代码列表"
+              }
+            },
+            "title": "CreateRoleRequest",
+            "additionalProperties": false,
+            "description": "创建角色请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "角色ID"
+                  },
+                  "code": {
+                    "type": "string",
+                    "title": "code",
+                    "description": "角色代码"
+                  },
+                  "name": {
+                    "type": "string",
+                    "title": "name",
+                    "description": "角色名称"
+                  },
+                  "description": {
+                    "type": "string",
+                    "title": "description",
+                    "description": "角色描述"
+                  },
+                  "isSystem": {
+                    "type": "boolean",
+                    "title": "is_system",
+                    "description": "是否为系统内置角色"
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "title": "sort_order",
+                    "format": "int32",
+                    "description": "排序顺序"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限代码列表"
+                  },
+                  "userCount": {
+                    "type": "integer",
+                    "title": "user_count",
+                    "format": "int32",
+                    "description": "用户数量"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "title": "created_at",
+                    "description": "创建时间"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "title": "updated_at",
+                    "description": "更新时间"
+                  },
+                  "isAllPermissions": {
+                    "type": "boolean",
+                    "title": "is_all_permissions",
+                    "description": "是否拥有全部权限（如 admin 角色）"
+                  }
+                },
+                "title": "RoleInfo",
+                "additionalProperties": false,
+                "description": "角色信息"
+              }
+            },
+            "title": "CreateRoleResponse",
+            "additionalProperties": false,
+            "description": "创建角色响应"
+          }
+        },
+        {
+          "id": "base.RoleService.DeleteRole",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/DeleteRole",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "title": "id",
+                "minLength": 1,
+                "description": "角色ID"
+              }
+            },
+            "title": "DeleteRoleRequest",
+            "additionalProperties": false,
+            "description": "删除角色请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "title": "success",
+                "description": "是否成功"
+              }
+            },
+            "title": "DeleteRoleResponse",
+            "additionalProperties": false,
+            "description": "删除角色响应"
+          }
+        },
+        {
+          "id": "base.RoleService.GetRole",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/GetRole",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "title": "id",
+                "minLength": 1,
+                "description": "角色ID"
+              }
+            },
+            "title": "GetRoleRequest",
+            "additionalProperties": false,
+            "description": "获取角色详情请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "角色ID"
+                  },
+                  "code": {
+                    "type": "string",
+                    "title": "code",
+                    "description": "角色代码"
+                  },
+                  "name": {
+                    "type": "string",
+                    "title": "name",
+                    "description": "角色名称"
+                  },
+                  "description": {
+                    "type": "string",
+                    "title": "description",
+                    "description": "角色描述"
+                  },
+                  "isSystem": {
+                    "type": "boolean",
+                    "title": "is_system",
+                    "description": "是否为系统内置角色"
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "title": "sort_order",
+                    "format": "int32",
+                    "description": "排序顺序"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限代码列表"
+                  },
+                  "userCount": {
+                    "type": "integer",
+                    "title": "user_count",
+                    "format": "int32",
+                    "description": "用户数量"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "title": "created_at",
+                    "description": "创建时间"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "title": "updated_at",
+                    "description": "更新时间"
+                  },
+                  "isAllPermissions": {
+                    "type": "boolean",
+                    "title": "is_all_permissions",
+                    "description": "是否拥有全部权限（如 admin 角色）"
+                  }
+                },
+                "title": "RoleInfo",
+                "additionalProperties": false,
+                "description": "角色信息"
+              }
+            },
+            "title": "GetRoleResponse",
+            "additionalProperties": false,
+            "description": "获取角色详情响应"
+          }
+        },
+        {
+          "id": "base.RoleService.GetRolePermissions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/GetRolePermissions",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "type": "string",
+                "title": "role_id",
+                "minLength": 1,
+                "description": "角色ID"
+              }
+            },
+            "title": "GetRolePermissionsRequest",
+            "additionalProperties": false,
+            "description": "获取角色权限请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "permissions",
+                "description": "角色拥有的权限代码列表"
+              },
+              "allPermissionGroups": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "string",
+                      "title": "resource",
+                      "description": "资源类型（分组名称）"
+                    },
+                    "resourceName": {
+                      "type": "string",
+                      "title": "resource_name",
+                      "description": "资源显示名称"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "title": "id",
+                            "description": "权限ID"
+                          },
+                          "code": {
+                            "type": "string",
+                            "title": "code",
+                            "description": "权限代码"
+                          },
+                          "name": {
+                            "type": "string",
+                            "title": "name",
+                            "description": "权限名称"
+                          },
+                          "description": {
+                            "type": "string",
+                            "title": "description",
+                            "description": "权限描述"
+                          },
+                          "resource": {
+                            "type": "string",
+                            "title": "resource",
+                            "description": "资源类型"
+                          },
+                          "action": {
+                            "type": "string",
+                            "title": "action",
+                            "description": "操作类型"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "title": "created_at",
+                            "description": "创建时间"
+                          }
+                        },
+                        "title": "PermissionInfo",
+                        "additionalProperties": false,
+                        "description": "权限信息"
+                      },
+                      "title": "permissions",
+                      "description": "该分组下的权限列表"
+                    }
+                  },
+                  "title": "PermissionGroup",
+                  "additionalProperties": false,
+                  "description": "权限分组信息"
+                },
+                "title": "all_permission_groups",
+                "description": "所有权限分组"
+              }
+            },
+            "title": "GetRolePermissionsResponse",
+            "additionalProperties": false,
+            "description": "获取角色权限响应"
+          }
+        },
+        {
+          "id": "base.RoleService.ListPermissions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/ListPermissions",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "resource": {
+                "type": "string",
+                "title": "resource",
+                "description": "资源类型筛选"
+              }
+            },
+            "title": "ListPermissionsRequest",
+            "additionalProperties": false,
+            "description": "权限列表请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "title": "id",
+                      "description": "权限ID"
+                    },
+                    "code": {
+                      "type": "string",
+                      "title": "code",
+                      "description": "权限代码"
+                    },
+                    "name": {
+                      "type": "string",
+                      "title": "name",
+                      "description": "权限名称"
+                    },
+                    "description": {
+                      "type": "string",
+                      "title": "description",
+                      "description": "权限描述"
+                    },
+                    "resource": {
+                      "type": "string",
+                      "title": "resource",
+                      "description": "资源类型"
+                    },
+                    "action": {
+                      "type": "string",
+                      "title": "action",
+                      "description": "操作类型"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "title": "created_at",
+                      "description": "创建时间"
+                    }
+                  },
+                  "title": "PermissionInfo",
+                  "additionalProperties": false,
+                  "description": "权限信息"
+                },
+                "title": "permissions",
+                "description": "权限列表"
+              },
+              "groups": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "resource": {
+                      "type": "string",
+                      "title": "resource",
+                      "description": "资源类型（分组名称）"
+                    },
+                    "resourceName": {
+                      "type": "string",
+                      "title": "resource_name",
+                      "description": "资源显示名称"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "title": "id",
+                            "description": "权限ID"
+                          },
+                          "code": {
+                            "type": "string",
+                            "title": "code",
+                            "description": "权限代码"
+                          },
+                          "name": {
+                            "type": "string",
+                            "title": "name",
+                            "description": "权限名称"
+                          },
+                          "description": {
+                            "type": "string",
+                            "title": "description",
+                            "description": "权限描述"
+                          },
+                          "resource": {
+                            "type": "string",
+                            "title": "resource",
+                            "description": "资源类型"
+                          },
+                          "action": {
+                            "type": "string",
+                            "title": "action",
+                            "description": "操作类型"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "title": "created_at",
+                            "description": "创建时间"
+                          }
+                        },
+                        "title": "PermissionInfo",
+                        "additionalProperties": false,
+                        "description": "权限信息"
+                      },
+                      "title": "permissions",
+                      "description": "该分组下的权限列表"
+                    }
+                  },
+                  "title": "PermissionGroup",
+                  "additionalProperties": false,
+                  "description": "权限分组信息"
+                },
+                "title": "groups",
+                "description": "按资源分组的权限列表"
+              }
+            },
+            "title": "ListPermissionsResponse",
+            "additionalProperties": false,
+            "description": "权限列表响应"
+          }
+        },
+        {
+          "id": "base.RoleService.ListRoles",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/ListRoles",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "page": {
+                "type": "integer",
+                "title": "page",
+                "minimum": 1,
+                "format": "int32",
+                "description": "页码，从 1 开始"
+              },
+              "pageSize": {
+                "type": "integer",
+                "title": "page_size",
+                "maximum": 100,
+                "minimum": 1,
+                "format": "int32",
+                "description": "每页数量"
+              },
+              "keyword": {
+                "type": "string",
+                "title": "keyword",
+                "description": "搜索关键词（角色名称、代码）"
+              },
+              "isSystem": {
+                "type": "boolean",
+                "title": "is_system",
+                "description": "是否仅显示系统角色",
+                "nullable": true
+              }
+            },
+            "title": "ListRolesRequest",
+            "additionalProperties": false,
+            "description": "角色列表请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "roles": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "title": "id",
+                      "description": "角色ID"
+                    },
+                    "code": {
+                      "type": "string",
+                      "title": "code",
+                      "description": "角色代码"
+                    },
+                    "name": {
+                      "type": "string",
+                      "title": "name",
+                      "description": "角色名称"
+                    },
+                    "description": {
+                      "type": "string",
+                      "title": "description",
+                      "description": "角色描述"
+                    },
+                    "isSystem": {
+                      "type": "boolean",
+                      "title": "is_system",
+                      "description": "是否为系统内置角色"
+                    },
+                    "sortOrder": {
+                      "type": "integer",
+                      "title": "sort_order",
+                      "format": "int32",
+                      "description": "排序顺序"
+                    },
+                    "permissions": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "title": "permissions",
+                      "description": "权限代码列表"
+                    },
+                    "userCount": {
+                      "type": "integer",
+                      "title": "user_count",
+                      "format": "int32",
+                      "description": "用户数量"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "title": "created_at",
+                      "description": "创建时间"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "title": "updated_at",
+                      "description": "更新时间"
+                    },
+                    "isAllPermissions": {
+                      "type": "boolean",
+                      "title": "is_all_permissions",
+                      "description": "是否拥有全部权限（如 admin 角色）"
+                    }
+                  },
+                  "title": "RoleInfo",
+                  "additionalProperties": false,
+                  "description": "角色信息"
+                },
+                "title": "roles",
+                "description": "角色列表"
+              },
+              "total": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "title": "total",
+                "format": "int64",
+                "description": "总数"
+              },
+              "page": {
+                "type": "integer",
+                "title": "page",
+                "format": "int32",
+                "description": "当前页码"
+              },
+              "pageSize": {
+                "type": "integer",
+                "title": "page_size",
+                "format": "int32",
+                "description": "每页数量"
+              }
+            },
+            "title": "ListRolesResponse",
+            "additionalProperties": false,
+            "description": "角色列表响应"
+          }
+        },
+        {
+          "id": "base.RoleService.UpdateRole",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/UpdateRole",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "title": "id",
+                "minLength": 1,
+                "description": "角色ID"
+              },
+              "name": {
+                "type": "string",
+                "title": "name",
+                "description": "角色名称",
+                "nullable": true
+              },
+              "description": {
+                "type": "string",
+                "title": "description",
+                "description": "角色描述",
+                "nullable": true
+              },
+              "sortOrder": {
+                "type": "integer",
+                "title": "sort_order",
+                "format": "int32",
+                "description": "排序顺序",
+                "nullable": true
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "permissions",
+                "description": "权限代码列表（完整替换）"
+              }
+            },
+            "title": "UpdateRoleRequest",
+            "additionalProperties": false,
+            "description": "更新角色请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "role": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "角色ID"
+                  },
+                  "code": {
+                    "type": "string",
+                    "title": "code",
+                    "description": "角色代码"
+                  },
+                  "name": {
+                    "type": "string",
+                    "title": "name",
+                    "description": "角色名称"
+                  },
+                  "description": {
+                    "type": "string",
+                    "title": "description",
+                    "description": "角色描述"
+                  },
+                  "isSystem": {
+                    "type": "boolean",
+                    "title": "is_system",
+                    "description": "是否为系统内置角色"
+                  },
+                  "sortOrder": {
+                    "type": "integer",
+                    "title": "sort_order",
+                    "format": "int32",
+                    "description": "排序顺序"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限代码列表"
+                  },
+                  "userCount": {
+                    "type": "integer",
+                    "title": "user_count",
+                    "format": "int32",
+                    "description": "用户数量"
+                  },
+                  "createdAt": {
+                    "type": "string",
+                    "title": "created_at",
+                    "description": "创建时间"
+                  },
+                  "updatedAt": {
+                    "type": "string",
+                    "title": "updated_at",
+                    "description": "更新时间"
+                  },
+                  "isAllPermissions": {
+                    "type": "boolean",
+                    "title": "is_all_permissions",
+                    "description": "是否拥有全部权限（如 admin 角色）"
+                  }
+                },
+                "title": "RoleInfo",
+                "additionalProperties": false,
+                "description": "角色信息"
+              }
+            },
+            "title": "UpdateRoleResponse",
+            "additionalProperties": false,
+            "description": "更新角色响应"
+          }
+        },
+        {
+          "id": "base.RoleService.UpdateRolePermissions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.RoleService/UpdateRolePermissions",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "roleId": {
+                "type": "string",
+                "title": "role_id",
+                "minLength": 1,
+                "description": "角色ID"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "permissions",
+                "description": "权限代码列表（完整替换）"
+              }
+            },
+            "title": "UpdateRolePermissionsRequest",
+            "additionalProperties": false,
+            "description": "更新角色权限请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "title": "success",
+                "description": "是否成功"
+              }
+            },
+            "title": "UpdateRolePermissionsResponse",
+            "additionalProperties": false,
+            "description": "更新角色权限响应"
+          }
+        }
+      ]
+    }
+  ]
+}

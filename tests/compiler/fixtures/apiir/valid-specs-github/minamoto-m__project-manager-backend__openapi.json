@@ -1,0 +1,621 @@
+{
+  "api": {
+    "title": "プロジェクト管理API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "プロジェクト",
+      "key": "resource",
+      "operations": [
+        {
+          "id": "GET:/api/projects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/projects",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "プロジェクト一覧を取得します"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "プロジェクトの一意識別子"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "プロジェクト名",
+                      "maxLength": 255
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "プロジェクトの説明"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "active",
+                        "completed",
+                        "archived"
+                      ],
+                      "description": "プロジェクトのステータス"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "作成日時"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "更新日時"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "status",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/api/tasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/tasks",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "タスク一覧を取得します"
+              },
+              "data": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "タスクの一意識別子"
+                    },
+                    "title": {
+                      "type": "string",
+                      "description": "タスクのタイトル",
+                      "maxLength": 255
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "タスクの説明"
+                    },
+                    "project_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "所属するプロジェクトのID"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "in_progress",
+                        "completed"
+                      ],
+                      "description": "タスクのステータス"
+                    },
+                    "priority": {
+                      "type": "string",
+                      "enum": [
+                        "low",
+                        "medium",
+                        "high"
+                      ],
+                      "description": "タスクの優先度"
+                    },
+                    "due_date": {
+                      "type": "string",
+                      "format": "date",
+                      "description": "期限日"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "作成日時"
+                    },
+                    "updated_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "更新日時"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "title",
+                    "project_id",
+                    "status",
+                    "created_at",
+                    "updated_at"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/projects",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/projects",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "プロジェクト名",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "description": "プロジェクトの説明"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "completed",
+                  "archived"
+                ],
+                "default": "active",
+                "description": "プロジェクトのステータス"
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "プロジェクトを作成します"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "プロジェクトの一意識別子"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "プロジェクト名",
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "プロジェクトの説明"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "completed",
+                      "archived"
+                    ],
+                    "description": "プロジェクトのステータス"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "作成日時"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新日時"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "status",
+                  "created_at",
+                  "updated_at"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/tasks",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/tasks",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "タスクのタイトル",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "description": "タスクの説明"
+              },
+              "project_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "所属するプロジェクトのID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "default": "pending",
+                "description": "タスクのステータス"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "default": "medium",
+                "description": "タスクの優先度"
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date",
+                "description": "期限日"
+              }
+            },
+            "required": [
+              "title",
+              "project_id"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "タスクを作成します"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "タスクの一意識別子"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "タスクのタイトル",
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "タスクの説明"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "所属するプロジェクトのID"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed"
+                    ],
+                    "description": "タスクのステータス"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ],
+                    "description": "タスクの優先度"
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "期限日"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "作成日時"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新日時"
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "project_id",
+                  "status",
+                  "created_at",
+                  "updated_at"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/projects/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/projects/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "プロジェクト名",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "description": "プロジェクトの説明"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "completed",
+                  "archived"
+                ],
+                "description": "プロジェクトのステータス"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "プロジェクトID {id} を更新します"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "プロジェクトの一意識別子"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "プロジェクト名",
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "プロジェクトの説明"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "completed",
+                      "archived"
+                    ],
+                    "description": "プロジェクトのステータス"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "作成日時"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新日時"
+                  }
+                },
+                "required": [
+                  "id",
+                  "name",
+                  "status",
+                  "created_at",
+                  "updated_at"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "PUT:/api/tasks/{id}",
+          "method": "PUT",
+          "kind": "update",
+          "path": "/api/tasks/{id}",
+          "identifierParam": "id",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "タスクのタイトル",
+                "maxLength": 255
+              },
+              "description": {
+                "type": "string",
+                "description": "タスクの説明"
+              },
+              "project_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "所属するプロジェクトのID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ],
+                "description": "タスクのステータス"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ],
+                "description": "タスクの優先度"
+              },
+              "due_date": {
+                "type": "string",
+                "format": "date",
+                "description": "期限日"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "タスクID {id} を更新します"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "タスクの一意識別子"
+                  },
+                  "title": {
+                    "type": "string",
+                    "description": "タスクのタイトル",
+                    "maxLength": 255
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "タスクの説明"
+                  },
+                  "project_id": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "所属するプロジェクトのID"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "in_progress",
+                      "completed"
+                    ],
+                    "description": "タスクのステータス"
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ],
+                    "description": "タスクの優先度"
+                  },
+                  "due_date": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "期限日"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "作成日時"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "更新日時"
+                  }
+                },
+                "required": [
+                  "id",
+                  "title",
+                  "project_id",
+                  "status",
+                  "created_at",
+                  "updated_at"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/projects/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/projects/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "プロジェクトID {id} を削除します"
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "DELETE:/api/tasks/{id}",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/tasks/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "タスクID {id} を削除します"
+              },
+              "data": {
+                "type": "object"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

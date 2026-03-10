@@ -1,0 +1,253 @@
+{
+  "api": {
+    "title": "Restaurant Ordering API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "getOrdersHistory",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "required": [
+              "customerId",
+              "orders",
+              "page",
+              "pageSize",
+              "total"
+            ],
+            "type": "object",
+            "properties": {
+              "customerId": {
+                "type": "string"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "pageSize": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              },
+              "orders": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "createdAt",
+                    "orderId",
+                    "status"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "orderId": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "DRAFT",
+                        "PENDING_PAYMENT",
+                        "AWAITING_CASHIER",
+                        "PAID",
+                        "IN_PROGRESS",
+                        "READY",
+                        "CANCELLED",
+                        "EXPIRED"
+                      ]
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getOrderById",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{orderId}",
+          "identifierParam": "orderId",
+          "responseSchema": {
+            "required": [
+              "channel",
+              "createdAt",
+              "items",
+              "orderId",
+              "status"
+            ],
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "DRAFT",
+                  "PENDING_PAYMENT",
+                  "AWAITING_CASHIER",
+                  "PAID",
+                  "IN_PROGRESS",
+                  "READY",
+                  "CANCELLED",
+                  "EXPIRED"
+                ]
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "channel": {
+                "type": "string",
+                "enum": [
+                  "MOBILE",
+                  "WEB",
+                  "KIOSK"
+                ]
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "required": [
+                    "menuItemId",
+                    "quantity"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "menuItemId": {
+                      "type": "string",
+                      "description": "Идентификатор позиции меню"
+                    },
+                    "quantity": {
+                      "minimum": 1,
+                      "type": "integer",
+                      "description": "Количество"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createOrder",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "requestSchema": {
+            "required": [
+              "channel",
+              "items",
+              "paymentMethod"
+            ],
+            "type": "object",
+            "properties": {
+              "channel": {
+                "type": "string",
+                "description": "Канал оформления заказа",
+                "enum": [
+                  "MOBILE",
+                  "WEB",
+                  "KIOSK"
+                ]
+              },
+              "paymentMethod": {
+                "type": "string",
+                "description": "Способ оплаты",
+                "enum": [
+                  "CARD",
+                  "CASH"
+                ]
+              },
+              "items": {
+                "minItems": 1,
+                "type": "array",
+                "description": "Список позиций заказа",
+                "items": {
+                  "required": [
+                    "menuItemId",
+                    "quantity"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "menuItemId": {
+                      "type": "string",
+                      "description": "Идентификатор позиции меню"
+                    },
+                    "quantity": {
+                      "minimum": 1,
+                      "type": "integer",
+                      "description": "Количество"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "required": [
+              "orderId",
+              "payment",
+              "status"
+            ],
+            "type": "object",
+            "properties": {
+              "orderId": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "DRAFT",
+                  "PENDING_PAYMENT",
+                  "AWAITING_CASHIER",
+                  "PAID",
+                  "IN_PROGRESS",
+                  "READY",
+                  "CANCELLED",
+                  "EXPIRED"
+                ]
+              },
+              "payment": {
+                "required": [
+                  "method",
+                  "status"
+                ],
+                "type": "object",
+                "properties": {
+                  "method": {
+                    "type": "string",
+                    "enum": [
+                      "CARD",
+                      "CASH"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "INITIATED",
+                      "AWAITING",
+                      "PAID",
+                      "FAILED"
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,478 @@
+openapi: 3.0.3
+info:
+  title: Inbox Zen Email Parsing MCP Server API
+  description: RESTful API for debugging and monitoring the MCP Email Parsing Server
+  version: 1.0.0
+  contact:
+    name: Inbox Zen API Support
+    email: support@inboxzen.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.inboxzen.dev
+    description: Production server
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the MCP server
+      operationId: getHealth
+      tags:
+        - System
+      responses:
+        "200":
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "healthy"
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+                    example: "1.0.0"
+
+  /api/stats:
+    get:
+      summary: Get system statistics
+      description: Returns comprehensive system statistics
+      operationId: getStats
+      tags:
+        - Analytics
+      responses:
+        "200":
+          description: System statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SystemStats"
+
+  /api/emails/recent:
+    get:
+      summary: Get recent emails
+      description: Returns the most recently processed emails
+      operationId: getRecentEmails
+      tags:
+        - Emails
+      parameters:
+        - name: limit
+          in: query
+          description: Number of emails to return (max 50)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: List of recent emails
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Email"
+                  count:
+                    type: integer
+
+  /api/emails:
+    get:
+      summary: Get emails with pagination and filtering
+      description: Returns paginated list of emails with optional filtering
+      operationId: getEmails
+      tags:
+        - Emails
+      parameters:
+        - name: skip
+          in: query
+          description: Number of emails to skip for pagination
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          description: Number of emails to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: urgency_level
+          in: query
+          description: Filter by urgency level
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high]
+        - name: sentiment
+          in: query
+          description: Filter by sentiment
+          required: false
+          schema:
+            type: string
+            enum: [positive, negative, neutral]
+        - name: search
+          in: query
+          description: Search term for email content
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Paginated list of emails
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  emails:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Email"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+
+  /api/emails/{email_id}:
+    get:
+      summary: Get specific email by ID
+      description: Returns detailed information for a specific email
+      operationId: getEmailById
+      tags:
+        - Emails
+      parameters:
+        - name: email_id
+          in: path
+          required: true
+          description: Unique identifier for the email
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Email details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Email"
+        "404":
+          description: Email not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/search:
+    get:
+      summary: Advanced email search
+      description: Perform advanced search with scoring and relevance
+      operationId: searchEmails
+      tags:
+        - Search
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Number of results to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: Search results with relevance scoring
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        email:
+                          $ref: "#/components/schemas/Email"
+                        score:
+                          type: number
+                          description: Relevance score (0-1)
+                  query:
+                    type: string
+                  total_results:
+                    type: integer
+
+  /api/analytics:
+    get:
+      summary: Get comprehensive analytics
+      description: Returns detailed analytics and statistics
+      operationId: getAnalytics
+      tags:
+        - Analytics
+      responses:
+        "200":
+          description: Comprehensive analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Analytics"
+
+  /webhooks/postmark:
+    post:
+      summary: Postmark webhook endpoint
+      description: Receives email webhooks from Postmark
+      operationId: postmarkWebhook
+      tags:
+        - Webhooks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostmarkWebhook"
+      responses:
+        "200":
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "processed"
+                  email_id:
+                    type: string
+        "400":
+          description: Invalid webhook payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  schemas:
+    Email:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique email identifier
+        subject:
+          type: string
+        sender:
+          type: string
+          format: email
+        recipient:
+          type: string
+          format: email
+        content:
+          type: string
+        received_at:
+          type: string
+          format: date-time
+        metadata:
+          type: object
+          properties:
+            urgency_level:
+              type: string
+              enum: [low, medium, high]
+            urgency_score:
+              type: number
+              minimum: 0
+              maximum: 100
+            sentiment:
+              type: string
+              enum: [positive, negative, neutral]
+            sentiment_score:
+              type: number
+              minimum: -1
+              maximum: 1
+            keywords:
+              type: array
+              items:
+                type: string
+            entities:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  value:
+                    type: string
+                  confidence:
+                    type: number
+            tasks:
+              type: array
+              items:
+                type: object
+                properties:
+                  description:
+                    type: string
+                  urgency:
+                    type: number
+                  deadline:
+                    type: string
+                    format: date-time
+                    nullable: true
+
+    SystemStats:
+      type: object
+      properties:
+        total_emails:
+          type: integer
+        emails_today:
+          type: integer
+        avg_processing_time:
+          type: number
+          description: Average processing time in seconds
+        server_uptime:
+          type: number
+          description: Server uptime in seconds
+        memory_usage:
+          type: object
+          properties:
+            used_mb:
+              type: number
+            total_mb:
+              type: number
+        last_email_processed:
+          type: string
+          format: date-time
+          nullable: true
+
+    Analytics:
+      type: object
+      properties:
+        summary:
+          type: object
+          properties:
+            total_emails:
+              type: integer
+            timespan_days:
+              type: integer
+        urgency_distribution:
+          type: object
+          properties:
+            low:
+              type: integer
+            medium:
+              type: integer
+            high:
+              type: integer
+        sentiment_distribution:
+          type: object
+          properties:
+            positive:
+              type: integer
+            negative:
+              type: integer
+            neutral:
+              type: integer
+        time_series:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+        hourly_distribution:
+          type: object
+          additionalProperties:
+            type: integer
+        top_keywords:
+          type: array
+          items:
+            type: object
+            properties:
+              keyword:
+                type: string
+              count:
+                type: integer
+        avg_urgency_score:
+          type: number
+        avg_sentiment_score:
+          type: number
+
+    Pagination:
+      type: object
+      properties:
+        skip:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        has_more:
+          type: boolean
+
+    PostmarkWebhook:
+      type: object
+      properties:
+        From:
+          type: string
+          format: email
+        To:
+          type: string
+          format: email
+        Subject:
+          type: string
+        TextBody:
+          type: string
+        HtmlBody:
+          type: string
+        Date:
+          type: string
+          format: date-time
+        MessageID:
+          type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: Emails
+    description: Email data access and management
+  - name: Search
+    description: Email search and discovery
+  - name: Analytics
+    description: Analytics and statistics
+  - name: Webhooks
+    description: Webhook endpoints for external integrations

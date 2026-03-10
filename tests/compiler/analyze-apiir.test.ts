@@ -4,7 +4,7 @@ import {
   extractResourceSignature,
   normalizePattern,
   mineStructuralPatterns,
-  formatPatternMiningReport,
+  formatPatternMiningReportTop10,
 } from "@/scripts/corpus-data/analyze-apiir";
 
 function makeResource(overrides: Partial<ResourceIR> = {}): ResourceIR {
@@ -213,16 +213,15 @@ describe("mineStructuralPatterns", () => {
   });
 });
 
-describe("formatPatternMiningReport", () => {
-  it("formats report with header and entries", () => {
+describe("formatPatternMiningReportTop10", () => {
+  it("formats report with top patterns and optional examples", () => {
     const results = [
       { pattern: "fields≤8 depth0 ops:list+detail", count: 10, share: 50, examples: ["a/users", "b/items"] },
       { pattern: "fields≤6 depth0 ops:list", count: 5, share: 25, examples: ["c/events"] },
     ];
-    const lines = formatPatternMiningReport(results, 20);
-    expect(lines[0]).toContain("Structural Pattern Distribution");
+    const lines = formatPatternMiningReportTop10(results, 20, { includeExamples: true });
     expect(lines.some((l) => l.includes("fields≤8 depth0 ops:list+detail"))).toBe(true);
-    expect(lines.some((l) => l.includes("10 resources (50%)"))).toBe(true);
+    expect(lines.some((l) => l.includes("50%"))).toBe(true);
     expect(lines.some((l) => l.includes("examples: a/users, b/items"))).toBe(true);
   });
 });

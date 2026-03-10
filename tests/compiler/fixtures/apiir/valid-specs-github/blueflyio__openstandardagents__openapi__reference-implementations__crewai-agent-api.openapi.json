@@ -1,0 +1,143 @@
+{
+  "api": {
+    "title": "CrewAI Research Agent API",
+    "version": "0.3.3"
+  },
+  "resources": [
+    {
+      "name": "collaboration",
+      "key": "collaboration",
+      "operations": [
+        {
+          "id": "collaborate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/collaborate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "task",
+              "agents"
+            ],
+            "properties": {
+              "task": {
+                "type": "string",
+                "description": "Collaborative task"
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "agent_id": {
+                      "type": "string"
+                    },
+                    "role": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "collaboration_id": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "initiated",
+                  "in_progress",
+                  "completed"
+                ]
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "research",
+      "key": "research",
+      "operations": [
+        {
+          "id": "conductResearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/research",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "topic"
+            ],
+            "properties": {
+              "topic": {
+                "type": "string",
+                "description": "Research topic"
+              },
+              "depth": {
+                "type": "string",
+                "enum": [
+                  "shallow",
+                  "medium",
+                  "deep"
+                ],
+                "default": "medium"
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Preferred sources"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "topic": {
+                "type": "string"
+              },
+              "findings": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "source": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "relevance": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "summary": {
+                "type": "string"
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

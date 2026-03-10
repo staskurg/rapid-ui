@@ -1,0 +1,268 @@
+{
+  "api": {
+    "title": "RAG Chatbot API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Chat",
+      "key": "chat",
+      "operations": [
+        {
+          "id": "askQuestion",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 2000,
+                "description": "User's question about the book content",
+                "example": "What are the main types of sensors used in humanoid robots?"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Optional session ID for multi-turn conversations. If not provided, a new session will be created.",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "answer",
+              "sources",
+              "session_id"
+            ],
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "AI-generated answer based on retrieved book content",
+                "example": "Humanoid robots use several types of sensors including visual sensors (cameras), tactile sensors (force/pressure), auditory sensors (microphones), and proprioceptive sensors (encoders, gyroscopes)."
+              },
+              "sources": {
+                "type": "array",
+                "description": "Citations from the book that support the answer",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "chunk",
+                    "similarity"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "description": "Relative path to source markdown file",
+                      "example": "/docs/module-02/chapter-05-sensor-types.md"
+                    },
+                    "section": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Section or chapter heading (if available)",
+                      "example": "Sensor Integration"
+                    },
+                    "chunk": {
+                      "type": "string",
+                      "maxLength": 200,
+                      "description": "Excerpt from the retrieved chunk (truncated for display)",
+                      "example": "Humanoid robots use several types of sensors including visual sensors..."
+                    },
+                    "similarity": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Cosine similarity score indicating relevance (0-1, higher is better)",
+                      "example": 0.92
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 5
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session ID for tracking multi-turn conversations",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          }
+        },
+        {
+          "id": "askSelectedText",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask-selected",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question",
+              "selected_text"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "minLength": 5,
+                "maxLength": 2000,
+                "description": "User's question about the selected text",
+                "example": "Can you explain this in simpler terms?"
+              },
+              "selected_text": {
+                "type": "string",
+                "minLength": 10,
+                "maxLength": 5000,
+                "description": "Text selected by the user from the book (used as additional context)",
+                "example": "The inverse kinematics problem involves determining the joint parameters that provide a desired position of the end-effector."
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Optional session ID for multi-turn conversations",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "answer",
+              "sources",
+              "session_id"
+            ],
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "AI-generated answer based on retrieved book content",
+                "example": "Humanoid robots use several types of sensors including visual sensors (cameras), tactile sensors (force/pressure), auditory sensors (microphones), and proprioceptive sensors (encoders, gyroscopes)."
+              },
+              "sources": {
+                "type": "array",
+                "description": "Citations from the book that support the answer",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "file",
+                    "chunk",
+                    "similarity"
+                  ],
+                  "properties": {
+                    "file": {
+                      "type": "string",
+                      "description": "Relative path to source markdown file",
+                      "example": "/docs/module-02/chapter-05-sensor-types.md"
+                    },
+                    "section": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Section or chapter heading (if available)",
+                      "example": "Sensor Integration"
+                    },
+                    "chunk": {
+                      "type": "string",
+                      "maxLength": 200,
+                      "description": "Excerpt from the retrieved chunk (truncated for display)",
+                      "example": "Humanoid robots use several types of sensors including visual sensors..."
+                    },
+                    "similarity": {
+                      "type": "number",
+                      "format": "float",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "Cosine similarity score indicating relevance (0-1, higher is better)",
+                      "example": 0.92
+                    }
+                  }
+                },
+                "minItems": 0,
+                "maxItems": 5
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Session ID for tracking multi-turn conversations",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "services",
+              "version",
+              "timestamp"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy"
+                ],
+                "description": "Overall health status",
+                "example": "healthy"
+              },
+              "services": {
+                "type": "object",
+                "required": [
+                  "qdrant",
+                  "postgres",
+                  "openai"
+                ],
+                "properties": {
+                  "qdrant": {
+                    "type": "boolean",
+                    "description": "Qdrant vector database connectivity",
+                    "example": true
+                  },
+                  "postgres": {
+                    "type": "boolean",
+                    "description": "Neon Postgres database connectivity",
+                    "example": true
+                  },
+                  "openai": {
+                    "type": "boolean",
+                    "description": "OpenAI API connectivity",
+                    "example": true
+                  }
+                }
+              },
+              "version": {
+                "type": "string",
+                "description": "API version",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Timestamp of health check (ISO 8601)",
+                "example": "2025-12-09T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

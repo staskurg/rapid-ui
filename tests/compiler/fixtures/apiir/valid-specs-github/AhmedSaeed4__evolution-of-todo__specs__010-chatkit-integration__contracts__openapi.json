@@ -1,0 +1,128 @@
+{
+  "api": {
+    "title": "ChatKit Integration API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "ChatKit",
+      "key": "chatkit",
+      "operations": [
+        {
+          "id": "POST:/api/chatkit/refresh",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/chatkit/refresh",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "client_secret",
+              "session_id",
+              "expires_at"
+            ],
+            "properties": {
+              "client_secret": {
+                "type": "string",
+                "description": "New ChatKit client secret",
+                "example": "sk-chatkit-refreshed-xyz789..."
+              },
+              "session_id": {
+                "type": "string",
+                "description": "ChatKit session identifier (same as before)",
+                "example": "chatkit-session-uuid-12345"
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "New expiration timestamp",
+                "example": "2026-01-17T11:30:00Z"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/api/chatkit/session",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/chatkit/session",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "client_secret",
+              "session_id",
+              "expires_at"
+            ],
+            "properties": {
+              "client_secret": {
+                "type": "string",
+                "description": "ChatKit client secret for frontend authentication",
+                "example": "sk-chatkit-abc123..."
+              },
+              "session_id": {
+                "type": "string",
+                "description": "OpenAI ChatKit session identifier",
+                "example": "chatkit-session-uuid-12345"
+              },
+              "expires_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Expiration timestamp for the client secret",
+                "example": "2026-01-17T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/api/chatkit/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/chatkit/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "openai_key_configured",
+              "session_endpoint_available",
+              "store_implemented",
+              "timestamp"
+            ],
+            "properties": {
+              "openai_key_configured": {
+                "type": "boolean",
+                "description": "Whether OPENAI_API_KEY environment variable is set",
+                "example": true
+              },
+              "session_endpoint_available": {
+                "type": "boolean",
+                "description": "Whether session endpoints are operational",
+                "example": true
+              },
+              "store_implemented": {
+                "type": "boolean",
+                "description": "Whether ChatKit Store methods are implemented",
+                "example": true
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Current server timestamp",
+                "example": "2026-01-16T10:30:00Z"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+openapi: 3.0.1
+info:
+  title: StreamBridge Telemetry API
+  description: |
+    API for ingesting telemetry data and crash dump metadata into the StreamBridge pipeline.
+
+    ## Authentication
+    All API calls require a valid subscription key passed in the `Ocp-Apim-Subscription-Key` header.
+
+    ## Rate Limiting
+    - 100 requests per minute per subscription key
+    - Rate limit headers included in responses
+
+    ## Data Flow
+    1. Client sends telemetry → APIM validates and routes
+    2. Logic Apps orchestrates workflow
+    3. Crash dumps trigger Function App processing
+    4. All data stored in Cosmos DB
+  version: "1.0.0"
+  contact:
+    name: StreamBridge Support
+    email: support@streambridge.demo
+
+servers:
+  - url: https://{apim-name}.azure-api.net/telemetry
+    description: Azure API Management Gateway
+    variables:
+      apim-name:
+        default: streambridge-apim
+        description: APIM instance name
+
+security:
+  - subscriptionKey: []
+
+paths:
+  /uploadTelemetry:
+    post:
+      operationId: uploadTelemetry
+      summary: Upload Telemetry Data
+      description: |
+        Upload telemetry data and optionally crash dump metadata.
+        - Telemetry data is stored directly in Cosmos DB
+        - Crash dump metadata triggers additional processing via Azure Functions
+      tags:
+        - Telemetry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TelemetryPayload'
+            examples:
+              metricsOnly:
+                summary: Metrics telemetry without crash dump
+                value:
+                  deviceId: "device-001"
+                  region: "eastus"
+                  timestamp: "2024-01-15T10:30:00Z"
+                  telemetryType: "metrics"
+                  data:
+                    cpu: 45.2
+                    memory: 72.1
+                    diskUsage: 55.0
+                    networkIn: 1024
+                    networkOut: 512
+              withCrashDump:
+                summary: Telemetry with crash dump metadata
+                value:
+                  deviceId: "device-002"
+                  region: "westus2"
+                  timestamp: "2024-01-15T10:35:00Z"
+                  telemetryType: "crashDump"
+                  data:
+                    lastKnownState: "running"
+                    uptime: 3600
+                  crashDump:
+                    dumpId: "dump-abc123"
+                    errorCode: "0xC0000005"
+                    stackTrace: "ntdll.dll!RtlUserThreadStart\nkernel32.dll!BaseThreadInitThunk"
+                    processName: "myapp.exe"
+                    memoryDumpUrl: "https://storage.blob.core.windows.net/dumps/dump-abc123.dmp"
+      responses:
+        '200':
+          description: Telemetry accepted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                documentId: "550e8400-e29b-41d4-a716-446655440000"
+                message: "Telemetry data ingested successfully"
+                processingResult:
+                  status: "processed"
+                  message: "Crash dump processed successfully"
+                timestamp: "2024-01-15T10:30:05Z"
+        '400':
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Invalid payload"
+                message: "Required fields missing: deviceId, region, timestamp are required"
+        '401':
+          description: Unauthorized - Invalid or missing subscription key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Unauthorized"
+                message: "Access denied due to missing subscription key"
+        '429':
+          description: Rate limit exceeded
+          headers:
+            Retry-After:
+              description: Seconds to wait before retrying
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Remaining calls in current window
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error: "Rate limit exceeded"
+                message: "You have exceeded the rate limit. Please try again later."
+                retryAfter: "60"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    subscriptionKey:
+      type: apiKey
+      in: header
+      name: Ocp-Apim-Subscription-Key
+      description: APIM subscription key for authentication
+
+  schemas:
+    TelemetryPayload:
+      type: object
+      required:
+        - deviceId
+        - region
+        - timestamp
+        - telemetryType
+      properties:
+        deviceId:
+          type: string
+          description: Unique identifier for the device
+          example: "device-001"
+          maxLength: 128
+        region:
+          type: string
+          description: Geographic region (used as partition key)
+          example: "eastus"
+          enum:
+            - eastus
+            - eastus2
+            - westus
+            - westus2
+            - centralus
+            - northeurope
+            - westeurope
+            - southeastasia
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp of the telemetry event
+          example: "2024-01-15T10:30:00Z"
+        telemetryType:
+          type: string
+          description: Type of telemetry data
+          enum:
+            - metrics
+            - logs
+            - events
+            - crashDump
+          example: "metrics"
+        data:
+          type: object
+          description: Telemetry data payload (flexible schema)
+          additionalProperties: true
+          example:
+            cpu: 45.2
+            memory: 72.1
+        crashDump:
+          $ref: '#/components/schemas/CrashDump'
+
+    CrashDump:
+      type: object
+      nullable: true
+      description: Crash dump metadata (only present for crash events)
+      properties:
+        dumpId:
+          type: string
+          description: Unique identifier for the crash dump
+          example: "dump-abc123"
+        errorCode:
+          type: string
+          description: Windows error code or exception code
+          example: "0xC0000005"
+        stackTrace:
+          type: string
+          description: Stack trace at time of crash
+          example: "ntdll.dll!RtlUserThreadStart"
+        processName:
+          type: string
+          description: Name of the crashed process
+          example: "myapp.exe"
+        memoryDumpUrl:
+          type: string
+          format: uri
+          description: URL to the full memory dump file
+          example: "https://storage.blob.core.windows.net/dumps/dump-abc123.dmp"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        documentId:
+          type: string
+          format: uuid
+          description: Unique ID of the stored document
+        message:
+          type: string
+          example: "Telemetry data ingested successfully"
+        processingResult:
+          type: object
+          properties:
+            status:
+              type: string
+              enum:
+                - stored
+                - processed
+            message:
+              type: string
+            functionResponse:
+              type: object
+              description: Response from Function App (if crash dump processed)
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error type
+        message:
+          type: string
+          description: Human-readable error message
+        correlationId:
+          type: string
+          description: Request correlation ID for troubleshooting
+        timestamp:
+          type: string
+          format: date-time
+
+tags:
+  - name: Telemetry
+    description: Telemetry ingestion operations

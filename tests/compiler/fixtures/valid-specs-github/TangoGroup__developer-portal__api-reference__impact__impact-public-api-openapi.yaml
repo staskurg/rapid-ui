@@ -1,0 +1,630 @@
+openapi: 3.1.0
+info:
+  title: Impact API
+  version: 1.0.0
+  description: |
+    **🚧 This API and its documentation is under construction 🚧**
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  # /api/v1/impact-reports/champion-organization/{id}:
+  #   get:
+  #     summary: Get Impact Report for a Champion Organization
+  #     description: |
+  #       Get Impact Report for a Champion organization.
+
+  # /api/v1/impact-reports/donor-organization/{id}:
+  #   get:
+  #     summary: Get Impact Report for a Donor Organization
+  #     description: |
+  #       Get Impact Report for a Donor organization.
+
+  # /api/v1/impact-reports/funds/{id  }:
+  #   get:
+  #     summary: Get Impact Report for a Fund
+  #     description: |
+  #       Get Impact Report for a Fund.
+
+  # /api/v1/impact-reports/program/{id}:
+  #   get:
+  #     summary: Get Impact Report for a Program
+  #     description: |
+  #       Get Impact Report for a Program.
+
+  /api/v1/report-outcome:
+    post:
+      summary: Report an Outcome for an Offering Session
+      description: |
+        - The offering session or offering id + participant id/email must be provided.
+        - The `milestoneKey` is the unique identifier for the offering milestone and can be found in the offering builder or on the offering details page of the Organization Dashboard.
+        - The outcome data must match the outcome type's data schema. If the `custom` type is used, the data can be any JSON object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportOutcomeRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportOutcomeResponse"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntityError"
+
+  /api/v1/verify-offering-session-milestone:
+    post:
+      summary: Verify an Offering Session Milestone
+      description: |
+        - The offering milestone must be configured for External Service verification in the offering builder.
+        - The `milestoneKey` is the unique identifier for the offering milestone and can be found in the offering builder or on the offering details page of the Organization Dashboard.
+        - The offering session milestone must be in the `PendingVerification` status when this endpoint is called.
+        - The returned `status` will be `Verified` if this is the last remaining verification required. Otherwise, the `status` will be `PendingVerification` indicating verification is still required from another role.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferingSessionMilestoneVerifyRequest"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferingSessionMilestone"
+        "400":
+          $ref: "#/components/responses/BadRequestError"
+        "403":
+          $ref: "#/components/responses/UnauthorizedError"
+        "404":
+          $ref: "#/components/responses/NotFoundError"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntityError"
+
+webhooks:
+  offeringSessionMilestoneStatusChange:
+    post:
+      summary: Offering Session Milestone Changed
+      security: []
+      requestBody:
+        description: Information about the milestone that changed
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferingSessionMilestoneStatusChangePayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  paymentReceived:
+    post:
+      summary: Payment Received
+      security: []
+      requestBody:
+        description: Information about the payment
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentReceivedPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  applicantReadyForOffering:
+    post:
+      summary: Applicant Ready for Offering
+      security: []
+      requestBody:
+        description: Information about offering and the applicant
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicantReadyForOfferingPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  applicantJoinedWaitlist:
+    post:
+      summary: Applicant Joined Waitlist
+      security: []
+      requestBody:
+        description: Information about offering and the applicant
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApplicantJoinedWaitlistPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  programApplicationReceived:
+    post:
+      summary: Program Application Received
+      security: []
+      requestBody:
+        description: Information about the program application submission
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramApplicationReceivedPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  programApplicationRejected:
+    post:
+      summary: Program Application Rejected
+      security: []
+      requestBody:
+        description: A program application was rejected by either the champion organization or the sponsor.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramApplicationRejectedPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+  programApplicationPendingSponsorPayload:
+    post:
+      summary: Program Application Pending Sponsor
+      security: []
+      requestBody:
+        description: A program application was approved, but is still pending sponsor approval before the session can start.
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProgramApplicationPendingSponsorPayload"
+      responses:
+        "200":
+          description: Return a 200 status to indicate that the data was received successfully
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        This security scheme requires an API key to be provided in the X-API-Key header.
+
+        Visit your **Organization Dashboard** to generate an API key.
+  responses:
+    UnauthorizedError:
+      description: Unauthorized error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unauthorized"
+    BadRequestError:
+      description: Bad request error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Bad request"
+    NotFoundError:
+      description: Not found error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Entity not found"
+    UnprocessableEntityError:
+      description: Unprocessable entity error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+                example: "Unprocessable entity"
+
+  schemas:
+    OfferingSessionMilestone:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: string
+        status:
+          type: string
+          enum:
+            - Ready
+            - Locked
+            - Completed
+            - PendingVerification
+            - Verified
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+
+    OfferingSessionMilestoneVerifyRequest:
+      type: object
+      required:
+        - userIdOrEmail
+        - milestoneKey
+      properties:
+        userIdOrEmail:
+          type: string
+        milestoneKey:
+          type: string
+
+    WebhookPayload:
+      type: object
+      properties:
+        event:
+          type: string
+          description: An identifier for the type of event that occurred.
+        name:
+          type: string
+          description: The configured name of the webhook that was triggered in response to the event.
+        version:
+          type: string
+          default: "1.0"
+        timestamp:
+          type: string
+          description: The time the webhook was triggered.
+        data:
+          type: object
+          description: Event-specific data payload.
+
+    OfferingSessionMilestoneStatusChangeData:
+      type: object
+      properties:
+        offeringSessionMilestoneId:
+          type: string
+        offeringSessionId:
+          type: string
+        offeringVersionId:
+          type: string
+        offeringId:
+          type: string
+        milestoneKey:
+          type: string
+        status:
+          type: string
+          enum:
+            - Ready
+            - Locked
+            - Completed
+            - PendingVerification
+            - Verified
+        applicantUserId:
+          type: string
+        applicantUserEmail:
+          type: string
+        participantId:
+          type: string
+        participantEmail:
+          type: string
+        isTestSession:
+          type: boolean
+
+    OfferingSessionMilestoneStatusChangePayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "offering_session_milestone.state_changed"
+            data:
+              $ref: "#/components/schemas/OfferingSessionMilestoneStatusChangeData"
+
+    PaymentReceivedData:
+      type: object
+      properties:
+        paymentId:
+          type: string
+        amount:
+          type: number
+        offeringSessionMilestoneId:
+          type: string
+        offeringSessionId:
+          type: string
+        offeringVersionId:
+          type: string
+        offeringId:
+          type: string
+        offeringTitle:
+          type: string
+
+    PaymentReceivedPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "payment.received"
+            data:
+              $ref: "#/components/schemas/PaymentReceivedData"
+
+    ApplicantReadyForOfferingData:
+      type: object
+      properties:
+        offeringSessionId:
+          type: string
+        offeringVersionId:
+          type: string
+        offeringId:
+          type: string
+        offeringTitle:
+          type: string
+        applicantUserId:
+          type: string
+        applicantUserEmail:
+          type: string
+        applicantName:
+          type: string
+        participantId:
+          type: string
+        participantEmail:
+          type: string
+        participantName:
+          type: string
+        championUserId:
+          type: string
+        scholarshipId:
+          type: string
+
+    ApplicantReadyForOfferingPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "applicant.ready_for_offering"
+            data:
+              $ref: "#/components/schemas/ApplicantReadyForOfferingData"
+
+    ApplicantJoinedWaitlistData:
+      type: object
+      properties:
+        offeringId:
+          type: string
+        applicantUserId:
+          type: string
+        applicantUserEmail:
+          type: string
+        scholarshipId:
+          type: string
+
+    ApplicantJoinedWaitlistPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "applicant.joined_waitlist"
+            data:
+              $ref: "#/components/schemas/ApplicantJoinedWaitlistData"
+
+    ProgramApplicationReceivedResponse:
+      type: object
+      required:
+        - questionId
+        - questionText
+        - responseType
+        - response
+      properties:
+        questionId:
+          type: string
+        questionText:
+          type: string
+        responseType:
+          type: string
+          enum:
+            - shortText
+            - paragraph
+            - dropdown
+            - checkbox
+            - multipleChoice
+            - externalLink
+            - date
+            - time
+        response:
+          type: object
+          properties:
+            selectedOptionIds:
+              type: array
+              items:
+                type: string
+            selectedOptionTexts:
+              type: array
+              items:
+                type: string
+            didClick:
+              type: boolean
+            url:
+              type: string
+            value:
+              type: string
+
+    ProgramApplicationReceivedData:
+      type: object
+      required:
+        - offeringApplicationId
+        - offeringVersionId
+        - offeringId
+        - applicantUserId
+        - applicantEmail
+        - applicantName
+        - participantId
+        - participantEmail
+        - participantName
+        - applicationFormVersionId
+        - responses
+      properties:
+        offeringApplicationId:
+          type: string
+          nullable: true
+        scholarshipId:
+          type: string
+          nullable: true
+        offeringVersionId:
+          type: string
+        offeringId:
+          type: string
+        applicantUserId:
+          type: string
+        applicantEmail:
+          type: string
+        applicantName:
+          type: string
+        participantId:
+          type: string
+        participantEmail:
+          type: string
+        participantName:
+          type: string
+        applicationFormVersionId:
+          type: string
+        responses:
+          type: array
+          items:
+            $ref: "#/components/schemas/ProgramApplicationReceivedResponse"
+
+    ProgramApplicationReceivedPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "program_application.received"
+            data:
+              $ref: "#/components/schemas/ProgramApplicationReceivedData"
+
+    ReportOutcomeRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            # - Audio
+            - Custom
+            # - Document
+            # - Image
+            - Markdown
+            # - Video
+        data:
+          type: object
+          additionalProperties: true
+        milestoneKey:
+          type: string
+        offeringId:
+          type: string
+        offeringSessionId:
+          type: string
+        participantIdOrEmail:
+          type: string
+        reportingUserId:
+          type: string
+
+    ReportOutcomeResponse:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: string
+
+    ProgramApplicationDecisionData:
+      type: object
+      required:
+        - offeringApplicationId
+        - offeringVersionId
+        - offeringId
+        - applicantUserId
+        - applicantEmail
+        - applicantName
+        - participantId
+        - participantEmail
+        - participantName
+        - applicationFormVersionId
+      properties:
+        offeringApplicationId:
+          type: string
+          nullable: true
+        scholarshipId:
+          type: string
+          nullable: true
+        scholarshipApplicationId:
+          type: string
+          nullable: true
+        rejectionSource:
+          type: string
+          enum:
+            - champion
+            - sponsor
+          nullable: true
+        offeringVersionId:
+          type: string
+        offeringId:
+          type: string
+        applicantUserId:
+          type: string
+        applicantEmail:
+          type: string
+        applicantName:
+          type: string
+        participantId:
+          type: string
+        participantEmail:
+          type: string
+        participantName:
+          type: string
+        applicationFormVersionId:
+          type: string
+
+    ProgramApplicationRejectedPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "program_application.rejected"
+            data:
+              $ref: "#/components/schemas/ProgramApplicationDecisionData"
+
+    ProgramApplicationPendingSponsorPayload:
+      allOf:
+        - $ref: "#/components/schemas/WebhookPayload"
+        - type: object
+          properties:
+            event:
+              type: string
+              default: "program_application.pending_sponsor"
+            data:
+              $ref: "#/components/schemas/ProgramApplicationDecisionData"

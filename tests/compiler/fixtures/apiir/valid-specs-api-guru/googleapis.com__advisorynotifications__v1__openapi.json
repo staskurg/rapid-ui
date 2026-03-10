@@ -1,0 +1,421 @@
+{
+  "api": {
+    "title": "Advisory Notifications API",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "organizations",
+      "key": "organizations",
+      "operations": [
+        {
+          "id": "advisorynotifications.organizations.locations.updateSettings",
+          "method": "PATCH",
+          "kind": "update",
+          "path": "/v1/{name}",
+          "identifierParam": "name",
+          "queryParamCount": 11,
+          "requestSchema": {
+            "description": "Settings for Advisory Notifications.",
+            "properties": {
+              "etag": {
+                "description": "Required. Fingerprint for optimistic concurrency returned in Get requests. Must be provided for Update requests. If the value provided does not match the value known to the server, ABORTED will be thrown, and the client should retry the read-modify-write cycle.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Identifier. The resource name of the settings to retrieve. Format: organizations/{organization}/locations/{location}/settings.",
+                "type": "string"
+              },
+              "notificationSettings": {
+                "additionalProperties": {
+                  "description": "Settings for each NotificationType.",
+                  "properties": {
+                    "enabled": {
+                      "description": "Whether the associated NotificationType is enabled.",
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "description": "Required. Map of each notification type and its settings to get/set all settings at once. The server will validate the value for each notification type.",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "Settings for Advisory Notifications.",
+            "properties": {
+              "etag": {
+                "description": "Required. Fingerprint for optimistic concurrency returned in Get requests. Must be provided for Update requests. If the value provided does not match the value known to the server, ABORTED will be thrown, and the client should retry the read-modify-write cycle.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Identifier. The resource name of the settings to retrieve. Format: organizations/{organization}/locations/{location}/settings.",
+                "type": "string"
+              },
+              "notificationSettings": {
+                "additionalProperties": {
+                  "description": "Settings for each NotificationType.",
+                  "properties": {
+                    "enabled": {
+                      "description": "Whether the associated NotificationType is enabled.",
+                      "type": "boolean"
+                    }
+                  },
+                  "type": "object"
+                },
+                "description": "Required. Map of each notification type and its settings to get/set all settings at once. The server will validate the value for each notification type.",
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "advisorynotifications.projects.locations.notifications.get",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/{name}",
+          "identifierParam": "name",
+          "queryParamCount": 12,
+          "responseSchema": {
+            "description": "A notification object for notifying customers about security and privacy issues.",
+            "properties": {
+              "createTime": {
+                "description": "Output only. Time the notification was created.",
+                "format": "google-datetime",
+                "readOnly": true,
+                "type": "string"
+              },
+              "messages": {
+                "description": "A list of messages in the notification.",
+                "items": {
+                  "description": "A message which contains notification details.",
+                  "properties": {
+                    "attachments": {
+                      "description": "The attachments to download.",
+                      "items": {
+                        "description": "Attachment with specific information about the issue.",
+                        "properties": {
+                          "csv": {
+                            "description": "A representation of a CSV file attachment, as a list of column headers and a list of data rows.",
+                            "properties": {
+                              "dataRows": {
+                                "description": "The list of data rows in a CSV file, as string arrays rather than as a single comma-separated string.",
+                                "items": {
+                                  "description": "A representation of a single data row in a CSV file.",
+                                  "properties": {
+                                    "entries": {
+                                      "description": "The data entries in a CSV file row, as a string array rather than a single comma-separated string.",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "type": "array"
+                              },
+                              "headers": {
+                                "description": "The list of headers for data columns in a CSV file.",
+                                "items": {
+                                  "type": "string"
+                                },
+                                "type": "array"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "displayName": {
+                            "description": "The title of the attachment.",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "body": {
+                      "description": "A message body containing text.",
+                      "properties": {
+                        "text": {
+                          "description": "A text object containing the English text and its localized copies.",
+                          "properties": {
+                            "enText": {
+                              "description": "The English copy.",
+                              "type": "string"
+                            },
+                            "localizationState": {
+                              "description": "Status of the localization.",
+                              "enum": [
+                                "LOCALIZATION_STATE_UNSPECIFIED",
+                                "LOCALIZATION_STATE_NOT_APPLICABLE",
+                                "LOCALIZATION_STATE_PENDING",
+                                "LOCALIZATION_STATE_COMPLETED"
+                              ],
+                              "type": "string"
+                            },
+                            "localizedText": {
+                              "description": "The requested localized copy (if applicable).",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "createTime": {
+                      "description": "The Message creation timestamp.",
+                      "format": "google-datetime",
+                      "type": "string"
+                    },
+                    "localizationTime": {
+                      "description": "Time when Message was localized",
+                      "format": "google-datetime",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "The resource name of the notification. Format: organizations/{organization}/locations/{location}/notifications/{notification} or projects/{project}/locations/{location}/notifications/{notification}.",
+                "type": "string"
+              },
+              "notificationType": {
+                "description": "Type of notification",
+                "enum": [
+                  "NOTIFICATION_TYPE_UNSPECIFIED",
+                  "NOTIFICATION_TYPE_SECURITY_PRIVACY_ADVISORY",
+                  "NOTIFICATION_TYPE_SENSITIVE_ACTIONS",
+                  "NOTIFICATION_TYPE_SECURITY_MSA",
+                  "NOTIFICATION_TYPE_THREAT_HORIZONS"
+                ],
+                "type": "string"
+              },
+              "subject": {
+                "description": "A subject line of a notification.",
+                "properties": {
+                  "text": {
+                    "description": "A text object containing the English text and its localized copies.",
+                    "properties": {
+                      "enText": {
+                        "description": "The English copy.",
+                        "type": "string"
+                      },
+                      "localizationState": {
+                        "description": "Status of the localization.",
+                        "enum": [
+                          "LOCALIZATION_STATE_UNSPECIFIED",
+                          "LOCALIZATION_STATE_NOT_APPLICABLE",
+                          "LOCALIZATION_STATE_PENDING",
+                          "LOCALIZATION_STATE_COMPLETED"
+                        ],
+                        "type": "string"
+                      },
+                      "localizedText": {
+                        "description": "The requested localized copy (if applicable).",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "advisorynotifications.projects.locations.notifications.list",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/{parent}/notifications",
+          "identifierParam": "parent",
+          "queryParamCount": 15,
+          "responseSchema": {
+            "description": "Response of ListNotifications endpoint.",
+            "properties": {
+              "nextPageToken": {
+                "description": "A token, which can be sent as `page_token` to retrieve the next page. If this field is omitted, there are no subsequent pages.",
+                "type": "string"
+              },
+              "notifications": {
+                "description": "List of notifications under a given parent.",
+                "items": {
+                  "description": "A notification object for notifying customers about security and privacy issues.",
+                  "properties": {
+                    "createTime": {
+                      "description": "Output only. Time the notification was created.",
+                      "format": "google-datetime",
+                      "readOnly": true,
+                      "type": "string"
+                    },
+                    "messages": {
+                      "description": "A list of messages in the notification.",
+                      "items": {
+                        "description": "A message which contains notification details.",
+                        "properties": {
+                          "attachments": {
+                            "description": "The attachments to download.",
+                            "items": {
+                              "description": "Attachment with specific information about the issue.",
+                              "properties": {
+                                "csv": {
+                                  "description": "A representation of a CSV file attachment, as a list of column headers and a list of data rows.",
+                                  "properties": {
+                                    "dataRows": {
+                                      "description": "The list of data rows in a CSV file, as string arrays rather than as a single comma-separated string.",
+                                      "items": {
+                                        "description": "A representation of a single data row in a CSV file.",
+                                        "properties": {
+                                          "entries": {
+                                            "description": "The data entries in a CSV file row, as a string array rather than a single comma-separated string.",
+                                            "items": {
+                                              "type": "string"
+                                            },
+                                            "type": "array"
+                                          }
+                                        },
+                                        "type": "object"
+                                      },
+                                      "type": "array"
+                                    },
+                                    "headers": {
+                                      "description": "The list of headers for data columns in a CSV file.",
+                                      "items": {
+                                        "type": "string"
+                                      },
+                                      "type": "array"
+                                    }
+                                  },
+                                  "type": "object"
+                                },
+                                "displayName": {
+                                  "description": "The title of the attachment.",
+                                  "type": "string"
+                                }
+                              },
+                              "type": "object"
+                            },
+                            "type": "array"
+                          },
+                          "body": {
+                            "description": "A message body containing text.",
+                            "properties": {
+                              "text": {
+                                "description": "A text object containing the English text and its localized copies.",
+                                "properties": {
+                                  "enText": {
+                                    "description": "The English copy.",
+                                    "type": "string"
+                                  },
+                                  "localizationState": {
+                                    "description": "Status of the localization.",
+                                    "enum": [
+                                      "LOCALIZATION_STATE_UNSPECIFIED",
+                                      "LOCALIZATION_STATE_NOT_APPLICABLE",
+                                      "LOCALIZATION_STATE_PENDING",
+                                      "LOCALIZATION_STATE_COMPLETED"
+                                    ],
+                                    "type": "string"
+                                  },
+                                  "localizedText": {
+                                    "description": "The requested localized copy (if applicable).",
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "createTime": {
+                            "description": "The Message creation timestamp.",
+                            "format": "google-datetime",
+                            "type": "string"
+                          },
+                          "localizationTime": {
+                            "description": "Time when Message was localized",
+                            "format": "google-datetime",
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "name": {
+                      "description": "The resource name of the notification. Format: organizations/{organization}/locations/{location}/notifications/{notification} or projects/{project}/locations/{location}/notifications/{notification}.",
+                      "type": "string"
+                    },
+                    "notificationType": {
+                      "description": "Type of notification",
+                      "enum": [
+                        "NOTIFICATION_TYPE_UNSPECIFIED",
+                        "NOTIFICATION_TYPE_SECURITY_PRIVACY_ADVISORY",
+                        "NOTIFICATION_TYPE_SENSITIVE_ACTIONS",
+                        "NOTIFICATION_TYPE_SECURITY_MSA",
+                        "NOTIFICATION_TYPE_THREAT_HORIZONS"
+                      ],
+                      "type": "string"
+                    },
+                    "subject": {
+                      "description": "A subject line of a notification.",
+                      "properties": {
+                        "text": {
+                          "description": "A text object containing the English text and its localized copies.",
+                          "properties": {
+                            "enText": {
+                              "description": "The English copy.",
+                              "type": "string"
+                            },
+                            "localizationState": {
+                              "description": "Status of the localization.",
+                              "enum": [
+                                "LOCALIZATION_STATE_UNSPECIFIED",
+                                "LOCALIZATION_STATE_NOT_APPLICABLE",
+                                "LOCALIZATION_STATE_PENDING",
+                                "LOCALIZATION_STATE_COMPLETED"
+                              ],
+                              "type": "string"
+                            },
+                            "localizedText": {
+                              "description": "The requested localized copy (if applicable).",
+                              "type": "string"
+                            }
+                          },
+                          "type": "object"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "totalSize": {
+                "description": "Estimation of a total number of notifications.",
+                "format": "int32",
+                "type": "integer"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

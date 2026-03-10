@@ -1,0 +1,1922 @@
+{
+  "api": {
+    "title": "Armored Archer API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analytics",
+      "key": "analytics",
+      "operations": [
+        {
+          "id": "getAnalyticsSummary",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_analytics_summary",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "time_range": {
+                "type": "string",
+                "enum": [
+                  "day",
+                  "week",
+                  "month",
+                  "all_time"
+                ],
+                "default": "week"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "summary": {
+                "type": "object",
+                "properties": {
+                  "total_sessions": {
+                    "type": "integer"
+                  },
+                  "total_playtime_minutes": {
+                    "type": "integer"
+                  },
+                  "levels_completed": {
+                    "type": "integer"
+                  },
+                  "enemies_defeated": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "trackEvent",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/track_event",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "event_name"
+            ],
+            "properties": {
+              "event_name": {
+                "type": "string"
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "trackRevenue",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/track_revenue",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "product_id",
+              "amount",
+              "currency"
+            ],
+            "properties": {
+              "product_id": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              },
+              "transaction_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "key": "authentication",
+      "operations": [
+        {
+          "id": "authenticateDevice",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v2/account/authenticate/device",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "device_id"
+            ],
+            "properties": {
+              "device_id": {
+                "type": "string",
+                "description": "Unique device identifier",
+                "example": "device_abc123def456"
+              },
+              "username": {
+                "type": "string",
+                "description": "Optional username for new accounts",
+                "example": "ArcherPlayer1"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Session token"
+              },
+              "user_id": {
+                "type": "string",
+                "description": "User ID"
+              },
+              "username": {
+                "type": "string",
+                "description": "Username"
+              }
+            }
+          }
+        },
+        {
+          "id": "refreshSession",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v2/session/refresh",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Refresh token",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Session token"
+              },
+              "user_id": {
+                "type": "string",
+                "description": "User ID"
+              },
+              "username": {
+                "type": "string",
+                "description": "Username"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Combat System",
+      "key": "combat-system",
+      "operations": [
+        {
+          "id": "getMatchState",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_match_state",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "match_id"
+            ],
+            "properties": {
+              "match_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "match_id": {
+                "type": "string"
+              },
+              "turn": {
+                "type": "integer"
+              },
+              "current_turn_user_id": {
+                "type": "string"
+              },
+              "creator_id": {
+                "type": "string"
+              },
+              "opponent_id": {
+                "type": "string"
+              },
+              "creator_health": {
+                "type": "integer"
+              },
+              "opponent_health": {
+                "type": "integer"
+              },
+              "status": {
+                "type": "string"
+              },
+              "winner": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "submitCombatAction",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/submit_combat_action",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "match_id",
+              "action_type",
+              "angle"
+            ],
+            "properties": {
+              "match_id": {
+                "type": "string"
+              },
+              "action_type": {
+                "type": "string",
+                "enum": [
+                  "shoot"
+                ]
+              },
+              "angle": {
+                "type": "number"
+              },
+              "power": {
+                "type": "number"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "success": {
+                    "type": "boolean"
+                  },
+                  "hit": {
+                    "type": "boolean"
+                  },
+                  "damage": {
+                    "type": "integer"
+                  },
+                  "is_crit": {
+                    "type": "boolean"
+                  },
+                  "match_status": {
+                    "type": "string"
+                  },
+                  "winner": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gear System",
+      "key": "gear-system",
+      "operations": [
+        {
+          "id": "equipGear",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/equip_gear",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "gear_id",
+              "slot"
+            ],
+            "properties": {
+              "gear_id": {
+                "type": "string"
+              },
+              "slot": {
+                "type": "string",
+                "enum": [
+                  "weapon",
+                  "armor",
+                  "accessory"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "equipped_gear": {
+                "type": "object"
+              },
+              "gear": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "rarity": {
+                    "type": "string",
+                    "enum": [
+                      "common",
+                      "rare",
+                      "legendary"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "weapon",
+                      "armor",
+                      "accessory"
+                    ]
+                  },
+                  "stats": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "base_value": {
+                          "type": "integer"
+                        },
+                        "value": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "level": {
+                    "type": "integer"
+                  },
+                  "timestamp": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "generateGear",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/generate_gear",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "stage_id",
+              "boss_defeated"
+            ],
+            "properties": {
+              "stage_id": {
+                "type": "string"
+              },
+              "boss_defeated": {
+                "type": "boolean"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "gear": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "rarity": {
+                    "type": "string",
+                    "enum": [
+                      "common",
+                      "rare",
+                      "legendary"
+                    ]
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": [
+                      "weapon",
+                      "armor",
+                      "accessory"
+                    ]
+                  },
+                  "stats": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "base_value": {
+                          "type": "integer"
+                        },
+                        "value": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "modifiers": {
+                    "type": "array",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "level": {
+                    "type": "integer"
+                  },
+                  "timestamp": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "inventory": {
+                "type": "object",
+                "properties": {
+                  "gear": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "rarity": {
+                          "type": "string",
+                          "enum": [
+                            "common",
+                            "rare",
+                            "legendary"
+                          ]
+                        },
+                        "type": {
+                          "type": "string",
+                          "enum": [
+                            "weapon",
+                            "armor",
+                            "accessory"
+                          ]
+                        },
+                        "stats": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": {
+                                "type": "string"
+                              },
+                              "base_value": {
+                                "type": "integer"
+                              },
+                              "value": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
+                        "modifiers": {
+                          "type": "array",
+                          "items": {
+                            "type": "object"
+                          }
+                        },
+                        "level": {
+                          "type": "integer"
+                        },
+                        "timestamp": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "equipped_gear": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getInventory",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_inventory",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "gear": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "rarity": {
+                      "type": "string",
+                      "enum": [
+                        "common",
+                        "rare",
+                        "legendary"
+                      ]
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "weapon",
+                        "armor",
+                        "accessory"
+                      ]
+                    },
+                    "stats": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": "string"
+                          },
+                          "base_value": {
+                            "type": "integer"
+                          },
+                          "value": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "modifiers": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    },
+                    "level": {
+                      "type": "integer"
+                    },
+                    "timestamp": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "equipped_gear": {
+                "type": "object"
+              },
+              "unlocked_modifier_pools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "unequipGear",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/unequip_gear",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "slot"
+            ],
+            "properties": {
+              "slot": {
+                "type": "string",
+                "enum": [
+                  "weapon",
+                  "armor",
+                  "accessory"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "equipped_gear": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "unlockModifierPool",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/unlock_modifier_pool",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "modifier_id"
+            ],
+            "properties": {
+              "modifier_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "unlocked_modifier_pools": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Matchmaking",
+      "key": "matchmaking",
+      "operations": [
+        {
+          "id": "acceptMatch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/accept_match",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "match_id"
+            ],
+            "properties": {
+              "match_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "match": {
+                "type": "object",
+                "properties": {
+                  "match_id": {
+                    "type": "string"
+                  },
+                  "creator_id": {
+                    "type": "string"
+                  },
+                  "opponent_id": {
+                    "type": "string"
+                  },
+                  "creator_rank": {
+                    "type": "integer"
+                  },
+                  "opponent_rank": {
+                    "type": "integer"
+                  },
+                  "match_type": {
+                    "type": "string",
+                    "enum": [
+                      "ranked",
+                      "casual"
+                    ]
+                  },
+                  "is_punch_up": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "active",
+                      "completed"
+                    ]
+                  },
+                  "created_at": {
+                    "type": "integer"
+                  },
+                  "updated_at": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "createMatch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/create_match",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "match_type"
+            ],
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": [
+                  "ranked",
+                  "casual"
+                ]
+              },
+              "is_punch_up": {
+                "type": "boolean"
+              },
+              "target_opponent_id": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "match": {
+                "type": "object",
+                "properties": {
+                  "match_id": {
+                    "type": "string"
+                  },
+                  "creator_id": {
+                    "type": "string"
+                  },
+                  "opponent_id": {
+                    "type": "string"
+                  },
+                  "creator_rank": {
+                    "type": "integer"
+                  },
+                  "opponent_rank": {
+                    "type": "integer"
+                  },
+                  "match_type": {
+                    "type": "string",
+                    "enum": [
+                      "ranked",
+                      "casual"
+                    ]
+                  },
+                  "is_punch_up": {
+                    "type": "boolean"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "active",
+                      "completed"
+                    ]
+                  },
+                  "created_at": {
+                    "type": "integer"
+                  },
+                  "updated_at": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getPlayerRank",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_player_rank",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "rank": {
+                "type": "integer"
+              },
+              "level": {
+                "type": "integer"
+              },
+              "xp": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "listMatches",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/list_matches",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "match_type": {
+                "type": "string",
+                "enum": [
+                  "ranked",
+                  "casual"
+                ]
+              },
+              "min_rank": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "max_rank": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "matches": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "match_id": {
+                      "type": "string"
+                    },
+                    "creator_id": {
+                      "type": "string"
+                    },
+                    "opponent_id": {
+                      "type": "string"
+                    },
+                    "creator_rank": {
+                      "type": "integer"
+                    },
+                    "opponent_rank": {
+                      "type": "integer"
+                    },
+                    "match_type": {
+                      "type": "string",
+                      "enum": [
+                        "ranked",
+                        "casual"
+                      ]
+                    },
+                    "is_punch_up": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "active",
+                        "completed"
+                      ]
+                    },
+                    "created_at": {
+                      "type": "integer"
+                    },
+                    "updated_at": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              },
+              "player_rank": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Player rpc",
+      "key": "player-rpc",
+      "operations": [
+        {
+          "id": "getPlayerReports",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_player_reports",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "reports": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "reporter_id": {
+                      "type": "string"
+                    },
+                    "reported_user_id": {
+                      "type": "string"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string"
+                    },
+                    "created_at": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "armored_archer_health_check",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/health_check",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "armored_archer_report_player",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/report_player",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Player RPG System",
+      "key": "player-rpg-system",
+      "operations": [
+        {
+          "id": "allocateStats",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/allocate_stats",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "stat_name",
+              "points"
+            ],
+            "properties": {
+              "stat_name": {
+                "type": "string",
+                "enum": [
+                  "attack",
+                  "defense",
+                  "dodge",
+                  "crit_rate"
+                ]
+              },
+              "points": {
+                "type": "integer",
+                "maximum": 1000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "player_stats": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer"
+                  },
+                  "xp": {
+                    "type": "integer"
+                  },
+                  "ability_points": {
+                    "type": "integer"
+                  },
+                  "stats": {
+                    "type": "object",
+                    "properties": {
+                      "attack": {
+                        "type": "integer"
+                      },
+                      "defense": {
+                        "type": "integer"
+                      },
+                      "dodge": {
+                        "type": "integer"
+                      },
+                      "crit_rate": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "gainXP",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/gain_xp",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "xp_amount",
+              "source"
+            ],
+            "properties": {
+              "xp_amount": {
+                "type": "integer",
+                "maximum": 1000000
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "pve",
+                  "pvp"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "player_stats": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "level": {
+                    "type": "integer"
+                  },
+                  "xp": {
+                    "type": "integer"
+                  },
+                  "ability_points": {
+                    "type": "integer"
+                  },
+                  "stats": {
+                    "type": "object",
+                    "properties": {
+                      "attack": {
+                        "type": "integer"
+                      },
+                      "defense": {
+                        "type": "integer"
+                      },
+                      "dodge": {
+                        "type": "integer"
+                      },
+                      "crit_rate": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              },
+              "xp_gained": {
+                "type": "integer"
+              },
+              "levels_gained": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getPlayerStats",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_player_stats",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "level": {
+                "type": "integer"
+              },
+              "xp": {
+                "type": "integer"
+              },
+              "ability_points": {
+                "type": "integer"
+              },
+              "stats": {
+                "type": "object",
+                "properties": {
+                  "attack": {
+                    "type": "integer"
+                  },
+                  "defense": {
+                    "type": "integer"
+                  },
+                  "dodge": {
+                    "type": "integer"
+                  },
+                  "crit_rate": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Season System",
+      "key": "season-system",
+      "operations": [
+        {
+          "id": "claimSeasonRewards",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/claim_season_rewards",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "rewards": {
+                "type": "object",
+                "properties": {
+                  "rank_tier": {
+                    "type": "string",
+                    "enum": [
+                      "legendary",
+                      "epic",
+                      "rare",
+                      "uncommon",
+                      "common"
+                    ]
+                  },
+                  "coins": {
+                    "type": "integer"
+                  },
+                  "gems": {
+                    "type": "integer"
+                  },
+                  "cosmetics": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "aura": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              "claimed": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "id": "endSeason",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/end_season",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "old_season": {
+                "type": "object",
+                "properties": {
+                  "season_id": {
+                    "type": "string"
+                  },
+                  "season_number": {
+                    "type": "integer"
+                  },
+                  "start_time": {
+                    "type": "integer"
+                  },
+                  "end_time": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "ended"
+                    ]
+                  },
+                  "duration_weeks": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "new_season": {
+                "type": "object",
+                "properties": {
+                  "season_id": {
+                    "type": "string"
+                  },
+                  "season_number": {
+                    "type": "integer"
+                  },
+                  "start_time": {
+                    "type": "integer"
+                  },
+                  "end_time": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "ended"
+                    ]
+                  },
+                  "duration_weeks": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getLeaderboard",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_leaderboard",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "season": {
+                "type": "object",
+                "properties": {
+                  "season_id": {
+                    "type": "string"
+                  },
+                  "season_number": {
+                    "type": "integer"
+                  },
+                  "start_time": {
+                    "type": "integer"
+                  },
+                  "end_time": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "ended"
+                    ]
+                  },
+                  "duration_weeks": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "leaderboard": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "owner_id": {
+                      "type": "string"
+                    },
+                    "username": {
+                      "type": "string"
+                    },
+                    "rank": {
+                      "type": "integer"
+                    },
+                    "score": {
+                      "type": "integer"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "wins": {
+                          "type": "integer"
+                        },
+                        "losses": {
+                          "type": "integer"
+                        },
+                        "win_rate": {
+                          "type": "number"
+                        },
+                        "punch_up_wins": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getSeasonInfo",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_season_info",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "season": {
+                "type": "object",
+                "properties": {
+                  "season_id": {
+                    "type": "string"
+                  },
+                  "season_number": {
+                    "type": "integer"
+                  },
+                  "start_time": {
+                    "type": "integer"
+                  },
+                  "end_time": {
+                    "type": "integer"
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "active",
+                      "ended"
+                    ]
+                  },
+                  "duration_weeks": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "player_rank": {
+                "type": "integer",
+                "nullable": true
+              },
+              "player_score": {
+                "type": "integer"
+              },
+              "time_remaining": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "getSeasonRewards",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_season_rewards",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "rank": {
+                "type": "integer"
+              },
+              "rewards": {
+                "type": "object",
+                "properties": {
+                  "rank_tier": {
+                    "type": "string",
+                    "enum": [
+                      "legendary",
+                      "epic",
+                      "rare",
+                      "uncommon",
+                      "common"
+                    ]
+                  },
+                  "coins": {
+                    "type": "integer"
+                  },
+                  "gems": {
+                    "type": "integer"
+                  },
+                  "cosmetics": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string"
+                      },
+                      "aura": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "updateRank",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/update_rank",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "winner_id",
+              "loser_id",
+              "winner_old_rank",
+              "loser_old_rank",
+              "winner_new_rank",
+              "loser_new_rank",
+              "is_punch_up"
+            ],
+            "properties": {
+              "winner_id": {
+                "type": "string"
+              },
+              "loser_id": {
+                "type": "string"
+              },
+              "winner_old_rank": {
+                "type": "integer"
+              },
+              "loser_old_rank": {
+                "type": "integer"
+              },
+              "winner_new_rank": {
+                "type": "integer"
+              },
+              "loser_new_rank": {
+                "type": "integer"
+              },
+              "is_punch_up": {
+                "type": "boolean"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "winner": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "old_rank": {
+                    "type": "integer"
+                  },
+                  "new_rank": {
+                    "type": "integer"
+                  },
+                  "rank_change": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "loser": {
+                "type": "object",
+                "properties": {
+                  "user_id": {
+                    "type": "string"
+                  },
+                  "old_rank": {
+                    "type": "integer"
+                  },
+                  "new_rank": {
+                    "type": "integer"
+                  },
+                  "rank_change": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "is_punch_up": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Store",
+      "key": "store",
+      "operations": [
+        {
+          "id": "appLaunchCheck",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/app_launch_check",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "pending_purchases": {
+                "type": "object",
+                "properties": {
+                  "processed": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "refunds": {
+                "type": "object",
+                "properties": {
+                  "found": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "subscription": {
+                "type": "object",
+                "properties": {
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "tier": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "checkRefunds",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/check_refunds",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "refunds_found": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "checkSubscriptions",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/check_subscriptions",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "active_subscription": {
+                "type": "boolean"
+              },
+              "subscription_tier": {
+                "type": "string",
+                "nullable": true
+              }
+            }
+          }
+        },
+        {
+          "id": "getCurrency",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/get_currency",
+          "requestSchema": {
+            "type": "object",
+            "properties": {}
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "gems": {
+                "type": "integer"
+              },
+              "gold": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "processPendingPurchases",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/process_pending_purchases",
+          "requestSchema": {
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "processed": {
+                "type": "integer"
+              },
+              "successful": {
+                "type": "integer"
+              },
+              "results": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "product_id": {
+                      "type": "string"
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "spendGems",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/spend_gems",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "amount"
+            ],
+            "properties": {
+              "amount": {
+                "type": "integer",
+                "maximum": 1000000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "new_balance": {
+                "type": "integer"
+              },
+              "amount_spent": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "validatePurchase",
+          "method": "POST",
+          "kind": "create",
+          "path": "/rpc/armored_archer/validate_purchase",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "product_id",
+              "platform",
+              "transaction_receipt"
+            ],
+            "properties": {
+              "product_id": {
+                "type": "string",
+                "enum": [
+                  "com.armoredarcher.gems.small",
+                  "com.armoredarcher.gems.medium",
+                  "com.armoredarcher.gems.large"
+                ]
+              },
+              "platform": {
+                "type": "string",
+                "enum": [
+                  "ios",
+                  "android"
+                ]
+              },
+              "transaction_receipt": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "gems_awarded": {
+                "type": "integer"
+              },
+              "new_balance": {
+                "type": "integer"
+              },
+              "product_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

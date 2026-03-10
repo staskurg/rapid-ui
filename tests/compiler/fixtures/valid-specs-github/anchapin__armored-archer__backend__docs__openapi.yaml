@@ -1,0 +1,2488 @@
+openapi: 3.0.3
+info:
+  title: Armored Archer API
+  description: |
+    API documentation for the Armored Archer game backend powered by Nakama.
+
+    ## Authentication
+    The Armored Archer API uses Nakama's authentication system. All RPC endpoints
+    require a valid Nakama session token.
+
+    ### Authentication Methods
+    1. **Device Authentication** (`/v2/account/authenticate/device`)
+       - Authenticate using a unique device identifier
+       - Best for mobile platforms (iOS/Android)
+       - No user input required
+
+    2. **Email Authentication** (`/v2/account/authenticate/email`)
+       - Authenticate using email and password
+       - Requires account creation
+
+    ### Including the Token
+    All RPC endpoints require the token to be included in the `Authorization` header:
+    ```
+    Authorization: Bearer <your_session_token>
+    ```
+
+    ### Token Lifecycle
+    - Tokens expire after 30 days by default
+    - Use refresh tokens to extend sessions
+    - Store tokens securely on the client
+
+    ## Authorization
+    Most endpoints require authentication. The following endpoints are public:
+    - `/v2/account/authenticate/*` (all authentication endpoints)
+
+    ## Rate Limits
+    - Authentication endpoints: 10 requests/minute
+    - Gameplay RPCs: 60 requests/minute
+    - Store/Commerce: 30 requests/minute
+
+    ## Error Responses
+    All endpoints may return error responses in the following format:
+    ```json
+    {
+      "error": "Error message",
+      "error_code": "ERROR_CODE",
+      "rpc_name": "rpc_name"
+    }
+    ```
+
+    ## Common Error Codes
+    | Code | Description |
+    |------|-------------|
+    | ERR_AUTHENTICATION_FAILED | Invalid credentials or expired token |
+    | ERR_AUTHORIZATION_FAILED | User lacks permission |
+    | ERR_RATE_LIMITED | Too many requests |
+    | ERR_VALIDATION_FAILED | Invalid request parameters |
+    | ERR_INTERNAL_ERROR | Server-side error |
+  version: 1.0.0
+  contact:
+    name: Armored Archer Support
+  license:
+    name: MIT
+servers:
+  - url: https://api.armoredarcher.com
+    description: Production server
+  - url: https://staging-api.armoredarcher.com
+    description: Staging server
+  - url: http://localhost:7350
+    description: Local development server
+tags:
+  - name: Authentication
+    description: Nakama authentication endpoints
+  - name: Player RPG System
+    description: Player stats, XP, and stat allocation
+  - name: Matchmaking
+    description: PvP match creation and management
+  - name: Combat System
+    description: Combat actions and match state
+  - name: Season System
+    description: Seasons, leaderboards, and rewards
+  - name: Store
+    description: In-game purchases and currency
+  - name: Gear System
+    description: Gear generation and inventory management
+  - name: Analytics
+    description: Event tracking and analytics
+  - name: Player RPC
+    description: Player reporting and health check
+paths:
+  /v2/account/authenticate/device:
+    post:
+      tags:
+        - Authentication
+      summary: Authenticate with device ID
+      description: |
+        Authenticate a user using a device identifier. Creates a new account
+        if one doesn't exist, or returns existing session for returning users.
+      operationId: authenticateDevice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - device_id
+              properties:
+                device_id:
+                  type: string
+                  description: Unique device identifier
+                  example: device_abc123def456
+                username:
+                  type: string
+                  description: Optional username for new accounts
+                  example: ArcherPlayer1
+      responses:
+        '200':
+          description: Authentication successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+              example:
+                token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+                user_id: user_1234567890
+                username: ArcherPlayer1
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Device ID is required
+                error_code: INVALID_REQUEST
+  /v2/session/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh session token
+      description: |
+        Refresh an existing session token to extend its validity.
+        Requires a valid refresh token.
+      operationId: refreshSession
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                  description: Refresh token
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid or expired refresh token
+  /rpc/armored_archer/gain_xp:
+    post:
+      tags:
+        - Player RPG System
+      summary: Gain experience points
+      description: |
+        Add XP to the player's stats. If the player doesn't have stats yet,
+        they will be initialized with default values.
+
+        Leveling formula: Each level requires progressively more XP.
+        Level up grants ability points that can be allocated to stats.
+      operationId: gainXP
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GainXPRequest'
+            example:
+              xp_amount: 150
+              source: pve
+      responses:
+        '200':
+          description: XP gained successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GainXPResponse'
+              example:
+                success: true
+                player_stats:
+                  user_id: user_1234567890
+                  level: 2
+                  xp: 50
+                  ability_points: 1
+                  stats:
+                    attack: 10
+                    defense: 10
+                    dodge: 10
+                    crit_rate: 5
+                xp_gained: 150
+                levels_gained: 1
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+  /rpc/armored_archer/allocate_stats:
+    post:
+      tags:
+        - Player RPG System
+      summary: Allocate ability points to stats
+      description: |
+        Allocate ability points to increase player stats. Available stats are:
+        - attack: Increases damage dealt
+        - defense: Reduces damage taken
+        - dodge: Chance to avoid attacks
+        - crit_rate: Chance to deal critical damage
+
+        Requires player to have sufficient ability points.
+      operationId: allocateStats
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AllocateStatsRequest'
+            example:
+              stat_name: attack
+              points: 1
+      responses:
+        '200':
+          description: Stats allocated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AllocateStatsResponse'
+              example:
+                success: true
+                player_stats:
+                  user_id: user_1234567890
+                  level: 2
+                  xp: 50
+                  ability_points: 0
+                  stats:
+                    attack: 11
+                    defense: 10
+                    dodge: 10
+                    crit_rate: 5
+        '400':
+          description: Not enough ability points or invalid stat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: Not enough ability points
+        '404':
+          description: Player stats not found
+  /rpc/armored_archer/get_player_stats:
+    post:
+      tags:
+        - Player RPG System
+      summary: Get player stats
+      description: |
+        Retrieve the current player's stats including level, XP, ability points,
+        and combat statistics. Results are cached for performance.
+      operationId: getPlayerStats
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPlayerStatsRequest'
+            example: {}
+      responses:
+        '200':
+          description: Player stats retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerStats'
+              example:
+                user_id: user_1234567890
+                level: 5
+                xp: 450
+                ability_points: 3
+                stats:
+                  attack: 15
+                  defense: 12
+                  dodge: 11
+                  crit_rate: 8
+        '404':
+          description: Player stats not found
+  /rpc/armored_archer/list_matches:
+    post:
+      tags:
+        - Matchmaking
+      summary: List available matches
+      description: |
+        List available PvP matches that the player can join.
+        Supports filtering by match type and rank range.
+      operationId: listMatches
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListMatchesRequest'
+            example:
+              match_type: ranked
+              min_rank: 100
+              max_rank: 500
+              limit: 20
+      responses:
+        '200':
+          description: Matches listed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListMatchesResponse'
+              example:
+                success: true
+                matches:
+                  - match_id: match_1234567890
+                    creator_id: user_abcdef
+                    creator_rank: 150
+                    match_type: ranked
+                    is_punch_up: false
+                    status: pending
+                    created_at: 1699999999000
+                player_rank: 200
+                total: 1
+  /rpc/armored_archer/create_match:
+    post:
+      tags:
+        - Matchmaking
+      summary: Create a new PvP match
+      description: |
+        Create a new PvP match. Can be:
+        - Open match: Any player can accept
+        - Direct challenge: Specific opponent invited
+
+        Ranked matches affect leaderboard standings.
+      operationId: createMatch
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMatchRequest'
+            example:
+              match_type: ranked
+              is_punch_up: false
+      responses:
+        '200':
+          description: Match created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateMatchResponse'
+              example:
+                success: true
+                match:
+                  match_id: match_1234567890
+                  creator_id: user_1234567890
+                  opponent_id: ''
+                  creator_rank: 200
+                  opponent_rank: 0
+                  match_type: ranked
+                  is_punch_up: false
+                  status: pending
+                  created_at: 1700000000000
+        '400':
+          description: Invalid request or rank difference too large
+  /rpc/armored_archer/accept_match:
+    post:
+      tags:
+        - Matchmaking
+      summary: Accept a pending match
+      description: |
+        Accept a pending match invitation. Both players must be present
+        for the match to become active.
+      operationId: acceptMatch
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptMatchRequest'
+            example:
+              match_id: match_1234567890
+      responses:
+        '200':
+          description: Match accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptMatchResponse'
+              example:
+                success: true
+                match:
+                  match_id: match_1234567890
+                  creator_id: user_abcdef
+                  opponent_id: user_1234567890
+                  creator_rank: 150
+                  opponent_rank: 200
+                  match_type: ranked
+                  status: active
+        '400':
+          description: Match not available or already accepted
+  /rpc/armored_archer/get_player_rank:
+    post:
+      tags:
+        - Matchmaking
+      summary: Get player rank
+      description: |
+        Get the current player's rank based on their stats.
+        Rank is calculated as: (level * 10) + (total_stats / 4)
+      operationId: getPlayerRank
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetPlayerRankRequest'
+            example: {}
+      responses:
+        '200':
+          description: Rank retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetPlayerRankResponse'
+              example:
+                success: true
+                rank: 200
+                level: 5
+                xp: 450
+  /rpc/armored_archer/submit_combat_action:
+    post:
+      tags:
+        - Combat System
+      summary: Submit a combat action
+      description: |
+        Submit an action during an active PvP match. Currently only "shoot" action
+        is supported. The action is processed server-side for fair combat.
+
+        Combat mechanics:
+        - Hit chance: 1 - (dodge / 100)
+        - Damage: (10 + attack * 0.5) - (defense * 0.3)
+        - Critical: 2x damage if crit roll succeeds
+      operationId: submitCombatAction
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitCombatActionRequest'
+            example:
+              match_id: match_1234567890
+              action_type: shoot
+              angle: 0.78
+              power: 85
+      responses:
+        '200':
+          description: Combat action processed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitCombatActionResponse'
+              example:
+                success: true
+                result:
+                  success: true
+                  hit: true
+                  damage: 25
+                  is_crit: false
+                  match_status: active
+        '400':
+          description: Not your turn or match not active
+  /rpc/armored_archer/get_match_state:
+    post:
+      tags:
+        - Combat System
+      summary: Get current match state
+      description: |
+        Get the current state of an active match including health,
+        turn number, and combat log.
+      operationId: getMatchState
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetMatchStateRequest'
+            example:
+              match_id: match_1234567890
+      responses:
+        '200':
+          description: Match state retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MatchState'
+              example:
+                match_id: match_1234567890
+                turn: 3
+                current_turn_user_id: user_1234567890
+                creator_id: user_abcdef
+                opponent_id: user_1234567890
+                creator_health: 75
+                opponent_health: 100
+                status: active
+  /rpc/armored_archer/get_season_info:
+    post:
+      tags:
+        - Season System
+      summary: Get current season info
+      description: |
+        Get information about the current active season including
+        duration, time remaining, and player's current rank.
+      operationId: getSeasonInfo
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSeasonInfoRequest'
+            example: {}
+      responses:
+        '200':
+          description: Season info retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSeasonInfoResponse'
+              example:
+                success: true
+                season:
+                  season_id: season_5
+                  season_number: 5
+                  start_time: 1700000000000
+                  end_time: 1702598400000
+                  status: active
+                  duration_weeks: 4
+                player_rank: 45
+                player_score: 1250
+                time_remaining: 2592000000
+  /rpc/armored_archer/get_leaderboard:
+    post:
+      tags:
+        - Season System
+      summary: Get season leaderboard
+      description: |
+        Get the current season leaderboard with top players.
+        Returns ranked entries with wins, losses, and win rate.
+      operationId: getLeaderboard
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetLeaderboardRequest'
+            example:
+              limit: 50
+      responses:
+        '200':
+          description: Leaderboard retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetLeaderboardResponse'
+              example:
+                success: true
+                season:
+                  season_id: season_5
+                  season_number: 5
+                leaderboard:
+                  - owner_id: user_001
+                    username: TopPlayer
+                    rank: 1
+                    score: 1800
+                    meta:
+                      wins: 50
+                      losses: 5
+                      win_rate: 0.91
+                      punch_up_wins: 15
+  /rpc/armored_archer/update_rank:
+    post:
+      tags:
+        - Season System
+      summary: Update player rank after match
+      description: |
+        Update the leaderboard after a PvP match using Elo rating system.
+
+        - K-factor for normal matches: 32
+        - K-factor for punch-up matches: 60
+
+        Punch-up = fighting someone with higher rank.
+      operationId: updateRank
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRankRequest'
+            example:
+              winner_id: user_1234567890
+              loser_id: user_abcdef
+              winner_old_rank: 1200
+              loser_old_rank: 1150
+              winner_new_rank: 1220
+              loser_new_rank: 1130
+              is_punch_up: false
+      responses:
+        '200':
+          description: Rank updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateRankResponse'
+              example:
+                success: true
+                winner:
+                  user_id: user_1234567890
+                  old_rank: 1200
+                  new_rank: 1220
+                  rank_change: 20
+                loser:
+                  user_id: user_abcdef
+                  old_rank: 1150
+                  new_rank: 1130
+                  rank_change: -20
+  /rpc/armored_archer/get_season_rewards:
+    post:
+      tags:
+        - Season System
+      summary: Get season rewards preview
+      description: |
+        Preview the rewards the player will receive based on their
+        current season rank. Rewards are tiered:
+        - Legendary (Rank 1-10): 10000 coins, 500 gems, champion title + aura
+        - Epic (Rank 11-50): 5000 coins, 200 gems, elite title
+        - Rare (Rank 51-100): 2000 coins, 100 gems, veteran title
+        - Uncommon (Rank 101-500): 500 coins
+        - Common (Rank 501+): 100 coins
+      operationId: getSeasonRewards
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetSeasonRewardsRequest'
+            example: {}
+      responses:
+        '200':
+          description: Rewards preview retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetSeasonRewardsResponse'
+              example:
+                success: true
+                rank: 25
+                rewards:
+                  rank_tier: epic
+                  coins: 5000
+                  gems: 200
+                  cosmetics:
+                    title: Season 5 Elite
+  /rpc/armored_archer/claim_season_rewards:
+    post:
+      tags:
+        - Season System
+      summary: Claim season rewards
+      description: |
+        Claim the player's season rewards. Can only be claimed once per season.
+        Rewards include coins, gems, and cosmetic titles/aura.
+      operationId: claimSeasonRewards
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClaimSeasonRewardsRequest'
+            example: {}
+      responses:
+        '200':
+          description: Rewards claimed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimSeasonRewardsResponse'
+              example:
+                success: true
+                rewards:
+                  rank_tier: epic
+                  coins: 5000
+                  gems: 200
+                claimed: true
+        '400':
+          description: Rewards already claimed or no leaderboard entry
+  /rpc/armored_archer/end_season:
+    post:
+      tags:
+        - Season System
+      summary: End current season (admin)
+      description: |
+        End the current season and start a new one.
+        Creates a new leaderboard for the new season.
+      operationId: endSeason
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EndSeasonRequest'
+            example: {}
+      responses:
+        '200':
+          description: Season ended
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EndSeasonResponse'
+              example:
+                success: true
+                old_season:
+                  season_id: season_5
+                  status: ended
+                new_season:
+                  season_id: season_6
+                  season_number: 6
+                  status: active
+  /rpc/armored_archer/validate_purchase:
+    post:
+      tags:
+        - Store
+      summary: Validate in-app purchase
+      description: |
+        Validate a purchase receipt and award gems to the player.
+        Supported products:
+        - com.armoredarcher.gems.small: 100 gems ($0.99)
+        - com.armoredarcher.gems.medium: 550 gems ($4.99)
+        - com.armoredarcher.gems.large: 1200 gems ($9.99)
+      operationId: validatePurchase
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidatePurchaseRequest'
+            example:
+              product_id: com.armoredarcher.gems.medium
+              platform: ios
+              transaction_receipt: base64_encoded_receipt...
+      responses:
+        '200':
+          description: Purchase validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidatePurchaseResponse'
+              example:
+                success: true
+                gems_awarded: 550
+                new_balance: 750
+                product_id: com.armoredarcher.gems.medium
+        '400':
+          description: Invalid product ID
+  /rpc/armored_archer/get_currency:
+    post:
+      tags:
+        - Store
+      summary: Get player currency
+      description: |
+        Get the player's current gem and gold balance.
+        Results are cached for performance.
+      operationId: getCurrency
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetCurrencyRequest'
+            example: {}
+      responses:
+        '200':
+          description: Currency retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerCurrency'
+              example:
+                user_id: user_1234567890
+                gems: 500
+                gold: 2500
+  /rpc/armored_archer/spend_gems:
+    post:
+      tags:
+        - Store
+      summary: Spend gems
+      description: |
+        Spend gems from the player's balance.
+        Used for premium features, cosmetics, or in-game purchases.
+      operationId: spendGems
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SpendGemsRequest'
+            example:
+              amount: 100
+      responses:
+        '200':
+          description: Gems spent
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SpendGemsResponse'
+              example:
+                success: true
+                new_balance: 400
+                amount_spent: 100
+        '400':
+          description: Insufficient gems
+  /rpc/armored_archer/generate_gear:
+    post:
+      tags:
+        - Gear System
+      summary: Generate new gear
+      description: |
+        Generate a new piece of gear based on the stage.
+        Gear has randomized stats and can have modifiers.
+
+        Rarity drop rates:
+        - Common: 70%
+        - Rare: 25%
+        - Legendary: 5%
+      operationId: generateGear
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateGearRequest'
+            example:
+              stage_id: stage_01
+              boss_defeated: true
+      responses:
+        '200':
+          description: Gear generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenerateGearResponse'
+              example:
+                success: true
+                gear:
+                  id: gear_1234567890
+                  name: Steel Blade +1
+                  rarity: rare
+                  type: weapon
+                  stats:
+                    - name: attack
+                      base_value: 10
+                      value: 15
+                    - name: crit_rate
+                      base_value: 5
+                      value: 8
+  /rpc/armored_archer/equip_gear:
+    post:
+      tags:
+        - Gear System
+      summary: Equip gear
+      description: |
+        Equip a piece of gear to the specified slot.
+        Slots: weapon, armor, accessory
+      operationId: equipGear
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EquipGearRequest'
+            example:
+              gear_id: gear_1234567890
+              slot: weapon
+      responses:
+        '200':
+          description: Gear equipped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EquipGearResponse'
+              example:
+                success: true
+                equipped_gear:
+                  weapon: gear_1234567890
+                  armor: null
+                  accessory: null
+        '400':
+          description: Gear not found or wrong slot
+  /rpc/armored_archer/unequip_gear:
+    post:
+      tags:
+        - Gear System
+      summary: Unequip gear
+      description: |
+        Remove equipped gear from a slot.
+      operationId: unequipGear
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnequipGearRequest'
+            example:
+              slot: weapon
+      responses:
+        '200':
+          description: Gear unequipped
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnequipGearResponse'
+              example:
+                success: true
+                equipped_gear:
+                  weapon: null
+  /rpc/armored_archer/get_inventory:
+    post:
+      tags:
+        - Gear System
+      summary: Get player inventory
+      description: |
+        Get all gear in the player's inventory and currently equipped items.
+      operationId: getInventory
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GetInventoryRequest'
+            example: {}
+      responses:
+        '200':
+          description: Inventory retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayerInventory'
+              example:
+                user_id: user_1234567890
+                gear:
+                  - id: gear_1234567890
+                    name: Steel Blade
+                    rarity: rare
+                    type: weapon
+                equipped_gear:
+                  weapon: gear_1234567890
+                unlocked_modifier_pools: []
+  /rpc/armored_archer/unlock_modifier_pool:
+    post:
+      tags:
+        - Gear System
+      summary: Unlock modifier pool
+      description: |
+        Unlock a new modifier pool for gear generation.
+        Modifier pools are typically unlocked by defeating bosses.
+
+        Available modifier pools:
+        - piercing_arrow: Boss "boss_wind" unlock
+        - heavy_impact: Boss "boss_basic" unlock
+        - wind_fury: Boss "boss_wind" unlock
+      operationId: unlockModifierPool
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UnlockModifierPoolRequest'
+            example:
+              modifier_id: boss_wind
+      responses:
+        '200':
+          description: Modifier pool unlocked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnlockModifierPoolResponse'
+              example:
+                success: true
+                unlocked_modifier_pools:
+                  - boss_basic
+                  - boss_wind
+  /rpc/armored_archer/health_check:
+    post:
+      tags:
+        - Player rpc
+      summary: 'RPC: armored_archer/health_check'
+      description: Auto-generated endpoint for armored_archer/health_check
+      operationId: armored_archer_health_check
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /rpc/armored_archer/report_player:
+    post:
+      tags:
+        - Player rpc
+      summary: 'RPC: armored_archer/report_player'
+      description: Auto-generated endpoint for armored_archer/report_player
+      operationId: armored_archer_report_player
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+  /rpc/armored_archer/get_player_reports:
+    post:
+      tags:
+        - Player RPC
+      summary: Get player reports
+      description: |
+        Get reports filed by or against the current player. Returns a list of
+        player reports for moderation and dispute resolution purposes.
+      operationId: getPlayerReports
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  reports:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        reporter_id:
+                          type: string
+                        reported_user_id:
+                          type: string
+                        reason:
+                          type: string
+                        status:
+                          type: string
+                        created_at:
+                          type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rpc/armored_archer/process_pending_purchases:
+    post:
+      tags:
+        - Store
+      summary: Process pending purchases
+      description: |
+        Process any pending purchases that were not completed during app launch.
+        This is typically called when the app regains focus or after a network
+        reconnection. Processes any stored pending purchases from local storage.
+      operationId: processPendingPurchases
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Purchases processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessPendingPurchasesResponse'
+              example:
+                success: true
+                processed: 2
+                successful: 2
+                results:
+                  - product_id: gem_pack_100
+                    success: true
+                  - product_id: gem_pack_500
+                    success: true
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rpc/armored_archer/check_refunds:
+    post:
+      tags:
+        - Store
+      summary: Check for refunds
+      description: |
+        Check for refunds via RevenueCat API. Should be called on app launch
+        to detect chargebacks and reverse any previously granted benefits.
+      operationId: checkRefunds
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Refund check completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckRefundsResponse'
+              example:
+                success: true
+                refunds_found: 0
+        '500':
+          description: Server error checking refunds
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rpc/armored_archer/check_subscriptions:
+    post:
+      tags:
+        - Store
+      summary: Check subscription status
+      description: |
+        Check subscription status via RevenueCat API. Verifies active subscriptions
+        and updates player benefits accordingly.
+      operationId: checkSubscriptions
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: Subscription check completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckSubscriptionsResponse'
+              example:
+                success: true
+                active_subscription: true
+                subscription_tier: premium
+        '500':
+          description: Server error checking subscriptions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rpc/armored_archer/app_launch_check:
+    post:
+      tags:
+        - Store
+      summary: App launch check
+      description: |
+        Comprehensive check performed on app launch. Processes pending purchases,
+        checks for refunds, and verifies subscription status. This is the main
+        entry point for store-related initialization.
+      operationId: appLaunchCheck
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+            example: {}
+      responses:
+        '200':
+          description: App launch check completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppLaunchCheckResponse'
+              example:
+                success: true
+                pending_purchases:
+                  processed: 0
+                refunds:
+                  found: 0
+                subscription:
+                  active: true
+                  tier: premium
+  /rpc/armored_archer/track_event:
+    post:
+      tags:
+        - Analytics
+      summary: Track analytics event
+      description: |
+        Track a custom analytics event. Events are sent to the analytics pipeline
+        for processing and storage.
+      operationId: trackEvent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackEventRequest'
+            example:
+              event_name: level_completed
+              properties:
+                level: 5
+                score: 1500
+                time_seconds: 120
+      responses:
+        '200':
+          description: Event tracked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackEventResponse'
+              example:
+                success: true
+        '400':
+          description: Invalid event data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /rpc/armored_archer/get_analytics_summary:
+    post:
+      tags:
+        - Analytics
+      summary: Get analytics summary
+      description: |
+        Get an analytics summary for the current player. Returns aggregated
+        statistics about player behavior and engagement.
+      operationId: getAnalyticsSummary
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                time_range:
+                  type: string
+                  enum: [day, week, month, all_time]
+                  default: week
+            example:
+              time_range: week
+      responses:
+        '200':
+          description: Analytics summary retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSummaryResponse'
+              example:
+                success: true
+                summary:
+                  total_sessions: 25
+                  total_playtime_minutes: 450
+                  levels_completed: 42
+                  enemies_defeated: 1250
+  /rpc/armored_archer/track_revenue:
+    post:
+      tags:
+        - Analytics
+      summary: Track revenue event
+      description: |
+        Track a revenue event. Records purchase information for analytics
+        and revenue reporting purposes.
+      operationId: trackRevenue
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrackRevenueRequest'
+            example:
+              product_id: gem_pack_100
+              amount: 0.99
+              currency: USD
+              transaction_id: transaction_abc123
+      responses:
+        '200':
+          description: Revenue event tracked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrackRevenueResponse'
+              example:
+                success: true
+        '400':
+          description: Invalid revenue data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Nakama session token
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+        error_code:
+          type: string
+          description: Error code identifier
+    ValidationErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Validation error details
+        error_code:
+          type: string
+          enum:
+            - VALIDATION_ERROR
+        rpc_name:
+          type: string
+          description: Name of the RPC that failed validation
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Session token
+        user_id:
+          type: string
+          description: User ID
+        username:
+          type: string
+          description: Username
+    PlayerStats:
+      type: object
+      properties:
+        user_id:
+          type: string
+        level:
+          type: integer
+        xp:
+          type: integer
+        ability_points:
+          type: integer
+        stats:
+          type: object
+          properties:
+            attack:
+              type: integer
+            defense:
+              type: integer
+            dodge:
+              type: integer
+            crit_rate:
+              type: integer
+    GainXPRequest:
+      type: object
+      required:
+        - xp_amount
+        - source
+      properties:
+        xp_amount:
+          type: integer
+          maximum: 1000000
+        source:
+          type: string
+          enum:
+            - pve
+            - pvp
+    GainXPResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        player_stats:
+          $ref: '#/components/schemas/PlayerStats'
+        xp_gained:
+          type: integer
+        levels_gained:
+          type: integer
+    AllocateStatsRequest:
+      type: object
+      required:
+        - stat_name
+        - points
+      properties:
+        stat_name:
+          type: string
+          enum:
+            - attack
+            - defense
+            - dodge
+            - crit_rate
+        points:
+          type: integer
+          maximum: 1000
+    AllocateStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        player_stats:
+          $ref: '#/components/schemas/PlayerStats'
+    GetPlayerStatsRequest:
+      type: object
+      properties: {}
+    PvPMatch:
+      type: object
+      properties:
+        match_id:
+          type: string
+        creator_id:
+          type: string
+        opponent_id:
+          type: string
+        creator_rank:
+          type: integer
+        opponent_rank:
+          type: integer
+        match_type:
+          type: string
+          enum:
+            - ranked
+            - casual
+        is_punch_up:
+          type: boolean
+        status:
+          type: string
+          enum:
+            - pending
+            - active
+            - completed
+        created_at:
+          type: integer
+        updated_at:
+          type: integer
+    ListMatchesRequest:
+      type: object
+      properties:
+        match_type:
+          type: string
+          enum:
+            - ranked
+            - casual
+        min_rank:
+          type: integer
+          minimum: 1
+        max_rank:
+          type: integer
+          minimum: 1
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    ListMatchesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/PvPMatch'
+        player_rank:
+          type: integer
+        total:
+          type: integer
+    CreateMatchRequest:
+      type: object
+      required:
+        - match_type
+      properties:
+        match_type:
+          type: string
+          enum:
+            - ranked
+            - casual
+        is_punch_up:
+          type: boolean
+        target_opponent_id:
+          type: string
+    CreateMatchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        match:
+          $ref: '#/components/schemas/PvPMatch'
+    AcceptMatchRequest:
+      type: object
+      required:
+        - match_id
+      properties:
+        match_id:
+          type: string
+    AcceptMatchResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        match:
+          $ref: '#/components/schemas/PvPMatch'
+    GetPlayerRankRequest:
+      type: object
+      properties: {}
+    GetPlayerRankResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        rank:
+          type: integer
+        level:
+          type: integer
+        xp:
+          type: integer
+    CombatAction:
+      type: object
+      properties:
+        match_id:
+          type: string
+        action_type:
+          type: string
+          enum:
+            - shoot
+        angle:
+          type: number
+          minimum: -6.28318530718
+          maximum: 6.28318530718
+        power:
+          type: number
+          minimum: 0
+          maximum: 100
+    CombatResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+        hit:
+          type: boolean
+        damage:
+          type: integer
+        is_crit:
+          type: boolean
+        match_status:
+          type: string
+        winner:
+          type: string
+    SubmitCombatActionRequest:
+      type: object
+      required:
+        - match_id
+        - action_type
+        - angle
+      properties:
+        match_id:
+          type: string
+        action_type:
+          type: string
+          enum:
+            - shoot
+        angle:
+          type: number
+        power:
+          type: number
+    SubmitCombatActionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          $ref: '#/components/schemas/CombatResult'
+    GetMatchStateRequest:
+      type: object
+      required:
+        - match_id
+      properties:
+        match_id:
+          type: string
+    MatchState:
+      type: object
+      properties:
+        match_id:
+          type: string
+        turn:
+          type: integer
+        current_turn_user_id:
+          type: string
+        creator_id:
+          type: string
+        opponent_id:
+          type: string
+        creator_health:
+          type: integer
+        opponent_health:
+          type: integer
+        status:
+          type: string
+        winner:
+          type: string
+    SeasonInfo:
+      type: object
+      properties:
+        season_id:
+          type: string
+        season_number:
+          type: integer
+        start_time:
+          type: integer
+        end_time:
+          type: integer
+        status:
+          type: string
+          enum:
+            - active
+            - ended
+        duration_weeks:
+          type: integer
+    LeaderboardEntry:
+      type: object
+      properties:
+        owner_id:
+          type: string
+        username:
+          type: string
+        rank:
+          type: integer
+        score:
+          type: integer
+        meta:
+          type: object
+          properties:
+            wins:
+              type: integer
+            losses:
+              type: integer
+            win_rate:
+              type: number
+            punch_up_wins:
+              type: integer
+    GetSeasonInfoRequest:
+      type: object
+      properties: {}
+    GetSeasonInfoResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        season:
+          $ref: '#/components/schemas/SeasonInfo'
+        player_rank:
+          type: integer
+          nullable: true
+        player_score:
+          type: integer
+        time_remaining:
+          type: integer
+    GetLeaderboardRequest:
+      type: object
+      properties:
+        limit:
+          type: integer
+          minimum: 1
+          maximum: 100
+    GetLeaderboardResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        season:
+          $ref: '#/components/schemas/SeasonInfo'
+        leaderboard:
+          type: array
+          items:
+            $ref: '#/components/schemas/LeaderboardEntry'
+        total:
+          type: integer
+    UpdateRankRequest:
+      type: object
+      required:
+        - winner_id
+        - loser_id
+        - winner_old_rank
+        - loser_old_rank
+        - winner_new_rank
+        - loser_new_rank
+        - is_punch_up
+      properties:
+        winner_id:
+          type: string
+        loser_id:
+          type: string
+        winner_old_rank:
+          type: integer
+        loser_old_rank:
+          type: integer
+        winner_new_rank:
+          type: integer
+        loser_new_rank:
+          type: integer
+        is_punch_up:
+          type: boolean
+    UpdateRankResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        winner:
+          type: object
+          properties:
+            user_id:
+              type: string
+            old_rank:
+              type: integer
+            new_rank:
+              type: integer
+            rank_change:
+              type: integer
+        loser:
+          type: object
+          properties:
+            user_id:
+              type: string
+            old_rank:
+              type: integer
+            new_rank:
+              type: integer
+            rank_change:
+              type: integer
+        is_punch_up:
+          type: boolean
+    SeasonRewards:
+      type: object
+      properties:
+        rank_tier:
+          type: string
+          enum:
+            - legendary
+            - epic
+            - rare
+            - uncommon
+            - common
+        coins:
+          type: integer
+        gems:
+          type: integer
+        cosmetics:
+          type: object
+          properties:
+            title:
+              type: string
+            aura:
+              type: string
+    GetSeasonRewardsRequest:
+      type: object
+      properties: {}
+    GetSeasonRewardsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        rank:
+          type: integer
+        rewards:
+          $ref: '#/components/schemas/SeasonRewards'
+    ClaimSeasonRewardsRequest:
+      type: object
+      properties: {}
+    ClaimSeasonRewardsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        rewards:
+          $ref: '#/components/schemas/SeasonRewards'
+        claimed:
+          type: boolean
+    EndSeasonRequest:
+      type: object
+      properties: {}
+    EndSeasonResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        old_season:
+          $ref: '#/components/schemas/SeasonInfo'
+        new_season:
+          $ref: '#/components/schemas/SeasonInfo'
+    ValidatePurchaseRequest:
+      type: object
+      required:
+        - product_id
+        - platform
+        - transaction_receipt
+      properties:
+        product_id:
+          type: string
+          enum:
+            - com.armoredarcher.gems.small
+            - com.armoredarcher.gems.medium
+            - com.armoredarcher.gems.large
+        platform:
+          type: string
+          enum:
+            - ios
+            - android
+        transaction_receipt:
+          type: string
+    ValidatePurchaseResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        gems_awarded:
+          type: integer
+        new_balance:
+          type: integer
+        product_id:
+          type: string
+    PlayerCurrency:
+      type: object
+      properties:
+        user_id:
+          type: string
+        gems:
+          type: integer
+        gold:
+          type: integer
+    GetCurrencyRequest:
+      type: object
+      properties: {}
+    SpendGemsRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        amount:
+          type: integer
+          maximum: 1000000
+    SpendGemsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        new_balance:
+          type: integer
+        amount_spent:
+          type: integer
+    ProcessPendingPurchasesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        processed:
+          type: integer
+        successful:
+          type: integer
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              product_id:
+                type: string
+              success:
+                type: boolean
+              error:
+                type: string
+                nullable: true
+    CheckRefundsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        refunds_found:
+          type: integer
+    CheckSubscriptionsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        active_subscription:
+          type: boolean
+        subscription_tier:
+          type: string
+          nullable: true
+    AppLaunchCheckResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        pending_purchases:
+          type: object
+          properties:
+            processed:
+              type: integer
+        refunds:
+          type: object
+          properties:
+            found:
+              type: integer
+        subscription:
+          type: object
+          properties:
+            active:
+              type: boolean
+            tier:
+              type: string
+              nullable: true
+    TrackEventRequest:
+      type: object
+      required:
+        - event_name
+      properties:
+        event_name:
+          type: string
+        properties:
+          type: object
+          additionalProperties: true
+    TrackEventResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+    AnalyticsSummaryResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        summary:
+          type: object
+          properties:
+            total_sessions:
+              type: integer
+            total_playtime_minutes:
+              type: integer
+            levels_completed:
+              type: integer
+            enemies_defeated:
+              type: integer
+    TrackRevenueRequest:
+      type: object
+      required:
+        - product_id
+        - amount
+        - currency
+      properties:
+        product_id:
+          type: string
+        amount:
+          type: number
+        currency:
+          type: string
+        transaction_id:
+          type: string
+    TrackRevenueResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+    GearItem:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        rarity:
+          type: string
+          enum:
+            - common
+            - rare
+            - legendary
+        type:
+          type: string
+          enum:
+            - weapon
+            - armor
+            - accessory
+        stats:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              base_value:
+                type: integer
+              value:
+                type: integer
+        modifiers:
+          type: array
+          items:
+            type: object
+        level:
+          type: integer
+        timestamp:
+          type: integer
+    GenerateGearRequest:
+      type: object
+      required:
+        - stage_id
+        - boss_defeated
+      properties:
+        stage_id:
+          type: string
+        boss_defeated:
+          type: boolean
+    GenerateGearResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        gear:
+          $ref: '#/components/schemas/GearItem'
+        inventory:
+          type: object
+          properties:
+            gear:
+              type: array
+              items:
+                $ref: '#/components/schemas/GearItem'
+            equipped_gear:
+              type: object
+    EquipGearRequest:
+      type: object
+      required:
+        - gear_id
+        - slot
+      properties:
+        gear_id:
+          type: string
+        slot:
+          type: string
+          enum:
+            - weapon
+            - armor
+            - accessory
+    EquipGearResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        equipped_gear:
+          type: object
+        gear:
+          $ref: '#/components/schemas/GearItem'
+    UnequipGearRequest:
+      type: object
+      required:
+        - slot
+      properties:
+        slot:
+          type: string
+          enum:
+            - weapon
+            - armor
+            - accessory
+    UnequipGearResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        equipped_gear:
+          type: object
+    GetInventoryRequest:
+      type: object
+      properties: {}
+    PlayerInventory:
+      type: object
+      properties:
+        user_id:
+          type: string
+        gear:
+          type: array
+          items:
+            $ref: '#/components/schemas/GearItem'
+        equipped_gear:
+          type: object
+        unlocked_modifier_pools:
+          type: array
+          items:
+            type: string
+    UnlockModifierPoolRequest:
+      type: object
+      required:
+        - modifier_id
+      properties:
+        modifier_id:
+          type: string
+    UnlockModifierPoolResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        unlocked_modifier_pools:
+          type: array
+          items:
+            type: string
+    TurnData:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic turn data structure for match state.'
+    Context:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: '* Runtime context interface (extended version).'
+        username:
+          type: string
+          description: '* Runtime context interface (extended version).'
+    Logger:
+      type: object
+      properties:
+        format:
+          type:
+            type: 'string, ...args: unknown[]): void'
+          description: '* Runtime logger interface.'
+    StorageRead:
+      type: object
+      properties:
+        collection:
+          type: string
+          description: '* Storage read request interface.'
+        key:
+          type: string
+        userId:
+          type: string
+          description: '* Runtime context interface (extended version).'
+    StorageObject:
+      type: object
+      properties:
+        collection:
+          type: string
+          description: '* Storage read request interface.'
+        key:
+          type: string
+        userId:
+          type: string
+          description: '* Runtime context interface (extended version).'
+        value:
+          type: string
+          description: '* Storage object interface.'
+        version:
+          type: string
+        permissionRead:
+          type: number
+          description: '* Storage object interface.'
+        permissionWrite:
+          type: number
+          description: '* Storage object interface.'
+        createTime:
+          type: number
+          description: '* Storage object interface.'
+        updateTime:
+          type: number
+          description: '* Storage object interface.'
+    StorageWrite:
+      type: object
+      properties:
+        collection:
+          type: string
+          description: '* Storage read request interface.'
+        key:
+          type: string
+        userId:
+          type: string
+          description: '* Runtime context interface (extended version).'
+        value:
+          type: string
+          description: '* Storage object interface.'
+        version:
+          type: string
+          nullable: true
+        permissionRead:
+          type: number
+          description: '* Storage object interface.'
+          nullable: true
+        permissionWrite:
+          type: number
+          description: '* Storage object interface.'
+          nullable: true
+    Nakama:
+      type: object
+      properties:
+        objects:
+          type:
+            type: 'StorageWrite[]): void'
+          description: '* Nakama server interface.'
+        userId:
+          type:
+            type: |-
+              string,
+                    collection: string,
+                    limit: number,
+                    cursor: string,
+                    filter: string
+                  ): StorageObject[]
+          description: '* Runtime context interface (extended version).'
+    Initializer:
+      type: object
+      properties:
+        id:
+          type:
+            type: string
+            enum:
+              - |-
+                string,
+                      fn: (ctx: Context, logger: Logger, nk: Nakama, payload: string) => string
+              - |-
+                Promise<string>
+                    ): void
+        name:
+          type:
+            type: |-
+              string,
+                    fn: (ctx: Context, logger: Logger, nk: Nakama, params: MatchParams) => MatchResult
+                  ): void
+        fn:
+          type:
+            type: |-
+              (ctx: Context, logger: Logger, nk: Nakama, data: BeforeAfterData) => BeforeAfterData
+                  ): void
+    Stream:
+      type: object
+      properties:
+        mode:
+          type: number
+          description: '* Stream interface.'
+        subject:
+          type: string
+        label:
+          type: string
+          description: '* Stream interface.'
+        subcontext:
+          type: string
+          description: '* Stream interface.'
+    Presence:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: '* Runtime context interface (extended version).'
+        sessionId:
+          type: string
+          description: '* Presence interface.'
+        node:
+          type: string
+          description: '* Presence interface.'
+        username:
+          type: string
+          description: '* Runtime context interface (extended version).'
+        status:
+          type: string
+          description: '* Presence interface.'
+    LoggerArgs:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    StorageMetadata:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    NotificationContent:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    LeaderboardMetadata:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    WalletUpdateMetadata:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    MatchParams:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    BeforeAfterData:
+      type: object
+      properties:
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    LeaderboardRecord:
+      type: object
+      properties:
+        ownerId:
+          type: string
+          description: '* Leaderboard record data structure.'
+        username:
+          type: string
+          description: '* Leaderboard record data structure.'
+        rank:
+          type: number
+          description: '* Leaderboard record data structure.'
+        score:
+          type: number
+          description: '* Leaderboard record data structure.'
+        metadata:
+          type: string
+          nullable: true
+        expiry:
+          type: number
+          description: '* Leaderboard record data structure.'
+          nullable: true
+        maxNumScore:
+          type: number
+          description: '* Leaderboard record data structure.'
+          nullable: true
+        numScore:
+          type: number
+          description: '* Leaderboard record data structure.'
+          nullable: true
+    StreamUserListResult:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: '* Stream user list result interface.'
+        presence:
+          type:
+            type: unknown
+          description: '* Stream user list result interface.'
+    MatchResult:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: '* Match result interface.'
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'
+    RpcResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: '* Match result interface.'
+          nullable: true
+        error:
+          type: string
+          description: '* RPC response interface.'
+          nullable: true
+        key:
+          type:
+            type: 'string]: unknown'
+          description: '* Generic logger arguments interface.'

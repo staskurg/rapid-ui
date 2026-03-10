@@ -1,0 +1,374 @@
+openapi: 3.0.3
+info:
+  title: SmartAccess Lift API
+  description: API contracts for SmartAccess Lift web application
+  version: 1.0.0
+  contact:
+    name: SmartAccess Lift Team
+
+servers:
+  - url: https://smartaccess.example.com
+    description: Production server
+  - url: https://dev.smartaccess.example.com
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and registration
+  - name: Dashboard
+    description: Dashboard data
+  - name: Visitor Access
+    description: Visitor access management
+  - name: Floor Permissions
+    description: Floor permission management
+  - name: Live View
+    description: Live elevator monitoring
+  - name: Access Logs
+    description: Access log viewing
+
+paths:
+  /api/VisitorAccess/Create:
+    post:
+      tags:
+        - Visitor Access
+      summary: Create visitor access grant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVisitorAccessRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateVisitorAccessResponse'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/VisitorAccess/List:
+    get:
+      tags:
+        - Visitor Access
+      summary: Get list of visitor access grants
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [Pending, Active, Expired, All]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VisitorAccessListResponse'
+
+  /api/FloorPermission/Update:
+    post:
+      tags:
+        - Floor Permissions
+      summary: Update floor permissions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFloorPermissionRequest'
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFloorPermissionResponse'
+
+  /api/LiveView/Occupants:
+    get:
+      tags:
+        - Live View
+      summary: Get current elevator occupants
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OccupantsResponse'
+
+  /api/AccessLog/Data:
+    get:
+      tags:
+        - Access Logs
+      summary: Get access log data with pagination
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: floorId
+          in: query
+          schema:
+            type: integer
+        - name: accessMethod
+          in: query
+          schema:
+            type: string
+            enum: [NFC, Fingerprint, QR, AdminOverride]
+        - name: outcome
+          in: query
+          schema:
+            type: string
+            enum: [Successful, Denied]
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessLogDataResponse'
+
+components:
+  schemas:
+    CreateVisitorAccessRequest:
+      type: object
+      required:
+        - visitorName
+        - startTime
+        - endTime
+        - floorIds
+      properties:
+        visitorName:
+          type: string
+          minLength: 1
+          maxLength: 200
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        floorIds:
+          type: array
+          items:
+            type: integer
+          minItems: 1
+
+    CreateVisitorAccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        visitorAccessId:
+          type: integer
+        qrCodeUrl:
+          type: string
+        qrCodeImage:
+          type: string
+        shareableLink:
+          type: string
+
+    VisitorAccessListResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/VisitorAccessItem'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    VisitorAccessItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        visitorName:
+          type: string
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [Pending, Active, Expired]
+        floors:
+          type: array
+          items:
+            type: integer
+        useCount:
+          type: integer
+
+    UpdateFloorPermissionRequest:
+      type: object
+      properties:
+        userId:
+          type: integer
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/FloorPermissionUpdate'
+      required:
+        - permissions
+
+    FloorPermissionUpdate:
+      type: object
+      properties:
+        floorId:
+          type: integer
+        isAllowed:
+          type: boolean
+      required:
+        - floorId
+        - isAllowed
+
+    UpdateFloorPermissionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+
+    OccupantsResponse:
+      type: object
+      properties:
+        occupants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Occupant'
+        timestamp:
+          type: string
+          format: date-time
+
+    Occupant:
+      type: object
+      properties:
+        userId:
+          type: integer
+          nullable: true
+        userName:
+          type: string
+          nullable: true
+        visitorName:
+          type: string
+          nullable: true
+        entryTime:
+          type: string
+          format: date-time
+        currentFloor:
+          type: integer
+          nullable: true
+        accessMethod:
+          type: string
+
+    AccessLogDataResponse:
+      type: object
+      properties:
+        logs:
+          type: array
+          items:
+            $ref: '#/components/schemas/AccessLogEntry'
+        totalCount:
+          type: integer
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        totalPages:
+          type: integer
+
+    AccessLogEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userName:
+          type: string
+          nullable: true
+        visitorName:
+          type: string
+          nullable: true
+        floorNumber:
+          type: integer
+        accessMethod:
+          type: string
+          enum: [NFC, Fingerprint, QR, AdminOverride]
+        timestamp:
+          type: string
+          format: date-time
+        outcome:
+          type: string
+          enum: [Successful, Denied]
+        reason:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+        errors:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        statusCode:
+          type: integer
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: .AspNetCore.Cookies
+
+security:
+  - cookieAuth: []
+

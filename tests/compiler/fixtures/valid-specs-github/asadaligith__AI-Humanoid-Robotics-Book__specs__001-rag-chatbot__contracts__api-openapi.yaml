@@ -1,0 +1,403 @@
+openapi: 3.0.3
+info:
+  title: RAG Chatbot API
+  description: |
+    RESTful API for the AI Humanoid Robotics Book chatbot.
+    Provides endpoints for asking questions, handling selected text queries, and health monitoring.
+  version: 1.0.0
+  contact:
+    name: AI Humanoid Robotics Book Project
+    url: https://asadaligith.github.io/AI-Humanoid-Robotics-Book/
+
+servers:
+  - url: https://rag-chatbot-api.onrender.com
+    description: Production server (Render)
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: Chat
+    description: Chatbot question-answering endpoints
+  - name: Health
+    description: Service health and monitoring
+
+paths:
+  /ask:
+    post:
+      tags:
+        - Chat
+      summary: Ask a general question about the book
+      description: |
+        Submit a question to the chatbot. The system retrieves relevant content from the book
+        and generates an answer using RAG (Retrieval-Augmented Generation).
+        Supports multi-turn conversations via session_id.
+      operationId: askQuestion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskRequest'
+            examples:
+              simpleQuestion:
+                summary: Simple question
+                value:
+                  question: "What are the key components of a humanoid robot?"
+              withSession:
+                summary: Multi-turn conversation
+                value:
+                  question: "How does this relate to sensor integration?"
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successful response with answer and citations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+              examples:
+                successfulAnswer:
+                  summary: Answer with citations
+                  value:
+                    answer: "Humanoid robots consist of three key components: sensors, actuators, and control systems. Sensors gather environmental data, actuators enable movement, and control systems process information to coordinate actions."
+                    sources:
+                      - file: "/docs/module-01/chapter-03-robot-components.md"
+                        section: "Key Components Overview"
+                        chunk: "Humanoid robots consist of three key components: sensors..."
+                        similarity: 0.92
+                      - file: "/docs/module-02/chapter-05-sensor-types.md"
+                        section: "Sensor Integration"
+                        chunk: "Sensors gather environmental data such as visual, auditory..."
+                        similarity: 0.87
+                    session_id: "550e8400-e29b-41d4-a716-446655440000"
+                noInformation:
+                  summary: No relevant information found
+                  value:
+                    answer: "I don't have information about that in the book."
+                    sources: []
+                    session_id: "550e8400-e29b-41d4-a716-446655440001"
+        '400':
+          description: Invalid request (e.g., question too long or empty)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                questionTooLong:
+                  summary: Question exceeds length limit
+                  value:
+                    error: "Question exceeds maximum length of 2000 characters"
+                    code: "INVALID_QUESTION_LENGTH"
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimitExceeded:
+                  summary: Too many requests
+                  value:
+                    error: "Rate limit exceeded. Please try again in 60 seconds."
+                    code: "RATE_LIMIT_EXCEEDED"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service temporarily unavailable (e.g., OpenAI API down)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /ask-selected:
+    post:
+      tags:
+        - Chat
+      summary: Ask a question with selected text context
+      description: |
+        Submit a question along with selected text from the book. The system uses the selected
+        text as additional context to provide more focused answers. Useful when users highlight
+        a passage and want clarification or more details.
+      operationId: askSelectedText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AskSelectedRequest'
+            examples:
+              selectedTextQuery:
+                summary: Question about selected text
+                value:
+                  question: "Can you explain this concept in simpler terms?"
+                  selected_text: "The inverse kinematics problem involves determining the joint parameters that provide a desired position of the end-effector."
+                  session_id: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successful response with answer and citations
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChatResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                selectedTextTooLong:
+                  summary: Selected text exceeds limit
+                  value:
+                    error: "Selected text exceeds maximum length of 5000 characters"
+                    code: "INVALID_SELECTED_TEXT_LENGTH"
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '503':
+          description: Service temporarily unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: |
+        Returns the health status of the API and its dependencies (Qdrant, Postgres, OpenAI).
+        Used by deployment platforms (Render, Fly, Railway) for zero-downtime deployments
+        and monitoring systems for alerting.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                allHealthy:
+                  summary: All services operational
+                  value:
+                    status: "healthy"
+                    services:
+                      qdrant: true
+                      postgres: true
+                      openai: true
+                    version: "1.0.0"
+                    timestamp: "2025-12-09T10:30:00Z"
+        '503':
+          description: Service is unhealthy (one or more dependencies down)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                qdrantDown:
+                  summary: Qdrant unavailable
+                  value:
+                    status: "unhealthy"
+                    services:
+                      qdrant: false
+                      postgres: true
+                      openai: true
+                    version: "1.0.0"
+                    timestamp: "2025-12-09T10:30:00Z"
+
+components:
+  schemas:
+    AskRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          minLength: 5
+          maxLength: 2000
+          description: User's question about the book content
+          example: "What are the main types of sensors used in humanoid robots?"
+        session_id:
+          type: string
+          format: uuid
+          description: Optional session ID for multi-turn conversations. If not provided, a new session will be created.
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    AskSelectedRequest:
+      type: object
+      required:
+        - question
+        - selected_text
+      properties:
+        question:
+          type: string
+          minLength: 5
+          maxLength: 2000
+          description: User's question about the selected text
+          example: "Can you explain this in simpler terms?"
+        selected_text:
+          type: string
+          minLength: 10
+          maxLength: 5000
+          description: Text selected by the user from the book (used as additional context)
+          example: "The inverse kinematics problem involves determining the joint parameters that provide a desired position of the end-effector."
+        session_id:
+          type: string
+          format: uuid
+          description: Optional session ID for multi-turn conversations
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    ChatResponse:
+      type: object
+      required:
+        - answer
+        - sources
+        - session_id
+      properties:
+        answer:
+          type: string
+          description: AI-generated answer based on retrieved book content
+          example: "Humanoid robots use several types of sensors including visual sensors (cameras), tactile sensors (force/pressure), auditory sensors (microphones), and proprioceptive sensors (encoders, gyroscopes)."
+        sources:
+          type: array
+          description: Citations from the book that support the answer
+          items:
+            $ref: '#/components/schemas/Source'
+          minItems: 0
+          maxItems: 5
+        session_id:
+          type: string
+          format: uuid
+          description: Session ID for tracking multi-turn conversations
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    Source:
+      type: object
+      required:
+        - file
+        - chunk
+        - similarity
+      properties:
+        file:
+          type: string
+          description: Relative path to source markdown file
+          example: "/docs/module-02/chapter-05-sensor-types.md"
+        section:
+          type: string
+          nullable: true
+          description: Section or chapter heading (if available)
+          example: "Sensor Integration"
+        chunk:
+          type: string
+          maxLength: 200
+          description: Excerpt from the retrieved chunk (truncated for display)
+          example: "Humanoid robots use several types of sensors including visual sensors..."
+        similarity:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          description: Cosine similarity score indicating relevance (0-1, higher is better)
+          example: 0.92
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - services
+        - version
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [healthy, unhealthy]
+          description: Overall health status
+          example: "healthy"
+        services:
+          type: object
+          required:
+            - qdrant
+            - postgres
+            - openai
+          properties:
+            qdrant:
+              type: boolean
+              description: Qdrant vector database connectivity
+              example: true
+            postgres:
+              type: boolean
+              description: Neon Postgres database connectivity
+              example: true
+            openai:
+              type: boolean
+              description: OpenAI API connectivity
+              example: true
+        version:
+          type: string
+          description: API version
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of health check (ISO 8601)
+          example: "2025-12-09T10:30:00Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - code
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: "Question exceeds maximum length of 2000 characters"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: "INVALID_QUESTION_LENGTH"
+        details:
+          type: object
+          description: Optional additional error context
+          additionalProperties: true
+
+  securitySchemes:
+    ApiKeyHeader:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Optional API key for rate limiting and access control.
+        Not required for public deployment but can be added later for premium features.
+
+security: []
+# No security required for MVP (public chatbot)
+# Future: Add ApiKeyHeader for rate limiting tiers

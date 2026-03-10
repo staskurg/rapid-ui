@@ -1,0 +1,395 @@
+{
+  "api": {
+    "title": "base",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "base.AuthService",
+      "key": "baseauthservice",
+      "operations": [
+        {
+          "id": "base.AuthService.GetCurrentUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.AuthService/GetCurrentUser",
+          "requestSchema": {
+            "type": "object",
+            "title": "GetCurrentUserRequest",
+            "additionalProperties": false,
+            "description": "获取当前用户信息请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "用户ID"
+                  },
+                  "username": {
+                    "type": "string",
+                    "title": "username",
+                    "description": "用户名"
+                  },
+                  "nickname": {
+                    "type": "string",
+                    "title": "nickname",
+                    "description": "昵称"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "title": "avatar",
+                    "description": "头像URL"
+                  },
+                  "email": {
+                    "type": "string",
+                    "title": "email",
+                    "description": "邮箱"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "title": "phone",
+                    "description": "手机号"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "roles",
+                    "description": "角色列表"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限列表"
+                  }
+                },
+                "title": "UserInfo",
+                "additionalProperties": false,
+                "description": "用户信息"
+              }
+            },
+            "title": "GetCurrentUserResponse",
+            "additionalProperties": false,
+            "description": "获取当前用户信息响应"
+          }
+        },
+        {
+          "id": "base.AuthService.Login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.AuthService/Login",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "title": "username",
+                "maxLength": 50,
+                "minLength": 1,
+                "description": "用户名"
+              },
+              "password": {
+                "type": "string",
+                "title": "password",
+                "maxLength": 128,
+                "minLength": 6,
+                "description": "密码"
+              }
+            },
+            "title": "LoginRequest",
+            "additionalProperties": false,
+            "description": "登录请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "title": "access_token",
+                "description": "访问令牌"
+              },
+              "refreshToken": {
+                "type": "string",
+                "title": "refresh_token",
+                "description": "刷新令牌"
+              },
+              "expiresIn": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "title": "expires_in",
+                "format": "int64",
+                "description": "令牌过期时间（秒）"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "用户ID"
+                  },
+                  "username": {
+                    "type": "string",
+                    "title": "username",
+                    "description": "用户名"
+                  },
+                  "nickname": {
+                    "type": "string",
+                    "title": "nickname",
+                    "description": "昵称"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "title": "avatar",
+                    "description": "头像URL"
+                  },
+                  "email": {
+                    "type": "string",
+                    "title": "email",
+                    "description": "邮箱"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "title": "phone",
+                    "description": "手机号"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "roles",
+                    "description": "角色列表"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限列表"
+                  }
+                },
+                "title": "UserInfo",
+                "additionalProperties": false,
+                "description": "用户信息"
+              }
+            },
+            "title": "LoginResponse",
+            "additionalProperties": false,
+            "description": "登录响应"
+          }
+        },
+        {
+          "id": "base.AuthService.Logout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.AuthService/Logout",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "title": "access_token",
+                "description": "访问令牌"
+              }
+            },
+            "title": "LogoutRequest",
+            "additionalProperties": false,
+            "description": "登出请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "title": "success",
+                "description": "是否成功"
+              }
+            },
+            "title": "LogoutResponse",
+            "additionalProperties": false,
+            "description": "登出响应"
+          }
+        },
+        {
+          "id": "base.AuthService.RefreshToken",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.AuthService/RefreshToken",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "refreshToken": {
+                "type": "string",
+                "title": "refresh_token",
+                "minLength": 1,
+                "description": "刷新令牌"
+              }
+            },
+            "title": "RefreshTokenRequest",
+            "additionalProperties": false,
+            "description": "刷新令牌请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "accessToken": {
+                "type": "string",
+                "title": "access_token",
+                "description": "新的访问令牌"
+              },
+              "refreshToken": {
+                "type": "string",
+                "title": "refresh_token",
+                "description": "新的刷新令牌"
+              },
+              "expiresIn": {
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "title": "expires_in",
+                "format": "int64",
+                "description": "令牌过期时间（秒）"
+              }
+            },
+            "title": "RefreshTokenResponse",
+            "additionalProperties": false,
+            "description": "刷新令牌响应"
+          }
+        },
+        {
+          "id": "base.AuthService.Register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/base.AuthService/Register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "username": {
+                "type": "string",
+                "title": "username",
+                "maxLength": 50,
+                "minLength": 3,
+                "pattern": "^[a-zA-Z][a-zA-Z0-9_]*$",
+                "description": "用户名"
+              },
+              "password": {
+                "type": "string",
+                "title": "password",
+                "maxLength": 128,
+                "minLength": 6,
+                "description": "密码"
+              },
+              "confirmPassword": {
+                "type": "string",
+                "title": "confirm_password",
+                "maxLength": 128,
+                "minLength": 6,
+                "description": "确认密码"
+              },
+              "email": {
+                "type": "string",
+                "title": "email",
+                "format": "email",
+                "description": "邮箱"
+              },
+              "nickname": {
+                "type": "string",
+                "title": "nickname",
+                "description": "昵称（可选）"
+              }
+            },
+            "title": "RegisterRequest",
+            "additionalProperties": false,
+            "description": "用户注册请求"
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "title": "success",
+                "description": "是否成功"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "title": "id",
+                    "description": "用户ID"
+                  },
+                  "username": {
+                    "type": "string",
+                    "title": "username",
+                    "description": "用户名"
+                  },
+                  "nickname": {
+                    "type": "string",
+                    "title": "nickname",
+                    "description": "昵称"
+                  },
+                  "avatar": {
+                    "type": "string",
+                    "title": "avatar",
+                    "description": "头像URL"
+                  },
+                  "email": {
+                    "type": "string",
+                    "title": "email",
+                    "description": "邮箱"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "title": "phone",
+                    "description": "手机号"
+                  },
+                  "roles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "roles",
+                    "description": "角色列表"
+                  },
+                  "permissions": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "title": "permissions",
+                    "description": "权限列表"
+                  }
+                },
+                "title": "UserInfo",
+                "additionalProperties": false,
+                "description": "用户信息"
+              },
+              "message": {
+                "type": "string",
+                "title": "message",
+                "description": "提示消息"
+              }
+            },
+            "title": "RegisterResponse",
+            "additionalProperties": false,
+            "description": "用户注册响应"
+          }
+        }
+      ]
+    }
+  ]
+}

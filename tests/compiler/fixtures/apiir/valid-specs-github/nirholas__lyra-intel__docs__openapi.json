@@ -1,0 +1,635 @@
+{
+  "api": {
+    "title": "Lyra Intel API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Analysis",
+      "key": "analysis",
+      "operations": [
+        {
+          "id": "POST:/analyze",
+          "method": "POST",
+          "kind": "create",
+          "path": "/analyze",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "repository_url"
+            ],
+            "properties": {
+              "repository_url": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://github.com/user/repo"
+              },
+              "branch": {
+                "type": "string",
+                "default": "main"
+              },
+              "analyzers": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "security",
+                    "quality",
+                    "complexity",
+                    "dependencies",
+                    "documentation"
+                  ]
+                }
+              },
+              "options": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "running",
+                  "completed",
+                  "failed"
+                ]
+              },
+              "project_name": {
+                "type": "string"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "completed_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "metrics": {
+                "type": "object",
+                "properties": {
+                  "complexity": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "maintainability": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "coverage": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "security_score": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "lines_of_code": {
+                    "type": "integer"
+                  },
+                  "comment_ratio": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                }
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "critical",
+                        "high",
+                        "medium",
+                        "low",
+                        "info"
+                      ]
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "rule": {
+                      "type": "string"
+                    },
+                    "fixes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              },
+              "files": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "language": {
+                      "type": "string"
+                    },
+                    "lines": {
+                      "type": "integer"
+                    },
+                    "complexity": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/analyze/file",
+          "method": "POST",
+          "kind": "create",
+          "path": "/analyze/file",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "content",
+              "language"
+            ],
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "File content to analyze"
+              },
+              "language": {
+                "type": "string",
+                "description": "Programming language",
+                "enum": [
+                  "python",
+                  "javascript",
+                  "typescript",
+                  "go",
+                  "rust",
+                  "java",
+                  "cpp",
+                  "csharp",
+                  "ruby",
+                  "php"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "metrics": {
+                "type": "object",
+                "properties": {
+                  "complexity": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "maintainability": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "coverage": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "security_score": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "lines_of_code": {
+                    "type": "integer"
+                  },
+                  "comment_ratio": {
+                    "type": "number",
+                    "format": "float"
+                  }
+                }
+              },
+              "issues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "string"
+                    },
+                    "line": {
+                      "type": "integer"
+                    },
+                    "column": {
+                      "type": "integer"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "critical",
+                        "high",
+                        "medium",
+                        "low",
+                        "info"
+                      ]
+                    },
+                    "type": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "rule": {
+                      "type": "string"
+                    },
+                    "fixes": {
+                      "type": "array",
+                      "items": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              },
+              "suggestions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "username",
+              "password"
+            ],
+            "properties": {
+              "username": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "token_type": {
+                "type": "string"
+              },
+              "expires_in": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "healthy": {
+                "type": "boolean"
+              },
+              "checks": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "healthy": {
+                      "type": "boolean"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Projects",
+      "key": "projects",
+      "operations": [
+        {
+          "id": "GET:/projects",
+          "method": "GET",
+          "kind": "list",
+          "path": "/projects",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "repository_url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "last_analyzed": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              },
+              "total": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              },
+              "limit": {
+                "type": "integer"
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/projects/{project_id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/projects/{project_id}",
+          "identifierParam": "project_id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "repository_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "last_analyzed": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/projects",
+          "method": "POST",
+          "kind": "create",
+          "path": "/projects",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "repository_url"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "repository_url": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "repository_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "last_analyzed": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "key": "reports",
+      "operations": [
+        {
+          "id": "POST:/reports/generate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/reports/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "analysis_id",
+              "format"
+            ],
+            "properties": {
+              "analysis_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": {
+                "type": "string",
+                "enum": [
+                  "json",
+                  "html",
+                  "pdf",
+                  "sarif",
+                  "csv",
+                  "xlsx"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "download_url": {
+                "type": "string",
+                "format": "uri"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Security",
+      "key": "security",
+      "operations": [
+        {
+          "id": "POST:/security/scan",
+          "method": "POST",
+          "kind": "create",
+          "path": "/security/scan",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "repository_url"
+            ],
+            "properties": {
+              "repository_url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "scan_types": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "vulnerabilities",
+                    "secrets",
+                    "dependencies",
+                    "configuration"
+                  ]
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "vulnerabilities": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "severity": {
+                      "type": "string",
+                      "enum": [
+                        "critical",
+                        "high",
+                        "medium",
+                        "low"
+                      ]
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "affected_package": {
+                      "type": "string"
+                    },
+                    "fixed_version": {
+                      "type": "string"
+                    },
+                    "cvss_score": {
+                      "type": "number",
+                      "format": "float"
+                    }
+                  }
+                }
+              },
+              "secrets_found": {
+                "type": "integer"
+              },
+              "risk_score": {
+                "type": "number",
+                "format": "float"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

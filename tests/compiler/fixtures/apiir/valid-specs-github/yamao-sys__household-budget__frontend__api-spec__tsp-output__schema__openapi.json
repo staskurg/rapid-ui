@@ -1,0 +1,663 @@
+{
+  "api": {
+    "title": "Household Budget Service",
+    "version": "1.0"
+  },
+  "resources": [
+    {
+      "name": "csrf",
+      "key": "csrf",
+      "operations": [
+        {
+          "id": "get-csrf",
+          "method": "GET",
+          "kind": "list",
+          "path": "/csrf",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "csrfToken"
+            ],
+            "properties": {
+              "csrfToken": {
+                "type": "string"
+              }
+            },
+            "title": "CsrfResponse"
+          }
+        }
+      ]
+    },
+    {
+      "name": "expenses",
+      "key": "expenses",
+      "operations": [
+        {
+          "id": "get-expenses",
+          "method": "GET",
+          "kind": "list",
+          "path": "/expenses",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "expenses"
+            ],
+            "properties": {
+              "expenses": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "paidAt",
+                    "amount",
+                    "category",
+                    "description"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "paidAt": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "amount": {
+                      "type": "integer"
+                    },
+                    "category": {
+                      "type": "integer"
+                    },
+                    "description": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "Expense"
+                }
+              }
+            },
+            "title": "Expense Lists"
+          }
+        },
+        {
+          "id": "get-expenses-category-total-amounts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/expenses/categoryTotalAmounts",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "totalAmounts"
+            ],
+            "properties": {
+              "totalAmounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "category",
+                    "totalAmount"
+                  ],
+                  "properties": {
+                    "category": {
+                      "type": "integer"
+                    },
+                    "totalAmount": {
+                      "type": "integer"
+                    }
+                  },
+                  "title": "Category Total Amount Lists"
+                }
+              }
+            },
+            "title": "Category Total Amount Lists Response"
+          }
+        },
+        {
+          "id": "get-expenses-total-amounts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/expenses/totalAmounts",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "totalAmounts"
+            ],
+            "properties": {
+              "totalAmounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "date",
+                    "extendProps"
+                  ],
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "extendProps": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "totalAmount"
+                      ]
+                    }
+                  },
+                  "title": "Total Amount Lists"
+                }
+              }
+            },
+            "title": "Total Amount Lists Response"
+          }
+        },
+        {
+          "id": "post-expenses",
+          "method": "POST",
+          "kind": "create",
+          "path": "/expenses",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "paidAt",
+              "amount",
+              "category",
+              "description"
+            ],
+            "properties": {
+              "paidAt": {
+                "type": "string",
+                "format": "date"
+              },
+              "amount": {
+                "type": "integer"
+              },
+              "category": {
+                "type": "integer"
+              },
+              "description": {
+                "type": "string"
+              }
+            },
+            "title": "Store Expense Input"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "expense",
+              "errors"
+            ],
+            "properties": {
+              "expense": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "paidAt",
+                  "amount",
+                  "category",
+                  "description"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "paidAt": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "amount": {
+                    "type": "integer"
+                  },
+                  "category": {
+                    "type": "integer"
+                  },
+                  "description": {
+                    "type": "string"
+                  }
+                },
+                "title": "Expense"
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "paidAt": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "amount": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "category": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "description": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "title": "Store Expense Validation Error"
+              }
+            },
+            "title": "Store Expense Response"
+          }
+        }
+      ]
+    },
+    {
+      "name": "incomes",
+      "key": "incomes",
+      "operations": [
+        {
+          "id": "get-incomes",
+          "method": "GET",
+          "kind": "list",
+          "path": "/incomes",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "incomes"
+            ],
+            "properties": {
+              "incomes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "receivedAt",
+                    "amount",
+                    "clientName"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "receivedAt": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "amount": {
+                      "type": "integer"
+                    },
+                    "clientName": {
+                      "type": "string"
+                    }
+                  },
+                  "title": "Income"
+                }
+              }
+            },
+            "title": "Income Lists"
+          }
+        },
+        {
+          "id": "get-incomes-client-total-amounts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/incomes/clientTotalAmounts",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "totalAmounts"
+            ],
+            "properties": {
+              "totalAmounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "clientName",
+                    "totalAmount"
+                  ],
+                  "properties": {
+                    "clientName": {
+                      "type": "string"
+                    },
+                    "totalAmount": {
+                      "type": "integer"
+                    }
+                  },
+                  "title": "Client Total Amount Lists"
+                }
+              }
+            },
+            "title": "Client Total Amount Lists Response"
+          }
+        },
+        {
+          "id": "get-incomes-total-amounts",
+          "method": "GET",
+          "kind": "list",
+          "path": "/incomes/totalAmounts",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "totalAmounts"
+            ],
+            "properties": {
+              "totalAmounts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "date",
+                    "extendProps"
+                  ],
+                  "properties": {
+                    "date": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "extendProps": {
+                      "type": "object",
+                      "properties": {
+                        "type": {
+                          "type": "string"
+                        },
+                        "totalAmount": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "type",
+                        "totalAmount"
+                      ]
+                    }
+                  },
+                  "title": "Total Amount Lists"
+                }
+              }
+            },
+            "title": "Total Amount Lists Response"
+          }
+        },
+        {
+          "id": "post-incomes",
+          "method": "POST",
+          "kind": "create",
+          "path": "/incomes",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "receivedAt",
+              "amount",
+              "clientName"
+            ],
+            "properties": {
+              "receivedAt": {
+                "type": "string",
+                "format": "date"
+              },
+              "amount": {
+                "type": "integer"
+              },
+              "clientName": {
+                "type": "string"
+              }
+            },
+            "title": "Store Income Input"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "income",
+              "errors"
+            ],
+            "properties": {
+              "income": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "receivedAt",
+                  "amount",
+                  "clientName"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "receivedAt": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "amount": {
+                    "type": "integer"
+                  },
+                  "clientName": {
+                    "type": "string"
+                  }
+                },
+                "title": "Income"
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "receivedAt": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "amount": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "clientName": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "title": "Store Income Validation Error"
+              }
+            },
+            "title": "Store Income Response"
+          }
+        }
+      ]
+    },
+    {
+      "name": "users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "get-users-check-signed-in",
+          "method": "GET",
+          "kind": "list",
+          "path": "/users/checkSignedIn",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "isSignedIn": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "isSignedIn"
+            ]
+          }
+        },
+        {
+          "id": "post-users-sign-in",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/signIn",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "title": "User Sign In Input"
+          },
+          "responseSchema": {
+            "type": "object",
+            "title": "User Sign In Ok Response"
+          }
+        },
+        {
+          "id": "post-users-sign-up",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/signUp",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "email",
+              "password"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "title": "User Sign Up Input"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "code",
+              "errors"
+            ],
+            "properties": {
+              "code": {
+                "type": "integer"
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "email": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "password": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "title": "User Sign Up Validation Error"
+              }
+            },
+            "title": "User Sign In Response"
+          }
+        },
+        {
+          "id": "post-users-validate-sign-up",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/validateSignUp",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "name",
+              "email",
+              "password"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            },
+            "title": "User Sign Up Input"
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "code",
+              "errors"
+            ],
+            "properties": {
+              "code": {
+                "type": "integer"
+              },
+              "errors": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "email": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "password": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "title": "User Sign Up Validation Error"
+              }
+            },
+            "title": "User Sign In Response"
+          }
+        }
+      ]
+    }
+  ]
+}

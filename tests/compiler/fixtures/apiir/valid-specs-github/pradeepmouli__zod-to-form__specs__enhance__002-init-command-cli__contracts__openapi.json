@@ -1,0 +1,272 @@
+{
+  "api": {
+    "title": "zod-to-form CLI Init Contracts",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Cli",
+      "key": "cli",
+      "operations": [
+        {
+          "id": "initComponentConfig",
+          "method": "POST",
+          "kind": "create",
+          "path": "/cli/init",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "cwd"
+            ],
+            "properties": {
+              "cwd": {
+                "type": "string"
+              },
+              "outFile": {
+                "type": "string",
+                "default": "component-config.ts"
+              },
+              "force": {
+                "type": "boolean",
+                "default": false
+              },
+              "dryRun": {
+                "type": "boolean",
+                "default": false
+              },
+              "verbose": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "configPath",
+              "configContent",
+              "summary"
+            ],
+            "properties": {
+              "configPath": {
+                "type": "string"
+              },
+              "configContent": {
+                "type": "string"
+              },
+              "usedShadcnDefaults": {
+                "type": "boolean"
+              },
+              "shadcn": {
+                "type": "object",
+                "required": [
+                  "exists",
+                  "aliases"
+                ],
+                "properties": {
+                  "exists": {
+                    "type": "boolean"
+                  },
+                  "componentsPath": {
+                    "type": "string",
+                    "nullable": true
+                  },
+                  "aliases": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "style": {
+                    "type": "string",
+                    "nullable": true
+                  }
+                }
+              },
+              "summary": {
+                "type": "object",
+                "required": [
+                  "status",
+                  "stepsCompleted",
+                  "fileWritten"
+                ],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "success",
+                      "warning",
+                      "error"
+                    ]
+                  },
+                  "stepsCompleted": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "fileWritten": {
+                    "type": "boolean"
+                  },
+                  "outputPath": {
+                    "type": "string"
+                  },
+                  "usedFallbacks": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "verboseDetails": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "resolveConfig",
+          "method": "POST",
+          "kind": "create",
+          "path": "/cli/load-config",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "cwd"
+            ],
+            "properties": {
+              "cwd": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "resolvedPath",
+              "source"
+            ],
+            "properties": {
+              "resolvedPath": {
+                "type": "string"
+              },
+              "source": {
+                "type": "string",
+                "enum": [
+                  "component-config.ts",
+                  "z2f.config.ts",
+                  "none"
+                ]
+              },
+              "contract": {
+                "type": "object",
+                "required": [
+                  "components",
+                  "fieldTypes"
+                ],
+                "properties": {
+                  "components": {
+                    "type": "string"
+                  },
+                  "fieldTypes": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "required": [
+                        "component"
+                      ],
+                      "properties": {
+                        "component": {
+                          "type": "string"
+                        },
+                        "render": {
+                          "type": "string",
+                          "description": "Symbolic function reference for logical contract modeling."
+                        }
+                      }
+                    }
+                  },
+                  "fields": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "object",
+                      "additionalProperties": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Core",
+      "key": "core",
+      "operations": [
+        {
+          "id": "validateComponentConfig",
+          "method": "POST",
+          "kind": "create",
+          "path": "/core/component-config/validate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "components",
+              "fieldTypes"
+            ],
+            "properties": {
+              "components": {
+                "type": "string"
+              },
+              "fieldTypes": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "required": [
+                    "component"
+                  ],
+                  "properties": {
+                    "component": {
+                      "type": "string"
+                    },
+                    "render": {
+                      "type": "string",
+                      "description": "Symbolic function reference for logical contract modeling."
+                    }
+                  }
+                }
+              },
+              "fields": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "valid"
+            ],
+            "properties": {
+              "valid": {
+                "type": "boolean"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

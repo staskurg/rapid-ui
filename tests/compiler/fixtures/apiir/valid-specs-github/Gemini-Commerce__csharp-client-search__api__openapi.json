@@ -1,0 +1,1264 @@
+{
+  "api": {
+    "title": "Search Service",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Search",
+      "key": "search",
+      "operations": [
+        {
+          "id": "Search_Configuration",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search.Search/Configuration",
+          "requestSchema": {
+            "description": "contains all the necessary to create or update an index",
+            "properties": {
+              "tenantId": {
+                "description": "tenant_id for which create or update indexes configuration [#DOCGENBUG REQUIRED FIELD]",
+                "type": "string"
+              },
+              "configSchema": {
+                "description": "contains index configurations fields [#DOCGENBUG REQUIRED FIELD]",
+                "items": {
+                  "description": "contains index configurations fields",
+                  "properties": {
+                    "index": {
+                      "description": "index name, to create or where update configuration",
+                      "type": "string"
+                    },
+                    "documentKeyName": {
+                      "description": "field which value will be used as document id [#DOCGENBUG REQUIRED FIELD]",
+                      "type": "string"
+                    },
+                    "attributes": {
+                      "description": "fields that can be stored into index and later retrieved",
+                      "items": {
+                        "description": "contains the configurations needed to define an attribute within documents",
+                        "properties": {
+                          "name": {
+                            "description": "attribute name",
+                            "type": "string"
+                          },
+                          "type": {
+                            "default": "TEXT",
+                            "enum": [
+                              "TEXT",
+                              "BOOLEAN",
+                              "INTEGER",
+                              "FLOAT",
+                              "DATE",
+                              "OBJECT"
+                            ],
+                            "type": "string"
+                          },
+                          "language": {
+                            "description": "locale code (currently only it_IT and en_US are supported)",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "searchables": {
+                      "description": "fields that can be used for fulltext searches",
+                      "items": {
+                        "description": "contains the configurations needed to define which index attributes can be used for search",
+                        "properties": {
+                          "attribute": {
+                            "description": "json array of attributes of index which can be used for search",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "attribute"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "facets": {
+                      "description": "fields that can be used for aggregations",
+                      "items": {
+                        "description": "contains the configurations needed to define an aggregation (Facet) using defined index attributes",
+                        "properties": {
+                          "attribute": {
+                            "description": "json array of attributes of index that you can use as aggregation to make facets",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "attribute"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "filters": {
+                      "description": "fields that can be used for filtering",
+                      "items": {
+                        "description": "contains the configurations needed to define which index attributes can be used as filter",
+                        "properties": {
+                          "attribute": {
+                            "description": "json array of attributes of index that you can use to filter search results",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "attribute"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    },
+                    "sortables": {
+                      "description": "fields that can be used for sorting",
+                      "items": {
+                        "description": "contains the configurations needed to define which index attributes can be used for sort",
+                        "properties": {
+                          "attribute": {
+                            "description": "json array of attributes of index which can be used for sort",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "attribute"
+                        ],
+                        "type": "object"
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "attributes",
+                    "index"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "type": "object"
+          }
+        },
+        {
+          "id": "Search_Delete",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search.Search/Delete",
+          "requestSchema": {
+            "properties": {
+              "tenantId": {
+                "description": "tenant_id for which remove costraints [#DOCGENBUG REQUIRED FIELD]",
+                "type": "string"
+              },
+              "constraints": {
+                "description": "constraints to remove (index name) [#DOCGENBUG REQUIRED FIELD]",
+                "items": {
+                  "example": {
+                    "index": "index"
+                  },
+                  "properties": {
+                    "index": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "errors": [
+                {
+                  "code": "code",
+                  "message": "message",
+                  "constraints": {
+                    "index": "index"
+                  }
+                },
+                {
+                  "code": "code",
+                  "message": "message",
+                  "constraints": {
+                    "index": "index"
+                  }
+                }
+              ]
+            },
+            "properties": {
+              "errors": {
+                "items": {
+                  "example": {
+                    "code": "code",
+                    "message": "message",
+                    "constraints": {
+                      "index": "index"
+                    }
+                  },
+                  "properties": {
+                    "constraints": {
+                      "example": {
+                        "index": "index"
+                      },
+                      "properties": {
+                        "index": {
+                          "type": "string"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "code": {
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Search_InsertOrReplace",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search.Search/InsertOrReplace",
+          "requestSchema": {
+            "description": "contains where and what data to write in search storage",
+            "properties": {
+              "tenantId": {
+                "description": "tenant id data identifier where to write data [#DOCGENBUG REQUIRED FIELD]",
+                "type": "string"
+              },
+              "index": {
+                "description": "elasticsearch index identifier where to write data",
+                "type": "string"
+              },
+              "documents": {
+                "description": "A JSON array of documents to write or update",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "documents",
+              "index"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "contains write operation result response from search service",
+            "example": {
+              "index": "index",
+              "errors": [
+                {
+                  "code": "code",
+                  "documentKeyValue": "documentKeyValue",
+                  "message": "message",
+                  "documentKeyName": "documentKeyName"
+                },
+                {
+                  "code": "code",
+                  "documentKeyValue": "documentKeyValue",
+                  "message": "message",
+                  "documentKeyName": "documentKeyName"
+                }
+              ]
+            },
+            "properties": {
+              "index": {
+                "description": "elasticsearch index where the write request was processed",
+                "type": "string"
+              },
+              "errors": {
+                "description": "array of errors obtained during elasticsearch documents write or update",
+                "items": {
+                  "description": "contain error information obtained during writing process in search storage",
+                  "example": {
+                    "code": "code",
+                    "documentKeyValue": "documentKeyValue",
+                    "message": "message",
+                    "documentKeyName": "documentKeyName"
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "error identifier code",
+                      "type": "string"
+                    },
+                    "documentKeyName": {
+                      "description": "document key used to identify document",
+                      "type": "string"
+                    },
+                    "documentKeyValue": {
+                      "description": "document key identifier",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "error description message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "index"
+            ],
+            "type": "object"
+          }
+        },
+        {
+          "id": "Search_MSearch",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search.Search/MSearch",
+          "requestSchema": {
+            "description": "contains search request information about how and where to make the search",
+            "properties": {
+              "tenantId": {
+                "description": "tenant to search on [#DOCGENBUG REQUIRED FIELD]",
+                "type": "string"
+              },
+              "type": {
+                "default": "STANDARD",
+                "enum": [
+                  "STANDARD",
+                  "AS_YOU_TYPE"
+                ],
+                "type": "string"
+              },
+              "payload": {
+                "description": "contains the search request payload",
+                "items": {
+                  "description": "contains the search request payload",
+                  "properties": {
+                    "index": {
+                      "description": "index where to search data",
+                      "type": "string"
+                    },
+                    "params": {
+                      "description": "contains params needed to perform search",
+                      "example": {
+                        "minScore": 5.962134,
+                        "offset": 0,
+                        "limit": 6,
+                        "term": "term",
+                        "attributes": [
+                          {
+                            "attribute": "attribute"
+                          },
+                          {
+                            "attribute": "attribute"
+                          }
+                        ],
+                        "filters": [
+                          {
+                            "filter": "filter",
+                            "type": "TERM"
+                          },
+                          {
+                            "filter": "filter",
+                            "type": "TERM"
+                          }
+                        ],
+                        "sorts": [
+                          {
+                            "attribute": "attribute",
+                            "order": "ASC"
+                          },
+                          {
+                            "attribute": "attribute",
+                            "order": "ASC"
+                          }
+                        ],
+                        "searchables": [
+                          {
+                            "attribute": "attribute"
+                          },
+                          {
+                            "attribute": "attribute"
+                          }
+                        ],
+                        "facets": [
+                          {
+                            "limit": 1,
+                            "name": "name",
+                            "attribute": "attribute",
+                            "type": "TERMS",
+                            "params": "params"
+                          },
+                          {
+                            "limit": 1,
+                            "name": "name",
+                            "attribute": "attribute",
+                            "type": "TERMS",
+                            "params": "params"
+                          }
+                        ]
+                      },
+                      "properties": {
+                        "offset": {
+                          "description": "number of the record where to start to take result for pagination",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "description": "number of search result for page",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "term": {
+                          "description": "term to search",
+                          "type": "string"
+                        },
+                        "searchables": {
+                          "description": "list of attributes where to search the indicated term, if not indicated it uses all in those present in index configuration",
+                          "items": {
+                            "description": "contains a list of attributes where the search term to be searched",
+                            "example": {
+                              "attribute": "attribute"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes where to search the indicated term",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "filters": {
+                          "description": "list of attribute and relative value which you want to filter search results",
+                          "items": {
+                            "description": "contains a list of document attributes and relative values which you want to filter search results",
+                            "example": {
+                              "filter": "filter",
+                              "type": "TERM"
+                            },
+                            "properties": {
+                              "filter": {
+                                "description": "JSON string that contains filters information to apply to search",
+                                "type": "string"
+                              },
+                              "type": {
+                                "default": "TERM",
+                                "enum": [
+                                  "TERM",
+                                  "TERMS",
+                                  "RANGE"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "filter"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "attributes": {
+                          "description": "attributes that you want to be present in search results",
+                          "items": {
+                            "description": "contains a list of document attributes which you want the search returns",
+                            "example": {
+                              "attribute": "attribute"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want to be returned in search results",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "facets": {
+                          "description": "list of attributes you want to create aggregation to make filter suggestion",
+                          "items": {
+                            "description": "contains a list of document attributes which you want to be returned as aggregations by attribute values to make filter suggestions",
+                            "example": {
+                              "limit": 1,
+                              "name": "name",
+                              "attribute": "attribute",
+                              "type": "TERMS",
+                              "params": "params"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want to create aggregation to make filter suggestion",
+                                "type": "string"
+                              },
+                              "limit": {
+                                "description": "Limit of facets result",
+                                "format": "int64",
+                                "type": "integer"
+                              },
+                              "type": {
+                                "default": "TERMS",
+                                "enum": [
+                                  "TERMS",
+                                  "STATS",
+                                  "HISTOGRAM"
+                                ],
+                                "type": "string"
+                              },
+                              "params": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "sorts": {
+                          "description": "params to sort search results",
+                          "items": {
+                            "description": "contains a list of document attributes on which order the result for",
+                            "example": {
+                              "attribute": "attribute",
+                              "order": "ASC"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want search results to be ordered by",
+                                "type": "string"
+                              },
+                              "order": {
+                                "default": "ASC",
+                                "enum": [
+                                  "ASC",
+                                  "DESC"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "minScore": {
+                          "format": "float",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "index",
+                    "params"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "payload"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "contains the search results and errors",
+            "example": {
+              "result": [
+                {
+                  "hits": [
+                    "hits",
+                    "hits"
+                  ],
+                  "totalHits": 7,
+                  "totalPages": 2,
+                  "index": "index",
+                  "page": 5,
+                  "params": {
+                    "minScore": 5.962134,
+                    "offset": 0,
+                    "limit": 6,
+                    "term": "term",
+                    "attributes": [
+                      {
+                        "attribute": "attribute"
+                      },
+                      {
+                        "attribute": "attribute"
+                      }
+                    ],
+                    "filters": [
+                      {
+                        "filter": "filter",
+                        "type": "TERM"
+                      },
+                      {
+                        "filter": "filter",
+                        "type": "TERM"
+                      }
+                    ],
+                    "sorts": [
+                      {
+                        "attribute": "attribute",
+                        "order": "ASC"
+                      },
+                      {
+                        "attribute": "attribute",
+                        "order": "ASC"
+                      }
+                    ],
+                    "searchables": [
+                      {
+                        "attribute": "attribute"
+                      },
+                      {
+                        "attribute": "attribute"
+                      }
+                    ],
+                    "facets": [
+                      {
+                        "limit": 1,
+                        "name": "name",
+                        "attribute": "attribute",
+                        "type": "TERMS",
+                        "params": "params"
+                      },
+                      {
+                        "limit": 1,
+                        "name": "name",
+                        "attribute": "attribute",
+                        "type": "TERMS",
+                        "params": "params"
+                      }
+                    ]
+                  },
+                  "aggregations": {
+                    "key": {
+                      "results": [
+                        "results",
+                        "results"
+                      ]
+                    }
+                  }
+                },
+                {
+                  "hits": [
+                    "hits",
+                    "hits"
+                  ],
+                  "totalHits": 7,
+                  "totalPages": 2,
+                  "index": "index",
+                  "page": 5,
+                  "params": {
+                    "minScore": 5.962134,
+                    "offset": 0,
+                    "limit": 6,
+                    "term": "term",
+                    "attributes": [
+                      {
+                        "attribute": "attribute"
+                      },
+                      {
+                        "attribute": "attribute"
+                      }
+                    ],
+                    "filters": [
+                      {
+                        "filter": "filter",
+                        "type": "TERM"
+                      },
+                      {
+                        "filter": "filter",
+                        "type": "TERM"
+                      }
+                    ],
+                    "sorts": [
+                      {
+                        "attribute": "attribute",
+                        "order": "ASC"
+                      },
+                      {
+                        "attribute": "attribute",
+                        "order": "ASC"
+                      }
+                    ],
+                    "searchables": [
+                      {
+                        "attribute": "attribute"
+                      },
+                      {
+                        "attribute": "attribute"
+                      }
+                    ],
+                    "facets": [
+                      {
+                        "limit": 1,
+                        "name": "name",
+                        "attribute": "attribute",
+                        "type": "TERMS",
+                        "params": "params"
+                      },
+                      {
+                        "limit": 1,
+                        "name": "name",
+                        "attribute": "attribute",
+                        "type": "TERMS",
+                        "params": "params"
+                      }
+                    ]
+                  },
+                  "aggregations": {
+                    "key": {
+                      "results": [
+                        "results",
+                        "results"
+                      ]
+                    }
+                  }
+                }
+              ],
+              "errors": [
+                {
+                  "code": "code",
+                  "message": "message"
+                },
+                {
+                  "code": "code",
+                  "message": "message"
+                }
+              ]
+            },
+            "properties": {
+              "result": {
+                "description": "array of SearchResult that contains search results per index [#DOCGENBUG REQUIRED FIELD]",
+                "items": {
+                  "description": "contains the search results, aggregations and paging information",
+                  "example": {
+                    "hits": [
+                      "hits",
+                      "hits"
+                    ],
+                    "totalHits": 7,
+                    "totalPages": 2,
+                    "index": "index",
+                    "page": 5,
+                    "params": {
+                      "minScore": 5.962134,
+                      "offset": 0,
+                      "limit": 6,
+                      "term": "term",
+                      "attributes": [
+                        {
+                          "attribute": "attribute"
+                        },
+                        {
+                          "attribute": "attribute"
+                        }
+                      ],
+                      "filters": [
+                        {
+                          "filter": "filter",
+                          "type": "TERM"
+                        },
+                        {
+                          "filter": "filter",
+                          "type": "TERM"
+                        }
+                      ],
+                      "sorts": [
+                        {
+                          "attribute": "attribute",
+                          "order": "ASC"
+                        },
+                        {
+                          "attribute": "attribute",
+                          "order": "ASC"
+                        }
+                      ],
+                      "searchables": [
+                        {
+                          "attribute": "attribute"
+                        },
+                        {
+                          "attribute": "attribute"
+                        }
+                      ],
+                      "facets": [
+                        {
+                          "limit": 1,
+                          "name": "name",
+                          "attribute": "attribute",
+                          "type": "TERMS",
+                          "params": "params"
+                        },
+                        {
+                          "limit": 1,
+                          "name": "name",
+                          "attribute": "attribute",
+                          "type": "TERMS",
+                          "params": "params"
+                        }
+                      ]
+                    },
+                    "aggregations": {
+                      "key": {
+                        "results": [
+                          "results",
+                          "results"
+                        ]
+                      }
+                    }
+                  },
+                  "properties": {
+                    "index": {
+                      "description": "index where the data were extrapolated",
+                      "type": "string"
+                    },
+                    "params": {
+                      "description": "contains params needed to perform search",
+                      "example": {
+                        "minScore": 5.962134,
+                        "offset": 0,
+                        "limit": 6,
+                        "term": "term",
+                        "attributes": [
+                          {
+                            "attribute": "attribute"
+                          },
+                          {
+                            "attribute": "attribute"
+                          }
+                        ],
+                        "filters": [
+                          {
+                            "filter": "filter",
+                            "type": "TERM"
+                          },
+                          {
+                            "filter": "filter",
+                            "type": "TERM"
+                          }
+                        ],
+                        "sorts": [
+                          {
+                            "attribute": "attribute",
+                            "order": "ASC"
+                          },
+                          {
+                            "attribute": "attribute",
+                            "order": "ASC"
+                          }
+                        ],
+                        "searchables": [
+                          {
+                            "attribute": "attribute"
+                          },
+                          {
+                            "attribute": "attribute"
+                          }
+                        ],
+                        "facets": [
+                          {
+                            "limit": 1,
+                            "name": "name",
+                            "attribute": "attribute",
+                            "type": "TERMS",
+                            "params": "params"
+                          },
+                          {
+                            "limit": 1,
+                            "name": "name",
+                            "attribute": "attribute",
+                            "type": "TERMS",
+                            "params": "params"
+                          }
+                        ]
+                      },
+                      "properties": {
+                        "offset": {
+                          "description": "number of the record where to start to take result for pagination",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "description": "number of search result for page",
+                          "format": "int64",
+                          "type": "integer"
+                        },
+                        "term": {
+                          "description": "term to search",
+                          "type": "string"
+                        },
+                        "searchables": {
+                          "description": "list of attributes where to search the indicated term, if not indicated it uses all in those present in index configuration",
+                          "items": {
+                            "description": "contains a list of attributes where the search term to be searched",
+                            "example": {
+                              "attribute": "attribute"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes where to search the indicated term",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "filters": {
+                          "description": "list of attribute and relative value which you want to filter search results",
+                          "items": {
+                            "description": "contains a list of document attributes and relative values which you want to filter search results",
+                            "example": {
+                              "filter": "filter",
+                              "type": "TERM"
+                            },
+                            "properties": {
+                              "filter": {
+                                "description": "JSON string that contains filters information to apply to search",
+                                "type": "string"
+                              },
+                              "type": {
+                                "default": "TERM",
+                                "enum": [
+                                  "TERM",
+                                  "TERMS",
+                                  "RANGE"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "filter"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "attributes": {
+                          "description": "attributes that you want to be present in search results",
+                          "items": {
+                            "description": "contains a list of document attributes which you want the search returns",
+                            "example": {
+                              "attribute": "attribute"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want to be returned in search results",
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "facets": {
+                          "description": "list of attributes you want to create aggregation to make filter suggestion",
+                          "items": {
+                            "description": "contains a list of document attributes which you want to be returned as aggregations by attribute values to make filter suggestions",
+                            "example": {
+                              "limit": 1,
+                              "name": "name",
+                              "attribute": "attribute",
+                              "type": "TERMS",
+                              "params": "params"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want to create aggregation to make filter suggestion",
+                                "type": "string"
+                              },
+                              "limit": {
+                                "description": "Limit of facets result",
+                                "format": "int64",
+                                "type": "integer"
+                              },
+                              "type": {
+                                "default": "TERMS",
+                                "enum": [
+                                  "TERMS",
+                                  "STATS",
+                                  "HISTOGRAM"
+                                ],
+                                "type": "string"
+                              },
+                              "params": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "sorts": {
+                          "description": "params to sort search results",
+                          "items": {
+                            "description": "contains a list of document attributes on which order the result for",
+                            "example": {
+                              "attribute": "attribute",
+                              "order": "ASC"
+                            },
+                            "properties": {
+                              "attribute": {
+                                "description": "JSON string that contains the list of attributes you want search results to be ordered by",
+                                "type": "string"
+                              },
+                              "order": {
+                                "default": "ASC",
+                                "enum": [
+                                  "ASC",
+                                  "DESC"
+                                ],
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "attribute"
+                            ],
+                            "type": "object"
+                          },
+                          "type": "array"
+                        },
+                        "minScore": {
+                          "format": "float",
+                          "type": "number"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "page": {
+                      "description": "page number of the results you are processing",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "totalPages": {
+                      "description": "number of pages of results",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "totalHits": {
+                      "description": "number of total search results",
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "hits": {
+                      "description": "search result records contained in the specified page",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "aggregations": {
+                      "additionalProperties": {
+                        "example": {
+                          "results": [
+                            "results",
+                            "results"
+                          ]
+                        },
+                        "properties": {
+                          "results": {
+                            "items": {
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "description": "array of aggregation obtained by search result",
+                      "type": "object"
+                    }
+                  },
+                  "required": [
+                    "index"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "errors": {
+                "description": "array of error obtained during search process per index [#DOCGENBUG REQUIRED FIELD]",
+                "items": {
+                  "description": "contains error information obtained during search process",
+                  "example": {
+                    "code": "code",
+                    "message": "message"
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "query error code obtained during elastic search query request",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "query error message obtained during elastic search query request",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "Search_Update",
+          "method": "POST",
+          "kind": "create",
+          "path": "/search.Search/Update",
+          "requestSchema": {
+            "description": "contains where and what data to write in search storage",
+            "properties": {
+              "tenantId": {
+                "description": "tenant id data identifier where to write data [#DOCGENBUG REQUIRED FIELD]",
+                "type": "string"
+              },
+              "index": {
+                "description": "elasticsearch index identifier where to write data",
+                "type": "string"
+              },
+              "documents": {
+                "description": "A JSON array of documents to write or update",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "documents",
+              "index"
+            ],
+            "type": "object"
+          },
+          "responseSchema": {
+            "description": "contains write operation result response from search service",
+            "example": {
+              "index": "index",
+              "errors": [
+                {
+                  "code": "code",
+                  "documentKeyValue": "documentKeyValue",
+                  "message": "message",
+                  "documentKeyName": "documentKeyName"
+                },
+                {
+                  "code": "code",
+                  "documentKeyValue": "documentKeyValue",
+                  "message": "message",
+                  "documentKeyName": "documentKeyName"
+                }
+              ]
+            },
+            "properties": {
+              "index": {
+                "description": "elasticsearch index where the write request was processed",
+                "type": "string"
+              },
+              "errors": {
+                "description": "array of errors obtained during elasticsearch documents write or update",
+                "items": {
+                  "description": "contain error information obtained during writing process in search storage",
+                  "example": {
+                    "code": "code",
+                    "documentKeyValue": "documentKeyValue",
+                    "message": "message",
+                    "documentKeyName": "documentKeyName"
+                  },
+                  "properties": {
+                    "code": {
+                      "description": "error identifier code",
+                      "type": "string"
+                    },
+                    "documentKeyName": {
+                      "description": "document key used to identify document",
+                      "type": "string"
+                    },
+                    "documentKeyValue": {
+                      "description": "document key identifier",
+                      "type": "string"
+                    },
+                    "message": {
+                      "description": "error description message",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "code",
+                    "message"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "index"
+            ],
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

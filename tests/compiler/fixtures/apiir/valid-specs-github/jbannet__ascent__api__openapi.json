@@ -1,0 +1,778 @@
+{
+  "api": {
+    "title": "Fitness App API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "server"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "healthy"
+              },
+              "server": {
+                "type": "string",
+                "example": "fitness-server"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Onboarding",
+      "key": "onboarding",
+      "operations": [
+        {
+          "id": "submitOnboardingAnswers",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/onboarding/submit",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "answers"
+            ],
+            "properties": {
+              "answers": {
+                "type": "object",
+                "additionalProperties": true,
+                "description": "Key-value pairs of question IDs to answers"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "status",
+              "message"
+            ],
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "success"
+              },
+              "message": {
+                "type": "string"
+              },
+              "user_id": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Plan",
+      "key": "plan",
+      "operations": [
+        {
+          "id": "getUserPlan",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/plan/{userID}",
+          "identifierParam": "userID",
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "plan_id",
+              "user_id",
+              "goal",
+              "start_date",
+              "weeks",
+              "sessions"
+            ],
+            "properties": {
+              "plan_id": {
+                "type": "string"
+              },
+              "user_id": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string",
+                "enum": [
+                  "get_stronger",
+                  "lose_fat",
+                  "general_strength_fitness",
+                  "build_muscle",
+                  "endurance",
+                  "mobility_health"
+                ]
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "weeks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "week_number",
+                    "start_date",
+                    "days"
+                  ],
+                  "properties": {
+                    "week_number": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "date"
+                        ],
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "session_id": {
+                            "type": "string",
+                            "description": "Optional reference to a session for this day"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "sessions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "blocks"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "blocks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "rounds",
+                          "rest_sec_between_rounds",
+                          "items"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "warmup",
+                              "strength",
+                              "cooldown",
+                              "cardio"
+                            ]
+                          },
+                          "rounds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                          },
+                          "rest_sec_between_rounds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                          },
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "kind"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "exercise_prescription",
+                                    "rest",
+                                    "warmup",
+                                    "cooldown"
+                                  ]
+                                },
+                                "exercise_prescription": {
+                                  "type": "object",
+                                  "required": [
+                                    "exercise_name",
+                                    "rep_spec",
+                                    "intensity"
+                                  ],
+                                  "properties": {
+                                    "exercise_name": {
+                                      "type": "string"
+                                    },
+                                    "rep_spec": {
+                                      "type": "object",
+                                      "required": [
+                                        "kind"
+                                      ],
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "reps",
+                                            "time",
+                                            "distance"
+                                          ]
+                                        },
+                                        "reps": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        },
+                                        "time_sec": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        },
+                                        "distance": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "intensity": {
+                                      "type": "object",
+                                      "required": [
+                                        "mode"
+                                      ],
+                                      "properties": {
+                                        "mode": {
+                                          "type": "string",
+                                          "enum": [
+                                            "rpe",
+                                            "percentage",
+                                            "weight"
+                                          ]
+                                        },
+                                        "rpe": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "percentage": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "weight": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 0
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "rest_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                },
+                                "warmup_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "description",
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                },
+                                "cooldown_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "description",
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "notes_coach": {
+                "type": "string",
+                "default": ""
+              }
+            }
+          }
+        },
+        {
+          "id": "generateFitnessPlan",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/plan/generate",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "user_id",
+              "goal"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string",
+                "enum": [
+                  "get_stronger",
+                  "lose_fat",
+                  "general_strength_fitness",
+                  "build_muscle",
+                  "endurance",
+                  "mobility_health"
+                ]
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "plan_id",
+              "user_id",
+              "goal",
+              "start_date",
+              "weeks",
+              "sessions"
+            ],
+            "properties": {
+              "plan_id": {
+                "type": "string"
+              },
+              "user_id": {
+                "type": "string"
+              },
+              "goal": {
+                "type": "string",
+                "enum": [
+                  "get_stronger",
+                  "lose_fat",
+                  "general_strength_fitness",
+                  "build_muscle",
+                  "endurance",
+                  "mobility_health"
+                ]
+              },
+              "start_date": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "weeks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "week_number",
+                    "start_date",
+                    "days"
+                  ],
+                  "properties": {
+                    "week_number": {
+                      "type": "integer",
+                      "minimum": 1
+                    },
+                    "start_date": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "days": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "date"
+                        ],
+                        "properties": {
+                          "date": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "session_id": {
+                            "type": "string",
+                            "description": "Optional reference to a session for this day"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "sessions": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "id",
+                    "title",
+                    "blocks"
+                  ],
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "blocks": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "rounds",
+                          "rest_sec_between_rounds",
+                          "items"
+                        ],
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string",
+                            "enum": [
+                              "warmup",
+                              "strength",
+                              "cooldown",
+                              "cardio"
+                            ]
+                          },
+                          "rounds": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 1
+                          },
+                          "rest_sec_between_rounds": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "default": 0
+                          },
+                          "items": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": [
+                                "kind"
+                              ],
+                              "properties": {
+                                "kind": {
+                                  "type": "string",
+                                  "enum": [
+                                    "exercise_prescription",
+                                    "rest",
+                                    "warmup",
+                                    "cooldown"
+                                  ]
+                                },
+                                "exercise_prescription": {
+                                  "type": "object",
+                                  "required": [
+                                    "exercise_name",
+                                    "rep_spec",
+                                    "intensity"
+                                  ],
+                                  "properties": {
+                                    "exercise_name": {
+                                      "type": "string"
+                                    },
+                                    "rep_spec": {
+                                      "type": "object",
+                                      "required": [
+                                        "kind"
+                                      ],
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "enum": [
+                                            "reps",
+                                            "time",
+                                            "distance"
+                                          ]
+                                        },
+                                        "reps": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        },
+                                        "time_sec": {
+                                          "type": "integer",
+                                          "minimum": 1
+                                        },
+                                        "distance": {
+                                          "type": "string"
+                                        }
+                                      }
+                                    },
+                                    "intensity": {
+                                      "type": "object",
+                                      "required": [
+                                        "mode"
+                                      ],
+                                      "properties": {
+                                        "mode": {
+                                          "type": "string",
+                                          "enum": [
+                                            "rpe",
+                                            "percentage",
+                                            "weight"
+                                          ]
+                                        },
+                                        "rpe": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 1,
+                                          "maximum": 10
+                                        },
+                                        "percentage": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 0,
+                                          "maximum": 100
+                                        },
+                                        "weight": {
+                                          "type": "number",
+                                          "format": "float",
+                                          "minimum": 0
+                                        }
+                                      }
+                                    }
+                                  }
+                                },
+                                "rest_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                },
+                                "warmup_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "description",
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                },
+                                "cooldown_step": {
+                                  "type": "object",
+                                  "required": [
+                                    "description",
+                                    "duration_sec"
+                                  ],
+                                  "properties": {
+                                    "description": {
+                                      "type": "string"
+                                    },
+                                    "duration_sec": {
+                                      "type": "integer",
+                                      "minimum": 1
+                                    }
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "notes_coach": {
+                "type": "string",
+                "default": ""
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "key": "user",
+      "operations": [
+        {
+          "id": "loginUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/user/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "token",
+              "user"
+            ],
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "email",
+                  "created_at",
+                  "updated_at"
+                ],
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "created_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "updated_at": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "registerUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/user/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "id",
+              "email",
+              "created_at",
+              "updated_at"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updated_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

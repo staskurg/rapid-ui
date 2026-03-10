@@ -1,0 +1,238 @@
+{
+  "api": {
+    "title": "Notion2RAG2API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "health_check",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "healthy",
+                  "unhealthy"
+                ],
+                "example": "healthy"
+              },
+              "service": {
+                "type": "string",
+                "example": "Notion2RAG2API"
+              },
+              "version": {
+                "type": "string",
+                "example": "0.1.0"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Query",
+      "key": "query",
+      "operations": [
+        {
+          "id": "query_documents",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/query",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000,
+                "description": "자연어 질문",
+                "example": "Flutter와 전자정부 프레임워크에 대해 설명해주세요"
+              },
+              "top_k": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 20,
+                "default": 5,
+                "description": "검색할 관련 문서의 수",
+                "example": 3
+              },
+              "temperature": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 2,
+                "default": 0.7,
+                "description": "LLM 생성 온도 (높을수록 창의적, 낮을수록 일관적)",
+                "example": 0.7
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "GPT-4가 생성한 자연어 답변",
+                "example": "Flutter는 전자정부 5.0 표준 프레임워크로 공식 채택되었습니다..."
+              },
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "page_id": {
+                      "type": "string",
+                      "description": "Notion 페이지 ID",
+                      "example": "2c6af259-fd05-801e-a963-c4e034d0678e"
+                    },
+                    "text": {
+                      "type": "string",
+                      "description": "검색된 텍스트 조각",
+                      "example": "전자정부 5.0 표준(Flutter) 전환에 따른..."
+                    },
+                    "score": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "description": "쿼리와의 유사도 점수 (높을수록 관련성 높음)",
+                      "example": 0.4796282649040222
+                    },
+                    "metadata": {
+                      "type": "object",
+                      "description": "추가 메타데이터",
+                      "example": {}
+                    }
+                  }
+                },
+                "description": "검색된 관련 문서들"
+              },
+              "query": {
+                "type": "string",
+                "description": "원본 사용자 질문",
+                "example": "Flutter와 전자정부 프레임워크에 대해 설명해주세요"
+              },
+              "model_used": {
+                "type": "string",
+                "default": "gpt-4-turbo-preview",
+                "description": "사용된 OpenAI 모델",
+                "example": "gpt-4-turbo-preview"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Refresh",
+      "key": "refresh",
+      "operations": [
+        {
+          "id": "refresh_index",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/refresh",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "page_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "특정 페이지 ID들. 없으면 모든 페이지 새로고침",
+                "example": [
+                  "2c6af259-fd05-801e-a963-c4e034d0678e"
+                ]
+              },
+              "force": {
+                "type": "boolean",
+                "default": false,
+                "description": "변경되지 않은 내용도 강제로 다시 인덱싱",
+                "example": false
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "accepted",
+                  "running",
+                  "completed",
+                  "failed"
+                ],
+                "description": "새로고침 작업 상태",
+                "example": "accepted"
+              },
+              "message": {
+                "type": "string",
+                "description": "상태 메시지",
+                "example": "Refresh task has been queued"
+              },
+              "task_id": {
+                "type": "string",
+                "description": "작업 추적을 위한 고유 ID",
+                "example": "refresh_1765418233.803095"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "작업 시작 시간",
+                "example": "2025-12-11T10:57:13.803135"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resource",
+      "key": "resource",
+      "operations": [
+        {
+          "id": "get_root",
+          "method": "GET",
+          "kind": "list",
+          "path": "/",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "Notion2RAG2API"
+              },
+              "version": {
+                "type": "string",
+                "example": "0.1.0"
+              },
+              "status": {
+                "type": "string",
+                "example": "running"
+              },
+              "docs": {
+                "type": "string",
+                "example": "/docs"
+              },
+              "health": {
+                "type": "string",
+                "example": "/health"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

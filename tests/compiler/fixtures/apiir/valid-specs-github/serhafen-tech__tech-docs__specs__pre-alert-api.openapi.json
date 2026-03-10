@@ -1,0 +1,1994 @@
+{
+  "api": {
+    "title": "Pre-Alert API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Pre-Alert Chile",
+      "key": "pre-alert-chile",
+      "operations": [
+        {
+          "id": "submitManifestDeclareChile",
+          "method": "POST",
+          "kind": "create",
+          "path": "/mawbs/cl",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "mawbNumber",
+              "destinationCountryCode",
+              "customsType",
+              "transportType",
+              "fromPortCode",
+              "toPortCode",
+              "totalPackages",
+              "totalWeight",
+              "totalValue",
+              "currency",
+              "shipperInfo",
+              "itemList"
+            ],
+            "properties": {
+              "mawbNumber": {
+                "type": "string",
+                "description": "Master Air Waybill Number (example 2024001, MAWB-2025-500)",
+                "maxLength": 50,
+                "example": "2024001"
+              },
+              "manifestNumber": {
+                "type": "string",
+                "description": "Unique manifest number (example MANIFEST-2024-001, MAN-2025-500)",
+                "maxLength": 50,
+                "pattern": "^[A-Z0-9_-]+$",
+                "example": "MANIFEST-2024-001"
+              },
+              "destinationCountryCode": {
+                "type": "string",
+                "description": "ISO 2-letter destination country code (example PE, CL)",
+                "minLength": 2,
+                "maxLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "example": "PE"
+              },
+              "customsType": {
+                "type": "string",
+                "description": "Type of customs declaration (example INWARD, OUTWARD)",
+                "enum": [
+                  "INWARD",
+                  "OUTWARD"
+                ],
+                "example": "INWARD"
+              },
+              "customsClearanceMode": {
+                "type": "string",
+                "description": "Customs clearance mode for this manifest:\n- `STANDARD`: Regular postal/commercial clearance\n- `EXPRESS`: Expedited/courier clearance\n- `OVERSEAS_CCC_DIRECT`: Direct cross-border e-commerce clearance\n",
+                "enum": [
+                  "STANDARD",
+                  "EXPRESS",
+                  "OVERSEAS_CCC_DIRECT"
+                ],
+                "example": "STANDARD"
+              },
+              "transportType": {
+                "type": "string",
+                "description": "Type of transport (example AIR, SEA, ROAD, RAIL)",
+                "enum": [
+                  "AIR",
+                  "SEA",
+                  "ROAD",
+                  "RAIL"
+                ],
+                "example": "AIR"
+              },
+              "transportNumber": {
+                "type": "string",
+                "description": "Transport number - flight, vessel, etc. (example 5Y8052, LA600)",
+                "maxLength": 20,
+                "example": "5Y8052"
+              },
+              "fromPortCode": {
+                "type": "string",
+                "description": "Origin port/airport code - Use 3-letter IATA code for AIR transport (example HKG, CAN, PVG)",
+                "maxLength": 8,
+                "example": "HKG"
+              },
+              "toPortCode": {
+                "type": "string",
+                "description": "Destination port/airport code - Use 3-letter IATA code for AIR transport (example LIM, SCL)",
+                "maxLength": 8,
+                "example": "LIM"
+              },
+              "eta": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Estimated time of arrival (example 2024-01-20T14:30:00Z) - Must be on or after MAWB creation",
+                "example": "2024-01-20T14:30:00Z"
+              },
+              "etd": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Estimated time of departure (example 2024-01-18T08:15:00Z) - Must be on or after MAWB creation",
+                "example": "2024-01-18T08:15:00Z"
+              },
+              "totalPackages": {
+                "type": "integer",
+                "description": "Total number of parcels (HAWBs) expected in this manifest (example 1060, 154)",
+                "minimum": 1,
+                "example": 1060
+              },
+              "totalWeight": {
+                "type": "number",
+                "description": "Total weight of all packages in kilograms (example 458.0, 1500.50)",
+                "minimum": 0,
+                "example": 458
+              },
+              "totalValue": {
+                "type": "number",
+                "description": "Total declared value (example 15000.0)",
+                "minimum": 0,
+                "example": 15000
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code - ISO 4217 (example USD, EUR, CLP)",
+                "maxLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "example": "USD"
+              },
+              "clientReferenceNumber": {
+                "type": "string",
+                "description": "Client reference number (example CLIENT-REF-001, REF-2024-12345)",
+                "maxLength": 100
+              },
+              "exportLicense": {
+                "type": "string",
+                "description": "Export license number (example EXP2024001, EXP-2025-500)",
+                "maxLength": 100
+              },
+              "shipperInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the shipper (example Yang Ke, John Smith)",
+                    "maxLength": 255,
+                    "example": "Yang Ke"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Full address of the shipper (example Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A)",
+                    "maxLength": 1000,
+                    "example": "Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the shipper (example Shaoxing, Guangzhou, Shanghai)",
+                    "maxLength": 100,
+                    "example": "Shaoxing"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 2-letter country code (example CN, US, HK)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CN"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or province (example Zhejiang Province, Guangdong, California)",
+                    "maxLength": 100,
+                    "example": "Zhejiang Province"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address (example Tangpu Town, Room 301, Building 1)",
+                    "maxLength": 500
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email address (example shipper@example.com, company@business.com)",
+                    "format": "email",
+                    "maxLength": 255,
+                    "example": "shipper@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Mobile phone number (example +8615137736988, +1234567890)",
+                    "maxLength": 50,
+                    "example": "+8615137736988"
+                  },
+                  "companyName": {
+                    "type": "string",
+                    "description": "Company name (example Temu, Happiness Childhood Store)",
+                    "maxLength": 255,
+                    "example": "Temu"
+                  },
+                  "taxId": {
+                    "type": "string",
+                    "description": "Tax identification number (example 123456789, 91330100MA2XXXXXXX)",
+                    "maxLength": 50,
+                    "example": 123456789
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Optional array of key-value pairs for custom metadata (e.g., internal UUIDs, specific tax IDs).",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "itemList": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "trackingId",
+                    "bigBagNumber"
+                  ],
+                  "properties": {
+                    "trackingId": {
+                      "type": "string",
+                      "description": "Tracking identifier (example WYB3474845631, 88M0030800)",
+                      "maxLength": 100,
+                      "pattern": "^[A-Z0-9_-]+$",
+                      "example": "WYB3474845631"
+                    },
+                    "bigBagNumber": {
+                      "type": "string",
+                      "description": "Big bag number (example BIGBAG001, BIGBAG508)",
+                      "maxLength": 50,
+                      "example": "BIGBAG001"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message",
+              "mawbNumber"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Request processed successfully"
+              },
+              "manifestNumber": {
+                "type": "string",
+                "example": "MANIFEST-2024-001"
+              },
+              "mawbNumber": {
+                "type": "string",
+                "example": "2024001"
+              },
+              "totalParcels": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 3
+              },
+              "processedParcels": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 3
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field",
+                    "error",
+                    "code"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "manifestNumber"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Manifest number is required"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "REQUIRED"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "submitParcelDeclareChile",
+          "method": "POST",
+          "kind": "create",
+          "path": "/parcels/cl",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "destinationCountryCode",
+              "trackingId",
+              "grossWeight",
+              "declaredValue",
+              "pieces",
+              "currency",
+              "clientTrackingNumber",
+              "senderInfo",
+              "consigneeInfo",
+              "itemsList"
+            ],
+            "properties": {
+              "destinationCountryCode": {
+                "type": "string",
+                "description": "ISO 2-letter destination country code (example PE, CL)",
+                "minLength": 2,
+                "maxLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "example": "PE"
+              },
+              "trackingId": {
+                "type": "string",
+                "description": "Unique tracking identifier (example SH-PE-123456789, 889089) Usually the last-mile carrier tracking number used for local delivery to the end customer.",
+                "maxLength": 100,
+                "pattern": "^[A-Z0-9_-]+$",
+                "example": "SH-PE-123456789"
+              },
+              "grossWeight": {
+                "type": "string",
+                "description": "Gross weight of the parcel (example 2.5, 0.246) Must be in the unit specified by weightUom (default KG).",
+                "pattern": "^[0-9]+\\.?[0-9]*$",
+                "example": "2.5"
+              },
+              "netWeight": {
+                "type": "string",
+                "description": "Net weight (example 2.0, 0.246)",
+                "pattern": "^[0-9]+\\.?[0-9]*$",
+                "example": "2.0"
+              },
+              "weightUom": {
+                "type": "string",
+                "description": "Weight unit of measure (default KG)",
+                "enum": [
+                  "KG",
+                  "LB",
+                  "G",
+                  "OZ"
+                ],
+                "default": "KG",
+                "example": "KG"
+              },
+              "declaredValue": {
+                "type": "number",
+                "description": "FOB value - the declared commercial value of goods at origin port excluding international shipping and insurance (example 25, 10.14)",
+                "minimum": 0.01,
+                "example": 25
+              },
+              "fobValue": {
+                "type": "number",
+                "description": "FOB (Free On Board) value in declared currency (example 10.14)",
+                "minimum": 0,
+                "example": 10.14
+              },
+              "cifValue": {
+                "type": "number",
+                "description": "CIF (Cost, Insurance, Freight) value in declared currency (example 12.50)",
+                "minimum": 0,
+                "example": 12.5
+              },
+              "freightPrice": {
+                "type": "number",
+                "description": "Freight cost (example 0.5)",
+                "minimum": 0,
+                "example": 0.5
+              },
+              "insurancePrice": {
+                "type": "number",
+                "description": "Insurance cost (example 0.0, 2.5)",
+                "minimum": 0,
+                "example": 0
+              },
+              "pieces": {
+                "type": "integer",
+                "description": "Number of physical boxes/packages that make up this specific HAWB (example 1, 2)",
+                "minimum": 1,
+                "example": 1
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code - ISO 4217 (example USD, CLP, PEN)",
+                "maxLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "example": "USD"
+              },
+              "dangerousGoods": {
+                "type": "boolean",
+                "description": "Indicates if the parcel contains dangerous goods",
+                "default": false,
+                "example": false
+              },
+              "bigBagId": {
+                "type": "string",
+                "description": "Big bag identifier (example BB-PE-001, BIGBAG-2026-001)",
+                "maxLength": 50,
+                "example": "BB-PE-001"
+              },
+              "batchNumber": {
+                "type": "string",
+                "description": "Batch number for grouping (example BATCH-20260308-001)",
+                "maxLength": 50
+              },
+              "barcode": {
+                "type": "string",
+                "description": "Parcel barcode (example BAR123456789)",
+                "maxLength": 100
+              },
+              "logisticsOrderCode": {
+                "type": "string",
+                "description": "Origin logistics provider's internal order code - e.g., Cainiao LP number (example LP00717258464258)",
+                "maxLength": 50,
+                "example": "LP00717258464258"
+              },
+              "lastmilePartnerCode": {
+                "type": "string",
+                "description": "Identification code of the final mile delivery partner (example DISTRIBUTOR_30710422)",
+                "maxLength": 50,
+                "example": "DISTRIBUTOR_30710422"
+              },
+              "customsReference": {
+                "type": "string",
+                "description": "Reference number generated by customs authorities upon clearance (example CUSTOMS_REF_002)",
+                "maxLength": 100
+              },
+              "invoiceNumber": {
+                "type": "string",
+                "description": "Commercial invoice number associated with the parcel (example INV2024001)",
+                "maxLength": 100
+              },
+              "clientTrackingNumber": {
+                "type": "string",
+                "description": "Client tracking number (example CLIENT-TRACK-001, HAWB-1)",
+                "maxLength": 100,
+                "example": "CLIENT-TRACK-001"
+              },
+              "taxCompanyId": {
+                "type": "string",
+                "description": "SII registered company ID - RUT (example 76.XXX.XXX-K, 76546789-K)",
+                "maxLength": 50,
+                "example": "76.XXX.XXX-K"
+              },
+              "taxCompanyName": {
+                "type": "string",
+                "description": "Company name as registered with SII (example Importadora Chile SpA)",
+                "maxLength": 255,
+                "example": "Importadora Chile SpA"
+              },
+              "taxHasBeenPaid": {
+                "type": "string",
+                "description": "Whether tax has been paid - IVA_YES or IVA_NO for Chile (example IVA_NO, IVA_YES)",
+                "enum": [
+                  "IVA_YES",
+                  "IVA_NO"
+                ],
+                "example": "IVA_NO"
+              },
+              "senderInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Sender name (example Yang Ke, John Smith)",
+                    "maxLength": 255,
+                    "example": "Yang Ke"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Sender address (example CN, Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building A)",
+                    "maxLength": 1000
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Sender city (example Shaoxing, Shanghai, Guangzhou)",
+                    "maxLength": 100,
+                    "example": "Shaoxing"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Sender country code (example CN, US, HK)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CN"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Sender state or province (example Zhejiang Province, Guangdong)",
+                    "maxLength": 100,
+                    "example": "Zhejiang Province"
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Sender zip code (example 312000, 100000)",
+                    "maxLength": 20,
+                    "example": "312000"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Sender street address (example Tangpu Town, Room 301, Building A)",
+                    "maxLength": 500
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Sender email address",
+                    "maxLength": 255
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Sender phone number (example 15137736988, +8615137736988)",
+                    "maxLength": 50,
+                    "example": "15137736988"
+                  },
+                  "companyName": {
+                    "type": "string",
+                    "description": "Sender company name (example Happiness Childhood Store, Temu Warehouse)",
+                    "maxLength": 255
+                  },
+                  "taxId": {
+                    "type": "string",
+                    "description": "Sender tax ID (example 91330100MA2XXXXXXX)",
+                    "maxLength": 50
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Sender unique references",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "consigneeInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone",
+                  "identificationType",
+                  "identificationNumber"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the consignee",
+                    "maxLength": 255,
+                    "example": "Juan Pérez González"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Full address of the consignee",
+                    "maxLength": 1000,
+                    "example": "Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the consignee",
+                    "maxLength": 100,
+                    "example": "San Isidro"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Consignee country code",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CL"
+                  },
+                  "department": {
+                    "type": "string",
+                    "description": "Peruvian department (Departamento). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Peruvian province (Provincia). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "Peruvian district (Distrito). Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Cercado"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region. For Chile, this is the Región (required). For Peru, this can be used for department or state.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Postal or ZIP code",
+                    "maxLength": 20,
+                    "example": "15046"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address",
+                    "maxLength": 500,
+                    "example": "Av. Javier Prado Este 1234"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Consignee email address",
+                    "maxLength": 255,
+                    "example": "juan.perez@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Consignee phone number",
+                    "maxLength": 50,
+                    "example": "+51912345678"
+                  },
+                  "identificationType": {
+                    "type": "string",
+                    "description": "Type of identification document. DNI is standard for Peruvian nationals. RUT for Chilean nationals. Validated at API level based on destination country.",
+                    "enum": [
+                      "RUT",
+                      "DNI",
+                      "PASSPORT",
+                      "NATIONAL_ID",
+                      "DRIVER_LICENSE",
+                      "CE"
+                    ],
+                    "example": "RUT"
+                  },
+                  "identificationNumber": {
+                    "type": "string",
+                    "description": "Identification number (e.g. RUT format 12.345.678-9 for Chile, DNI 8 digits for Peru)",
+                    "maxLength": 100,
+                    "example": "12345678"
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Unique references for the consignee",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "returnInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name for the return address (example Juan Pérez González, Returns Warehouse)",
+                    "maxLength": 255,
+                    "example": "Juan Pérez González"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Return address (example Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago)",
+                    "maxLength": 1000,
+                    "example": "Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the return address (example Viña del Mar, Callao, Santiago) For Chile, this is the comuna. For Peru, this is the city name.",
+                    "maxLength": 100
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 2-letter country code for the return address (example CL, PE)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CL"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region (example Valparaíso, Callao, Lima) For Chile, this is the Región. For Peru, this can be used for department or state.",
+                    "maxLength": 100
+                  },
+                  "department": {
+                    "type": "string",
+                    "description": "Peruvian department - Departamento (example Lima, Callao) Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Province (example Lima, Callao) For Peru, this is the Provincia. Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "Peruvian district - Distrito (example Callao, Cercado) Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Postal or ZIP code (example 2820000, 07031)",
+                    "maxLength": 20
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address for the return (example Calle Falsa 123, Av. Elmer Faucett s/n)",
+                    "maxLength": 500,
+                    "example": "Calle Falsa 123"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address (example returns@company.pe, devoluciones@empresa.cl)",
+                    "maxLength": 255
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Phone number (example +5112345678, +56912345678)",
+                    "maxLength": 50
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Optional array of key-value pairs for custom return metadata",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "itemsList": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "itemNumber",
+                    "itemName",
+                    "quantity",
+                    "unitPrice",
+                    "totalPrice",
+                    "currency",
+                    "hsCode"
+                  ],
+                  "properties": {
+                    "itemNumber": {
+                      "type": "string",
+                      "description": "Item identifier (example 10050058244557952, 1005005824455795_1)",
+                      "maxLength": 100,
+                      "example": 10050058244557952
+                    },
+                    "itemName": {
+                      "type": "string",
+                      "description": "Name or description of the item (example Smartphone Case, Women's Cotton T-Shirt, Ropa Set)",
+                      "maxLength": 255,
+                      "example": "Smartphone Case"
+                    },
+                    "barCode": {
+                      "type": "string",
+                      "description": "Identification barcode for the item (example 123456789012, 978-0-123456-78-9)",
+                      "maxLength": 50,
+                      "example": 123456789012
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "description": "Quantity of the item (example 1, 2, 5)",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "unitPrice": {
+                      "type": "number",
+                      "description": "Price per single unit of the item (example 25, 10.14, 12.99)",
+                      "minimum": 0,
+                      "example": 25
+                    },
+                    "totalPrice": {
+                      "type": "number",
+                      "description": "Total price for all units of this item - unitPrice * quantity (example 10.14, 25.98, 50.00)",
+                      "minimum": 0,
+                      "example": 10.14
+                    },
+                    "fobValue": {
+                      "type": "number",
+                      "description": "FOB (Free On Board) value for this item (example 10.14, 20.00)",
+                      "minimum": 0,
+                      "example": 10.14
+                    },
+                    "cifValue": {
+                      "type": "number",
+                      "description": "CIF (Cost, Insurance, Freight) value for this item (example 12.50, 25.98)",
+                      "minimum": 0,
+                      "example": 12.5
+                    },
+                    "currency": {
+                      "type": "string",
+                      "description": "3-letter ISO 4217 Currency Code (example USD, CLP, PEN)",
+                      "maxLength": 3,
+                      "pattern": "^[A-Z]{3}$",
+                      "example": "USD"
+                    },
+                    "hsCode": {
+                      "type": "string",
+                      "description": "HS code - Tariff code for the item (example 6203420000, 8517.12.00)",
+                      "maxLength": 20,
+                      "example": "6203420000"
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Country of origin (example CN, US, VN)",
+                      "minLength": 2,
+                      "maxLength": 2,
+                      "pattern": "^[A-Z]{2}$"
+                    },
+                    "productUrl": {
+                      "type": "string",
+                      "description": "URL to the product page (example https://www.example.com/product/123)",
+                      "maxLength": 500,
+                      "example": "https://www.example.com/product/123"
+                    },
+                    "uniqueReferences": {
+                      "type": "array",
+                      "description": "Optional array of key-value pairs for custom item metadata",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "uniqueReferences": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Request processed successfully"
+              },
+              "trackingId": {
+                "type": "string",
+                "example": "SH-PE-123456789"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PROCESSED",
+                  "PENDING",
+                  "FAILED"
+                ],
+                "example": "PROCESSED"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field",
+                    "error",
+                    "code"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "manifestNumber"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Manifest number is required"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "REQUIRED"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pre-Alert Peru",
+      "key": "pre-alert-peru",
+      "operations": [
+        {
+          "id": "submitManifestDeclarePeru",
+          "method": "POST",
+          "kind": "create",
+          "path": "/mawbs/pe",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "mawbNumber",
+              "destinationCountryCode",
+              "customsType",
+              "transportType",
+              "fromPortCode",
+              "toPortCode",
+              "totalPackages",
+              "totalWeight",
+              "totalValue",
+              "currency",
+              "shipperInfo",
+              "itemList"
+            ],
+            "properties": {
+              "mawbNumber": {
+                "type": "string",
+                "description": "Master Air Waybill Number (example 2024001, MAWB-2025-500)",
+                "maxLength": 50,
+                "example": "2024001"
+              },
+              "manifestNumber": {
+                "type": "string",
+                "description": "Unique manifest number (example MANIFEST-2024-001, MAN-2025-500)",
+                "maxLength": 50,
+                "pattern": "^[A-Z0-9_-]+$",
+                "example": "MANIFEST-2024-001"
+              },
+              "destinationCountryCode": {
+                "type": "string",
+                "description": "ISO 2-letter destination country code (example PE, CL)",
+                "minLength": 2,
+                "maxLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "example": "PE"
+              },
+              "customsType": {
+                "type": "string",
+                "description": "Type of customs declaration (example INWARD, OUTWARD)",
+                "enum": [
+                  "INWARD",
+                  "OUTWARD"
+                ],
+                "example": "INWARD"
+              },
+              "customsClearanceMode": {
+                "type": "string",
+                "description": "Customs clearance mode for this manifest:\n- `STANDARD`: Regular postal/commercial clearance\n- `EXPRESS`: Expedited/courier clearance\n- `OVERSEAS_CCC_DIRECT`: Direct cross-border e-commerce clearance\n",
+                "enum": [
+                  "STANDARD",
+                  "EXPRESS",
+                  "OVERSEAS_CCC_DIRECT"
+                ],
+                "example": "STANDARD"
+              },
+              "transportType": {
+                "type": "string",
+                "description": "Type of transport (example AIR, SEA, ROAD, RAIL)",
+                "enum": [
+                  "AIR",
+                  "SEA",
+                  "ROAD",
+                  "RAIL"
+                ],
+                "example": "AIR"
+              },
+              "transportNumber": {
+                "type": "string",
+                "description": "Transport number - flight, vessel, etc. (example 5Y8052, LA600)",
+                "maxLength": 20,
+                "example": "5Y8052"
+              },
+              "fromPortCode": {
+                "type": "string",
+                "description": "Origin port/airport code - Use 3-letter IATA code for AIR transport (example HKG, CAN, PVG)",
+                "maxLength": 8,
+                "example": "HKG"
+              },
+              "toPortCode": {
+                "type": "string",
+                "description": "Destination port/airport code - Use 3-letter IATA code for AIR transport (example LIM, SCL)",
+                "maxLength": 8,
+                "example": "LIM"
+              },
+              "eta": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Estimated time of arrival (example 2024-01-20T14:30:00Z) - Must be on or after MAWB creation",
+                "example": "2024-01-20T14:30:00Z"
+              },
+              "etd": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Estimated time of departure (example 2024-01-18T08:15:00Z) - Must be on or after MAWB creation",
+                "example": "2024-01-18T08:15:00Z"
+              },
+              "totalPackages": {
+                "type": "integer",
+                "description": "Total number of parcels (HAWBs) expected in this manifest (example 1060, 154)",
+                "minimum": 1,
+                "example": 1060
+              },
+              "totalWeight": {
+                "type": "number",
+                "description": "Total weight of all packages in kilograms (example 458.0, 1500.50)",
+                "minimum": 0,
+                "example": 458
+              },
+              "totalValue": {
+                "type": "number",
+                "description": "Total declared value (example 15000.0)",
+                "minimum": 0,
+                "example": 15000
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code - ISO 4217 (example USD, EUR, CLP)",
+                "maxLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "example": "USD"
+              },
+              "clientReferenceNumber": {
+                "type": "string",
+                "description": "Client reference number (example CLIENT-REF-001, REF-2024-12345)",
+                "maxLength": 100
+              },
+              "exportLicense": {
+                "type": "string",
+                "description": "Export license number (example EXP2024001, EXP-2025-500)",
+                "maxLength": 100
+              },
+              "shipperInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the shipper (example Yang Ke, John Smith)",
+                    "maxLength": 255,
+                    "example": "Yang Ke"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Full address of the shipper (example Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A)",
+                    "maxLength": 1000,
+                    "example": "Zhejiang Province, Shangyu District, Tangpu Town, Room 301, Building A"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the shipper (example Shaoxing, Guangzhou, Shanghai)",
+                    "maxLength": 100,
+                    "example": "Shaoxing"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 2-letter country code (example CN, US, HK)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CN"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or province (example Zhejiang Province, Guangdong, California)",
+                    "maxLength": 100,
+                    "example": "Zhejiang Province"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address (example Tangpu Town, Room 301, Building 1)",
+                    "maxLength": 500
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "Email address (example shipper@example.com, company@business.com)",
+                    "format": "email",
+                    "maxLength": 255,
+                    "example": "shipper@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Mobile phone number (example +8615137736988, +1234567890)",
+                    "maxLength": 50,
+                    "example": "+8615137736988"
+                  },
+                  "companyName": {
+                    "type": "string",
+                    "description": "Company name (example Temu, Happiness Childhood Store)",
+                    "maxLength": 255,
+                    "example": "Temu"
+                  },
+                  "taxId": {
+                    "type": "string",
+                    "description": "Tax identification number (example 123456789, 91330100MA2XXXXXXX)",
+                    "maxLength": 50,
+                    "example": 123456789
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Optional array of key-value pairs for custom metadata (e.g., internal UUIDs, specific tax IDs).",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "itemList": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "trackingId",
+                    "bigBagNumber"
+                  ],
+                  "properties": {
+                    "trackingId": {
+                      "type": "string",
+                      "description": "Tracking identifier (example WYB3474845631, 88M0030800)",
+                      "maxLength": 100,
+                      "pattern": "^[A-Z0-9_-]+$",
+                      "example": "WYB3474845631"
+                    },
+                    "bigBagNumber": {
+                      "type": "string",
+                      "description": "Big bag number (example BIGBAG001, BIGBAG508)",
+                      "maxLength": 50,
+                      "example": "BIGBAG001"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message",
+              "mawbNumber"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Request processed successfully"
+              },
+              "manifestNumber": {
+                "type": "string",
+                "example": "MANIFEST-2024-001"
+              },
+              "mawbNumber": {
+                "type": "string",
+                "example": "2024001"
+              },
+              "totalParcels": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 3
+              },
+              "processedParcels": {
+                "type": "integer",
+                "minimum": 0,
+                "example": 3
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field",
+                    "error",
+                    "code"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "manifestNumber"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Manifest number is required"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "REQUIRED"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "submitParcelDeclarePeru",
+          "method": "POST",
+          "kind": "create",
+          "path": "/parcels/pe",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "destinationCountryCode",
+              "trackingId",
+              "grossWeight",
+              "declaredValue",
+              "pieces",
+              "currency",
+              "clientTrackingNumber",
+              "senderInfo",
+              "consigneeInfo",
+              "itemsList"
+            ],
+            "properties": {
+              "destinationCountryCode": {
+                "type": "string",
+                "description": "ISO 2-letter destination country code (example PE, CL)",
+                "minLength": 2,
+                "maxLength": 2,
+                "pattern": "^[A-Z]{2}$",
+                "example": "PE"
+              },
+              "trackingId": {
+                "type": "string",
+                "description": "Unique tracking identifier (example SH-PE-123456789, 889089) Usually the last-mile carrier tracking number used for local delivery to the end customer.",
+                "maxLength": 100,
+                "pattern": "^[A-Z0-9_-]+$",
+                "example": "SH-PE-123456789"
+              },
+              "grossWeight": {
+                "type": "string",
+                "description": "Gross weight of the parcel (example 2.5, 0.246) Must be in the unit specified by weightUom (default KG).",
+                "pattern": "^[0-9]+\\.?[0-9]*$",
+                "example": "2.5"
+              },
+              "netWeight": {
+                "type": "string",
+                "description": "Net weight (example 2.0, 0.246)",
+                "pattern": "^[0-9]+\\.?[0-9]*$",
+                "example": "2.0"
+              },
+              "weightUom": {
+                "type": "string",
+                "description": "Weight unit of measure (default KG)",
+                "enum": [
+                  "KG",
+                  "LB",
+                  "G",
+                  "OZ"
+                ],
+                "default": "KG",
+                "example": "KG"
+              },
+              "declaredValue": {
+                "type": "number",
+                "description": "FOB value - the declared commercial value of goods at origin port excluding international shipping and insurance (example 25, 10.14)",
+                "minimum": 0.01,
+                "example": 25
+              },
+              "fobValue": {
+                "type": "number",
+                "description": "FOB (Free On Board) value in declared currency (example 10.14)",
+                "minimum": 0,
+                "example": 10.14
+              },
+              "cifValue": {
+                "type": "number",
+                "description": "CIF (Cost, Insurance, Freight) value in declared currency (example 12.50)",
+                "minimum": 0,
+                "example": 12.5
+              },
+              "freightPrice": {
+                "type": "number",
+                "description": "Freight cost (example 0.5)",
+                "minimum": 0,
+                "example": 0.5
+              },
+              "insurancePrice": {
+                "type": "number",
+                "description": "Insurance cost (example 0.0, 2.5)",
+                "minimum": 0,
+                "example": 0
+              },
+              "pieces": {
+                "type": "integer",
+                "description": "Number of physical boxes/packages that make up this specific HAWB (example 1, 2)",
+                "minimum": 1,
+                "example": 1
+              },
+              "currency": {
+                "type": "string",
+                "description": "Currency code - ISO 4217 (example USD, CLP, PEN)",
+                "maxLength": 3,
+                "pattern": "^[A-Z]{3}$",
+                "example": "USD"
+              },
+              "dangerousGoods": {
+                "type": "boolean",
+                "description": "Indicates if the parcel contains dangerous goods",
+                "default": false,
+                "example": false
+              },
+              "bigBagId": {
+                "type": "string",
+                "description": "Big bag identifier (example BB-PE-001, BIGBAG-2026-001)",
+                "maxLength": 50,
+                "example": "BB-PE-001"
+              },
+              "batchNumber": {
+                "type": "string",
+                "description": "Batch number for grouping (example BATCH-20260308-001)",
+                "maxLength": 50
+              },
+              "barcode": {
+                "type": "string",
+                "description": "Parcel barcode (example BAR123456789)",
+                "maxLength": 100
+              },
+              "logisticsOrderCode": {
+                "type": "string",
+                "description": "Origin logistics provider's internal order code - e.g., Cainiao LP number (example LP00717258464258)",
+                "maxLength": 50,
+                "example": "LP00717258464258"
+              },
+              "lastmilePartnerCode": {
+                "type": "string",
+                "description": "Identification code of the final mile delivery partner (example DISTRIBUTOR_30710422)",
+                "maxLength": 50,
+                "example": "DISTRIBUTOR_30710422"
+              },
+              "customsReference": {
+                "type": "string",
+                "description": "Reference number generated by customs authorities upon clearance (example CUSTOMS_REF_002)",
+                "maxLength": 100
+              },
+              "invoiceNumber": {
+                "type": "string",
+                "description": "Commercial invoice number associated with the parcel (example INV2024001)",
+                "maxLength": 100
+              },
+              "clientTrackingNumber": {
+                "type": "string",
+                "description": "Client tracking number (example CLIENT-TRACK-001, HAWB-1)",
+                "maxLength": 100,
+                "example": "CLIENT-TRACK-001"
+              },
+              "taxCompanyId": {
+                "type": "string",
+                "description": "SII registered company ID - RUT (example 76.XXX.XXX-K, 76546789-K)",
+                "maxLength": 50,
+                "example": "76.XXX.XXX-K"
+              },
+              "taxCompanyName": {
+                "type": "string",
+                "description": "Company name as registered with SII (example Importadora Chile SpA)",
+                "maxLength": 255,
+                "example": "Importadora Chile SpA"
+              },
+              "taxHasBeenPaid": {
+                "type": "string",
+                "description": "Whether tax has been paid - IVA_YES or IVA_NO for Chile (example IVA_NO, IVA_YES)",
+                "enum": [
+                  "IVA_YES",
+                  "IVA_NO"
+                ],
+                "example": "IVA_NO"
+              },
+              "senderInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Sender name (example Yang Ke, John Smith)",
+                    "maxLength": 255,
+                    "example": "Yang Ke"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Sender address (example CN, Zhejiang Province, Shaoxing, Shangyu District, Tangpu Town, Room 301, Building A)",
+                    "maxLength": 1000
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "Sender city (example Shaoxing, Shanghai, Guangzhou)",
+                    "maxLength": 100,
+                    "example": "Shaoxing"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Sender country code (example CN, US, HK)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CN"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "Sender state or province (example Zhejiang Province, Guangdong)",
+                    "maxLength": 100,
+                    "example": "Zhejiang Province"
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Sender zip code (example 312000, 100000)",
+                    "maxLength": 20,
+                    "example": "312000"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Sender street address (example Tangpu Town, Room 301, Building A)",
+                    "maxLength": 500
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Sender email address",
+                    "maxLength": 255
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Sender phone number (example 15137736988, +8615137736988)",
+                    "maxLength": 50,
+                    "example": "15137736988"
+                  },
+                  "companyName": {
+                    "type": "string",
+                    "description": "Sender company name (example Happiness Childhood Store, Temu Warehouse)",
+                    "maxLength": 255
+                  },
+                  "taxId": {
+                    "type": "string",
+                    "description": "Sender tax ID (example 91330100MA2XXXXXXX)",
+                    "maxLength": 50
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Sender unique references",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "consigneeInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone",
+                  "identificationType",
+                  "identificationNumber"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Full name of the consignee",
+                    "maxLength": 255,
+                    "example": "Juan Pérez González"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Full address of the consignee",
+                    "maxLength": 1000,
+                    "example": "Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the consignee",
+                    "maxLength": 100,
+                    "example": "San Isidro"
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Consignee country code",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CL"
+                  },
+                  "department": {
+                    "type": "string",
+                    "description": "Peruvian department (Departamento). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Peruvian province (Provincia). Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "Peruvian district (Distrito). Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.",
+                    "maxLength": 100,
+                    "example": "Cercado"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region. For Chile, this is the Región (required). For Peru, this can be used for department or state.",
+                    "maxLength": 100,
+                    "example": "Lima"
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Postal or ZIP code",
+                    "maxLength": 20,
+                    "example": "15046"
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address",
+                    "maxLength": 500,
+                    "example": "Av. Javier Prado Este 1234"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Consignee email address",
+                    "maxLength": 255,
+                    "example": "juan.perez@example.com"
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Consignee phone number",
+                    "maxLength": 50,
+                    "example": "+51912345678"
+                  },
+                  "identificationType": {
+                    "type": "string",
+                    "description": "Type of identification document. DNI is standard for Peruvian nationals. RUT for Chilean nationals. Validated at API level based on destination country.",
+                    "enum": [
+                      "RUT",
+                      "DNI",
+                      "PASSPORT",
+                      "NATIONAL_ID",
+                      "DRIVER_LICENSE",
+                      "CE"
+                    ],
+                    "example": "RUT"
+                  },
+                  "identificationNumber": {
+                    "type": "string",
+                    "description": "Identification number (e.g. RUT format 12.345.678-9 for Chile, DNI 8 digits for Peru)",
+                    "maxLength": 100,
+                    "example": "12345678"
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Unique references for the consignee",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "returnInfo": {
+                "type": "object",
+                "required": [
+                  "name",
+                  "address",
+                  "city",
+                  "country",
+                  "state",
+                  "zipCode",
+                  "email",
+                  "phone"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "Name for the return address (example Juan Pérez González, Returns Warehouse)",
+                    "maxLength": 255,
+                    "example": "Juan Pérez González"
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "Return address (example Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago)",
+                    "maxLength": 1000,
+                    "example": "Av. Libertador Bernardo O'Higgins 1234, Providencia, Santiago"
+                  },
+                  "city": {
+                    "type": "string",
+                    "description": "City of the return address (example Viña del Mar, Callao, Santiago) For Chile, this is the comuna. For Peru, this is the city name.",
+                    "maxLength": 100
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "ISO 2-letter country code for the return address (example CL, PE)",
+                    "minLength": 2,
+                    "maxLength": 2,
+                    "pattern": "^[A-Z]{2}$",
+                    "example": "CL"
+                  },
+                  "state": {
+                    "type": "string",
+                    "description": "State or region (example Valparaíso, Callao, Lima) For Chile, this is the Región. For Peru, this can be used for department or state.",
+                    "maxLength": 100
+                  },
+                  "department": {
+                    "type": "string",
+                    "description": "Peruvian department - Departamento (example Lima, Callao) Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "province": {
+                    "type": "string",
+                    "description": "Province (example Lima, Callao) For Peru, this is the Provincia. Required when destinationCountryCode is PE, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "district": {
+                    "type": "string",
+                    "description": "Peruvian district - Distrito (example Callao, Cercado) Required when destinationCountryCode is PE for precise addressing, optional for other countries. Validated at API level.",
+                    "maxLength": 100
+                  },
+                  "zipCode": {
+                    "type": "string",
+                    "description": "Postal or ZIP code (example 2820000, 07031)",
+                    "maxLength": 20
+                  },
+                  "street": {
+                    "type": "string",
+                    "description": "Street address for the return (example Calle Falsa 123, Av. Elmer Faucett s/n)",
+                    "maxLength": 500,
+                    "example": "Calle Falsa 123"
+                  },
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email address (example returns@company.pe, devoluciones@empresa.cl)",
+                    "maxLength": 255
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Phone number (example +5112345678, +56912345678)",
+                    "maxLength": 50
+                  },
+                  "uniqueReferences": {
+                    "type": "array",
+                    "description": "Optional array of key-value pairs for custom return metadata",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "value": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "itemsList": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "itemNumber",
+                    "itemName",
+                    "quantity",
+                    "unitPrice",
+                    "totalPrice",
+                    "currency",
+                    "hsCode"
+                  ],
+                  "properties": {
+                    "itemNumber": {
+                      "type": "string",
+                      "description": "Item identifier (example 10050058244557952, 1005005824455795_1)",
+                      "maxLength": 100,
+                      "example": 10050058244557952
+                    },
+                    "itemName": {
+                      "type": "string",
+                      "description": "Name or description of the item (example Smartphone Case, Women's Cotton T-Shirt, Ropa Set)",
+                      "maxLength": 255,
+                      "example": "Smartphone Case"
+                    },
+                    "barCode": {
+                      "type": "string",
+                      "description": "Identification barcode for the item (example 123456789012, 978-0-123456-78-9)",
+                      "maxLength": 50,
+                      "example": 123456789012
+                    },
+                    "quantity": {
+                      "type": "integer",
+                      "description": "Quantity of the item (example 1, 2, 5)",
+                      "minimum": 1,
+                      "example": 1
+                    },
+                    "unitPrice": {
+                      "type": "number",
+                      "description": "Price per single unit of the item (example 25, 10.14, 12.99)",
+                      "minimum": 0,
+                      "example": 25
+                    },
+                    "totalPrice": {
+                      "type": "number",
+                      "description": "Total price for all units of this item - unitPrice * quantity (example 10.14, 25.98, 50.00)",
+                      "minimum": 0,
+                      "example": 10.14
+                    },
+                    "fobValue": {
+                      "type": "number",
+                      "description": "FOB (Free On Board) value for this item (example 10.14, 20.00)",
+                      "minimum": 0,
+                      "example": 10.14
+                    },
+                    "cifValue": {
+                      "type": "number",
+                      "description": "CIF (Cost, Insurance, Freight) value for this item (example 12.50, 25.98)",
+                      "minimum": 0,
+                      "example": 12.5
+                    },
+                    "currency": {
+                      "type": "string",
+                      "description": "3-letter ISO 4217 Currency Code (example USD, CLP, PEN)",
+                      "maxLength": 3,
+                      "pattern": "^[A-Z]{3}$",
+                      "example": "USD"
+                    },
+                    "hsCode": {
+                      "type": "string",
+                      "description": "HS code - Tariff code for the item (example 6203420000, 8517.12.00)",
+                      "maxLength": 20,
+                      "example": "6203420000"
+                    },
+                    "country": {
+                      "type": "string",
+                      "description": "Country of origin (example CN, US, VN)",
+                      "minLength": 2,
+                      "maxLength": 2,
+                      "pattern": "^[A-Z]{2}$"
+                    },
+                    "productUrl": {
+                      "type": "string",
+                      "description": "URL to the product page (example https://www.example.com/product/123)",
+                      "maxLength": 500,
+                      "example": "https://www.example.com/product/123"
+                    },
+                    "uniqueReferences": {
+                      "type": "array",
+                      "description": "Optional array of key-value pairs for custom item metadata",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "key": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "uniqueReferences": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "success",
+              "message"
+            ],
+            "properties": {
+              "success": {
+                "type": "boolean",
+                "example": true
+              },
+              "message": {
+                "type": "string",
+                "example": "Request processed successfully"
+              },
+              "trackingId": {
+                "type": "string",
+                "example": "SH-PE-123456789"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "PROCESSED",
+                  "PENDING",
+                  "FAILED"
+                ],
+                "example": "PROCESSED"
+              },
+              "errors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "field",
+                    "error",
+                    "code"
+                  ],
+                  "properties": {
+                    "field": {
+                      "type": "string",
+                      "example": "manifestNumber"
+                    },
+                    "error": {
+                      "type": "string",
+                      "example": "Manifest number is required"
+                    },
+                    "code": {
+                      "type": "string",
+                      "example": "REQUIRED"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

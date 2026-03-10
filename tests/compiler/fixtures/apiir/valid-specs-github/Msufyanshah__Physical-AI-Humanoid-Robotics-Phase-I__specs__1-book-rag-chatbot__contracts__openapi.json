@@ -1,0 +1,406 @@
+{
+  "api": {
+    "title": "Physical AI & Humanoid Robotics Book API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Ask-general",
+      "key": "ask-general",
+      "operations": [
+        {
+          "id": "POST:/ask-general",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask-general",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "description": "The question to ask about the book content",
+                "example": "Explain the difference between ROS 2 nodes and topics"
+              },
+              "user_id": {
+                "type": "string",
+                "description": "Optional user ID for logged-in users",
+                "example": "user-12345"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "The answer to the question",
+                "example": "ROS 2 nodes are processes that perform computation, while topics are named buses over which nodes exchange messages..."
+              },
+              "source_chunks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "IDs of content chunks used to generate the answer",
+                "example": [
+                  "chunk-1",
+                  "chunk-2"
+                ]
+              },
+              "confidence_score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence score of the answer",
+                "example": 0.92
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ask-selected",
+      "key": "ask-selected",
+      "operations": [
+        {
+          "id": "POST:/ask-selected",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ask-selected",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "question",
+              "selected_text"
+            ],
+            "properties": {
+              "question": {
+                "type": "string",
+                "description": "The question about the selected text",
+                "example": "Can you elaborate on this concept?"
+              },
+              "selected_text": {
+                "type": "string",
+                "description": "The text that was selected by the user",
+                "example": "ROS 2 nodes are processes that perform computation..."
+              },
+              "user_id": {
+                "type": "string",
+                "description": "Optional user ID for logged-in users",
+                "example": "user-12345"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "answer": {
+                "type": "string",
+                "description": "The answer to the question based on the selected text",
+                "example": "The concept refers to processes that perform computation in ROS 2..."
+              },
+              "source_chunks": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "IDs of content chunks used to generate the answer",
+                "example": [
+                  "chunk-1"
+                ]
+              },
+              "confidence_score": {
+                "type": "number",
+                "format": "float",
+                "minimum": 0,
+                "maximum": 1,
+                "description": "Confidence score of the answer",
+                "example": 0.85
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "key": "auth",
+      "operations": [
+        {
+          "id": "POST:/auth/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/login",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "student@example.com"
+              },
+              "password": {
+                "type": "string",
+                "description": "User's password",
+                "example": "securePassword123"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string",
+                "description": "Authentication token",
+                "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+              },
+              "user_id": {
+                "type": "string",
+                "description": "The ID of the logged-in user",
+                "example": "user-12345"
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "Login successful"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/auth/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "email",
+              "password"
+            ],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email",
+                "description": "User's email address",
+                "example": "student@example.com"
+              },
+              "password": {
+                "type": "string",
+                "minLength": 8,
+                "description": "User's password",
+                "example": "securePassword123"
+              },
+              "username": {
+                "type": "string",
+                "description": "Optional username",
+                "example": "robotics_student"
+              },
+              "background": {
+                "type": "string",
+                "enum": [
+                  "beginner",
+                  "intermediate",
+                  "advanced"
+                ],
+                "description": "User's background level",
+                "example": "beginner"
+              },
+              "hardware_level": {
+                "type": "string",
+                "enum": [
+                  "simulator-only",
+                  "basic-hardware",
+                  "advanced-hardware"
+                ],
+                "description": "User's hardware level",
+                "example": "simulator-only"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "description": "The ID of the newly created user",
+                "example": "user-12345"
+              },
+              "message": {
+                "type": "string",
+                "description": "Success message",
+                "example": "User registered successfully"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Embed-chunk",
+      "key": "embed-chunk",
+      "operations": [
+        {
+          "id": "POST:/embed-chunk",
+          "method": "POST",
+          "kind": "create",
+          "path": "/embed-chunk",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "content",
+              "metadata"
+            ],
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "The content to embed",
+                "example": "In ROS 2, nodes are processes that perform computation..."
+              },
+              "metadata": {
+                "type": "object",
+                "description": "Metadata about the content chunk",
+                "properties": {
+                  "chapter_id": {
+                    "type": "string",
+                    "example": "ch1-ros-intro"
+                  },
+                  "module_id": {
+                    "type": "string",
+                    "example": "mod1-ros"
+                  },
+                  "section_title": {
+                    "type": "string",
+                    "example": "Introduction to ROS 2 Nodes"
+                  },
+                  "word_count": {
+                    "type": "integer",
+                    "example": 250
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "chunk_id": {
+                "type": "string",
+                "description": "The ID of the embedded chunk",
+                "example": "chunk-1"
+              },
+              "embedding_status": {
+                "type": "string",
+                "description": "Status of the embedding operation",
+                "example": "success"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Personalize-content",
+      "key": "personalize-content",
+      "operations": [
+        {
+          "id": "POST:/personalize-content",
+          "method": "POST",
+          "kind": "create",
+          "path": "/personalize-content",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "user_id"
+            ],
+            "properties": {
+              "user_id": {
+                "type": "string",
+                "description": "The ID of the user requesting personalized content",
+                "example": "user-12345"
+              },
+              "module_id": {
+                "type": "string",
+                "description": "The ID of the module for which to retrieve personalized content",
+                "example": "mod1-ros"
+              },
+              "chapter_id": {
+                "type": "string",
+                "description": "Optional chapter ID for more specific personalization",
+                "example": "ch1-ros-intro"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "personalized_content": {
+                "type": "string",
+                "description": "The personalized content",
+                "example": "Based on your beginner level, we've included additional explanations..."
+              },
+              "user_preferences": {
+                "type": "object",
+                "description": "The user's preferences that were used for personalization",
+                "example": {
+                  "experience_level": "beginner",
+                  "preferred_hardware_examples": "simulator"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Translate-urdu",
+      "key": "translate-urdu",
+      "operations": [
+        {
+          "id": "POST:/translate-urdu",
+          "method": "POST",
+          "kind": "create",
+          "path": "/translate-urdu",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "content"
+            ],
+            "properties": {
+              "content": {
+                "type": "string",
+                "description": "The content to translate",
+                "example": "In ROS 2, nodes are processes that perform computation..."
+              },
+              "preserve_formatting": {
+                "type": "boolean",
+                "description": "Whether to preserve original formatting in translation",
+                "default": true
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "translated_content": {
+                "type": "string",
+                "description": "The Urdu translation of the content",
+                "example": "ROS 2 میں، نوڈس وہ عمل ہیں جو حساب کتاب انجام دیتے ہیں..."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

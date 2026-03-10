@@ -1,0 +1,261 @@
+openapi: 3.0.1
+info:
+  title: Eclipse XFSC TRAIN Trusted Content Resolver
+  description: XFSC TRAIN Trusted Content Resolver REST API
+  contact:
+    email: denis.sukhoroslov@telekom.com
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+servers:
+  - url: "{protocol}://{tcr-address}/tcr/v1"
+    variables:
+      tcr-address:
+        default: tcr.train.xfsc.dev
+        description: TCR host/port
+      protocol:
+        default: https
+        description: TCR host/port
+    description: TRAIN XFSC test environment
+    
+components:
+  responses:
+    ClientError:
+      description: >-
+        May contain hints how to solve the error or indicate what was wrong in
+        the request.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ServerError:
+      description: >-
+        May contain hints how to solve the error or indicate what went wrong at
+        the server. Must not outline any information about the internal
+        structure of the server.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    DnsError:
+      description: HTTP Bad Gateway 502 - DNS resolution error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    DidError:
+      description: HTTP Not Extended 510 - DID resolution error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+      required:
+        - code
+        - message
+    KnownServiceEndpointType:
+      type: string
+      enum:
+        - gx-trust-list-issuer
+        - gx-trust-list-schemas
+        - gx-trust-list-policies
+        - gx-trust-list-apps
+        - gx-trust-list-verifier
+        - gx-trust-list-authorities
+    ResolveRequest:
+      type: object
+      properties:
+        issuer:
+          description: Issuer details from the VC/VP (e.g., DID/URI)
+          type: string
+        trustSchemePointers:
+          description: Trust Framework Pointers (e.g., example.federation1.de)
+          type: array
+          items:
+            type: string
+        endpointTypes:
+          description: Service endpoint types to be considered during the resolving
+          type: array
+          items:
+            type: string
+      required:
+        - issuer
+        - trustSchemePointers
+    ResolvedTrustList:
+      type: object
+      properties:
+        vcUri: 
+          description: Resolved VC endpoint URI
+          type: string
+        tlUri: 
+          description: Resolved Trust List URI
+          type: string
+        trustList:
+          description: Trust List structure
+          type: object
+        vcVerified:
+          description: VC signature verified and VC hash matches Trust List content
+          type: boolean
+      required:
+        - vcVerified
+    ResolvedDoc:
+      type: object
+      properties:
+        document:
+          description: DID Document of the DID
+          type: object
+        endpoints:
+          description: Resolved Trust List VC endpoints
+          type: array
+          items:
+            $ref: '#/components/schemas/ResolvedTrustList'
+        didVerified:
+          description: Well-known did-configuration verification result
+          type: boolean
+      required:
+        - document
+        - didVerified
+    ResolvedDid:
+      type: object
+      properties:
+        did:
+          description: Corresponding DID mapped to Trust Framework Pointer
+          type: string
+        resolvedDoc:
+          $ref: '#/components/schemas/ResolvedDoc'
+        error:  
+          $ref: '#/components/schemas/Error'
+      required:
+        - did
+    ResolvedPointer:
+      type: object
+      properties:
+        pointer:
+          description: Trust Framework Pointer (e.g., example.federation1.de)
+          type: string
+        dids:
+          description: DIDs resolved from the pointer
+          type: array
+          items:
+            type: string
+        error:
+          $ref: '#/components/schemas/Error'
+      required:
+        - pointer
+    ResolveResponse:
+      type: object
+      properties:
+        trustSchemePointers:
+          description: Trust Framework Pointers (e.g., example.federation1.de)
+          type: array
+          items:
+            $ref: '#/components/schemas/ResolvedPointer'
+        resolvedResults:
+          description: PTR Resolution results
+          type: array
+          items:
+            $ref: '#/components/schemas/ResolvedDid'
+      required:
+        - trustSchemePointers
+
+    ValidateRequest:
+      type: object
+      properties:
+        issuer:
+          description: Issuer details from the VC/VP (e.g., DID/URI)
+          type: string
+        did:
+          description: DID resolved from Trust Pointer
+          type: string
+        endpoints:
+          description: Resolved Trust List VC endpoints
+          type: array
+          items:
+            type: string
+      required:
+        - issuer
+        - did
+        - endpoints
+    ValidateResponse:
+      type: object
+      properties:
+        didVerified: 
+          description: DID verified via well-known did-configuration
+          type: boolean
+        endpoints:
+          description: If Issuer details are found, display meta data information, public keys, schema from the trust list..?
+          type: array
+          items:
+            $ref: '#/components/schemas/ResolvedTrustList'
+      required:
+        - didVerified
+          
+tags:
+  - name: TrustedContentResolver
+    description: Trusted Content Resolver API
+
+paths:
+  /resolve:
+    post:
+      tags:
+        - TrustedContentResolver
+      summary: Verification result based on issuer & trust scheme pointers
+      description: Returns a Verification result from TCR
+      operationId: resolveTrustList
+      requestBody:
+        description: Verification params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveRequest'
+        required: true
+      responses:
+        '200':
+          description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveResponse'
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '502':
+          $ref: '#/components/responses/DnsError'
+        '510':
+          $ref: '#/components/responses/DidError'
+  /validate:
+    post:
+      tags:
+        - TrustedContentResolver
+      summary: Validation result based on /resolve output
+      description: Returns a Validation result from TCR
+      operationId: validateTrustList
+      requestBody:
+        description: Validation params
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ValidateRequest'
+        required: true
+      responses:
+        '200':
+          description: Validated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidateResponse'
+        '400':
+          $ref: '#/components/responses/ClientError'
+        '500':
+          $ref: '#/components/responses/ServerError'
+        '510':
+          $ref: '#/components/responses/DidError'

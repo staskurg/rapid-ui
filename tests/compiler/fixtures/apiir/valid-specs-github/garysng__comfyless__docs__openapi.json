@@ -1,0 +1,635 @@
+{
+  "api": {
+    "title": "ComfyUI Serverless API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "healthCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        {
+          "id": "readinessCheck",
+          "method": "GET",
+          "kind": "list",
+          "path": "/ready",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ready"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Queue",
+      "key": "queue",
+      "operations": [
+        {
+          "id": "getQueueMetrics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/queue/metrics",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "pending_tasks": {
+                "type": "integer",
+                "description": "Number of pending tasks"
+              },
+              "running_tasks": {
+                "type": "integer",
+                "description": "Number of running tasks"
+              },
+              "completed_tasks": {
+                "type": "integer",
+                "description": "Number of completed tasks"
+              },
+              "failed_tasks": {
+                "type": "integer",
+                "description": "Number of failed tasks"
+              },
+              "total_tasks": {
+                "type": "integer",
+                "description": "Total number of tasks"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tasks",
+      "key": "tasks",
+      "operations": [
+        {
+          "id": "listTasks",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/tasks",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "tasks": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Task unique identifier"
+                    },
+                    "workflow_id": {
+                      "type": "string",
+                      "description": "Workflow ID"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "pending",
+                        "running",
+                        "completed",
+                        "failed",
+                        "cancelled"
+                      ],
+                      "description": "Task status"
+                    },
+                    "priority": {
+                      "type": "integer",
+                      "description": "Task priority"
+                    },
+                    "payload": {
+                      "type": "object",
+                      "description": "Task payload data",
+                      "additionalProperties": true
+                    },
+                    "worker_id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "description": "Worker ID executing the task",
+                      "nullable": true
+                    },
+                    "created_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Task creation time"
+                    },
+                    "started_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Task start execution time",
+                      "nullable": true
+                    },
+                    "completed_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Task completion time",
+                      "nullable": true
+                    },
+                    "result": {
+                      "type": "object",
+                      "description": "Task execution result",
+                      "additionalProperties": true,
+                      "nullable": true
+                    },
+                    "error": {
+                      "type": "string",
+                      "description": "Error message (if task failed)",
+                      "nullable": true
+                    },
+                    "retry_count": {
+                      "type": "integer",
+                      "description": "Retry count"
+                    },
+                    "max_retries": {
+                      "type": "integer",
+                      "description": "Maximum retry count"
+                    }
+                  }
+                }
+              },
+              "count": {
+                "type": "integer",
+                "description": "Total number of tasks"
+              }
+            }
+          }
+        },
+        {
+          "id": "getTask",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/tasks/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Task unique identifier"
+              },
+              "workflow_id": {
+                "type": "string",
+                "description": "Workflow ID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "running",
+                  "completed",
+                  "failed",
+                  "cancelled"
+                ],
+                "description": "Task status"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Task priority"
+              },
+              "payload": {
+                "type": "object",
+                "description": "Task payload data",
+                "additionalProperties": true
+              },
+              "worker_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Worker ID executing the task",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task creation time"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task start execution time",
+                "nullable": true
+              },
+              "completed_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task completion time",
+                "nullable": true
+              },
+              "result": {
+                "type": "object",
+                "description": "Task execution result",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message (if task failed)",
+                "nullable": true
+              },
+              "retry_count": {
+                "type": "integer",
+                "description": "Retry count"
+              },
+              "max_retries": {
+                "type": "integer",
+                "description": "Maximum retry count"
+              }
+            }
+          }
+        },
+        {
+          "id": "submitTask",
+          "method": "POST",
+          "kind": "create",
+          "path": "/api/v1/tasks",
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "workflow_id",
+              "payload"
+            ],
+            "properties": {
+              "workflow_id": {
+                "type": "string",
+                "description": "Workflow ID",
+                "example": "text_to_image_v1"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Task priority (higher number means higher priority)",
+                "default": 0,
+                "minimum": 0,
+                "maximum": 10
+              },
+              "payload": {
+                "type": "object",
+                "description": "Task payload data",
+                "additionalProperties": true,
+                "example": {
+                  "prompt": "A beautiful landscape",
+                  "steps": 20,
+                  "cfg_scale": 7.5
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Task unique identifier"
+              },
+              "workflow_id": {
+                "type": "string",
+                "description": "Workflow ID"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "running",
+                  "completed",
+                  "failed",
+                  "cancelled"
+                ],
+                "description": "Task status"
+              },
+              "priority": {
+                "type": "integer",
+                "description": "Task priority"
+              },
+              "payload": {
+                "type": "object",
+                "description": "Task payload data",
+                "additionalProperties": true
+              },
+              "worker_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Worker ID executing the task",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task creation time"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task start execution time",
+                "nullable": true
+              },
+              "completed_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Task completion time",
+                "nullable": true
+              },
+              "result": {
+                "type": "object",
+                "description": "Task execution result",
+                "additionalProperties": true,
+                "nullable": true
+              },
+              "error": {
+                "type": "string",
+                "description": "Error message (if task failed)",
+                "nullable": true
+              },
+              "retry_count": {
+                "type": "integer",
+                "description": "Retry count"
+              },
+              "max_retries": {
+                "type": "integer",
+                "description": "Maximum retry count"
+              }
+            }
+          }
+        },
+        {
+          "id": "cancelTask",
+          "method": "DELETE",
+          "kind": "delete",
+          "path": "/api/v1/tasks/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "string",
+                "example": "Task cancelled successfully"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Workers",
+      "key": "workers",
+      "operations": [
+        {
+          "id": "listWorkers",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/workers",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Worker unique identifier"
+                },
+                "pod_name": {
+                  "type": "string",
+                  "description": "Pod name"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "pending",
+                    "starting",
+                    "running",
+                    "idle",
+                    "terminating",
+                    "failed"
+                  ],
+                  "description": "Worker status"
+                },
+                "endpoint": {
+                  "type": "string",
+                  "description": "Worker endpoint URL"
+                },
+                "port": {
+                  "type": "integer",
+                  "description": "Worker port"
+                },
+                "current_task_id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "description": "Current executing task ID",
+                  "nullable": true
+                },
+                "created_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Worker creation time"
+                },
+                "started_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Worker start time",
+                  "nullable": true
+                },
+                "last_active_at": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Last active time"
+                },
+                "last_health_check": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Last health check time"
+                },
+                "health_status": {
+                  "type": "boolean",
+                  "description": "Health status"
+                },
+                "resources": {
+                  "type": "object",
+                  "properties": {
+                    "cpu": {
+                      "type": "string",
+                      "description": "CPU resource specification",
+                      "example": "2"
+                    },
+                    "memory": {
+                      "type": "string",
+                      "description": "Memory resource specification",
+                      "example": "4Gi"
+                    },
+                    "gpu": {
+                      "type": "string",
+                      "description": "GPU resource specification",
+                      "example": "1",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getWorkerMetrics",
+          "method": "GET",
+          "kind": "list",
+          "path": "/api/v1/workers/metrics",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "total_workers": {
+                "type": "integer",
+                "description": "Total number of workers"
+              },
+              "pending_workers": {
+                "type": "integer",
+                "description": "Number of pending workers"
+              },
+              "starting_workers": {
+                "type": "integer",
+                "description": "Number of starting workers"
+              },
+              "running_workers": {
+                "type": "integer",
+                "description": "Number of running workers"
+              },
+              "idle_workers": {
+                "type": "integer",
+                "description": "Number of idle workers"
+              },
+              "terminating_workers": {
+                "type": "integer",
+                "description": "Number of terminating workers"
+              },
+              "failed_workers": {
+                "type": "integer",
+                "description": "Number of failed workers"
+              }
+            }
+          }
+        },
+        {
+          "id": "getWorker",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/api/v1/workers/{id}",
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Worker unique identifier"
+              },
+              "pod_name": {
+                "type": "string",
+                "description": "Pod name"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "starting",
+                  "running",
+                  "idle",
+                  "terminating",
+                  "failed"
+                ],
+                "description": "Worker status"
+              },
+              "endpoint": {
+                "type": "string",
+                "description": "Worker endpoint URL"
+              },
+              "port": {
+                "type": "integer",
+                "description": "Worker port"
+              },
+              "current_task_id": {
+                "type": "string",
+                "format": "uuid",
+                "description": "Current executing task ID",
+                "nullable": true
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Worker creation time"
+              },
+              "started_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Worker start time",
+                "nullable": true
+              },
+              "last_active_at": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last active time"
+              },
+              "last_health_check": {
+                "type": "string",
+                "format": "date-time",
+                "description": "Last health check time"
+              },
+              "health_status": {
+                "type": "boolean",
+                "description": "Health status"
+              },
+              "resources": {
+                "type": "object",
+                "properties": {
+                  "cpu": {
+                    "type": "string",
+                    "description": "CPU resource specification",
+                    "example": "2"
+                  },
+                  "memory": {
+                    "type": "string",
+                    "description": "Memory resource specification",
+                    "example": "4Gi"
+                  },
+                  "gpu": {
+                    "type": "string",
+                    "description": "GPU resource specification",
+                    "example": "1",
+                    "nullable": true
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2052 @@
+openapi: 3.1.0
+info:
+  title: Horror Story Research API
+  description: |
+    Local-only API server for research card management and deduplication signal evaluation.
+
+    ## Features
+    - **Research Cards**: Generate horror research cards using local Ollama LLM
+    - **Validation**: Validate existing research card quality
+    - **Listing**: Browse and filter research cards
+    - **Dedup Signals**: Evaluate story similarity (LOW/MEDIUM/HIGH)
+    - **Resource Management**: Monitor Ollama model lifecycle
+
+    ## Additional Features
+    - FAISS-based semantic deduplication
+    - Story seed generation and registry
+    - Ollama resource auto-cleanup
+    - Task scheduler with queue management
+    - Thumbnail image generation
+
+    ## Usage
+    ```bash
+    # Start server
+    uvicorn src.api.main:app --host 127.0.0.1 --port 8000
+    ```
+
+    ## Authentication (Optional)
+    API key authentication is disabled by default. To enable:
+    ```bash
+    export API_AUTH_ENABLED=true
+    export API_KEY=your-secure-key
+    ```
+    When enabled, include `X-API-Key` header in all requests (except `/health` and `/resource/status`).
+
+    ## Note
+    This API is designed for **local use only**. All operations connect to local Ollama instance.
+  version: 1.7.0
+  contact:
+    name: VinylStage
+    email: mcpe9869@gmail.com
+  license:
+    name: CC-BY-NC-SA-4.0
+    url: https://creativecommons.org/licenses/by-nc-sa/4.0/
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+
+tags:
+  - name: story
+    description: Story generation and registry operations - direct story generation, listing, and details
+  - name: scheduler
+    description: Scheduler control operations - start, stop, and status monitoring
+  - name: tasks
+    description: Task management - create, list, update, cancel, and track task execution
+  - name: research
+    description: Research card operations - generate, validate, and list research cards via Ollama LLM
+  - name: dedup
+    description: Deduplication signal evaluation - check story similarity against existing registry
+  - name: system
+    description: System health and resource management endpoints
+
+paths:
+  /health:
+    get:
+      tags:
+        - system
+      summary: Health check
+      description: Returns API health status and version
+      operationId: healthCheck
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /resource/status:
+    get:
+      tags:
+        - system
+      summary: Resource manager status
+      description: |
+        Returns Ollama resource manager status including active models,
+        idle timeout configuration, and cleanup status.
+      operationId: resourceStatus
+      responses:
+        '200':
+          description: Resource status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResourceStatusResponse'
+
+  /story/generate:
+    post:
+      tags:
+        - story
+      summary: Generate story directly (blocking)
+      description: |
+        Generates a story synchronously and returns the result.
+
+        **v1.4.3**: Supports webhook_url for fire-and-forget completion notification.
+        **v1.6.0**: Supports custom tags field for user-defined tags.
+        **v1.6.1**: Supports thumbnail_provider for automatic thumbnail generation.
+
+        If topic is provided:
+        - Searches for existing research cards matching the topic
+        - If not found and auto_research=True, generates new research
+        - Uses the research card for story context
+
+        If topic is not provided:
+        - Selects a random template
+        - Uses existing research cards based on template affinity
+      operationId: generateStory
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoryGenerateRequest'
+            examples:
+              withTopic:
+                summary: With topic and custom tags
+                value:
+                  topic: "Korean apartment horror"
+                  tags: ["수면공포", "청각공포"]
+                  auto_research: true
+                  save_output: true
+              withModel:
+                summary: With specific model
+                value:
+                  model: "ollama:qwen3:30b"
+                  target_length: 3000
+                  save_output: true
+              withWebhook:
+                summary: With webhook notification
+                value:
+                  topic: "Subway late night encounter"
+                  webhook_url: "https://example.com/webhook"
+                  thumbnail_provider: "openai_dalle3"
+      responses:
+        '200':
+          description: Story generation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryGenerateResponse'
+              examples:
+                success:
+                  summary: Successful generation
+                  value:
+                    success: true
+                    story_id: "20260113_120000"
+                    story: "# The Floor Above\n\n..."
+                    title: "The Floor Above"
+                    file_path: "./data/novel/horror_story_20260113_120000.md"
+                    word_count: 3500
+                    metadata:
+                      model: "claude-sonnet-4-5-20250929"
+                      provider: "anthropic"
+                    webhook_triggered: false
+                    thumbnail_url: "https://oaidalleapiprodscus.blob.core.windows.net/..."
+                    thumbnail_provider: "openai_dalle3"
+                error:
+                  summary: Generation failed
+                  value:
+                    success: false
+                    error: "Generation failed"
+                    webhook_triggered: false
+
+  /story/list:
+    get:
+      tags:
+        - story
+      summary: List stories from registry
+      description: |
+        Lists stories from the registry with optional filtering and pagination.
+
+        Stories are sorted by creation time (newest first).
+      operationId: listStories
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum stories to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 50
+        - name: offset
+          in: query
+          description: Offset for pagination
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: accepted_only
+          in: query
+          description: Only return accepted stories
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of stories
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryListResponse'
+        '500':
+          description: Failed to list stories
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+  /story/{story_id}:
+    get:
+      tags:
+        - story
+      summary: Get story details
+      description: Get detailed information about a specific story from the registry.
+      operationId: getStoryDetail
+      parameters:
+        - name: story_id
+          in: path
+          required: true
+          description: Story identifier
+          schema:
+            type: string
+            example: "20260113_120000"
+      responses:
+        '200':
+          description: Story details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StoryDetailResponse'
+        '404':
+          description: Story not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Story not found: 20260113_120000"
+        '500':
+          description: Failed to get story
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+  /scheduler/start:
+    post:
+      tags:
+        - scheduler
+      summary: Start scheduler dispatch loop
+      description: |
+        Starts the scheduler dispatch loop to process queued tasks.
+
+        **Features:**
+        - Idempotent: Returns success if already running
+        - Not auto-started on server boot (explicit call required)
+        - Supports crash recovery on startup
+
+        **Note:** Scheduler must be started before tasks will execute.
+      operationId: startScheduler
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchedulerStartRequest'
+            example:
+              run_recovery: true
+      responses:
+        '200':
+          description: Scheduler started successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerStartResponse'
+              examples:
+                withRecovery:
+                  summary: Started with recovery
+                  value:
+                    success: true
+                    message: "Scheduler started successfully"
+                    recovery_stats:
+                      recovered_tasks: 2
+                      failed_tasks: 0
+                alreadyRunning:
+                  summary: Already running
+                  value:
+                    success: true
+                    message: "Scheduler is already running"
+
+  /scheduler/stop:
+    post:
+      tags:
+        - scheduler
+      summary: Stop scheduler dispatch loop
+      description: |
+        Gracefully stops the scheduler dispatch loop.
+
+        **Features:**
+        - Waits for current task to complete (no preemption)
+        - Idempotent: Returns success if already stopped
+        - Configurable timeout for task completion
+
+        **Note:** Queued tasks remain in queue; restart scheduler to continue.
+      operationId: stopScheduler
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SchedulerStopRequest'
+            example:
+              timeout: 30.0
+      responses:
+        '200':
+          description: Scheduler stopped successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerStopResponse'
+              examples:
+                stopped:
+                  summary: Successfully stopped
+                  value:
+                    success: true
+                    message: "Scheduler stopped successfully"
+                alreadyStopped:
+                  summary: Already stopped
+                  value:
+                    success: true
+                    message: "Scheduler is not running"
+
+  /scheduler/status:
+    get:
+      tags:
+        - scheduler
+      summary: Get scheduler status
+      description: |
+        Returns scheduler status and cumulative execution statistics.
+
+        Includes:
+        - Whether dispatch loop is running
+        - Currently executing task (if any)
+        - Number of queued tasks
+        - Cumulative stats (total executed, succeeded, failed, etc.)
+        - Direct API reservation status
+      operationId: getSchedulerStatus
+      responses:
+        '200':
+          description: Scheduler status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchedulerStatusResponse'
+              examples:
+                running:
+                  summary: Scheduler running with active task
+                  value:
+                    scheduler_running: true
+                    current_task_id: "task-550e8400-e29b-41d4-a716-446655440000"
+                    queue_length: 5
+                    cumulative_stats:
+                      total_executed: 42
+                      succeeded: 38
+                      failed: 3
+                      cancelled: 1
+                      skipped: 0
+                    has_active_reservation: false
+                idle:
+                  summary: Scheduler idle
+                  value:
+                    scheduler_running: true
+                    current_task_id: null
+                    queue_length: 0
+                    cumulative_stats:
+                      total_executed: 10
+                      succeeded: 10
+                      failed: 0
+                      cancelled: 0
+                      skipped: 0
+                    has_active_reservation: false
+
+  /tasks:
+    post:
+      tags:
+        - tasks
+      summary: Create task(s)
+      description: |
+        Creates one or more tasks and adds them to the scheduler queue.
+        Input is always an array of task specifications.
+
+        **Task Types:**
+        - **story**: Story generation task
+        - **research**: Research card generation task
+
+        **Priority:** Higher values execute sooner (0-100).
+        **Status:** New tasks start in QUEUED status.
+
+        **Note:** Scheduler must be running for tasks to execute.
+      operationId: createTasks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TaskCreateRequest'
+              minItems: 1
+              maxItems: 50
+            examples:
+              singleStory:
+                summary: Single story task
+                value:
+                  - type: "story"
+                    params:
+                      topic: "Korean apartment horror"
+                      enable_dedup: true
+                    priority: 10
+              multipleResearch:
+                summary: Multiple research tasks
+                value:
+                  - type: "research"
+                    params:
+                      topic: "Korean apartment horror"
+                      tags: ["urban", "isolation"]
+                    priority: 5
+                  - type: "research"
+                    params:
+                      topic: "Hospital ghost stories"
+                      tags: ["hospital", "ghost"]
+                    priority: 5
+      responses:
+        '201':
+          description: Task(s) created successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TaskResponse'
+
+    get:
+      tags:
+        - tasks
+      summary: List all tasks
+      description: |
+        Lists all tasks in the scheduler with optional limit.
+
+        Tasks are returned sorted by priority (descending) and queue position.
+      operationId: listTasks
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of tasks to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 50
+      responses:
+        '200':
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskListResponse'
+
+  /tasks/{task_id}:
+    get:
+      tags:
+        - tasks
+      summary: Get task details
+      description: Returns detailed information about a specific task.
+      operationId: getTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: Task identifier
+          schema:
+            type: string
+            example: "task-550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Task details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Task not found: nonexistent-id"
+
+    patch:
+      tags:
+        - tasks
+      summary: Update task priority
+      description: |
+        Updates the priority of a task (QUEUED status only).
+
+        **Constraints:** Only QUEUED tasks can be updated.
+        Running or finished tasks cannot be modified.
+      operationId: updateTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: Task identifier
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskUpdateRequest'
+            example:
+              priority: 50
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskResponse'
+        '400':
+          description: Cannot update task (not QUEUED)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Cannot update task: only QUEUED tasks can be updated"
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+    delete:
+      tags:
+        - tasks
+      summary: Cancel task
+      description: |
+        Cancels a task (QUEUED status only).
+
+        **Constraints:** Only QUEUED tasks can be cancelled.
+        Sets task status to CANCELLED.
+
+        **Note:** Running tasks cannot be cancelled via this endpoint.
+      operationId: deleteTask
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: Task identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Task cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDeleteResponse'
+        '400':
+          description: Cannot cancel task (not QUEUED)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Cannot cancel task: only QUEUED tasks can be cancelled"
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+  /tasks/{task_id}/runs:
+    get:
+      tags:
+        - tasks
+      summary: Get task execution runs
+      description: |
+        Returns the execution history (TaskRuns) for a specific task.
+
+        **Note:** Each Task has at most 1 TaskRun (1:1 relationship).
+        Retries create new Tasks with retry_of field set.
+      operationId: getTaskRuns
+      parameters:
+        - name: task_id
+          in: path
+          required: true
+          description: Task identifier
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of task runs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRunListResponse'
+        '404':
+          description: Task not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+
+  /tasks/group:
+    post:
+      tags:
+        - tasks
+      summary: Create task group
+      description: |
+        Creates a group of tasks for batch execution.
+
+        **Features:**
+        - Submit 1-50 tasks in a single group
+        - Mix story and research tasks
+        - Track group progress via group_id
+      operationId: createTaskGroup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskGroupCreateRequest'
+      responses:
+        '201':
+          description: Task group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskGroupResponse'
+
+  /research/run:
+    post:
+      tags:
+        - research
+      summary: Execute research generation
+      description: |
+        Triggers research generation via Ollama LLM.
+
+        This endpoint spawns a subprocess to execute the research_executor CLI.
+        The research card is generated and saved to disk.
+
+        **Note**: This operation may take 30-120 seconds depending on the model.
+      operationId: runResearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResearchRunRequest'
+            examples:
+              basic:
+                summary: Basic research request
+                value:
+                  topic: "한국 아파트 공포"
+                  tags: ["apartment", "korean"]
+              withModel:
+                summary: With model override
+                value:
+                  topic: "지하철 도시전설"
+                  tags: ["subway", "urban-legend"]
+                  model: "qwen3:30b"
+                  timeout: 300
+      responses:
+        '200':
+          description: Research execution result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchRunResponse'
+              examples:
+                success:
+                  summary: Successful generation
+                  value:
+                    card_id: "RC-20260111-123456"
+                    status: "complete"
+                    message: null
+                    output_path: "data/research/2026/01/RC-20260111-123456.json"
+                timeout:
+                  summary: Timeout error
+                  value:
+                    card_id: ""
+                    status: "timeout"
+                    message: "Research execution timed out after 300s"
+                    output_path: null
+
+  /research/validate:
+    post:
+      tags:
+        - research
+      summary: Validate research card
+      description: |
+        Validates an existing research card for quality and completeness.
+
+        Quality scores:
+        - **good**: All required fields present and valid
+        - **partial**: Some fields missing or incomplete
+        - **incomplete**: Major fields missing
+      operationId: validateResearch
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResearchValidateRequest'
+            example:
+              card_id: "RC-20260111-123456"
+      responses:
+        '200':
+          description: Validation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchValidateResponse'
+              examples:
+                valid:
+                  summary: Valid card
+                  value:
+                    card_id: "RC-20260111-123456"
+                    is_valid: true
+                    quality_score: "good"
+                    message: "Validation passed"
+                notFound:
+                  summary: Card not found
+                  value:
+                    card_id: "RC-20260111-999999"
+                    is_valid: false
+                    quality_score: "not_found"
+                    message: "Card not found: data/research/2026/01/RC-20260111-999999.json"
+
+  /research/list:
+    get:
+      tags:
+        - research
+      summary: List research cards
+      description: |
+        Lists research cards with optional filtering and pagination.
+
+        Cards are sorted by creation date (newest first).
+      operationId: listResearch
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of cards to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+        - name: offset
+          in: query
+          description: Pagination offset
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: quality
+          in: query
+          description: Filter by quality score
+          schema:
+            type: string
+            enum:
+              - good
+              - partial
+              - incomplete
+      responses:
+        '200':
+          description: List of research cards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchListResponse'
+
+  /research/dedup:
+    post:
+      tags:
+        - research
+      summary: Check research card for semantic duplicates
+      description: |
+        Checks a research card against existing cards using FAISS semantic similarity.
+
+        **Similarity Thresholds:**
+        - **LOW** (< 0.70): Unique content
+        - **MEDIUM** (0.70-0.85): Some overlap
+        - **HIGH** (≥ 0.85): High similarity (potential duplicate)
+
+        Uses nomic-embed-text model via Ollama (768 dimensions).
+      operationId: checkResearchDedup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResearchDedupCheckRequest'
+            example:
+              card_id: "RC-20260113-120000"
+      responses:
+        '200':
+          description: Dedup check result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchDedupCheckResponse'
+              examples:
+                low:
+                  summary: Low similarity (unique)
+                  value:
+                    card_id: "RC-20260113-120000"
+                    signal: "LOW"
+                    similarity_score: 0.45
+                    nearest_card_id: "RC-20260112-090000"
+                    similar_cards:
+                      - card_id: "RC-20260112-090000"
+                        similarity_score: 0.45
+                        title: "Urban Horror Research"
+                    index_size: 52
+                    message: "Card is sufficiently unique"
+                high:
+                  summary: High similarity (duplicate)
+                  value:
+                    card_id: "RC-20260113-120000"
+                    signal: "HIGH"
+                    similarity_score: 0.92
+                    nearest_card_id: "RC-20260112-143000"
+                    similar_cards:
+                      - card_id: "RC-20260112-143000"
+                        similarity_score: 0.92
+                        title: "Korean Apartment Horror"
+                    index_size: 52
+                    message: "High similarity detected"
+
+  /research/matching-templates:
+    post:
+      tags:
+        - research
+      summary: Find matching templates for research card
+      description: |
+        Finds story templates that match a research card's canonical affinity.
+
+        **Cross-pipeline CK matching** (Issue #21):
+        - Research cards have canonical_affinity (extracted from content)
+        - Templates have canonical_core (defined in template config)
+        - This endpoint matches them to suggest suitable templates
+
+        Returns templates sorted by match score (highest first).
+      operationId: matchResearchTemplates
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResearchMatchingTemplatesRequest'
+            examples:
+              default:
+                summary: Default matching
+                value:
+                  card_id: "RC-20260115-143052"
+                  max_templates: 5
+                  min_score: 0.5
+              strict:
+                summary: Strict matching (higher threshold)
+                value:
+                  card_id: "RC-20260115-143052"
+                  max_templates: 3
+                  min_score: 0.7
+      responses:
+        '200':
+          description: Matching templates
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResearchMatchingTemplatesResponse'
+        '404':
+          description: Research card not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Research card not found: RC-20260115-143052"
+
+  /dedup/evaluate:
+    post:
+      tags:
+        - dedup
+      summary: Evaluate deduplication signal
+      description: |
+        Evaluates similarity of a potential story against existing stories.
+
+        Returns a signal indicating the level of similarity:
+        - **LOW** (< 0.70): Unique content, proceed freely
+        - **MEDIUM** (0.70-0.85): Some overlap, consider adjustments
+        - **HIGH** (>= 0.85): Very similar, may want to reconsider
+
+        **Important**: This is advisory only - it does NOT block story generation.
+      operationId: evaluateDedup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DedupEvaluateRequest'
+            example:
+              template_id: "TMPL-abandoned-building"
+              canonical_core:
+                setting: "urban"
+                primary_fear: "isolation"
+                antagonist: "entity"
+                mechanism: "corruption"
+                twist: "identity"
+              title: "빈 건물의 속삭임"
+      responses:
+        '200':
+          description: Deduplication evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DedupEvaluateResponse'
+              examples:
+                low:
+                  summary: Low similarity (unique)
+                  value:
+                    signal: "LOW"
+                    similarity_score: 0.45
+                    similar_stories: []
+                    message: null
+                high:
+                  summary: High similarity
+                  value:
+                    signal: "HIGH"
+                    similarity_score: 0.92
+                    similar_stories:
+                      - story_id: "20260110-142030"
+                        template_id: "TMPL-abandoned-building"
+                        similarity_score: 0.92
+                        matched_dimensions: ["setting", "primary_fear", "antagonist"]
+                    message: "High similarity detected with recent story"
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          description: Health status
+          example: "ok"
+        version:
+          type: string
+          description: API version
+          example: "1.5.0"
+
+    ResourceStatusResponse:
+      type: object
+      required:
+        - running
+        - idle_timeout_seconds
+        - active_models
+        - model_count
+      properties:
+        running:
+          type: boolean
+          description: Whether resource manager is running
+        idle_timeout_seconds:
+          type: integer
+          description: Idle timeout before model unload (0 = disabled)
+          example: 300
+        active_models:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+          description: Map of model name to last used timestamp
+          example:
+            "qwen3:30b": "2026-01-11T12:00:00"
+        model_count:
+          type: integer
+          description: Number of active models
+
+    ResearchRunRequest:
+      type: object
+      required:
+        - topic
+      properties:
+        topic:
+          type: string
+          description: Research topic to analyze
+          minLength: 5
+          maxLength: 500
+          example: "한국 아파트 공포"
+        tags:
+          type: array
+          items:
+            type: string
+          description: Optional tags for categorization
+          default: []
+          example: ["apartment", "korean"]
+        model:
+          type: string
+          description: Ollama model override
+          example: "qwen3:30b"
+        timeout:
+          type: integer
+          description: Timeout in seconds
+          minimum: 30
+          maximum: 600
+          default: 300
+
+    ResearchRunResponse:
+      type: object
+      required:
+        - card_id
+        - status
+      properties:
+        card_id:
+          type: string
+          description: Generated card ID (empty on error)
+          example: "RC-20260111-123456"
+        status:
+          type: string
+          description: Execution status
+          enum:
+            - complete
+            - error
+            - timeout
+        message:
+          type: string
+          nullable: true
+          description: Status message
+        output_path:
+          type: string
+          nullable: true
+          description: Path to output file
+
+    ResearchValidateRequest:
+      type: object
+      required:
+        - card_id
+      properties:
+        card_id:
+          type: string
+          description: Card ID to validate
+          pattern: "^RC-\\d{8}-\\d{6}$"
+          example: "RC-20260111-123456"
+
+    ResearchValidateResponse:
+      type: object
+      required:
+        - card_id
+        - is_valid
+        - quality_score
+      properties:
+        card_id:
+          type: string
+          description: Validated card ID
+        is_valid:
+          type: boolean
+          description: Whether card is valid
+        quality_score:
+          type: string
+          description: Quality score
+          enum:
+            - good
+            - partial
+            - incomplete
+            - not_found
+            - invalid_id
+            - error
+        message:
+          type: string
+          nullable: true
+          description: Validation details
+
+    ResearchCardSummary:
+      type: object
+      required:
+        - card_id
+        - title
+        - topic
+        - quality_score
+        - created_at
+      properties:
+        card_id:
+          type: string
+          description: Card identifier
+          example: "RC-20260111-123456"
+        title:
+          type: string
+          description: Research card title
+          example: "아파트 엘리베이터의 공포"
+        topic:
+          type: string
+          description: Original research topic
+        quality_score:
+          type: string
+          description: Quality assessment
+        created_at:
+          type: string
+          description: Creation date (YYYY-MM-DD)
+          example: "2026-01-11"
+
+    ResearchListResponse:
+      type: object
+      required:
+        - cards
+        - total
+        - limit
+        - offset
+      properties:
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/ResearchCardSummary'
+          description: List of research cards
+        total:
+          type: integer
+          description: Total number of cards returned
+        limit:
+          type: integer
+          description: Requested limit
+        offset:
+          type: integer
+          description: Requested offset
+        message:
+          type: string
+          nullable: true
+          description: Status message
+
+    CanonicalCore:
+      type: object
+      description: Canonical dimensions for story comparison
+      properties:
+        setting:
+          type: string
+          description: Setting type (urban, rural, institutional, etc.)
+          example: "urban"
+        primary_fear:
+          type: string
+          description: Primary fear type
+          example: "isolation"
+        antagonist:
+          type: string
+          description: Antagonist type
+          example: "entity"
+        mechanism:
+          type: string
+          description: Horror mechanism
+          example: "corruption"
+        twist:
+          type: string
+          description: Twist pattern
+          example: "identity"
+
+    DedupEvaluateRequest:
+      type: object
+      properties:
+        template_id:
+          type: string
+          nullable: true
+          description: Template ID being used
+        canonical_core:
+          $ref: '#/components/schemas/CanonicalCore'
+        title:
+          type: string
+          nullable: true
+          description: Story title for similarity check
+
+    SimilarStory:
+      type: object
+      required:
+        - story_id
+        - template_id
+        - similarity_score
+        - matched_dimensions
+      properties:
+        story_id:
+          type: string
+          description: Similar story identifier
+        template_id:
+          type: string
+          description: Template used by similar story
+        similarity_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Similarity score (0.0-1.0)
+        matched_dimensions:
+          type: array
+          items:
+            type: string
+          description: List of matching canonical dimensions
+
+    DedupEvaluateResponse:
+      type: object
+      required:
+        - signal
+        - similarity_score
+      properties:
+        signal:
+          type: string
+          description: Deduplication signal level
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+        similarity_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Maximum similarity score found
+        similar_stories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimilarStory'
+          description: List of similar stories found
+          default: []
+        message:
+          type: string
+          nullable: true
+          description: Advisory message
+
+    # Story Schemas
+    StoryGenerateRequest:
+      type: object
+      properties:
+        topic:
+          type: string
+          nullable: true
+          description: Story topic. If provided, searches for matching research card or auto-generates one.
+          example: "Korean apartment horror"
+        tags:
+          type: array
+          items:
+            type: string
+          nullable: true
+          description: "Custom tags to include. Merged with auto-generated tags (default: ['호러', 'horror'])"
+          example: ["수면공포", "청각공포", "일상공포"]
+        auto_research:
+          type: boolean
+          default: true
+          description: Auto-generate research if no matching card found for topic
+        model:
+          type: string
+          nullable: true
+          description: "Story model. Options: null (Claude Sonnet default), 'claude-sonnet-4-5-20250929', 'claude-opus-4-5-20251101', 'ollama:qwen3:30b' (local Ollama)"
+          example: "ollama:qwen3:30b"
+        research_model:
+          type: string
+          nullable: true
+          description: "Research model for auto-research. Options: null/'qwen3:30b' (Ollama), 'gemini', 'deep-research' (Gemini Deep Research)"
+          example: "deep-research"
+        save_output:
+          type: boolean
+          default: true
+          description: Save generated story to file
+        target_length:
+          type: integer
+          nullable: true
+          minimum: 300
+          maximum: 10000
+          description: "Target story length in characters (soft limit, ±10%). If not provided, uses default (~3000-4000 chars)."
+          example: 3000
+        webhook_url:
+          type: string
+          nullable: true
+          description: Webhook URL for completion notification (fire-and-forget)
+          example: "https://example.com/webhook"
+        thumbnail_provider:
+          type: string
+          nullable: true
+          description: "Image provider for thumbnail. Options: 'openai_dalle3' (default), 'stability_ai', 'flux', 'local_sd'. Requires ENABLE_THUMBNAIL_GENERATION=true."
+          example: "openai_dalle3"
+
+    StoryGenerateResponse:
+      type: object
+      required:
+        - success
+        - webhook_triggered
+      properties:
+        success:
+          type: boolean
+          description: Whether generation succeeded
+        story_id:
+          type: string
+          nullable: true
+          description: Generated story identifier
+          example: "20260113_120000"
+        story:
+          type: string
+          nullable: true
+          description: Full story text in markdown format
+        title:
+          type: string
+          nullable: true
+          description: Story title
+        file_path:
+          type: string
+          nullable: true
+          description: Path to saved story file
+          example: "./data/novel/horror_story_20260113_120000.md"
+        word_count:
+          type: integer
+          nullable: true
+          description: Story word count
+        metadata:
+          type: object
+          additionalProperties: true
+          description: Additional metadata (model, provider, research_used, etc.)
+        error:
+          type: string
+          nullable: true
+          description: Error message if generation failed
+        webhook_triggered:
+          type: boolean
+          default: false
+          description: Whether a webhook notification was triggered
+        thumbnail_url:
+          type: string
+          nullable: true
+          description: URL of generated thumbnail image (empty if disabled or failed)
+        thumbnail_provider:
+          type: string
+          nullable: true
+          description: Image provider used for thumbnail generation
+
+    StoryListItem:
+      type: object
+      required:
+        - story_id
+        - created_at
+        - accepted
+      properties:
+        story_id:
+          type: string
+          description: Story identifier
+          example: "20260113_120000"
+        title:
+          type: string
+          nullable: true
+          description: Story title
+        template_id:
+          type: string
+          nullable: true
+          description: Template used for generation
+        template_name:
+          type: string
+          nullable: true
+          description: Template display name
+        created_at:
+          type: string
+          description: Creation timestamp (ISO format)
+          example: "2026-01-13T12:00:00"
+        accepted:
+          type: boolean
+          description: Whether story was accepted by quality filter
+        decision_reason:
+          type: string
+          nullable: true
+          description: Quality decision reason
+        story_signature:
+          type: string
+          nullable: true
+          description: Story deduplication signature
+        research_used:
+          type: array
+          items:
+            type: string
+          description: List of research card IDs used
+          default: []
+
+    StoryListResponse:
+      type: object
+      required:
+        - stories
+        - total
+      properties:
+        stories:
+          type: array
+          items:
+            $ref: '#/components/schemas/StoryListItem'
+          description: List of stories
+        total:
+          type: integer
+          description: Total number of stories
+        message:
+          type: string
+          nullable: true
+          description: Status message
+
+    StoryDetailResponse:
+      type: object
+      required:
+        - story_id
+        - created_at
+        - accepted
+      properties:
+        story_id:
+          type: string
+          description: Story identifier
+        title:
+          type: string
+          nullable: true
+          description: Story title
+        template_id:
+          type: string
+          nullable: true
+          description: Template used for generation
+        template_name:
+          type: string
+          nullable: true
+          description: Template display name
+        semantic_summary:
+          type: string
+          nullable: true
+          description: Semantic summary of the story
+        created_at:
+          type: string
+          description: Creation timestamp (ISO format)
+        accepted:
+          type: boolean
+          description: Whether story was accepted
+        decision_reason:
+          type: string
+          nullable: true
+          description: Quality decision reason
+        story_signature:
+          type: string
+          nullable: true
+          description: Story deduplication signature
+        canonical_core:
+          type: object
+          nullable: true
+          additionalProperties:
+            type: string
+          description: Canonical dimensions for deduplication
+        research_used:
+          type: array
+          items:
+            type: string
+          description: List of research card IDs used
+          default: []
+
+    # Scheduler Schemas
+    SchedulerStartRequest:
+      type: object
+      properties:
+        run_recovery:
+          type: boolean
+          default: true
+          description: Whether to run crash recovery on startup
+
+    SchedulerStartResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: Whether scheduler started successfully
+        message:
+          type: string
+          description: Status message
+        recovery_stats:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Recovery statistics if recovery was run
+
+    SchedulerStopRequest:
+      type: object
+      properties:
+        timeout:
+          type: number
+          format: float
+          minimum: 1.0
+          maximum: 300.0
+          default: 30.0
+          description: Maximum wait time for current task to complete (seconds)
+
+    SchedulerStopResponse:
+      type: object
+      required:
+        - success
+        - message
+      properties:
+        success:
+          type: boolean
+          description: Whether scheduler stopped successfully
+        message:
+          type: string
+          description: Status message
+
+    CumulativeStats:
+      type: object
+      properties:
+        total_executed:
+          type: integer
+          default: 0
+          description: Total TaskRuns executed
+        succeeded:
+          type: integer
+          default: 0
+          description: COMPLETED TaskRuns
+        failed:
+          type: integer
+          default: 0
+          description: FAILED TaskRuns
+        cancelled:
+          type: integer
+          default: 0
+          description: CANCELLED Tasks
+        skipped:
+          type: integer
+          default: 0
+          description: SKIPPED TaskRuns
+
+    SchedulerStatusResponse:
+      type: object
+      required:
+        - scheduler_running
+        - queue_length
+        - cumulative_stats
+        - has_active_reservation
+      properties:
+        scheduler_running:
+          type: boolean
+          description: Whether scheduler dispatch loop is running
+        current_task_id:
+          type: string
+          nullable: true
+          description: Currently executing task ID (null if none)
+        queue_length:
+          type: integer
+          default: 0
+          description: Number of QUEUED tasks
+        cumulative_stats:
+          $ref: '#/components/schemas/CumulativeStats'
+        has_active_reservation:
+          type: boolean
+          default: false
+          description: Whether a Direct API reservation is active
+
+    # Task Schemas
+    TaskCreateRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          type: string
+          enum:
+            - story
+            - research
+          description: "Task type: 'story' for story generation, 'research' for research generation"
+        params:
+          type: object
+          additionalProperties: true
+          description: Task parameters (type-specific)
+          default: {}
+        priority:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 0
+          description: Task priority (higher = dispatched sooner)
+
+    TaskUpdateRequest:
+      type: object
+      properties:
+        priority:
+          type: integer
+          nullable: true
+          minimum: 0
+          maximum: 100
+          description: New priority value
+
+    TaskResponse:
+      type: object
+      required:
+        - task_id
+        - task_type
+        - status
+        - created_at
+        - queued_at
+      properties:
+        task_id:
+          type: string
+          description: Unique task identifier
+        task_type:
+          type: string
+          description: Task type (story/research)
+        status:
+          type: string
+          description: Task status (QUEUED/RUNNING/CANCELLED)
+          enum:
+            - QUEUED
+            - RUNNING
+            - CANCELLED
+        params:
+          type: object
+          additionalProperties: true
+          description: Task parameters
+          default: {}
+        priority:
+          type: integer
+          default: 0
+          description: Task priority
+        position:
+          type: integer
+          default: 0
+          description: Queue position
+        template_id:
+          type: string
+          nullable: true
+          description: Source template ID
+        group_id:
+          type: string
+          nullable: true
+          description: Task group ID
+        retry_of:
+          type: string
+          nullable: true
+          description: Original task ID if retry
+        created_at:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO format)
+        queued_at:
+          type: string
+          format: date-time
+          description: Queue entry timestamp (ISO format)
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Execution start timestamp
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Completion timestamp
+
+    TaskListResponse:
+      type: object
+      required:
+        - tasks
+        - total
+        - queued_count
+        - running_count
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskResponse'
+          description: List of tasks
+        total:
+          type: integer
+          description: Total number of tasks
+        queued_count:
+          type: integer
+          default: 0
+          description: Number of QUEUED tasks
+        running_count:
+          type: integer
+          default: 0
+          description: Number of RUNNING tasks
+
+    TaskDeleteResponse:
+      type: object
+      required:
+        - task_id
+        - success
+      properties:
+        task_id:
+          type: string
+          description: Task identifier
+        success:
+          type: boolean
+          description: Whether cancellation succeeded
+        message:
+          type: string
+          nullable: true
+          description: Status message
+
+    TaskRunResponse:
+      type: object
+      required:
+        - run_id
+        - task_id
+        - started_at
+      properties:
+        run_id:
+          type: string
+          description: Unique run identifier
+        task_id:
+          type: string
+          description: Associated task ID
+        status:
+          type: string
+          nullable: true
+          description: Run status (COMPLETED/FAILED/SKIPPED)
+          enum:
+            - COMPLETED
+            - FAILED
+            - SKIPPED
+        params_snapshot:
+          type: object
+          additionalProperties: true
+          description: Parameters at execution time
+          default: {}
+        template_id:
+          type: string
+          nullable: true
+          description: Source template ID
+        started_at:
+          type: string
+          format: date-time
+          description: Execution start timestamp
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+          description: Completion timestamp
+        exit_code:
+          type: integer
+          nullable: true
+          description: Process exit code
+        error:
+          type: string
+          nullable: true
+          description: Error message if failed
+        artifacts:
+          type: array
+          items:
+            type: string
+          description: Output artifact paths
+          default: []
+        log_path:
+          type: string
+          nullable: true
+          description: Execution log path
+
+    TaskRunListResponse:
+      type: object
+      required:
+        - runs
+        - total
+      properties:
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRunResponse'
+          description: List of task runs
+        total:
+          type: integer
+          description: Total number of runs
+
+    TaskGroupCreateRequest:
+      type: object
+      required:
+        - tasks
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskCreateRequest'
+          minItems: 1
+          maxItems: 50
+          description: List of task specifications
+
+    TaskGroupResponse:
+      type: object
+      required:
+        - group_id
+        - task_ids
+        - task_count
+      properties:
+        group_id:
+          type: string
+          description: Created group ID
+        task_ids:
+          type: array
+          items:
+            type: string
+          description: List of created task IDs
+        task_count:
+          type: integer
+          description: Number of tasks in group
+        status:
+          type: string
+          default: "queued"
+          description: Initial group status
+        message:
+          type: string
+          default: "Task group created successfully"
+
+    # Research Additional Schemas
+    ResearchDedupCheckRequest:
+      type: object
+      required:
+        - card_id
+      properties:
+        card_id:
+          type: string
+          description: Card ID to check for duplicates
+          pattern: "^RC-\\d{8}-\\d{6}$"
+
+    SimilarCard:
+      type: object
+      required:
+        - card_id
+        - similarity_score
+      properties:
+        card_id:
+          type: string
+          description: Similar card identifier
+        similarity_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Similarity score (0.0-1.0)
+        title:
+          type: string
+          nullable: true
+          description: Card title
+
+    ResearchDedupCheckResponse:
+      type: object
+      required:
+        - card_id
+        - signal
+        - similarity_score
+        - index_size
+      properties:
+        card_id:
+          type: string
+          description: Checked card ID
+        signal:
+          type: string
+          description: Dedup signal level
+          enum:
+            - LOW
+            - MEDIUM
+            - HIGH
+        similarity_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Highest similarity score (0.0-1.0)
+        nearest_card_id:
+          type: string
+          nullable: true
+          description: Most similar card ID
+        similar_cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/SimilarCard'
+          default: []
+          description: List of similar cards
+        index_size:
+          type: integer
+          default: 0
+          description: Number of cards in FAISS index
+        message:
+          type: string
+          nullable: true
+          description: Status message
+
+    MatchingTemplateItem:
+      type: object
+      required:
+        - template_id
+        - template_name
+        - match_score
+      properties:
+        template_id:
+          type: string
+          description: Template ID (e.g., T-SYS-001)
+        template_name:
+          type: string
+          description: Human-readable template name
+        match_score:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Match score (0.0-1.0)
+        canonical_core:
+          type: object
+          additionalProperties: true
+          default: {}
+          description: Template's canonical core values
+        match_details:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Per-dimension match breakdown
+
+    ResearchMatchingTemplatesRequest:
+      type: object
+      required:
+        - card_id
+      properties:
+        card_id:
+          type: string
+          description: Research card ID to match against templates
+          pattern: "^RC-\\d{8}-\\d{6}$"
+        max_templates:
+          type: integer
+          minimum: 1
+          maximum: 15
+          default: 5
+          description: Maximum number of templates to return
+        min_score:
+          type: number
+          format: float
+          minimum: 0.0
+          maximum: 1.0
+          default: 0.5
+          description: Minimum match score threshold (0.0-1.0)
+
+    ResearchMatchingTemplatesResponse:
+      type: object
+      required:
+        - card_id
+        - matching_templates
+        - total_templates
+      properties:
+        card_id:
+          type: string
+          description: Research card ID that was matched
+        matching_templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/MatchingTemplateItem'
+          default: []
+          description: List of matching templates sorted by score (highest first)
+        total_templates:
+          type: integer
+          description: Total number of templates evaluated
+        card_affinity:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: The research card's canonical affinity used for matching
+        message:
+          type: string
+          nullable: true
+          description: Status message
+
+    # FastAPI standard validation error schemas
+    HTTPValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          description: List of validation errors
+
+    ValidationError:
+      type: object
+      required:
+        - loc
+        - msg
+        - type
+      properties:
+        loc:
+          type: array
+          items:
+            oneOf:
+              - type: string
+              - type: integer
+          description: Location of the error
+        msg:
+          type: string
+          description: Error message
+        type:
+          type: string
+          description: Error type
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        API key authentication (optional).
+        Required when API_AUTH_ENABLED=true.
+        Excluded endpoints: /health, /resource/status
+
+security:
+  - ApiKeyAuth: []
+  - {}  # Also allow unauthenticated access (when API_AUTH_ENABLED=false)

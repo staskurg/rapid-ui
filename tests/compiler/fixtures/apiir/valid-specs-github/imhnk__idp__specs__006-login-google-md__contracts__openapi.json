@@ -1,0 +1,211 @@
+{
+  "api": {
+    "title": "Login with Google API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Identity",
+      "key": "identity",
+      "operations": [
+        {
+          "id": "initiateSmsChallenge",
+          "method": "POST",
+          "kind": "create",
+          "path": "/identity/v1/auth/challenge",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "challenge": {
+                "type": "string",
+                "enum": [
+                  "sms_otp"
+                ]
+              },
+              "phone_number": {
+                "type": "string",
+                "description": "Phone number in E.164 format."
+              }
+            },
+            "required": [
+              "challenge",
+              "phone_number"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "challenge_id": {
+                "type": "string",
+                "description": "Unique identifier for the OTP challenge."
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "verifyGoogleOtp",
+          "method": "POST",
+          "kind": "create",
+          "path": "/identity/v1/auth/challenge/verify/google",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "challenge_id": {
+                "type": "string",
+                "description": "Challenge ID from the SMS OTP challenge."
+              },
+              "otp": {
+                "type": "string",
+                "description": "The OTP code sent to the user's phone."
+              },
+              "id_token": {
+                "type": "string",
+                "description": "The Google ID token obtained from the Google SDK."
+              }
+            },
+            "required": [
+              "challenge_id",
+              "otp",
+              "id_token"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "user_exists": {
+                "type": "boolean"
+              },
+              "user_info": {
+                "type": "object",
+                "properties": {
+                  "full_name": {
+                    "type": "string"
+                  },
+                  "email": {
+                    "type": "string"
+                  }
+                }
+              },
+              "phone_number": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "id": "authenticateWithGoogle",
+          "method": "POST",
+          "kind": "create",
+          "path": "/identity/v1/auth/google",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "id_token": {
+                "type": "string",
+                "description": "The Google ID token obtained from the Google SDK."
+              }
+            },
+            "required": [
+              "id_token"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "access_token": {
+                "type": "string"
+              },
+              "refresh_token": {
+                "type": "string"
+              },
+              "expires_in": {
+                "type": "integer"
+              },
+              "user": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        {
+          "id": "registerNewUser",
+          "method": "POST",
+          "kind": "create",
+          "path": "/identity/v1/auth/register",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "challenge_id": {
+                "type": "string",
+                "description": "Verified challenge ID from SMS OTP flow."
+              },
+              "user_info": {
+                "type": "object",
+                "properties": {
+                  "full_name": {
+                    "type": "string",
+                    "description": "User's full name."
+                  },
+                  "date_of_birth": {
+                    "type": "string",
+                    "format": "date",
+                    "description": "User's date of birth in YYYY-MM-DD format."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "User's email address."
+                  },
+                  "gender": {
+                    "type": "string",
+                    "enum": [
+                      "male",
+                      "female",
+                      "other"
+                    ],
+                    "description": "User's gender."
+                  }
+                }
+              }
+            },
+            "required": [
+              "challenge_id",
+              "user_info"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "success": {
+                "type": "boolean"
+              },
+              "access_token": {
+                "type": "string",
+                "description": "JWT access token for authorized API calls."
+              },
+              "refresh_token": {
+                "type": "string",
+                "description": "JWT refresh token for obtaining new access tokens."
+              },
+              "expires_in": {
+                "type": "integer",
+                "description": "Token expiration time in seconds."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

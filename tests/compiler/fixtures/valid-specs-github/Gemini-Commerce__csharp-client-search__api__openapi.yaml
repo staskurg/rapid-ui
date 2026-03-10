@@ -1,0 +1,884 @@
+openapi: 3.0.1
+info:
+  contact:
+    email: info@gemini-commerce.com
+    name: Gemini Team
+  license:
+    name: Gemini fair use license
+    url: https://gemini-commerce.com/api/fair-use-license
+  title: Search Service
+  version: v1
+servers:
+- url: https://search.api.gogemini.io/
+paths:
+  /search.Search/Configuration:
+    post:
+      description: Create or update indexes by a passed configuration schema
+      operationId: Search_Configuration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchConfigRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rpcStatus'
+          description: An unexpected error response.
+      security:
+      - geminiAuthorization: []
+        standardAuthorization: []
+      summary: Indexes configuration
+      tags:
+      - Search
+      x-codegen-request-body-name: body
+  /search.Search/Delete:
+    post:
+      description: Delete indexes from ElasticSearch and Cassandra configuration
+      operationId: Search_Delete
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchDeleteRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchDeleteResponse'
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rpcStatus'
+          description: An unexpected error response.
+      security:
+      - geminiAuthorization: []
+        standardAuthorization: []
+      summary: Delete Indexes
+      tags:
+      - Search
+      x-codegen-request-body-name: body
+  /search.Search/InsertOrReplace:
+    post:
+      description: Insert or replace a document or more in a specified ElasticSearch
+        index of a tenant
+      operationId: Search_InsertOrReplace
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchWriteRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchWriteResponse'
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rpcStatus'
+          description: An unexpected error response.
+      security:
+      - geminiAuthorization: []
+        standardAuthorization: []
+      summary: Insert or replace documents to different elasticsearch indexes
+      tags:
+      - Search
+      x-codegen-request-body-name: body
+  /search.Search/MSearch:
+    post:
+      description: "MSearch promises to send a list of queries to elasticsearch to\
+        \ be executed on different indexes, it can also be used as an autocomplete\
+        \ by adding the corresponding TYPE"
+      operationId: Search_MSearch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchQueryRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchQueryResponse'
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rpcStatus'
+          description: An unexpected error response.
+      security:
+      - geminiAuthorization: []
+        standardAuthorization: []
+      summary: Send queries to different elasticsearch indexes
+      tags:
+      - Search
+      x-codegen-request-body-name: body
+  /search.Search/Update:
+    post:
+      description: Update a document or more in a specified ElasticSearch index of
+        a tenant
+      operationId: Search_Update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/searchWriteRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/searchWriteResponse'
+          description: A successful response.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/rpcStatus'
+          description: An unexpected error response.
+      security:
+      - geminiAuthorization: []
+        standardAuthorization: []
+      summary: Update documents to different elasticsearch indexes
+      tags:
+      - Search
+      x-codegen-request-body-name: body
+components:
+  schemas:
+    ParamSortOrder:
+      default: ASC
+      enum:
+      - ASC
+      - DESC
+      type: string
+    protobufAny:
+      example:
+        typeUrl: typeUrl
+        value: value
+      properties:
+        typeUrl:
+          type: string
+        value:
+          format: byte
+          pattern: "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+          type: string
+      type: object
+    rpcStatus:
+      example:
+        code: 0
+        details:
+        - typeUrl: typeUrl
+          value: value
+        - typeUrl: typeUrl
+          value: value
+        message: message
+      properties:
+        code:
+          format: int32
+          type: integer
+        message:
+          type: string
+        details:
+          items:
+            $ref: '#/components/schemas/protobufAny'
+          type: array
+      type: object
+    searchAggrMap:
+      example:
+        results:
+        - results
+        - results
+      properties:
+        results:
+          items:
+            type: string
+          type: array
+      type: object
+    searchConfigRequest:
+      description: contains all the necessary to create or update an index
+      properties:
+        tenantId:
+          description: "tenant_id for which create or update indexes configuration\
+            \ [#DOCGENBUG REQUIRED FIELD]"
+          type: string
+        configSchema:
+          description: "contains index configurations fields [#DOCGENBUG REQUIRED\
+            \ FIELD]"
+          items:
+            $ref: '#/components/schemas/searchConfigSchema'
+          type: array
+      type: object
+    searchConfigSchema:
+      description: contains index configurations fields
+      properties:
+        index:
+          description: "index name, to create or where update configuration"
+          type: string
+        documentKeyName:
+          description: "field which value will be used as document id [#DOCGENBUG\
+            \ REQUIRED FIELD]"
+          type: string
+        attributes:
+          description: fields that can be stored into index and later retrieved
+          items:
+            $ref: '#/components/schemas/searchConfigSchemaAttribute'
+          type: array
+        searchables:
+          description: fields that can be used for fulltext searches
+          items:
+            $ref: '#/components/schemas/searchConfigSchemaSearchable'
+          type: array
+        facets:
+          description: fields that can be used for aggregations
+          items:
+            $ref: '#/components/schemas/searchConfigSchemaFacet'
+          type: array
+        filters:
+          description: fields that can be used for filtering
+          items:
+            $ref: '#/components/schemas/searchConfigSchemaFilter'
+          type: array
+        sortables:
+          description: fields that can be used for sorting
+          items:
+            $ref: '#/components/schemas/searchConfigSchemaSortable'
+          type: array
+      required:
+      - attributes
+      - index
+      type: object
+    searchConfigSchemaAttribute:
+      description: contains the configurations needed to define an attribute within
+        documents
+      properties:
+        name:
+          description: attribute name
+          type: string
+        type:
+          $ref: '#/components/schemas/searchConfigSchemaAttributeType'
+        language:
+          description: locale code (currently only it_IT and en_US are supported)
+          type: string
+      required:
+      - name
+      type: object
+    searchConfigSchemaAttributeType:
+      default: TEXT
+      enum:
+      - TEXT
+      - BOOLEAN
+      - INTEGER
+      - FLOAT
+      - DATE
+      - OBJECT
+      type: string
+    searchConfigSchemaFacet:
+      description: contains the configurations needed to define an aggregation (Facet)
+        using defined index attributes
+      properties:
+        attribute:
+          description: json array of attributes of index that you can use as aggregation
+            to make facets
+          type: string
+      required:
+      - attribute
+      type: object
+    searchConfigSchemaFilter:
+      description: contains the configurations needed to define which index attributes
+        can be used as filter
+      properties:
+        attribute:
+          description: json array of attributes of index that you can use to filter
+            search results
+          type: string
+      required:
+      - attribute
+      type: object
+    searchConfigSchemaSearchable:
+      description: contains the configurations needed to define which index attributes
+        can be used for search
+      properties:
+        attribute:
+          description: json array of attributes of index which can be used for search
+          type: string
+      required:
+      - attribute
+      type: object
+    searchConfigSchemaSortable:
+      description: contains the configurations needed to define which index attributes
+        can be used for sort
+      properties:
+        attribute:
+          description: json array of attributes of index which can be used for sort
+          type: string
+      required:
+      - attribute
+      type: object
+    searchDeleteConstraints:
+      example:
+        index: index
+      properties:
+        index:
+          type: string
+      type: object
+    searchDeleteError:
+      example:
+        code: code
+        message: message
+        constraints:
+          index: index
+      properties:
+        constraints:
+          $ref: '#/components/schemas/searchDeleteConstraints'
+        code:
+          type: string
+        message:
+          type: string
+      type: object
+    searchDeleteRequest:
+      properties:
+        tenantId:
+          description: "tenant_id for which remove costraints [#DOCGENBUG REQUIRED\
+            \ FIELD]"
+          type: string
+        constraints:
+          description: "constraints to remove (index name) [#DOCGENBUG REQUIRED FIELD]"
+          items:
+            $ref: '#/components/schemas/searchDeleteConstraints'
+          type: array
+      type: object
+    searchDeleteResponse:
+      example:
+        errors:
+        - code: code
+          message: message
+          constraints:
+            index: index
+        - code: code
+          message: message
+          constraints:
+            index: index
+      properties:
+        errors:
+          items:
+            $ref: '#/components/schemas/searchDeleteError'
+          type: array
+      type: object
+    searchParamAttribute:
+      description: contains a list of document attributes which you want the search
+        returns
+      example:
+        attribute: attribute
+      properties:
+        attribute:
+          description: JSON string that contains the list of attributes you want to
+            be returned in search results
+          type: string
+      required:
+      - attribute
+      type: object
+    searchParamFacet:
+      description: contains a list of document attributes which you want to be returned
+        as aggregations by attribute values to make filter suggestions
+      example:
+        limit: 1
+        name: name
+        attribute: attribute
+        type: TERMS
+        params: params
+      properties:
+        attribute:
+          description: JSON string that contains the list of attributes you want to
+            create aggregation to make filter suggestion
+          type: string
+        limit:
+          description: Limit of facets result
+          format: int64
+          type: integer
+        type:
+          $ref: '#/components/schemas/searchParamFacetType'
+        params:
+          type: string
+        name:
+          type: string
+      required:
+      - attribute
+      type: object
+    searchParamFacetType:
+      default: TERMS
+      enum:
+      - TERMS
+      - STATS
+      - HISTOGRAM
+      type: string
+    searchParamFilter:
+      description: contains a list of document attributes and relative values which
+        you want to filter search results
+      example:
+        filter: filter
+        type: TERM
+      properties:
+        filter:
+          description: JSON string that contains filters information to apply to search
+          type: string
+        type:
+          $ref: '#/components/schemas/searchParamFilterType'
+      required:
+      - filter
+      type: object
+    searchParamFilterType:
+      default: TERM
+      enum:
+      - TERM
+      - TERMS
+      - RANGE
+      type: string
+    searchParamSearchable:
+      description: contains a list of attributes where the search term to be searched
+      example:
+        attribute: attribute
+      properties:
+        attribute:
+          description: JSON string that contains the list of attributes where to search
+            the indicated term
+          type: string
+      required:
+      - attribute
+      type: object
+    searchParamSort:
+      description: contains a list of document attributes on which order the result
+        for
+      example:
+        attribute: attribute
+        order: ASC
+      properties:
+        attribute:
+          description: JSON string that contains the list of attributes you want search
+            results to be ordered by
+          type: string
+        order:
+          $ref: '#/components/schemas/ParamSortOrder'
+      required:
+      - attribute
+      type: object
+    searchParams:
+      description: contains params needed to perform search
+      example:
+        minScore: 5.962134
+        offset: 0
+        limit: 6
+        term: term
+        attributes:
+        - attribute: attribute
+        - attribute: attribute
+        filters:
+        - filter: filter
+          type: TERM
+        - filter: filter
+          type: TERM
+        sorts:
+        - attribute: attribute
+          order: ASC
+        - attribute: attribute
+          order: ASC
+        searchables:
+        - attribute: attribute
+        - attribute: attribute
+        facets:
+        - limit: 1
+          name: name
+          attribute: attribute
+          type: TERMS
+          params: params
+        - limit: 1
+          name: name
+          attribute: attribute
+          type: TERMS
+          params: params
+      properties:
+        offset:
+          description: number of the record where to start to take result for pagination
+          format: int64
+          type: integer
+        limit:
+          description: number of search result for page
+          format: int64
+          type: integer
+        term:
+          description: term to search
+          type: string
+        searchables:
+          description: "list of attributes where to search the indicated term, if\
+            \ not indicated it uses all in those present in index configuration"
+          items:
+            $ref: '#/components/schemas/searchParamSearchable'
+          type: array
+        filters:
+          description: list of attribute and relative value which you want to filter
+            search results
+          items:
+            $ref: '#/components/schemas/searchParamFilter'
+          type: array
+        attributes:
+          description: attributes that you want to be present in search results
+          items:
+            $ref: '#/components/schemas/searchParamAttribute'
+          type: array
+        facets:
+          description: list of attributes you want to create aggregation to make filter
+            suggestion
+          items:
+            $ref: '#/components/schemas/searchParamFacet'
+          type: array
+        sorts:
+          description: params to sort search results
+          items:
+            $ref: '#/components/schemas/searchParamSort'
+          type: array
+        minScore:
+          format: float
+          type: number
+      type: object
+    searchPayload:
+      description: contains the search request payload
+      properties:
+        index:
+          description: index where to search data
+          type: string
+        params:
+          $ref: '#/components/schemas/searchParams'
+      required:
+      - index
+      - params
+      type: object
+    searchQueryError:
+      description: contains error information obtained during search process
+      example:
+        code: code
+        message: message
+      properties:
+        code:
+          description: query error code obtained during elastic search query request
+          type: string
+        message:
+          description: query error message obtained during elastic search query request
+          type: string
+      required:
+      - code
+      - message
+      type: object
+    searchQueryRequest:
+      description: contains search request information about how and where to make
+        the search
+      properties:
+        tenantId:
+          description: "tenant to search on [#DOCGENBUG REQUIRED FIELD]"
+          type: string
+        type:
+          $ref: '#/components/schemas/searchQueryRequestType'
+        payload:
+          description: contains the search request payload
+          items:
+            $ref: '#/components/schemas/searchPayload'
+          type: array
+      required:
+      - payload
+      type: object
+    searchQueryRequestType:
+      default: STANDARD
+      enum:
+      - STANDARD
+      - AS_YOU_TYPE
+      type: string
+    searchQueryResponse:
+      description: contains the search results and errors
+      example:
+        result:
+        - hits:
+          - hits
+          - hits
+          totalHits: 7
+          totalPages: 2
+          index: index
+          page: 5
+          params:
+            minScore: 5.962134
+            offset: 0
+            limit: 6
+            term: term
+            attributes:
+            - attribute: attribute
+            - attribute: attribute
+            filters:
+            - filter: filter
+              type: TERM
+            - filter: filter
+              type: TERM
+            sorts:
+            - attribute: attribute
+              order: ASC
+            - attribute: attribute
+              order: ASC
+            searchables:
+            - attribute: attribute
+            - attribute: attribute
+            facets:
+            - limit: 1
+              name: name
+              attribute: attribute
+              type: TERMS
+              params: params
+            - limit: 1
+              name: name
+              attribute: attribute
+              type: TERMS
+              params: params
+          aggregations:
+            key:
+              results:
+              - results
+              - results
+        - hits:
+          - hits
+          - hits
+          totalHits: 7
+          totalPages: 2
+          index: index
+          page: 5
+          params:
+            minScore: 5.962134
+            offset: 0
+            limit: 6
+            term: term
+            attributes:
+            - attribute: attribute
+            - attribute: attribute
+            filters:
+            - filter: filter
+              type: TERM
+            - filter: filter
+              type: TERM
+            sorts:
+            - attribute: attribute
+              order: ASC
+            - attribute: attribute
+              order: ASC
+            searchables:
+            - attribute: attribute
+            - attribute: attribute
+            facets:
+            - limit: 1
+              name: name
+              attribute: attribute
+              type: TERMS
+              params: params
+            - limit: 1
+              name: name
+              attribute: attribute
+              type: TERMS
+              params: params
+          aggregations:
+            key:
+              results:
+              - results
+              - results
+        errors:
+        - code: code
+          message: message
+        - code: code
+          message: message
+      properties:
+        result:
+          description: "array of SearchResult that contains search results per index\
+            \ [#DOCGENBUG REQUIRED FIELD]"
+          items:
+            $ref: '#/components/schemas/searchResult'
+          type: array
+        errors:
+          description: "array of error obtained during search process per index [#DOCGENBUG\
+            \ REQUIRED FIELD]"
+          items:
+            $ref: '#/components/schemas/searchQueryError'
+          type: array
+      type: object
+    searchResult:
+      description: "contains the search results, aggregations and paging information"
+      example:
+        hits:
+        - hits
+        - hits
+        totalHits: 7
+        totalPages: 2
+        index: index
+        page: 5
+        params:
+          minScore: 5.962134
+          offset: 0
+          limit: 6
+          term: term
+          attributes:
+          - attribute: attribute
+          - attribute: attribute
+          filters:
+          - filter: filter
+            type: TERM
+          - filter: filter
+            type: TERM
+          sorts:
+          - attribute: attribute
+            order: ASC
+          - attribute: attribute
+            order: ASC
+          searchables:
+          - attribute: attribute
+          - attribute: attribute
+          facets:
+          - limit: 1
+            name: name
+            attribute: attribute
+            type: TERMS
+            params: params
+          - limit: 1
+            name: name
+            attribute: attribute
+            type: TERMS
+            params: params
+        aggregations:
+          key:
+            results:
+            - results
+            - results
+      properties:
+        index:
+          description: index where the data were extrapolated
+          type: string
+        params:
+          $ref: '#/components/schemas/searchParams'
+        page:
+          description: page number of the results you are processing
+          format: int64
+          type: integer
+        totalPages:
+          description: number of pages of results
+          format: int64
+          type: integer
+        totalHits:
+          description: number of total search results
+          format: int64
+          type: integer
+        hits:
+          description: search result records contained in the specified page
+          items:
+            type: string
+          type: array
+        aggregations:
+          additionalProperties:
+            $ref: '#/components/schemas/searchAggrMap'
+          description: array of aggregation obtained by search result
+          type: object
+      required:
+      - index
+      type: object
+    searchWriteError:
+      description: contain error information obtained during writing process in search
+        storage
+      example:
+        code: code
+        documentKeyValue: documentKeyValue
+        message: message
+        documentKeyName: documentKeyName
+      properties:
+        code:
+          description: error identifier code
+          type: string
+        documentKeyName:
+          description: document key used to identify document
+          type: string
+        documentKeyValue:
+          description: document key identifier
+          type: string
+        message:
+          description: error description message
+          type: string
+      required:
+      - code
+      - message
+      type: object
+    searchWriteRequest:
+      description: contains where and what data to write in search storage
+      properties:
+        tenantId:
+          description: "tenant id data identifier where to write data [#DOCGENBUG\
+            \ REQUIRED FIELD]"
+          type: string
+        index:
+          description: elasticsearch index identifier where to write data
+          type: string
+        documents:
+          description: A JSON array of documents to write or update
+          items:
+            type: string
+          type: array
+      required:
+      - documents
+      - index
+      type: object
+    searchWriteResponse:
+      description: contains write operation result response from search service
+      example:
+        index: index
+        errors:
+        - code: code
+          documentKeyValue: documentKeyValue
+          message: message
+          documentKeyName: documentKeyName
+        - code: code
+          documentKeyValue: documentKeyValue
+          message: message
+          documentKeyName: documentKeyName
+      properties:
+        index:
+          description: elasticsearch index where the write request was processed
+          type: string
+        errors:
+          description: array of errors obtained during elasticsearch documents write
+            or update
+          items:
+            $ref: '#/components/schemas/searchWriteError'
+          type: array
+      required:
+      - index
+      type: object
+  securitySchemes:
+    geminiAuthorization:
+      in: header
+      name: X-Gem-Token
+      type: apiKey
+    standardAuthorization:
+      in: header
+      name: Authorization
+      type: apiKey
+x-original-swagger-version: "2.0"
+
