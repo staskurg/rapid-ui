@@ -1,6 +1,6 @@
 # GitHub Corpus Workflow
 
-Crawl OpenAPI specs from GitHub, validate them, and run the corpus pipeline.
+Crawl OpenAPI specs from GitHub, validate them, and run the corpus pipeline. Part of the RUS-v1 corpus pipeline — see [openapi-subset-v1.md](openapi-subset-v1.md) § Corpus Workflow for the full pipeline.
 
 **CRUD-focused:** The crawler targets CRUD-style APIs (post/put/delete signals) and filters out read-only integration APIs. See query design and `--no-crud-filter` below.
 

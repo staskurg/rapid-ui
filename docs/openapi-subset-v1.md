@@ -258,6 +258,9 @@ npm run corpus:report -- --repo api-guru
 
 # Extract valid specs + copy to fixtures
 npm run corpus:copy-valid-to-fixtures -- --repo api-guru
+
+# Pattern mining (after fixtures:generate-apiir)
+npm run corpus:pattern-mining -- --repo api-guru   # or --repo github
 ```
 
 **GitHub corpus:** For crawling and validating OpenAPI specs from GitHub, see [corpus-github.md](corpus-github.md).

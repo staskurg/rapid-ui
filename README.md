@@ -143,10 +143,24 @@ rapid-ui/
 | `OPENAI_API_KEY` | Yes | OpenAI API key for LLM planning phase |
 | `POSTGRES_URL` or `DATABASE_URL` | Yes | Postgres connection string for compilations |
 
+## Corpus & Subset Validation
+
+RapidUI validates the OpenAPI subset (RUS-v1) against real specs from APIs.guru and GitHub. ~600 specs pass validation (~6% of corpus).
+
+```bash
+npm run corpus:run -- --repo api-guru   # or --repo github
+npm run corpus:report -- --repo api-guru
+npm run corpus:pattern-mining -- --repo api-guru
+```
+
+For the GitHub crawler workflow, see [docs/corpus-github.md](./docs/corpus-github.md).
+
 ## Documentation
 
 - **[Architecture Overview](./ARCHITECTURE.md)** — System design and compiler pipeline
 - **[OpenAPI Compiler](./docs/openapi-compiler.md)** — Pipeline stages, supported subset, error codes
+- **[OpenAPI Subset v1](./docs/openapi-subset-v1.md)** — RUS-v1 spec and corpus workflow
+- **[GitHub Corpus](./docs/corpus-github.md)** — Crawling and validating OpenAPI specs from GitHub
 - **[Getting Started](./docs/getting-started.md)** — Step-by-step setup guide
 - **[Mock API Testing](./docs/mock-api-testing.md)** — Manual testing of generated UIs
 - **[Form Modal Nested Schema](./docs/form-modal-nested-schema.md)** — Nested field handling in forms

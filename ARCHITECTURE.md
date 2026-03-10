@@ -200,6 +200,41 @@ Data is shared per `accountId + compilationId + resource`; no session param. URL
 - **store.ts** — In-memory CRUD; seed from OpenAPI schema
 - **fixtures.ts** — Predefined hashes for golden specs
 
+## Corpus & Validation
+
+RapidUI validates the RUS-v1 subset against real OpenAPI specs from two sources:
+
+- **APIs.guru** — Specs from openapi-directory (pre-copied to `scripts/corpus-data/specs/api_guru/`)
+- **GitHub** — Crawled via `corpus:github-crawl` (requires GITHUB_TOKEN); stored in `scripts/corpus-data/specs/github/`
+
+### Corpus Pipeline
+
+```
+Crawl (GitHub) or copy (API-Guru)
+   ↓
+corpus:run --repo {api-guru|github}
+   ↓
+raw-{repo}-{timestamp}.json
+   ↓
+corpus:report --repo {api-guru|github}  → report-{repo}-{timestamp}.md
+corpus:copy-valid-to-fixtures --repo {api-guru|github}
+   ↓
+fixtures:generate-apiir
+   ↓
+corpus:pattern-mining --repo {api-guru|github}  → pattern-mining-{repo}-{timestamp}.md
+```
+
+### Report Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `corpus:report` | Spec-level compatibility, rejection density, corpus shape, language analysis (resource shape, CRUD patterns, grouping strategy) |
+| `corpus:pattern-mining` | Structural patterns, UI archetypes, operation frequency from ApiIR fixtures |
+
+Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures/valid-specs-{api-guru|github}/`.
+
+See [docs/corpus-github.md](docs/corpus-github.md) for the GitHub crawler workflow.
+
 ## File Structure
 
 ```
@@ -248,6 +283,18 @@ lib/
     mock-adapter.ts
   spec/
   session.ts
+
+scripts/
+  corpus-run.ts
+  corpus-report.ts
+  corpus-pattern-mining.ts
+  corpus-github-crawl.ts
+  corpus-extract-valid.ts
+  check-openapi.ts
+  corpus-data/
+    specs/           # api_guru/, github/ (gitignored)
+    reports/         # raw-*.json, report-*.md, pattern-mining-*.md
+    analyze-apiir.ts
 ```
 
 ## Technology Stack

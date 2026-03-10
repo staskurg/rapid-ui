@@ -6,6 +6,8 @@
 **Sample size:** 100–200 specs  
 **Source:** APIs.guru
 
+**Post-run validation (2026-03):** Actual pass rate ~6% (GitHub 406/6768, API-Guru ~145/~2500). Prediction confirmed. See `scripts/corpus-data/reports/report-*.md` for full analysis.
+
 ---
 
 ## 1. Expected Pass Rate

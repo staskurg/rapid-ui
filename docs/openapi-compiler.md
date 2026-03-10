@@ -41,6 +41,8 @@ RapidUI supports a **strict subset** (RUS-v1). Unsupported features cause **comp
 
 **Compliance check:** `npm run check:openapi -- path/to/spec.yaml` — runs parse → validate → resolve → buildApiIR; prints VALID or INVALID with error codes.
 
+**Corpus validation:** To validate against real APIs (APIs.guru, GitHub), see [corpus-github.md](corpus-github.md) and [openapi-subset-v1.md](openapi-subset-v1.md) § Corpus Workflow.
+
 ### Summary
 
 - **Versions:** OpenAPI 3.0.x, 3.1.x
