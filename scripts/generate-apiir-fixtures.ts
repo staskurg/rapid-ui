@@ -2,7 +2,7 @@
 /**
  * Generate ApiIR JSON fixtures from OpenAPI YAML fixtures.
  * Reads from:
- *   - tests/compiler/fixtures/demo/*.yaml (excludes invalid)
+ *   - tests/compiler/fixtures/demo/*.yaml
  *   - tests/compiler/fixtures/valid-specs-api-guru/*.yaml
  *   - tests/compiler/fixtures/valid-specs-github/*.yaml
  * Writes to tests/compiler/fixtures/apiir/demo/*.json, apiir/valid-specs-api-guru/*.json, apiir/valid-specs-github/*.json
@@ -22,7 +22,6 @@ import { buildApiIR } from "@/lib/compiler/apiir";
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const APIIR_DIR = join(FIXTURES_DIR, "apiir");
 const DEMO_DIR = join(FIXTURES_DIR, "demo");
-const INVALID_FIXTURE = "golden_openapi_invalid_expected_failure";
 
 type Source = { inputDir: string; outputSubdir: string };
 
@@ -35,9 +34,7 @@ function processSource(source: Source): number {
   }
 
   const files = readdirSync(inputDir).filter(
-    (f) =>
-      (f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")) &&
-      !f.startsWith(INVALID_FIXTURE)
+    (f) => f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")
   );
 
   if (files.length === 0) {

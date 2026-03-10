@@ -87,7 +87,7 @@ describe("ApiIR build", () => {
   });
 
   it("fails with mixed grouping (some tagged, some not)", () => {
-    const doc = loadAndProcess("demo/golden_openapi_invalid_mixed_grouping_expected_failure.yaml");
+    const doc = loadAndProcess("invalid/golden_openapi_invalid_mixed_grouping_expected_failure.yaml");
     const result = buildApiIR(doc);
     expect(result.success).toBe(false);
     if (result.success) return;

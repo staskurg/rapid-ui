@@ -11,7 +11,7 @@ const FIXTURES = join(__dirname, "fixtures");
 describe("invalid spec", () => {
   it("golden_openapi_invalid_expected_failure.yaml fails with expected errors", () => {
     const yaml = readFileSync(
-      join(FIXTURES, "demo", "golden_openapi_invalid_expected_failure.yaml"),
+      join(FIXTURES, "invalid", "golden_openapi_invalid_expected_failure.yaml"),
       "utf-8"
     );
     const parseResult = parseOpenAPI(yaml);
@@ -30,7 +30,7 @@ describe("invalid spec", () => {
 
   it("same invalid spec produces same ordered error list", () => {
     const yaml = readFileSync(
-      join(FIXTURES, "demo", "golden_openapi_invalid_expected_failure.yaml"),
+      join(FIXTURES, "invalid", "golden_openapi_invalid_expected_failure.yaml"),
       "utf-8"
     );
     const parse1 = parseOpenAPI(yaml);

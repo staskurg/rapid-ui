@@ -9,14 +9,21 @@ Evaluation harness for the **MVP v3 OpenAPI compiler** determinism. Proves the L
 ## Scripts
 
 ```bash
-# Full pipeline: OpenAPI → UISpec (runs compileOpenAPI N times per fixture)
+# Full pipeline: OpenAPI → UISpec (default: fixtures/demo/)
 npm run eval:ai
+npm run eval:ai -- --dir demo
 
-# LLM-only: ApiIR → UiPlanIR (loads pre-computed ApiIR, no pipeline)
+# LLM-only: ApiIR → UiPlanIR (default: fixtures/apiir/demo/)
 npm run eval:llm
+npm run eval:llm -- --dir demo
+
+# Run on a different folder (e.g. golden-specs, valid-specs-api-guru)
+npm run eval:ai -- --dir valid-specs-api-guru
+npm run eval:llm -- --dir valid-specs-api-guru
 
 # Run both evals in parallel (faster)
 npm run eval:all
+npm run eval:all -- --dir demo
 
 # Generate ApiIR fixtures from OpenAPI (run after parse/validate/build changes)
 npm run fixtures:generate-apiir
@@ -30,16 +37,19 @@ npm run fixtures:generate-apiir
 
 ## Fixtures
 
-- **OpenAPI** (`tests/compiler/fixtures/*.yaml`): Source for full pipeline. Excludes `golden_openapi_invalid_expected_failure.yaml`.
-- **ApiIR** (`tests/compiler/fixtures/apiir/*.json`): Pre-generated from OpenAPI. Source for LLM-only. Regenerate via `npm run fixtures:generate-apiir` when parse/validate/build changes.
+- **OpenAPI** (`tests/compiler/fixtures/{dir}/*.yaml`): Source for full pipeline. Use `--dir NAME` to pick a subfolder (default: `demo`). Invalid specs live in `invalid/` — use `--dir invalid` to test failure cases.
+- **ApiIR** (`tests/compiler/fixtures/apiir/{dir}/*.json`): Pre-generated from OpenAPI. Source for LLM-only. Use `--dir NAME` to pick a subfolder (default: `demo`). Regenerate via `npm run fixtures:generate-apiir` when parse/validate/build changes.
 
-**Adding a new spec:** Add YAML to `tests/compiler/fixtures/`, then run `npm run fixtures:generate-apiir` to create ApiIR fixtures. Use `--runs 10` or higher for thorough determinism checks.
+**Folders:** `demo` (valid golden + demo v1/v2/v3), `invalid` (intentionally failing specs), `valid-specs-api-guru`, `valid-specs-github`. Add custom folders (e.g. `golden-specs`) as needed.
+
+**Adding a new spec:** Add YAML to `tests/compiler/fixtures/{dir}/`, then run `npm run fixtures:generate-apiir` to create ApiIR fixtures. Use `--runs 10` or higher for thorough determinism checks.
 
 ## CLI Options
 
 Both `eval:ai` and `eval:llm` support:
 
 ```
+--dir NAME     Fixture subfolder (default: demo). eval:ai → fixtures/{dir}/, eval:llm → fixtures/apiir/{dir}/
 --runs N       Number of runs per fixture (default: 5)
 --quick, -q    Quick mode (2 runs for eval:ai, 5 for eval:llm)
 --parallel, -p Run all runs in parallel (faster; may hit rate limits)

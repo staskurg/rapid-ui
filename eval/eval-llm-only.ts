@@ -1,12 +1,13 @@
 #!/usr/bin/env tsx
 /**
  * LLM-only evaluation: ApiIR → UiPlanIR determinism.
- * Loads ApiIR from tests/compiler/fixtures/apiir/*.json.
+ * Loads ApiIR from tests/compiler/fixtures/apiir/{dir}/*.json.
+ * Default --dir demo. Use --dir to restrict to a subfolder (e.g. demo, golden-specs).
  * Runs llmPlan N times per fixture, compares via UiPlanIR fingerprint.
  * Requires OPENAI_API_KEY.
  */
 
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 
 const REPORTS_DIR = join(process.cwd(), "eval/reports");
@@ -30,6 +31,7 @@ function requireOpenAIKey(): void {
 
 function parseArgs(): {
   runs: number;
+  dir: string;
   fixtureName?: string;
   quick?: boolean;
   json?: boolean;
@@ -38,6 +40,7 @@ function parseArgs(): {
 } {
   const args = process.argv.slice(2);
   let runs = DEFAULT_RUNS;
+  let dir = "demo";
   let fixtureName: string | undefined;
   let quick = false;
   let json = false;
@@ -45,7 +48,9 @@ function parseArgs(): {
   let outputDir = REPORTS_DIR;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--quick" || args[i] === "-q") {
+    if (args[i] === "--dir" && args[i + 1]) {
+      dir = args[++i];
+    } else if (args[i] === "--quick" || args[i] === "-q") {
       quick = true;
       runs = 5; // plan: 5 runs for llm-only in quick
     } else if (args[i] === "--runs" && args[i + 1]) {
@@ -68,6 +73,7 @@ LLM-only evaluation (ApiIR → UiPlanIR determinism)
 Usage: tsx eval/eval-llm-only.ts [options]
 
 Options:
+  --dir NAME       ApiIR subfolder under fixtures/apiir/ (default: demo)
   --runs N         Number of runs per fixture (default: ${DEFAULT_RUNS})
   --quick, -q      Quick mode: 5 runs
   --fixture NAME   Run specific fixture only (base name without .json)
@@ -80,14 +86,20 @@ Options:
     }
   }
 
-  return { runs, fixtureName, quick, json, parallel, outputDir };
+  return { runs, dir, fixtureName, quick, json, parallel, outputDir };
 }
 
 async function main() {
   requireOpenAIKey();
   const config = parseArgs();
 
-  let fixtures = getApiIRFixtures(FIXTURES_APIIR_DIR);
+  const apiIrDir = join(FIXTURES_APIIR_DIR, config.dir);
+  if (!existsSync(apiIrDir)) {
+    console.error(`ApiIR directory not found: ${apiIrDir}`);
+    process.exit(1);
+  }
+
+  let fixtures = getApiIRFixtures(apiIrDir);
   if (config.fixtureName) {
     const base = config.fixtureName.replace(/\.json$/i, "");
     const match = fixtures.find((p) => p.endsWith(`${base}.json`));
@@ -108,6 +120,7 @@ async function main() {
 
   console.log("LLM-only Evaluation (ApiIR → UiPlanIR)");
   console.log("=".repeat(50));
+  console.log(`Dir: fixtures/apiir/${config.dir}`);
   console.log(`Runs per fixture: ${config.runs}${config.parallel ? " (parallel)" : ""}`);
   console.log(`Fixtures: ${fixtures.length}`);
   console.log("");

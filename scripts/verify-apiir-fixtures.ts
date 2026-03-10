@@ -31,9 +31,7 @@ function main() {
     if (!existsSync(yamlDir)) continue;
 
     const files = readdirSync(yamlDir).filter(
-      (f) =>
-        (f.endsWith(".yaml") || f.endsWith(".yml")) &&
-        !f.startsWith("golden_openapi_invalid")
+      (f) => f.endsWith(".yaml") || f.endsWith(".yml")
     );
 
     for (const file of files) {

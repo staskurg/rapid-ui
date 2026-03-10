@@ -53,7 +53,7 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
   });
 
   it("golden_openapi_invalid_expected_failure.yaml → INVALID with expected codes", () => {
-    const yaml = readFileSync(join(FIXTURES, "demo", "golden_openapi_invalid_expected_failure.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "invalid", "golden_openapi_invalid_expected_failure.yaml"), "utf-8");
     const result = checkOpenAPI(yaml);
     expect(result.valid).toBe(false);
     if (result.valid || !result.errors) return;
@@ -66,7 +66,7 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
   });
 
   it("golden_openapi_invalid_mixed_grouping_expected_failure.yaml → INVALID with OAS_AMBIGUOUS_RESOURCE_GROUPING", () => {
-    const yaml = readFileSync(join(FIXTURES, "demo", "golden_openapi_invalid_mixed_grouping_expected_failure.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "invalid", "golden_openapi_invalid_mixed_grouping_expected_failure.yaml"), "utf-8");
     const result = checkOpenAPI(yaml);
     expect(result.valid).toBe(false);
     if (result.valid || !result.errors) return;
@@ -76,7 +76,7 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
   });
 
   it("golden_openapi_invalid_non_crud_expected_failure.yaml → INVALID with IR_INVALID (non-CRUD operation)", () => {
-    const yaml = readFileSync(join(FIXTURES, "demo", "golden_openapi_invalid_non_crud_expected_failure.yaml"), "utf-8");
+    const yaml = readFileSync(join(FIXTURES, "invalid", "golden_openapi_invalid_non_crud_expected_failure.yaml"), "utf-8");
     const result = checkOpenAPI(yaml);
     expect(result.valid).toBe(false);
     if (result.valid || !result.errors) return;

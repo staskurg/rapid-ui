@@ -94,9 +94,9 @@ Feature usage across golden and demo specs. Serves as **RUS-v1 = union of these*
 
 ---
 
-## Invalid Spec: Expected Failures
+## Invalid Specs: Expected Failures
 
-`golden_openapi_invalid_expected_failure` intentionally violates:
+Invalid specs live in `tests/compiler/fixtures/invalid/`. `golden_openapi_invalid_expected_failure` intentionally violates:
 
 | Violation | Description |
 | --------- | ----------- |

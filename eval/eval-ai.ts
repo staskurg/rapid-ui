@@ -1,7 +1,8 @@
 #!/usr/bin/env tsx
 /**
  * Full pipeline evaluation: OpenAPI → UISpec determinism.
- * Loads OpenAPI from tests/compiler/fixtures/*.yaml (excludes invalid).
+ * Loads OpenAPI from tests/compiler/fixtures/{dir}/*.yaml (excludes invalid).
+ * Default --dir demo. Use --dir to restrict to a subfolder (e.g. demo, golden-specs).
  * Runs compileOpenAPI N times sequentially per fixture.
  * Compares via UISpec fingerprint; overall = min per-resource similarity.
  * Requires OPENAI_API_KEY.
@@ -30,7 +31,6 @@ const DEFAULT_RUNS = 5;
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const REPORTS_DIR = join(process.cwd(), "eval/reports");
 const FAILURES_DIR = join(process.cwd(), "eval/fixtures/failures");
-const INVALID_FIXTURE = "golden_openapi_invalid_expected_failure";
 const SIMILARITY_THRESHOLD = 0.9;
 const VALIDITY_THRESHOLD = 0.9;
 
@@ -44,6 +44,7 @@ function requireOpenAIKey(): void {
 
 interface Config {
   runs: number;
+  dir: string;
   fixtureName?: string;
   quick?: boolean;
   json?: boolean;
@@ -56,6 +57,7 @@ function parseArgs(): Config {
   const args = process.argv.slice(2);
   const config: Config = {
     runs: DEFAULT_RUNS,
+    dir: "demo",
     quick: false,
     json: false,
     outputDir: REPORTS_DIR,
@@ -65,7 +67,9 @@ function parseArgs(): Config {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === "--quick" || arg === "-q") {
+    if (arg === "--dir" && args[i + 1]) {
+      config.dir = args[++i];
+    } else if (arg === "--quick" || arg === "-q") {
       config.quick = true;
       config.runs = 2;
     } else if (arg === "--runs" && args[i + 1]) {
@@ -90,6 +94,7 @@ Full pipeline evaluation (OpenAPI → UISpec determinism)
 Usage: tsx eval/eval-ai.ts [options]
 
 Options:
+  --dir NAME         Fixture subfolder under fixtures/ (default: demo)
   --runs N           Number of runs per fixture (default: ${DEFAULT_RUNS})
   --quick, -q        Quick mode: 2 runs
   --fixture NAME     Run specific fixture only
@@ -127,8 +132,9 @@ function getFixtures(config: Config): string[] {
         if (data.openapiPath && existsSync(data.openapiPath)) {
           fixturePaths.add(data.openapiPath);
         } else if (data.fixtureName) {
-          const yaml = join(FIXTURES_DIR, `${data.fixtureName}.yaml`);
-          const yml = join(FIXTURES_DIR, `${data.fixtureName}.yml`);
+          const subdir = join(FIXTURES_DIR, config.dir);
+          const yaml = join(subdir, `${data.fixtureName}.yaml`);
+          const yml = join(subdir, `${data.fixtureName}.yml`);
           if (existsSync(yaml)) fixturePaths.add(yaml);
           else if (existsSync(yml)) fixturePaths.add(yml);
         }
@@ -139,21 +145,22 @@ function getFixtures(config: Config): string[] {
     return [...fixturePaths];
   }
 
-  if (config.fixtureName) {
-    const yaml = join(FIXTURES_DIR, `${config.fixtureName}.yaml`);
-    const yml = join(FIXTURES_DIR, `${config.fixtureName}.yml`);
-    if (existsSync(yaml)) return [yaml];
-    if (existsSync(yml)) return [yml];
-    throw new Error(`Fixture not found: ${config.fixtureName}`);
+  const dirPath = join(FIXTURES_DIR, config.dir);
+  if (!existsSync(dirPath)) {
+    throw new Error(`Fixture directory not found: ${dirPath}`);
   }
 
-  return readdirSync(FIXTURES_DIR)
-    .filter(
-      (f) =>
-        (f.endsWith(".yaml") || f.endsWith(".yml")) &&
-        !f.startsWith(INVALID_FIXTURE)
-    )
-    .map((f) => join(FIXTURES_DIR, f));
+  if (config.fixtureName) {
+    const yaml = join(dirPath, `${config.fixtureName}.yaml`);
+    const yml = join(dirPath, `${config.fixtureName}.yml`);
+    if (existsSync(yaml)) return [yaml];
+    if (existsSync(yml)) return [yml];
+    throw new Error(`Fixture not found: ${config.fixtureName} in ${dirPath}`);
+  }
+
+  return readdirSync(dirPath)
+    .filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"))
+    .map((f) => join(dirPath, f));
 }
 
 interface RunResult {
@@ -368,6 +375,7 @@ async function main() {
 
   console.log("Full Pipeline Evaluation (OpenAPI → UISpec)");
   console.log("=".repeat(50));
+  console.log(`Dir: fixtures/${config.dir}`);
   console.log(`Runs per fixture: ${config.runs}${config.quick ? " (quick)" : ""}${config.parallel ? " (parallel)" : ""}`);
   console.log(`Fixtures: ${fixtures.length}`);
   console.log("");
