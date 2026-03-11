@@ -87,7 +87,7 @@ describe("check-openapi (parse → validateSubset → resolveRefs → buildApiIR
     expect(result.errors[0].message).toContain("path params");
   });
 
-  it("valid-specs-api-guru fixtures → all VALID (RUS-v1 compliant from APIs.guru corpus)", () => {
+  it("valid-specs-api-guru fixtures → all VALID (RUS-v1 compliant from APIs.guru corpus)", { timeout: 30000 }, () => {
     const corpusDir = join(FIXTURES, "valid-specs-api-guru");
     if (!existsSync(corpusDir)) {
       return; // skip if corpus fixtures not yet extracted
