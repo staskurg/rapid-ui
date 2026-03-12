@@ -5,7 +5,7 @@
 
 import { UISpecSchema } from "@/lib/spec/schema";
 import type { UISpec, Field } from "@/lib/spec/types";
-import type { ApiIR, ResourceIR } from "../apiir/types";
+import type { ApiIR, ResourceIR, Capabilities } from "../apiir/types";
 import type { UiPlanIR, ResourcePlan, FieldPlan } from "../uiplan/uiplan.schema";
 import { slugify } from "@/lib/utils/slugify";
 import {
@@ -34,8 +34,13 @@ export type LowerOutput = LowerResult | LowerFailure;
 /**
  * Lower normalized UiPlanIR + ApiIR to UISpec map.
  * Keyed by resource slug. Each UISpec validated with UISpecSchema.
+ * Capability decisions come from capabilitiesBySlug only (no ad hoc inference from operations).
  */
-export function lower(uiPlan: UiPlanIR, apiIr: ApiIR): LowerOutput {
+export function lower(
+  apiIr: ApiIR,
+  uiPlan: UiPlanIR,
+  capabilitiesBySlug: Record<string, Capabilities>
+): LowerOutput {
   const resourceMap = new Map(
     apiIr.resources.map((r) => [slugify(r.name), r] as const)
   );
@@ -56,7 +61,18 @@ export function lower(uiPlan: UiPlanIR, apiIr: ApiIR): LowerOutput {
       };
     }
 
-    const spec = lowerResource(plan, resource);
+    const caps = capabilitiesBySlug[resource.key];
+    if (!caps) {
+      return {
+        success: false,
+        error: createError(
+          "UISPEC_INVALID",
+          "Lowering",
+          `No capabilities for resource "${plan.name}" (key: ${resource.key})`
+        ),
+      };
+    }
+    const spec = lowerResource(plan, resource, caps);
     if (!spec.success) return spec;
     specs[slug] = spec.spec;
   }
@@ -66,7 +82,8 @@ export function lower(uiPlan: UiPlanIR, apiIr: ApiIR): LowerOutput {
 
 function lowerResource(
   plan: ResourcePlan,
-  resource: ResourceIR
+  resource: ResourceIR,
+  capabilities: Capabilities
 ): { success: true; spec: UISpec } | LowerFailure {
   const schemaMap = mergeSchemaFields(resource);
   const fieldPlanMap = collectFieldPlans(plan);
@@ -120,13 +137,13 @@ function lowerResource(
   const listPaths = getViewPaths(plan, "list");
   const createPaths = getViewPaths(plan, "create");
   const editPaths = getViewPaths(plan, "edit");
-
-  const tableColumns = listPaths.filter((p) => schemaMap.has(p));
-  const formFields = mergeFormFields(createPaths, editPaths);
+  const detailPaths = getViewPaths(plan, "detail");
 
   const fieldNames = new Set(fields.map((f) => f.name));
+  const validTableColumns = listPaths.filter((p) => schemaMap.has(p) && fieldNames.has(p));
+  const formFields = mergeFormFields(createPaths, editPaths);
   const validFormFields = formFields.filter((p) => fieldNames.has(p));
-  const validTableColumns = tableColumns.filter((p) => fieldNames.has(p));
+  const validDetailFields = detailPaths.filter((p) => fieldNames.has(p));
 
   const filterableTypes = new Set(["string", "number", "enum"]);
   const filters = listPaths.filter((p) => {
@@ -136,14 +153,30 @@ function lowerResource(
 
   const idField = inferIdField(resource);
 
+  // Emit sections only when capabilities allow (Phase 1.2)
   const spec: UISpec = {
     entity: plan.name,
     fields,
-    table: { columns: validTableColumns.length ? validTableColumns : [fields[0].name] },
-    form: { fields: validFormFields.length ? validFormFields : [fields[0].name] },
-    filters,
+    ...(capabilities.list && {
+      table: {
+        columns: validTableColumns.length ? validTableColumns : [fields[0].name],
+      },
+    }),
+    ...((capabilities.create || capabilities.update) && {
+      form: {
+        fields: validFormFields.length ? validFormFields : [fields[0].name],
+      },
+    }),
+    ...(capabilities.detail &&
+      validDetailFields.length > 0 && {
+        detail: { fields: validDetailFields },
+      }),
+    filters: capabilities.list ? filters : [],
     ...(idField && { idField }),
   };
+
+  const consistencyErr = assertCapabilityConsistency(spec, capabilities);
+  if (consistencyErr) return consistencyErr;
 
   const parsed = UISpecSchema.safeParse(spec);
   if (!parsed.success) {
@@ -159,7 +192,47 @@ function lowerResource(
     };
   }
 
-  return { success: true, spec: parsed.data };
+  const validated = validateUISpecAgainstCapabilities(parsed.data, capabilities);
+  if (!validated.success) return validated;
+
+  return { success: true, spec: validated.spec };
+}
+
+function assertCapabilityConsistency(
+  spec: UISpec,
+  capabilities: Capabilities
+): LowerFailure | null {
+  if (capabilities.list && !spec.table) {
+    return {
+      success: false,
+      error: createError(
+        "UISPEC_INVALID",
+        "Lowering",
+        "capabilities.list is true but table section is missing"
+      ),
+    };
+  }
+  if ((capabilities.create || capabilities.update) && !spec.form) {
+    return {
+      success: false,
+      error: createError(
+        "UISPEC_INVALID",
+        "Lowering",
+        "capabilities.create or update is true but form section is missing"
+      ),
+    };
+  }
+  return null;
+}
+
+function validateUISpecAgainstCapabilities(
+  spec: UISpec,
+  capabilities: Capabilities
+): { success: true; spec: UISpec } | LowerFailure {
+  // Re-assert consistency before returning (never snapshot unvalidated output)
+  const err = assertCapabilityConsistency(spec, capabilities);
+  if (err) return err;
+  return { success: true, spec };
 }
 
 function hasOpaqueOrMapShape(resource: ResourceIR): boolean {

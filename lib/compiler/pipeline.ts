@@ -8,8 +8,8 @@ import { validateSubset } from "./openapi/subset-validator";
 import { resolveRefs } from "./openapi/ref-resolver";
 import { canonicalize, canonicalStringify } from "./openapi/canonicalize";
 import { sha256Hash } from "./hash";
-import { buildApiIR } from "./apiir";
-import type { ApiIR } from "./apiir";
+import { buildApiIR, deriveCapabilities } from "./apiir";
+import type { ApiIR, Capabilities } from "./apiir";
 import { llmPlan } from "./uiplan/llm-plan";
 import type { UiPlanIR } from "./uiplan/uiplan.schema";
 import { lower } from "./lowering";
@@ -81,6 +81,11 @@ export async function compileOpenAPI(
     return { success: false, errors: [buildResult.error] };
   }
 
+  deriveCapabilities(buildResult.apiIr);
+  const capabilitiesBySlug: Record<string, Capabilities> = Object.fromEntries(
+    buildResult.apiIr.resources.map((r) => [r.key, r.capabilities!])
+  );
+
   const llmResult = await llmPlan(buildResult.apiIr, {
     source: options?.source ?? "api",
     llmPlanFn: options?.llmPlanFn,
@@ -89,7 +94,7 @@ export async function compileOpenAPI(
     return { success: false, errors: [llmResult.error] };
   }
 
-  const lowerResult = lower(llmResult.uiPlan, buildResult.apiIr);
+  const lowerResult = lower(buildResult.apiIr, llmResult.uiPlan, capabilitiesBySlug);
   if (!lowerResult.success) {
     return { success: false, errors: [lowerResult.error] };
   }

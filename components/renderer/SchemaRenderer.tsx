@@ -127,7 +127,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
     }
 
     return data.filter((record) => {
-      return spec.filters.every((fieldName) => {
+      return (spec.filters ?? []).every((fieldName) => {
         const filterValue = filters[fieldName];
         if (filterValue === undefined || filterValue === null || filterValue === "") {
           return true; // No filter applied for this field
@@ -300,12 +300,14 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         </div>
       )}
 
-      {/* Header with Create Button */}
+      {/* Header with Create Button — derive mode from capabilities at render time */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{spec.entity} Management</h1>
           <p className="text-muted-foreground">
-            Manage {spec.entity.toLowerCase()} records with full CRUD operations
+            {capabilities.create || capabilities.update || capabilities.delete
+              ? `Manage ${spec.entity.toLowerCase()} records with full CRUD operations`
+              : `View ${spec.entity.toLowerCase()} records`}
           </p>
         </div>
         {capabilities.create && (
@@ -317,7 +319,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
       </div>
 
       {/* Filters Panel */}
-      {spec.filters.length > 0 && (
+      {(spec.filters ?? []).length > 0 && (
         <FiltersPanel spec={spec} filters={filters} onFilterChange={handleFilterChange} />
       )}
 
@@ -335,39 +337,43 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         />
       )}
 
-      {/* Create Modal */}
-      <FormModal
-        spec={spec}
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreate}
-        mode="create"
-      />
+      {/* Create Modal — only when create capability (form section present per capability consistency) */}
+      {capabilities.create && (
+        <FormModal
+          spec={spec}
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onSubmit={handleCreate}
+          mode="create"
+        />
+      )}
 
-      {/* Edit Modal */}
-      <FormModal
-        spec={spec}
-        isOpen={isEditModalOpen}
-        onClose={() => {
-          setIsEditModalOpen(false);
-          setSelectedRecord(null);
-          setEditRecord(null);
-        }}
-        onSubmit={(record: Record<string, unknown>) => {
-          const recordForId = editRecord ?? selectedRecord;
-          if (recordForId) {
-            const id = getRecordId(recordForId);
-            return handleUpdate(id, record);
+      {/* Edit Modal — only when update capability */}
+      {capabilities.update && (
+        <FormModal
+          spec={spec}
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setSelectedRecord(null);
+            setEditRecord(null);
+          }}
+          onSubmit={(record: Record<string, unknown>) => {
+            const recordForId = editRecord ?? selectedRecord;
+            if (recordForId) {
+              const id = getRecordId(recordForId);
+              return handleUpdate(id, record);
+            }
+          }}
+          initialValues={
+            editRecord ?? selectedRecord
+              ? (editRecord ?? selectedRecord) as Record<string, unknown>
+              : undefined
           }
-        }}
-        initialValues={
-          editRecord ?? selectedRecord
-            ? (editRecord ?? selectedRecord) as Record<string, unknown>
-            : undefined
-        }
-        mode="edit"
-        isLoadingInitialValues={editLoading}
-      />
+          mode="edit"
+          isLoadingInitialValues={editLoading}
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>

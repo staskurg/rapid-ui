@@ -62,6 +62,8 @@ export default async function GeneratedUIPage({
     );
   }
 
+  const capabilities = entry.capabilitiesBySlug[resource];
+
   logCompilationPageLoad({
     id,
     resource,
@@ -69,11 +71,6 @@ export default async function GeneratedUIPage({
     resourceNames: entry.resourceNames,
     resourceSlugs: entry.resourceSlugs,
     currentSpec,
-    apiIrSummary: {
-      title: entry.apiIr.api.title,
-      version: entry.apiIr.api.version,
-      resourceCount: entry.apiIr.resources.length,
-    },
   });
 
   return (
@@ -83,6 +80,7 @@ export default async function GeneratedUIPage({
       spec={currentSpec}
       resourceNames={entry.resourceNames}
       resourceSlugs={entry.resourceSlugs}
+      capabilities={capabilities}
       diffFromPrevious={entry.diffFromPrevious}
       updatedAt={entry.updatedAt}
     />

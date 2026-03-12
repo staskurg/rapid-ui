@@ -9,205 +9,39 @@ import { readFileSync } from "fs";
 import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { compileOpenAPI } from "@/lib/compiler/pipeline";
+import { getResourcePathSet } from "@/lib/compiler/lowering/schema-to-field";
 import type { ApiIR } from "@/lib/compiler/apiir";
 import type { UiPlanIR, ResourcePlan } from "@/lib/compiler/uiplan";
+import type { ResourceIR } from "@/lib/compiler/apiir";
 import stringify from "fast-json-stable-stringify";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FIXTURES = join(__dirname, "fixtures");
 
-/** UiPlanIR with paths matching Users schema (golden + demo v1/v2/v3). */
-function usersUiPlan(apiIr: ApiIR): UiPlanIR {
-  const r = apiIr.resources.find((x) => x.name === "Users");
-  if (!r) throw new Error("Users resource not found");
-  return {
-    resources: [
-      {
-        name: "Users",
-        views: {
-          list: {
-            fields: [
-              { path: "id", label: "ID", order: 0 },
-              { path: "email", label: "Email", order: 1 },
-              { path: "status", label: "Status", order: 2 },
-              { path: "profile.firstName", label: "First Name", order: 3 },
-              { path: "profile.lastName", label: "Last Name", order: 4 },
-              { path: "role", label: "Role", order: 5 },
-              { path: "department", label: "Department", order: 6 },
-              { path: "lastLoginAt", label: "Last Login", order: 7 },
-              { path: "notes", label: "Notes", order: 8 },
-            ],
-          },
-          detail: {
-            fields: [
-              { path: "id" },
-              { path: "email" },
-              { path: "status" },
-              { path: "profile.firstName" },
-              { path: "profile.lastName" },
-              { path: "role" },
-              { path: "department" },
-              { path: "lastLoginAt" },
-              { path: "notes" },
-            ],
-          },
-          create: {
-            fields: [
-              { path: "email" },
-              { path: "status" },
-              { path: "profile.firstName" },
-              { path: "profile.lastName" },
-              { path: "role" },
-              { path: "department" },
-              { path: "notes" },
-            ],
-          },
-          edit: {
-            fields: [
-              { path: "email" },
-              { path: "status" },
-              { path: "profile.firstName" },
-              { path: "profile.lastName" },
-              { path: "role" },
-              { path: "department" },
-              { path: "notes" },
-            ],
-          },
-        },
-      },
-    ],
-  };
+/** Build UiPlanIR from ApiIR using only valid schema paths. Deterministic per resource. */
+function buildUiPlanFromSchema(apiIr: ApiIR): UiPlanIR {
+  const resources: ResourcePlan[] = apiIr.resources.map((r: ResourceIR) => {
+    const paths = [...getResourcePathSet(r)].filter((p) => !p.startsWith("$")).sort();
+    const listPaths = paths.slice(0, 5).map((path, i) => ({ path, label: path, order: i }));
+    const detailPaths = paths.slice(0, 5).map((path) => ({ path }));
+    const createPaths = paths.slice(0, 4).map((path) => ({ path }));
+    const editPaths = paths.slice(0, 4).map((path) => ({ path }));
+
+    const ops = r.operations.map((o) => o.kind);
+    const views: ResourcePlan["views"] = {};
+    if (ops.includes("list") && listPaths.length) views.list = { fields: listPaths };
+    if (ops.includes("detail") && detailPaths.length) views.detail = { fields: detailPaths };
+    if (ops.includes("create") && createPaths.length) views.create = { fields: createPaths };
+    if (ops.includes("update") && editPaths.length) views.edit = { fields: editPaths };
+
+    return { name: r.name, views };
+  });
+  return { resources };
 }
 
-/** UiPlanIR with paths matching Tasks schema (v2: assigneeId, dueDate; v3: dueAt, tags). */
-function tasksUiPlan(apiIr: ApiIR): UiPlanIR {
-  const r = apiIr.resources.find((x) => x.name === "Tasks");
-  if (!r) throw new Error("Tasks resource not found");
-  return {
-    resources: [
-      {
-        name: "Tasks",
-        views: {
-          list: {
-            fields: [
-              { path: "id", label: "ID", order: 0 },
-              { path: "title", label: "Title", order: 1 },
-              { path: "status", label: "Status", order: 2 },
-              { path: "assigneeId", label: "Assignee", order: 3 },
-              { path: "dueDate", label: "Due Date", order: 4 },
-              { path: "dueAt", label: "Due At", order: 4 },
-              { path: "priority", label: "Priority", order: 5 },
-              { path: "tags", label: "Tags", order: 6 },
-            ],
-          },
-          detail: {
-            fields: [
-              { path: "id" },
-              { path: "title" },
-              { path: "status" },
-              { path: "assigneeId" },
-              { path: "dueDate" },
-              { path: "dueAt" },
-              { path: "priority" },
-              { path: "tags" },
-            ],
-          },
-          create: {
-            fields: [
-              { path: "title" },
-              { path: "status" },
-              { path: "assigneeId" },
-              { path: "dueDate" },
-              { path: "dueAt" },
-              { path: "priority" },
-              { path: "tags" },
-            ],
-          },
-          edit: {
-            fields: [
-              { path: "title" },
-              { path: "status" },
-              { path: "assigneeId" },
-              { path: "dueDate" },
-              { path: "dueAt" },
-              { path: "priority" },
-              { path: "tags" },
-            ],
-          },
-        },
-      },
-    ],
-  };
-}
-
-/** UiPlanIR with paths matching Products schema. */
-function productsUiPlan(apiIr: ApiIR): UiPlanIR {
-  if (!apiIr.resources.some((r) => r.name === "Products")) {
-    throw new Error("Products resource not found");
-  }
-  return {
-    resources: [
-      {
-        name: "Products",
-        views: {
-          list: {
-            fields: [
-              { path: "sku", label: "SKU", order: 0 },
-              { path: "name", label: "Name", order: 1 },
-              { path: "status", label: "Status", order: 2 },
-              { path: "price.amount", label: "Price", order: 3 },
-              { path: "inventory.quantity", label: "Quantity", order: 4 },
-            ],
-          },
-          detail: {
-            fields: [
-              { path: "sku" },
-              { path: "name" },
-              { path: "status" },
-              { path: "price.amount" },
-              { path: "inventory.quantity" },
-            ],
-          },
-          create: {
-            fields: [
-              { path: "sku" },
-              { path: "name" },
-              { path: "status" },
-              { path: "price.amount" },
-              { path: "price.currency" },
-              { path: "inventory.warehouseId" },
-              { path: "inventory.quantity" },
-            ],
-          },
-          edit: {
-            fields: [
-              { path: "name" },
-              { path: "status" },
-              { path: "price.amount" },
-              { path: "inventory.quantity" },
-            ],
-          },
-        },
-      },
-    ],
-  };
-}
-
-/** Deterministic mock: maps ApiIR to UiPlanIR for golden and demo specs. */
+/** Deterministic mock: maps ApiIR to UiPlanIR using only valid schema paths. */
 function mockLlmPlan(apiIr: ApiIR): UiPlanIR {
-  const plans: ResourcePlan[] = [];
-  for (const r of apiIr.resources) {
-    if (r.name === "Users") {
-      plans.push(usersUiPlan(apiIr).resources[0]);
-    } else if (r.name === "Products") {
-      plans.push(productsUiPlan(apiIr).resources[0]);
-    } else if (r.name === "Tasks") {
-      plans.push(tasksUiPlan(apiIr).resources[0]);
-    } else {
-      throw new Error(`Unknown resource: ${r.name}`);
-    }
-  }
-  return { resources: plans };
+  return buildUiPlanFromSchema(apiIr);
 }
 
 describe("compileOpenAPI full pipeline", () => {

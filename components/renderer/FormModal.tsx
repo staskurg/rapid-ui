@@ -128,7 +128,7 @@ export function FormModal({
             </>
           ) : (
           <>
-          {spec.form.fields.map((fieldName) => {
+          {(spec.form?.fields ?? []).map((fieldName) => {
             const field = spec.fields.find((f) => f.name === fieldName);
             if (!field) return null;
 

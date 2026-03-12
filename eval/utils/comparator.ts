@@ -13,6 +13,7 @@ export interface StructuralFingerprint {
   tableColumns: Set<string>;
   formFields: Set<string>;
   filterFields: Set<string>;
+  detailFields: Set<string>;
   enumFields: Map<string, string[]>; // field name -> options
 }
 
@@ -23,19 +24,22 @@ export interface ComparisonResult {
 }
 
 /**
- * Extract structural fingerprint from a UISpec
+ * Extract structural fingerprint from a UISpec.
+ * Tolerates missing optional sections (table, form, filters, detail) for capability-driven specs.
  */
 export function extractFingerprint(spec: UISpec): StructuralFingerprint {
-  const fieldNames = new Set<string>(spec.fields.map((f) => f.name));
+  const fields = spec.fields ?? [];
+  const fieldNames = new Set<string>(fields.map((f) => f.name));
   const fieldTypes = new Map<string, string>(
-    spec.fields.map((f) => [f.name, f.type])
+    fields.map((f) => [f.name, f.type])
   );
-  const tableColumns = new Set<string>(spec.table.columns);
-  const formFields = new Set<string>(spec.form.fields);
-  const filterFields = new Set<string>(spec.filters);
+  const tableColumns = new Set<string>(spec.table?.columns ?? []);
+  const formFields = new Set<string>(spec.form?.fields ?? []);
+  const filterFields = new Set<string>(spec.filters ?? []);
+  const detailFields = new Set<string>(spec.detail?.fields ?? []);
   const enumFields = new Map<string, string[]>();
 
-  spec.fields.forEach((field) => {
+  fields.forEach((field) => {
     if (field.type === "enum" && field.options) {
       enumFields.set(field.name, [...field.options].sort());
     }
@@ -47,6 +51,7 @@ export function extractFingerprint(spec: UISpec): StructuralFingerprint {
     tableColumns,
     formFields,
     filterFields,
+    detailFields,
     enumFields,
   };
 }
@@ -134,6 +139,15 @@ export function compareFingerprints(
     );
   }
 
+  // Compare detail fields
+  const detailDiff1 = [...fp1.detailFields].filter((f) => !fp2.detailFields.has(f));
+  const detailDiff2 = [...fp2.detailFields].filter((f) => !fp1.detailFields.has(f));
+  if (detailDiff1.length > 0 || detailDiff2.length > 0) {
+    differences.push(
+      `Detail fields differ: [${[...fp1.detailFields].join(", ")}] vs [${[...fp2.detailFields].join(", ")}]`
+    );
+  }
+
   // Calculate similarity score (0-1)
   // Simple approach: count matching elements / total elements
   let matchingElements = 0;
@@ -170,6 +184,13 @@ export function compareFingerprints(
   totalElements += allFilterFields.size;
   matchingElements += [...allFilterFields].filter(
     (f) => fp1.filterFields.has(f) && fp2.filterFields.has(f)
+  ).length;
+
+  // Detail fields
+  const allDetailFields = new Set([...fp1.detailFields, ...fp2.detailFields]);
+  totalElements += allDetailFields.size;
+  matchingElements += [...allDetailFields].filter(
+    (f) => fp1.detailFields.has(f) && fp2.detailFields.has(f)
   ).length;
 
   const similarity =

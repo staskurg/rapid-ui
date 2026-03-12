@@ -9,6 +9,8 @@ export type {
   OperationKind,
   HttpMethod,
   JsonSchema,
+  Capabilities,
 } from "./types";
+export { deriveCapabilities, deriveCapabilitiesForResource } from "./capabilities";
 export { buildApiIR, apiIrStringify } from "./build";
 export type { BuildApiIROutput, BuildApiIRResult, BuildApiIRFailure } from "./build";

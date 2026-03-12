@@ -5,6 +5,7 @@ import { SchemaRenderer } from "@/components/renderer/SchemaRenderer";
 import { CompiledUISidebar } from "./CompiledUISidebar";
 import { createMockAdapter } from "@/lib/adapters";
 import type { UISpec } from "@/lib/spec/types";
+import type { Capabilities } from "@/lib/compiler/apiir";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ interface CompiledUIContentProps {
   spec: UISpec;
   resourceNames: string[];
   resourceSlugs: string[];
+  capabilities?: Capabilities;
   diffFromPrevious?: DiffFromPrevious;
   updatedAt?: string;
 }
@@ -51,12 +53,13 @@ export function CompiledUIContent({
   spec,
   resourceNames,
   resourceSlugs,
+  capabilities,
   diffFromPrevious,
   updatedAt,
 }: CompiledUIContentProps) {
   const adapter = React.useMemo(
-    () => createMockAdapter(id, resource),
-    [id, resource]
+    () => createMockAdapter(id, resource, capabilities),
+    [id, resource, capabilities]
   );
 
   const [diffDialogOpen, setDiffDialogOpen] = React.useState(false);

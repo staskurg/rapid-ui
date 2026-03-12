@@ -10,5 +10,6 @@ export type {
   Field,
   TableConfig,
   FormConfig,
+  DetailConfig,
   UISpec,
 } from "./schema";

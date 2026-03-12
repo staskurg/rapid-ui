@@ -76,7 +76,7 @@ async function runSingleLlmPlan(
       };
     }
 
-    const normalized = normalizeUiPlanIR(llmResult.uiPlan);
+    const normalized = normalizeUiPlanIR(llmResult.uiPlan, apiIr);
     const fingerprint = extractUiPlanIRFingerprint(normalized);
 
     return {

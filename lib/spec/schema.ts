@@ -18,34 +18,46 @@ export const FieldSchema = z.object({
 });
 
 /**
- * Table configuration schema - defines which fields appear as columns
+ * Table configuration schema - defines which fields appear as columns.
+ * Optional when resource has no list capability.
  */
 export const TableConfigSchema = z.object({
   columns: z.array(z.string()).min(1, "At least one column is required"),
 });
 
 /**
- * Form configuration schema - defines field order for forms
+ * Form configuration schema - defines field order for forms.
+ * Optional when resource has no create/update capability.
  */
 export const FormConfigSchema = z.object({
   fields: z.array(z.string()).min(1, "At least one form field is required"),
 });
 
 /**
- * UI Spec schema - the complete specification for generating a schema-driven UI
+ * Detail view configuration - fields for detail view.
+ * Optional when resource has no detail capability.
+ */
+export const DetailConfigSchema = z.object({
+  fields: z.array(z.string()),
+});
+
+/**
+ * UI Spec schema - the complete specification for generating a schema-driven UI.
+ * table, form, detail, filters are optional (capability-driven).
  */
 export const UISpecSchema = z
   .object({
     entity: z.string().min(1, "Entity name is required"),
     fields: z.array(FieldSchema).min(1, "At least one field is required"),
-    table: TableConfigSchema,
-    form: FormConfigSchema,
-    filters: z.array(z.string()).default([]),
+    table: TableConfigSchema.optional(),
+    form: FormConfigSchema.optional(),
+    detail: DetailConfigSchema.optional(),
+    filters: z.array(z.string()).optional().default([]),
     idField: z.string().optional(),
   })
   .refine(
     (data) => {
-      // Validate that table columns reference existing field names
+      if (!data.table) return true;
       const fieldNames = new Set(data.fields.map((f) => f.name));
       return data.table.columns.every((col) => fieldNames.has(col));
     },
@@ -56,7 +68,7 @@ export const UISpecSchema = z
   )
   .refine(
     (data) => {
-      // Validate that form fields reference existing field names
+      if (!data.form) return true;
       const fieldNames = new Set(data.fields.map((f) => f.name));
       return data.form.fields.every((field) => fieldNames.has(field));
     },
@@ -67,13 +79,24 @@ export const UISpecSchema = z
   )
   .refine(
     (data) => {
-      // Validate that filter fields reference existing field names
+      const f = data.filters ?? [];
       const fieldNames = new Set(data.fields.map((f) => f.name));
-      return data.filters.every((filter) => fieldNames.has(filter));
+      return f.every((filter) => fieldNames.has(filter));
     },
     {
       message: "Filter fields must reference existing field names",
       path: ["filters"],
+    }
+  )
+  .refine(
+    (data) => {
+      if (!data.detail) return true;
+      const fieldNames = new Set(data.fields.map((f) => f.name));
+      return data.detail.fields.every((field) => fieldNames.has(field));
+    },
+    {
+      message: "Detail fields must reference existing field names",
+      path: ["detail", "fields"],
     }
   )
   .refine(
@@ -102,4 +125,5 @@ export type FieldType = z.infer<typeof FieldTypeSchema>;
 export type Field = z.infer<typeof FieldSchema>;
 export type TableConfig = z.infer<typeof TableConfigSchema>;
 export type FormConfig = z.infer<typeof FormConfigSchema>;
+export type DetailConfig = z.infer<typeof DetailConfigSchema>;
 export type UISpec = z.infer<typeof UISpecSchema>;

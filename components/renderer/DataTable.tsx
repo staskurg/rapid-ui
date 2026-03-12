@@ -38,7 +38,8 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
   const columns = React.useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
     const fieldMap = new Map(spec.fields.map((f) => [f.name, f]));
 
-    const cols: ColumnDef<Record<string, unknown>>[] = spec.table.columns.map(
+    const columns = spec.table?.columns ?? (spec.fields[0] ? [spec.fields[0].name] : []);
+    const cols: ColumnDef<Record<string, unknown>>[] = columns.map(
       (fieldName) => {
         const field = fieldMap.get(fieldName);
         const accessor = {

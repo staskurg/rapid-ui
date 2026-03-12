@@ -43,7 +43,8 @@ export function FiltersPanel({
 
   const hasActiveFilters = Object.keys(filters).length > 0;
 
-  if (spec.filters.length === 0) {
+  const filterFields = spec.filters ?? [];
+  if (filterFields.length === 0) {
     return null;
   }
 
@@ -65,7 +66,7 @@ export function FiltersPanel({
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {spec.filters.map((fieldName) => {
+        {filterFields.map((fieldName) => {
           const field = fieldMap.get(fieldName);
           if (!field) return null;
 

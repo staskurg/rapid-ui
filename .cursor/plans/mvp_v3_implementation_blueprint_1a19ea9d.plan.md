@@ -212,14 +212,66 @@ flowchart TB
 
 **Checkpoint 1.4:** `extractFingerprint(spec)` with missing `table`/`form` does not throw. Renderer renders a list-only resource without form. `npm test` passes; manual smoke test in dev app.
 
-### 1.5 Prompt Updates
+### 1.5 Capability Specs Setup + Eval Validation (Before Prompt Updates)
+
+Before updating the LLM prompt, validate that the pipeline and evals work correctly across the full capability matrix. This surfaces any issues with optional sections, capability-driven lowering, or LLM output before prompt iteration.
+
+**1.5a Fixture setup**
+
+- **Create** `tests/compiler/fixtures/capability-specs/` folder (similar to `demo/`)
+- **Move** the four existing specs from `fixtures/` root into `capability-specs/`:
+  - `create-only-spec.yaml` — POST only
+  - `detail-only-spec.yaml` — GET /{id} only
+  - `list-only-spec.yaml` — GET list only
+  - `list-detail-only-spec.yaml` — GET list + GET /{id} (read-only)
+- **Create** six additional core specs (OpenAPI 3.0.3, single resource `/items` or `/items/{id}`; follow existing 4 specs for schema structure — `properties`, `required`, `application/json` content):
+  - `update-only-spec.yaml` — PATCH /{id} only (form from update)
+  - `list-create-spec.yaml` — GET list + POST (table + form, no detail)
+  - `list-detail-create-spec.yaml` — GET list + GET /{id} + POST
+  - `list-detail-update-spec.yaml` — GET list + GET /{id} + PATCH
+  - `list-detail-create-update-spec.yaml` — GET list + GET /{id} + POST + PATCH (CRUD minus delete)
+  - `list-detail-delete-spec.yaml` — GET list + GET /{id} + DELETE (no form when only delete)
+- **Create** three optional specs (same schema conventions):
+  - `create-update-spec.yaml` — POST + PATCH /{id} (form only, both create and update)
+  - `detail-update-spec.yaml` — GET /{id} + PATCH (detail + form, no list)
+  - `list-create-update-spec.yaml` — GET list + POST + PATCH (table + form, no detail)
+- **Update** [scripts/generate-apiir-fixtures.ts](scripts/generate-apiir-fixtures.ts): add `{ inputDir: join(FIXTURES_DIR, "capability-specs"), outputSubdir: "capability-specs" }` to sources
+- **Update** [tests/compiler/lowering.test.ts](tests/compiler/lowering.test.ts): change `loadApiIr` paths from `list-only-spec.yaml`, `create-only-spec.yaml`, `detail-only-spec.yaml`, `list-detail-only-spec.yaml` to `capability-specs/list-only-spec.yaml`, etc.
+- **Run** `npm run fixtures:generate-apiir` — produces `tests/compiler/fixtures/apiir/capability-specs/*.json`
+
+**Capability → section mapping (for validation):**
+
+
+| Capabilities                    | Expected sections                |
+| ------------------------------- | -------------------------------- |
+| list only                       | table, filters                   |
+| detail only                     | detail                           |
+| create only                     | form                             |
+| update only                     | form                             |
+| list + detail                   | table, detail, filters           |
+| list + create                   | table, form, filters             |
+| list + detail + create          | table, detail, form, filters     |
+| list + detail + update          | table, detail, form, filters     |
+| list + detail + create + update | table, detail, form, filters     |
+| list + detail + delete          | table, detail, filters (no form) |
+
+
+**1.5b Eval runs**
+
+- **Run** `npm run eval:llm -- --dir capability-specs --runs 5` — validate LLM returns correct UiPlanIR (no invented table/form/detail when capability is absent)
+- **Run** `npm run eval:ai -- --dir capability-specs --runs 5` — validate full pipeline produces valid UISpecs; sections match capabilities per table above
+- **Document findings** in [eval/reports/capability-specs-findings.md](eval/reports/capability-specs-findings.md) — note any compile failures, invalid UISpecs, incorrect section presence, or determinism issues. Use findings to inform prompt updates in 1.5c.
+
+**Checkpoint 1.5b:** Evals complete without crashes for all 13 specs. Findings documented in `eval/reports/capability-specs-findings.md`. Fix any capability/lowering/renderer issues before prompt work.
+
+### 1.5c Prompt Updates
 
 - **Update** [lib/compiler/uiplan/prompt.system.txt](lib/compiler/uiplan/prompt.system.txt): clarify label rules, ordering rules, nested path handling, readOnly behavior, JSON fallback, deterministic constraints
 - **Keep prompt focused:** LLM decides labels, ordering, readOnly only. Do NOT have LLM think about table columns, filters, navigation, actions — those belong to lowering
 - **Encode principles, not examples** — no spec-specific hacks (e.g. "if resource is Task, put title first")
 - Skip `hidden` field for MVP v3
 
-**Checkpoint 1.5:** Prompt file updated. No automated checkpoint — defer validation to 1.8 (golden compile). If golden compile fails due to LLM output, iterate prompt here.
+**Checkpoint 1.5c:** Prompt file updated. No automated checkpoint — defer validation to 1.8 (golden compile). If golden compile fails due to LLM output, iterate prompt here.
 
 ### 1.6 Raw Input Layer
 
@@ -414,38 +466,41 @@ Golden OpenAPI specs must generate ApiIR fixtures used by `eval:llm`.
 ## File Summary
 
 
-| File                                               | Action                                                                                                                                                                     |
-| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lib/compiler/input/normalize.ts` (or in pipeline) | Create/Update — UTF-8/LF normalization, raw hash                                                                                                                           |
-| `lib/compiler/apiir/capabilities.ts`               | Create — derive capabilities; embed in ResourceIR                                                                                                                          |
-| `lib/compiler/apiir/types.ts`                      | Update — add `capabilities` to ResourceIR                                                                                                                                  |
-| `lib/compiler/pipeline.ts`                         | Update — add `compileToApiIR(spec)`; add `compileToUISpec(spec, { llmPlanFn })`; embed capabilities; pass capabilities explicitly to lower()                               |
-| `lib/spec/schema.ts`                               | Update — optional table/form/detail/filters                                                                                                                                |
-| `lib/compiler/lowering/lower.ts`                   | Update — lower(apiIr, uiPlan, capabilitiesBySlug: Record<string, Capabilities>); assertCapabilityConsistency; validateUISpecAgainstCapabilities after lower, before return |
-| `lib/compiler/uiplan/normalize.ts`                 | Update — fail hard on invented paths (UIPLAN_INVENTED_FIELD_PATH); freeze field ordering here (not in lowering)                                                            |
-| `lib/compiler/errors.ts`                           | Add `UIPLAN_INVENTED_FIELD_PATH`; add parser version error (e.g. `OAS_UNSUPPORTED_VERSION`)                                                                                |
-| `lib/compiler/openapi/parser.ts`                   | Update — reject 2.x, 1.x, missing, malformed version before parse continues                                                                                                |
-| `lib/compiler/uiplan/prompt.system.txt`            | Update — renderer constraints, nested paths                                                                                                                                |
-| `lib/compiler/openapi/subset-validator.ts`         | Update — stable error codes                                                                                                                                                |
-| `lib/adapters/mock-adapter.ts`                     | Update — accept capabilities param (derived from ApiIR)                                                                                                                    |
-| `app/u/[id]/[resource]/page.tsx`                   | Update — derive capabilities from apiIr; pass to content                                                                                                                   |
-| `components/compiler/CompiledUIContent.tsx`        | Update — accept capabilities; pass to adapter                                                                                                                              |
-| `components/renderer/SchemaRenderer.tsx`           | Update — handle missing sections; use adapter capabilities                                                                                                                 |
-| `eval/eval-ai.ts`, `eval/eval-llm-only.ts`         | Update — hash-based pass/fail, report layers, golden-specs path + subdir scan                                                                                              |
-| `eval/utils/comparator.ts`                         | Update — tolerate missing `table`, `form`, `filters`, `detail` in extractFingerprint and related functions                                                                 |
-| `eval/utils/report-schema.ts`                      | Update — Layer 1–3 structure                                                                                                                                               |
-| `tests/compiler/invalid.test.ts`                   | Extend — per-error-type invalid specs                                                                                                                                      |
-| `tests/compiler/fixtures/invalid/*.yaml`           | Create — invalid_oneof, invalid_primitive_response, etc.                                                                                                                   |
-| `tests/compiler/golden-specs.test.ts`              | Create — spec discovery, integrity check, compileToApiIR/compileToUISpec comparison, diffUnified on mismatch, UPDATE_GOLDEN support                                        |
-| `lib/compiler/apiir` (apiIrStringify)              | Verify/Update — stable stringify; add unit test for stringify stability                                                                                                    |
-| `package.json`                                     | Add `test:golden:update`, `generate:apiir-fixtures` scripts                                                                                                                |
-| `app/api/compile-openapi/route.ts`                 | Update — persist rawSpecHash during compilation                                                                                                                            |
-| `app/api/compilations/[id]/update/route.ts`        | Update — persist rawSpecHash on update                                                                                                                                     |
-| `lib/db/compilations.ts`                           | Update — add rawSpecHash column handling                                                                                                                                   |
-| `lib/compiler/mock/store.ts`                       | Update — add rawSpecHash to mock store entries                                                                                                                             |
-| `scripts/generate-apiir-fixtures.ts`               | Create/Update — generate ApiIR fixtures from golden OpenAPI specs using compileToApiIR; support --golden for golden-specs/                                                 |
-| `eval/utils/compile-openapi.ts`                    | Update — add to non-retryable list: OAS_UNSUPPORTED_ONEOF, OAS_UNSUPPORTED_VERSION, OAS_INVALID_RESPONSE_STRUCTURE                                                         |
-| `scripts/migrations/002_add_raw_spec_hash.sql`     | Create — add raw_spec_hash VARCHAR(64) column to compilations table (nullable for existing rows)                                                                           |
+| File                                               | Action                                                                                                                                                                                                                            |
+| -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lib/compiler/input/normalize.ts` (or in pipeline) | Create/Update — UTF-8/LF normalization, raw hash                                                                                                                                                                                  |
+| `lib/compiler/apiir/capabilities.ts`               | Create — derive capabilities; embed in ResourceIR                                                                                                                                                                                 |
+| `lib/compiler/apiir/types.ts`                      | Update — add `capabilities` to ResourceIR                                                                                                                                                                                         |
+| `lib/compiler/pipeline.ts`                         | Update — add `compileToApiIR(spec)`; add `compileToUISpec(spec, { llmPlanFn })`; embed capabilities; pass capabilities explicitly to lower()                                                                                      |
+| `lib/spec/schema.ts`                               | Update — optional table/form/detail/filters                                                                                                                                                                                       |
+| `lib/compiler/lowering/lower.ts`                   | Update — lower(apiIr, uiPlan, capabilitiesBySlug: Record<string, Capabilities>); assertCapabilityConsistency; validateUISpecAgainstCapabilities after lower, before return                                                        |
+| `lib/compiler/uiplan/normalize.ts`                 | Update — fail hard on invented paths (UIPLAN_INVENTED_FIELD_PATH); freeze field ordering here (not in lowering)                                                                                                                   |
+| `lib/compiler/errors.ts`                           | Add `UIPLAN_INVENTED_FIELD_PATH`; add parser version error (e.g. `OAS_UNSUPPORTED_VERSION`)                                                                                                                                       |
+| `lib/compiler/openapi/parser.ts`                   | Update — reject 2.x, 1.x, missing, malformed version before parse continues                                                                                                                                                       |
+| `lib/compiler/uiplan/prompt.system.txt`            | Update — renderer constraints, nested paths                                                                                                                                                                                       |
+| `lib/compiler/openapi/subset-validator.ts`         | Update — stable error codes                                                                                                                                                                                                       |
+| `lib/adapters/mock-adapter.ts`                     | Update — accept capabilities param (derived from ApiIR)                                                                                                                                                                           |
+| `app/u/[id]/[resource]/page.tsx`                   | Update — derive capabilities from apiIr; pass to content                                                                                                                                                                          |
+| `components/compiler/CompiledUIContent.tsx`        | Update — accept capabilities; pass to adapter                                                                                                                                                                                     |
+| `components/renderer/SchemaRenderer.tsx`           | Update — handle missing sections; use adapter capabilities                                                                                                                                                                        |
+| `eval/eval-ai.ts`, `eval/eval-llm-only.ts`         | Update — hash-based pass/fail, report layers, golden-specs path + subdir scan                                                                                                                                                     |
+| `eval/utils/comparator.ts`                         | Update — tolerate missing `table`, `form`, `filters`, `detail` in extractFingerprint and related functions                                                                                                                        |
+| `eval/utils/report-schema.ts`                      | Update — Layer 1–3 structure                                                                                                                                                                                                      |
+| `tests/compiler/invalid.test.ts`                   | Extend — per-error-type invalid specs                                                                                                                                                                                             |
+| `tests/compiler/fixtures/invalid/*.yaml`           | Create — invalid_oneof, invalid_primitive_response, etc.                                                                                                                                                                          |
+| `tests/compiler/golden-specs.test.ts`              | Create — spec discovery, integrity check, compileToApiIR/compileToUISpec comparison, diffUnified on mismatch, UPDATE_GOLDEN support                                                                                               |
+| `lib/compiler/apiir` (apiIrStringify)              | Verify/Update — stable stringify; add unit test for stringify stability                                                                                                                                                           |
+| `package.json`                                     | Add `test:golden:update`, `generate:apiir-fixtures` scripts                                                                                                                                                                       |
+| `app/api/compile-openapi/route.ts`                 | Update — persist rawSpecHash during compilation                                                                                                                                                                                   |
+| `app/api/compilations/[id]/update/route.ts`        | Update — persist rawSpecHash on update                                                                                                                                                                                            |
+| `lib/db/compilations.ts`                           | Update — add rawSpecHash column handling                                                                                                                                                                                          |
+| `lib/compiler/mock/store.ts`                       | Update — add rawSpecHash to mock store entries                                                                                                                                                                                    |
+| `scripts/generate-apiir-fixtures.ts`               | Create/Update — generate ApiIR fixtures from golden OpenAPI specs using compileToApiIR; support --golden for golden-specs/; add capability-specs source                                                                           |
+| `tests/compiler/fixtures/capability-specs/*.yaml`  | Create — move 4 existing specs; create 9 new specs (update-only, list-create, list-detail-create, list-detail-update, list-detail-create-update, list-detail-delete, create-update, detail-update, list-create-update) — 13 total |
+| `tests/compiler/lowering.test.ts`                  | Update — change loadApiIr paths to `capability-specs/*.yaml` after move                                                                                                                                                           |
+| `eval/reports/capability-specs-findings.md`        | Create — document eval findings (compile failures, invalid UISpecs, section mismatches) before prompt work                                                                                                                        |
+| `eval/utils/compile-openapi.ts`                    | Update — add to non-retryable list: OAS_UNSUPPORTED_ONEOF, OAS_UNSUPPORTED_VERSION, OAS_INVALID_RESPONSE_STRUCTURE                                                                                                                |
+| `scripts/migrations/002_add_raw_spec_hash.sql`     | Create — add raw_spec_hash VARCHAR(64) column to compilations table (nullable for existing rows)                                                                                                                                  |
 
 
 ---
@@ -531,6 +586,12 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 
 ---
 
+## Post-MVP cleanup (after all phases done)
+
+- **Remove lazy capabilities backfill** in `lib/db/compilations.ts` — `rowToEntry` currently derives capabilities from apiIr when missing (for pre-Phase-1.1 compilations). Once no such rows exist: run migration to add capabilities to api_ir, or persist capabilitiesBySlug at write time; then remove the backfill block and `deriveCapabilities` import from the DB layer.
+
+---
+
 ## Locked Decisions (pre-implementation)
 
 1. `--dir golden-specs` resolves to `tests/compiler/golden-specs/`; scan sorted archetype subdirs; first `.yaml`/`.yml` per subdir.
@@ -555,7 +616,7 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 
 **Phase 0:** 0.1 Parser → 0.2 Error codes → **Checkpoint 0**
 
-**Phase 1:** 1.1 Capabilities → 1.2 UISpec optional → 1.3 UiPlanIR normalize → 1.4 Comparator + Renderer → 1.5 Prompt → 1.6 Raw input → 1.7 compileToApiIR + eval path → 1.8 Golden compile → **Checkpoint 1.8**
+**Phase 1:** 1.1 Capabilities → 1.2 UISpec optional → 1.3 UiPlanIR normalize → 1.4 Comparator + Renderer → 1.5a Capability-specs fixtures → 1.5b Eval validation → 1.5c Prompt → 1.6 Raw input → 1.7 compileToApiIR + eval path → 1.8 Golden compile → **Checkpoint 1.8**
 
 **Phase 2:** 2.1 Hash-based pass/fail → 2.2 Report layers → 2.3 Stabilization loop → **Checkpoint 2.3**
 
@@ -571,8 +632,9 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 2. **Capability derivation** — everything downstream depends on it.
 3. **UISpec optional sections** — schema + lowering.
 4. **Comparator update** — prevent crashes during evals (`spec.table?.columns ?? []`, etc.).
-5. **Raw input layer + rawSpecHash** — safe once pipeline compiles.
-6. **Golden-spec compilation** — run 22 specs; fix failures.
+5. **Capability specs setup + eval validation** — move specs to capability-specs/, generate ApiIR, run eval:llm and eval:ai (--runs 5); document findings in eval/reports/capability-specs-findings.md before prompt work.
+6. **Raw input layer + rawSpecHash** — safe once pipeline compiles.
+7. **Golden-spec compilation** — run 22 specs; fix failures.
 
 Each layer stable before the next.
 
@@ -581,23 +643,25 @@ Each layer stable before the next.
 ## Checkpoint Summary (quick reference)
 
 
-| Phase | Checkpoint              | Command / Criteria                                                          |
-| ----- | ----------------------- | --------------------------------------------------------------------------- |
-| 0     | 0.1 Parser              | Unit test: OpenAPI 2.x → `OAS_UNSUPPORTED_VERSION`                          |
-| 0     | 0.2 Error codes         | `npm test` passes                                                           |
-| 1     | 1.1 Capabilities        | Unit test: deriveCapabilities; lower receives capabilitiesBySlug            |
-| 1     | 1.2 UISpec optional     | Unit test: list-only resource → table, no form                              |
-| 1     | 1.3 UiPlanIR            | Unit test: invented path → `UIPLAN_INVENTED_FIELD_PATH`                     |
-| 1     | 1.4 Comparator/Renderer | extractFingerprint no throw; renderer smoke test                            |
-| 1     | 1.5 Prompt              | (Deferred to 1.8)                                                           |
-| 1     | 1.6 Raw input           | rawSpecHash in CompileSuccess; DB persists                                  |
-| 1     | 1.7 Eval path           | `eval:ai --dir golden-specs --quick`; `eval:llm --dir golden-specs --quick` |
-| 1     | 1.8 Golden compile      | `eval:ai --dir golden-specs --runs 3` → all 22 valid                        |
-| 2     | 2.1 Hash pass/fail      | Evals report unique hash counts                                             |
-| 2     | 2.2 Report layers       | Layer 1–3 in report                                                         |
-| 2     | 2.3 Determinism         | `eval:llm` + `eval:ai` —runs 20 → unique hashes = 1                         |
-| 3     | 3.5 Golden test         | `npm test` includes golden-specs.test.ts; `test:golden:update` works        |
-| 4     | 4.1 Invalid             | One test per invalid spec; correct error codes                              |
-| 4     | 4.2 CI                  | `npm test` runs all; no LLM in CI                                           |
+| Phase | Checkpoint              | Command / Criteria                                                                                       |
+| ----- | ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| 0     | 0.1 Parser              | Unit test: OpenAPI 2.x → `OAS_UNSUPPORTED_VERSION`                                                       |
+| 0     | 0.2 Error codes         | `npm test` passes                                                                                        |
+| 1     | 1.1 Capabilities        | Unit test: deriveCapabilities; lower receives capabilitiesBySlug                                         |
+| 1     | 1.2 UISpec optional     | Unit test: list-only resource → table, no form                                                           |
+| 1     | 1.3 UiPlanIR            | Unit test: invented path → `UIPLAN_INVENTED_FIELD_PATH`                                                  |
+| 1     | 1.4 Comparator/Renderer | extractFingerprint no throw; renderer smoke test                                                         |
+| 1     | 1.5a Fixtures           | capability-specs folder + generate-apiir                                                                 |
+| 1     | 1.5b Eval validation    | eval:llm + eval:ai on capability-specs (--runs 5); findings in eval/reports/capability-specs-findings.md |
+| 1     | 1.5c Prompt             | (Deferred to 1.8)                                                                                        |
+| 1     | 1.6 Raw input           | rawSpecHash in CompileSuccess; DB persists                                                               |
+| 1     | 1.7 Eval path           | `eval:ai --dir golden-specs --quick`; `eval:llm --dir golden-specs --quick`                              |
+| 1     | 1.8 Golden compile      | `eval:ai --dir golden-specs --runs 3` → all 22 valid                                                     |
+| 2     | 2.1 Hash pass/fail      | Evals report unique hash counts                                                                          |
+| 2     | 2.2 Report layers       | Layer 1–3 in report                                                                                      |
+| 2     | 2.3 Determinism         | `eval:llm` + `eval:ai` —runs 20 → unique hashes = 1                                                      |
+| 3     | 3.5 Golden test         | `npm test` includes golden-specs.test.ts; `test:golden:update` works                                     |
+| 4     | 4.1 Invalid             | One test per invalid spec; correct error codes                                                           |
+| 4     | 4.2 CI                  | `npm test` runs all; no LLM in CI                                                                        |
 
 

@@ -14,12 +14,22 @@ export interface ApiIR {
   resources: ResourceIR[];
 }
 
+export interface Capabilities {
+  list: boolean;
+  detail: boolean;
+  create: boolean;
+  update: boolean;
+  delete: boolean;
+}
+
 export interface ResourceIR {
   /** Display name (e.g. "Users", "Products"). */
   name: string;
   /** Grouping key / slug for URLs (e.g. "users", "products"). */
   key: string;
   operations: OperationIR[];
+  /** Derived from operations; set by deriveCapabilities(). */
+  capabilities?: Capabilities;
 }
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

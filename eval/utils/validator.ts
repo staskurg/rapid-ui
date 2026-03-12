@@ -48,13 +48,13 @@ export function validateSchema(spec: unknown): ValidationResult {
 export function checkLogicalIntegrity(spec: UISpec): LogicalIntegrityResult {
   const issues: string[] = [];
 
-  // Check table columns
-  if (spec.table.columns.length === 0) {
+  // Check table columns (when present)
+  if (spec.table && spec.table.columns.length === 0) {
     issues.push("Table has no columns");
   }
 
-  // Check form fields
-  if (spec.form.fields.length === 0) {
+  // Check form fields (when present)
+  if (spec.form && spec.form.fields.length === 0) {
     issues.push("Form has no fields");
   }
 

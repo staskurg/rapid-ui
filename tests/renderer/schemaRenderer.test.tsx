@@ -3,6 +3,7 @@ import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { SchemaRenderer } from '@/components/renderer/SchemaRenderer';
 import type { UISpec } from '@/lib/spec/types';
+import type { CrudAdapter } from '@/lib/adapters';
 
 // Mock the child components to focus on SchemaRenderer state logic
 vi.mock('@/components/renderer/DataTable', () => ({
@@ -300,6 +301,49 @@ describe('SchemaRenderer State Management', () => {
       // Note: The mocked FiltersPanel doesn't actually filter, but the callback is called
       await waitFor(() => {
         expect(filterInput).toHaveValue('Alice');
+      });
+    });
+  });
+
+  describe('List-only (capability-driven)', () => {
+    it('renders list-only resource without Create button when capabilities.create is false', async () => {
+      const listOnlyAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: false, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue(initialData),
+      };
+      const listOnlySpec: UISpec = {
+        ...mockSpec,
+        table: { columns: ['id', 'name'] },
+        form: undefined,
+        filters: [],
+      };
+      render(
+        <SchemaRenderer spec={listOnlySpec} adapter={listOnlyAdapter} />
+      );
+      await waitFor(() => {
+        expect(screen.queryByText(/create user/i)).not.toBeInTheDocument();
+      });
+    });
+
+    it('shows "View X records" subtitle when read-only (no create/update/delete)', async () => {
+      const readOnlyAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: false, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue(initialData),
+      };
+      const listOnlySpec: UISpec = {
+        ...mockSpec,
+        table: { columns: ['id', 'name'] },
+        form: undefined,
+      };
+      render(
+        <SchemaRenderer spec={listOnlySpec} adapter={readOnlyAdapter} />
+      );
+      await waitFor(() => {
+        expect(screen.getByText(/view user records/i)).toBeInTheDocument();
       });
     });
   });

@@ -25,7 +25,7 @@ export function buildNestedSchema(
 ): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const rawShape: Record<string, unknown> = {};
 
-  for (const fieldName of spec.form.fields) {
+  for (const fieldName of spec.form?.fields ?? []) {
     const field = spec.fields.find((f) => f.name === fieldName);
     if (!field) continue;
 
@@ -154,7 +154,7 @@ export function setNested(
  */
 export function buildNestedDefaults(spec: UISpec): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
-  for (const fieldName of spec.form.fields) {
+  for (const fieldName of spec.form?.fields ?? []) {
     const field = spec.fields.find((f) => f.name === fieldName);
     if (field && field.type === "boolean" && !field.required) {
       setNested(defaults, fieldName, false);

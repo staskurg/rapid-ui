@@ -5,7 +5,7 @@
  */
 
 import type { Field } from "@/lib/spec/types";
-import type { JsonSchema } from "../apiir/types";
+import type { JsonSchema, ResourceIR } from "../apiir/types";
 
 export type FieldType = "string" | "number" | "boolean" | "enum" | "object";
 
@@ -176,4 +176,32 @@ function pathToLabel(path: string): string {
   if (path === SCHEMA_SHAPE_PLACEHOLDER) return "Data"; // UI label; internal path is $payload
   const last = path.split(".").pop() ?? path;
   return last.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+}
+
+/**
+ * Extract all valid field paths from a ResourceIR (list/detail response + create/update request schemas).
+ * Used by UiPlanIR normalization to validate field.path exists in ApiIR.
+ */
+export function getResourcePathSet(resource: ResourceIR): Set<string> {
+  const result = new Set<string>();
+  const listOp = resource.operations.find((o) => o.kind === "list");
+  const detailOp = resource.operations.find((o) => o.kind === "detail");
+  const createOp = resource.operations.find((o) => o.kind === "create");
+  const updateOp = resource.operations.find((o) => o.kind === "update");
+
+  const schemas: JsonSchema[] = [];
+  if (listOp?.responseSchema) schemas.push(listOp.responseSchema);
+  if (detailOp?.responseSchema) schemas.push(detailOp.responseSchema);
+  if (createOp?.requestSchema) schemas.push(createOp.requestSchema);
+  if (updateOp?.requestSchema) schemas.push(updateOp.requestSchema);
+
+  for (const schema of schemas) {
+    const requiredArr = (schema.required as string[] | undefined) ?? [];
+    const fields = extractSchemaFields(schema, requiredArr);
+    for (const path of fields.keys()) {
+      result.add(path);
+    }
+  }
+
+  return result;
 }

@@ -125,8 +125,8 @@ describe('UISpec Schema Validation', () => {
       expect(() => UISpecSchema.parse(invalidSpec)).toThrow();
     });
 
-    it('should reject spec missing table config', () => {
-      const invalidSpec = {
+    it('should accept spec without table (list-only resource; table optional)', () => {
+      const spec = {
         entity: 'User',
         fields: [
           {
@@ -140,11 +140,11 @@ describe('UISpec Schema Validation', () => {
         filters: [],
       };
 
-      expect(() => UISpecSchema.parse(invalidSpec)).toThrow();
+      expect(() => UISpecSchema.parse(spec)).not.toThrow();
     });
 
-    it('should reject spec missing form config', () => {
-      const invalidSpec = {
+    it('should accept spec without form (list-only resource; form optional)', () => {
+      const spec = {
         entity: 'User',
         fields: [
           {
@@ -158,7 +158,7 @@ describe('UISpec Schema Validation', () => {
         filters: [],
       };
 
-      expect(() => UISpecSchema.parse(invalidSpec)).toThrow();
+      expect(() => UISpecSchema.parse(spec)).not.toThrow();
     });
   });
 

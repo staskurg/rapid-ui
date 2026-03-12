@@ -4,13 +4,15 @@
  */
 import { neon } from "@neondatabase/serverless";
 import type { UISpec } from "@/lib/spec/types";
-import type { ApiIR } from "@/lib/compiler/apiir";
+import type { ApiIR, Capabilities } from "@/lib/compiler/apiir";
+import { deriveCapabilities } from "@/lib/compiler/apiir";
 
 export interface CompilationEntry {
   specs: Record<string, UISpec>;
   resourceNames: string[];
   resourceSlugs: string[];
   apiIr: ApiIR;
+  capabilitiesBySlug: Record<string, Capabilities>;
   openapiCanonicalHash: string;
   accountId?: string;
   name?: string;
@@ -55,11 +57,23 @@ async function withDbErrorHandling<T>(op: string, fn: () => Promise<T>): Promise
 }
 
 function rowToEntry(row: Record<string, unknown>): CompilationEntry {
+  const apiIr = row.api_ir as ApiIR;
+  // TODO(mvp-v3-cleanup): Remove lazy backfill once all phases are done and no pre-Phase-1.1
+  // compilations exist in production. Options: (1) run migration to add capabilities to api_ir,
+  // (2) persist capabilitiesBySlug at write time and drop this derivation. Then remove this block
+  // and the deriveCapabilities import.
+  if (!apiIr.resources?.[0]?.capabilities) {
+    deriveCapabilities(apiIr);
+  }
+  const capabilitiesBySlug: Record<string, Capabilities> = Object.fromEntries(
+    (apiIr.resources ?? []).map((r) => [r.key, r.capabilities!])
+  );
   return {
     specs: (row.specs as Record<string, UISpec>) ?? {},
     resourceNames: (row.resource_names as string[]) ?? [],
     resourceSlugs: (row.resource_slugs as string[]) ?? [],
-    apiIr: row.api_ir as ApiIR,
+    apiIr,
+    capabilitiesBySlug,
     openapiCanonicalHash: (row.openapi_canonical_hash as string) ?? "",
     accountId: row.account_id as string | undefined,
     name: row.name as string | undefined,
@@ -73,7 +87,7 @@ function rowToEntry(row: Record<string, unknown>): CompilationEntry {
 
 export async function putCompilation(
   id: string,
-  entry: Omit<CompilationEntry, "createdAt" | "updatedAt"> &
+  entry: Omit<CompilationEntry, "createdAt" | "updatedAt" | "capabilitiesBySlug"> &
     Partial<Pick<CompilationEntry, "createdAt" | "updatedAt">>
 ): Promise<void> {
   return withDbErrorHandling("putCompilation", async () => {

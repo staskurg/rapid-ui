@@ -11,10 +11,10 @@ import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
 import { canonicalize } from "@/lib/compiler/openapi/canonicalize";
-import { buildApiIR } from "@/lib/compiler/apiir";
+import { buildApiIR, deriveCapabilities } from "@/lib/compiler/apiir";
 import { normalizeUiPlanIR } from "@/lib/compiler/uiplan";
 import { lower } from "@/lib/compiler/lowering/lower";
-import type { ApiIR } from "@/lib/compiler/apiir";
+import type { ApiIR, Capabilities } from "@/lib/compiler/apiir";
 import type { UiPlanIR } from "@/lib/compiler/uiplan";
 import { UISpecSchema } from "@/lib/spec/schema";
 import stringify from "fast-json-stable-stringify";
@@ -33,7 +33,14 @@ function loadApiIr(specPath: string): ApiIR {
   const doc = canonicalize(resolveResult.doc) as Record<string, unknown>;
   const buildResult = buildApiIR(doc);
   if (!buildResult.success) throw new Error(`Build failed: ${buildResult.error.message}`);
+  deriveCapabilities(buildResult.apiIr);
   return buildResult.apiIr;
+}
+
+function capabilitiesBySlug(apiIr: ApiIR): Record<string, Capabilities> {
+  return Object.fromEntries(
+    apiIr.resources.map((r) => [r.key, r.capabilities!])
+  );
 }
 
 /** UiPlanIR with paths matching Users schema (id, email, status, profile.*). */
@@ -141,24 +148,26 @@ function productsUiPlan(apiIr: ApiIR): UiPlanIR {
 describe("lower", () => {
   it("golden Users: UiPlanIR + ApiIR → valid UISpec", () => {
     const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
-    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
-    const result = lower(uiPlan, apiIr);
+    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr), apiIr);
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.specs.users).toBeDefined();
     const spec = result.specs.users;
     expect(spec.entity).toBe("Users");
     expect(spec.fields.length).toBeGreaterThan(0);
-    expect(spec.table.columns.length).toBeGreaterThan(0);
-    expect(spec.form.fields.length).toBeGreaterThan(0);
+    expect(spec.table).toBeDefined();
+    expect(spec.table!.columns.length).toBeGreaterThan(0);
+    expect(spec.form).toBeDefined();
+    expect(spec.form!.fields.length).toBeGreaterThan(0);
     expect(spec.idField).toBe("id");
     UISpecSchema.parse(spec);
   });
 
   it("golden Products: UiPlanIR + ApiIR → valid UISpec", () => {
     const apiIr = loadApiIr("demo/golden_openapi_products_path_3_1.yaml");
-    const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr));
-    const result = lower(uiPlan, apiIr);
+    const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr), apiIr);
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(result.specs.products).toBeDefined();
@@ -170,9 +179,10 @@ describe("lower", () => {
 
   it("same UiPlanIR + ApiIR → byte-identical UISpec (determinism)", () => {
     const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
-    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
-    const r1 = lower(uiPlan, apiIr);
-    const r2 = lower(uiPlan, apiIr);
+    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr), apiIr);
+    const caps = capabilitiesBySlug(apiIr);
+    const r1 = lower(apiIr, uiPlan, caps);
+    const r2 = lower(apiIr, uiPlan, caps);
     expect(r1.success && r2.success).toBe(true);
     if (!r1.success || !r2.success) return;
     expect(stringify(r1.specs)).toBe(stringify(r2.specs));
@@ -180,8 +190,8 @@ describe("lower", () => {
 
   it("snapshot: Users UISpec", () => {
     const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
-    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr));
-    const result = lower(uiPlan, apiIr);
+    const uiPlan = normalizeUiPlanIR(usersUiPlan(apiIr), apiIr);
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(stringify(result.specs)).toMatchSnapshot();
@@ -189,10 +199,155 @@ describe("lower", () => {
 
   it("snapshot: Products UISpec", () => {
     const apiIr = loadApiIr("demo/golden_openapi_products_path_3_1.yaml");
-    const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr));
-    const result = lower(uiPlan, apiIr);
+    const uiPlan = normalizeUiPlanIR(productsUiPlan(apiIr), apiIr);
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(stringify(result.specs)).toMatchSnapshot();
+  });
+
+  it("list-only resource → UISpec has table, no form", () => {
+    const apiIr = loadApiIr("list-only-spec.yaml");
+    const uiPlan = normalizeUiPlanIR(
+      {
+        resources: [
+          {
+            name: "Items",
+            views: {
+              list: {
+                fields: [
+                  { path: "id", label: "ID", order: 0 },
+                  { path: "name", label: "Name", order: 1 },
+                ],
+              },
+              detail: { fields: [] },
+              create: { fields: [] },
+              edit: { fields: [] },
+            },
+          },
+        ],
+      },
+      apiIr
+    );
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const spec = result.specs.items;
+    expect(spec).toBeDefined();
+    expect(spec.table).toBeDefined();
+    expect(spec.table!.columns.length).toBeGreaterThan(0);
+    expect(spec.form).toBeUndefined();
+    expect(spec.detail).toBeUndefined();
+  });
+
+  it("create-only resource → UISpec has form, no table", () => {
+    const apiIr = loadApiIr("create-only-spec.yaml");
+    const uiPlan = normalizeUiPlanIR(
+      {
+        resources: [
+          {
+            name: "Items",
+            views: {
+              list: { fields: [] },
+              detail: { fields: [] },
+              create: {
+                fields: [
+                  { path: "name", label: "Name", order: 0 },
+                  { path: "status", label: "Status", order: 1 },
+                ],
+              },
+              edit: { fields: [] },
+            },
+          },
+        ],
+      },
+      apiIr
+    );
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const spec = result.specs.items;
+    expect(spec).toBeDefined();
+    expect(spec.form).toBeDefined();
+    expect(spec.form!.fields.length).toBeGreaterThan(0);
+    expect(spec.table).toBeUndefined();
+    expect(spec.detail).toBeUndefined();
+  });
+
+  it("detail-only resource → UISpec has detail, no table or form", () => {
+    const apiIr = loadApiIr("detail-only-spec.yaml");
+    const uiPlan = normalizeUiPlanIR(
+      {
+        resources: [
+          {
+            name: "Items",
+            views: {
+              list: { fields: [] },
+              detail: {
+                fields: [
+                  { path: "id" },
+                  { path: "name" },
+                  { path: "status" },
+                ],
+              },
+              create: { fields: [] },
+              edit: { fields: [] },
+            },
+          },
+        ],
+      },
+      apiIr
+    );
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const spec = result.specs.items;
+    expect(spec).toBeDefined();
+    expect(spec.detail).toBeDefined();
+    expect(spec.detail!.fields.length).toBeGreaterThan(0);
+    expect(spec.table).toBeUndefined();
+    expect(spec.form).toBeUndefined();
+  });
+
+  it("list + detail only (read-only) → UISpec has table and detail, no form", () => {
+    const apiIr = loadApiIr("list-detail-only-spec.yaml");
+    const uiPlan = normalizeUiPlanIR(
+      {
+        resources: [
+          {
+            name: "Items",
+            views: {
+              list: {
+                fields: [
+                  { path: "id", label: "ID", order: 0 },
+                  { path: "name", label: "Name", order: 1 },
+                  { path: "status", label: "Status", order: 2 },
+                ],
+              },
+              detail: {
+                fields: [
+                  { path: "id" },
+                  { path: "name" },
+                  { path: "status" },
+                ],
+              },
+              create: { fields: [] },
+              edit: { fields: [] },
+            },
+          },
+        ],
+      },
+      apiIr
+    );
+    const result = lower(apiIr, uiPlan, capabilitiesBySlug(apiIr));
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const spec = result.specs.items;
+    expect(spec).toBeDefined();
+    expect(spec.table).toBeDefined();
+    expect(spec.table!.columns.length).toBeGreaterThan(0);
+    expect(spec.detail).toBeDefined();
+    expect(spec.detail!.fields.length).toBeGreaterThan(0);
+    expect(spec.form).toBeUndefined();
   });
 });

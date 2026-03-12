@@ -12,6 +12,7 @@ import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
 import { canonicalize } from "@/lib/compiler/openapi/canonicalize";
 import { buildApiIR } from "@/lib/compiler/apiir";
+import { getResourcePathSet } from "@/lib/compiler/lowering/schema-to-field";
 import { llmPlan, normalizeUiPlanIR } from "@/lib/compiler/uiplan";
 import type { ApiIR, ResourceIR } from "@/lib/compiler/apiir";
 import type { UiPlanIR, ResourcePlan } from "@/lib/compiler/uiplan";
@@ -34,15 +35,18 @@ function loadApiIr(specPath: string): ApiIR {
   return buildResult.apiIr;
 }
 
-/** Deterministic mock: maps ApiIR to minimal valid UiPlanIR. */
+/** Deterministic mock: maps ApiIR to minimal valid UiPlanIR using paths from schema. */
 function mockLlmPlan(apiIr: ApiIR): UiPlanIR {
   const resources: ResourcePlan[] = apiIr.resources.map((r: ResourceIR) => {
+    const paths = [...getResourcePathSet(r)].filter((p) => !p.startsWith("$")).sort();
+    const first = paths[0];
+    const second = paths[1];
     const ops = r.operations.map((o) => o.kind);
     const views: ResourcePlan["views"] = {};
-    if (ops.includes("list")) views.list = { fields: [{ path: "id" }, { path: "name" }] };
-    if (ops.includes("detail")) views.detail = { fields: [{ path: "id" }, { path: "name" }] };
-    if (ops.includes("create")) views.create = { fields: [{ path: "name" }] };
-    if (ops.includes("update")) views.edit = { fields: [{ path: "name" }] };
+    if (ops.includes("list") && first) views.list = { fields: [{ path: first }, ...(second ? [{ path: second }] : [])] };
+    if (ops.includes("detail") && first) views.detail = { fields: [{ path: first }, ...(second ? [{ path: second }] : [])] };
+    if (ops.includes("create") && first) views.create = { fields: [{ path: first }] };
+    if (ops.includes("update") && first) views.edit = { fields: [{ path: first }] };
     return { name: r.name, views };
   });
   return { resources };
@@ -96,6 +100,62 @@ describe("UiPlanIR schema and normalizer", () => {
     expect(out.resources[0].views.list?.fields.map((f) => f.path)).toEqual(["id", "name"]);
   });
 
+  it("normalizer throws UIPLAN_INVENTED_FIELD_PATH when field.path does not exist in ApiIR", () => {
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
+    const input: UiPlanIR = {
+      resources: [
+        {
+          name: "Users",
+          views: {
+            list: {
+              fields: [
+                { path: "id" },
+                { path: "inventedField" }, // does not exist in Users schema
+              ],
+            },
+          },
+        },
+      ],
+    };
+    expect(() => normalizeUiPlanIR(input, apiIr)).toThrow();
+    try {
+      normalizeUiPlanIR(input, apiIr);
+    } catch (err) {
+      expect(err).toMatchObject({
+        code: "UIPLAN_INVENTED_FIELD_PATH",
+        stage: "UiPlan",
+        message: expect.stringContaining("inventedField"),
+      });
+    }
+  });
+
+  it("normalizer accepts valid paths when apiIr is passed", () => {
+    const apiIr = loadApiIr("demo/golden_openapi_users_tagged_3_0.yaml");
+    const input: UiPlanIR = {
+      resources: [
+        {
+          name: "Users",
+          views: {
+            list: {
+              fields: [
+                { path: "id", label: "ID", order: 0 },
+                { path: "email", label: "Email", order: 1 },
+                { path: "profile.firstName", label: "First Name", order: 2 },
+              ],
+            },
+          },
+        },
+      ],
+    };
+    const out = normalizeUiPlanIR(input, apiIr);
+    expect(out.resources[0].views.list?.fields).toHaveLength(3);
+    expect(out.resources[0].views.list?.fields.map((f) => f.path)).toEqual([
+      "id",
+      "email",
+      "profile.firstName",
+    ]);
+  });
+
   it("normalizer strips undefined, preserves false and 0", () => {
     const input: UiPlanIR = {
       resources: [
@@ -115,6 +175,31 @@ describe("UiPlanIR schema and normalizer", () => {
     const f = out.resources[0].views.list?.fields[0];
     expect(f?.readOnly).toBe(false);
     expect(f?.order).toBe(0);
+  });
+
+  it("normalizer field ordering is stable: (order ?? 0) then path", () => {
+    const input: UiPlanIR = {
+      resources: [
+        {
+          name: "R",
+          views: {
+            list: {
+              fields: [
+                { path: "c", order: 2 },
+                { path: "a" }, // no order → 0
+                { path: "b", order: 1 },
+              ],
+            },
+          },
+        },
+      ],
+    };
+    const out = normalizeUiPlanIR(input);
+    expect(out.resources[0].views.list?.fields.map((f) => f.path)).toEqual([
+      "a",
+      "b",
+      "c",
+    ]);
   });
 });
 

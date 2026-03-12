@@ -64,9 +64,22 @@ export async function llmPlan(
   // Optional mock for tests (CI without API key)
   if (options?.llmPlanFn) {
     const uiPlan = options.llmPlanFn(apiIr);
-    const normalized = normalizeUiPlanIR(uiPlan);
-    const uiPlanHash = sha256Hash(normalized);
-    return { success: true, uiPlan: normalized, uiPlanHash };
+    try {
+      const normalized = normalizeUiPlanIR(uiPlan, apiIr);
+      const uiPlanHash = sha256Hash(normalized);
+      return { success: true, uiPlan: normalized, uiPlanHash };
+    } catch (err) {
+      if (
+        err &&
+        typeof err === "object" &&
+        "code" in err &&
+        "stage" in err &&
+        "message" in err
+      ) {
+        return { success: false, error: err as CompilerError };
+      }
+      throw err;
+    }
   }
 
   if (!process.env.OPENAI_API_KEY) {
@@ -158,7 +171,30 @@ export async function llmPlan(
 
       const parseResult = UiPlanIRSchema.safeParse(parsed);
       if (parseResult.success) {
-        const normalized = normalizeUiPlanIR(parseResult.data);
+        let normalized: UiPlanIR;
+        try {
+          normalized = normalizeUiPlanIR(parseResult.data, apiIr);
+        } catch (err) {
+          if (
+            err &&
+            typeof err === "object" &&
+            "code" in err &&
+            "stage" in err &&
+            "message" in err
+          ) {
+            recordOpenAICall({
+              timestamp: new Date().toISOString(),
+              model: MODEL,
+              duration_ms: Date.now() - start,
+              prompt_tokens: promptTokens,
+              completion_tokens: completionTokens,
+              source,
+              status: "error",
+            });
+            return { success: false, error: err as CompilerError };
+          }
+          throw err;
+        }
         const uiPlanHash = sha256Hash(normalized);
 
         recordOpenAICall({
