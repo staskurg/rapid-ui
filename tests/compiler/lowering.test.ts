@@ -207,7 +207,7 @@ describe("lower", () => {
   });
 
   it("list-only resource → UISpec has table, no form", () => {
-    const apiIr = loadApiIr("list-only-spec.yaml");
+    const apiIr = loadApiIr("capability-specs/list-only-spec.yaml");
     const uiPlan = normalizeUiPlanIR(
       {
         resources: [
@@ -241,7 +241,7 @@ describe("lower", () => {
   });
 
   it("create-only resource → UISpec has form, no table", () => {
-    const apiIr = loadApiIr("create-only-spec.yaml");
+    const apiIr = loadApiIr("capability-specs/create-only-spec.yaml");
     const uiPlan = normalizeUiPlanIR(
       {
         resources: [
@@ -275,7 +275,7 @@ describe("lower", () => {
   });
 
   it("detail-only resource → UISpec has detail, no table or form", () => {
-    const apiIr = loadApiIr("detail-only-spec.yaml");
+    const apiIr = loadApiIr("capability-specs/detail-only-spec.yaml");
     const uiPlan = normalizeUiPlanIR(
       {
         resources: [
@@ -310,7 +310,7 @@ describe("lower", () => {
   });
 
   it("list + detail only (read-only) → UISpec has table and detail, no form", () => {
-    const apiIr = loadApiIr("list-detail-only-spec.yaml");
+    const apiIr = loadApiIr("capability-specs/list-detail-only-spec.yaml");
     const uiPlan = normalizeUiPlanIR(
       {
         resources: [

@@ -1,0 +1,90 @@
+{
+  "api": {
+    "title": "List Create API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Items",
+      "key": "items",
+      "operations": [
+        {
+          "id": "listItems",
+          "method": "GET",
+          "kind": "list",
+          "path": "/items",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ]
+            }
+          }
+        },
+        {
+          "id": "createItem",
+          "method": "POST",
+          "kind": "create",
+          "path": "/items",
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "active"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          }
+        }
+      ],
+      "capabilities": {
+        "list": true,
+        "detail": false,
+        "create": true,
+        "update": false,
+        "delete": false
+      }
+    }
+  ]
+}

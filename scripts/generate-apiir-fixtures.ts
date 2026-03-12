@@ -3,9 +3,12 @@
  * Generate ApiIR JSON fixtures from OpenAPI YAML fixtures.
  * Reads from:
  *   - tests/compiler/fixtures/demo/*.yaml
+ *   - tests/compiler/fixtures/capability-specs/*.yaml
  *   - tests/compiler/fixtures/valid-specs-api-guru/*.yaml
  *   - tests/compiler/fixtures/valid-specs-github/*.yaml
- * Writes to tests/compiler/fixtures/apiir/demo/*.json, apiir/valid-specs-api-guru/*.json, apiir/valid-specs-github/*.json
+ * Writes to tests/compiler/fixtures/apiir/{subdir}/*.json
+ *
+ * Calls deriveCapabilities(apiIr) so fixtures match pipeline output (include capabilities).
  *
  * Run after parse/validate/build changes. Commit updated ApiIR files.
  *
@@ -17,7 +20,7 @@ import { join } from "path";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR } from "@/lib/compiler/apiir";
+import { buildApiIR, deriveCapabilities } from "@/lib/compiler/apiir";
 
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const APIIR_DIR = join(FIXTURES_DIR, "apiir");
@@ -77,6 +80,8 @@ function processSource(source: Source): number {
       continue;
     }
 
+    deriveCapabilities(buildResult.apiIr);
+
     writeFileSync(
       outputPath,
       JSON.stringify(buildResult.apiIr, null, 2)
@@ -100,6 +105,7 @@ function main() {
 
   const sources: Source[] = [
     { inputDir: DEMO_DIR, outputSubdir: "demo" },
+    { inputDir: join(FIXTURES_DIR, "capability-specs"), outputSubdir: "capability-specs" },
     { inputDir: join(FIXTURES_DIR, "valid-specs-api-guru"), outputSubdir: "valid-specs-api-guru" },
     { inputDir: join(FIXTURES_DIR, "valid-specs-github"), outputSubdir: "valid-specs-github" },
   ];
