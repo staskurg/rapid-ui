@@ -54,8 +54,8 @@ export function computeSpecDiff(prev: UISpec, next: UISpec): SpecDiff {
     }
   }
 
-  const prevTableCols = new Set(prev.table.columns);
-  const nextTableCols = new Set(next.table.columns);
+  const prevTableCols = new Set(prev.table?.columns ?? []);
+  const nextTableCols = new Set(next.table?.columns ?? []);
   const tableColumnsAdded = [...nextTableCols].filter(
     (c) => !prevTableCols.has(c)
   );
@@ -63,8 +63,8 @@ export function computeSpecDiff(prev: UISpec, next: UISpec): SpecDiff {
     (c) => !nextTableCols.has(c)
   );
 
-  const prevFormFields = new Set(prev.form.fields);
-  const nextFormFields = new Set(next.form.fields);
+  const prevFormFields = new Set(prev.form?.fields ?? []);
+  const nextFormFields = new Set(next.form?.fields ?? []);
   const formFieldsAdded = [...nextFormFields].filter(
     (f) => !prevFormFields.has(f)
   );
@@ -72,8 +72,8 @@ export function computeSpecDiff(prev: UISpec, next: UISpec): SpecDiff {
     (f) => !nextFormFields.has(f)
   );
 
-  const prevFilters = new Set(prev.filters);
-  const nextFilters = new Set(next.filters);
+  const prevFilters = new Set(prev.filters ?? []);
+  const nextFilters = new Set(next.filters ?? []);
   const filtersAdded = [...nextFilters].filter((f) => !prevFilters.has(f));
   const filtersRemoved = [...prevFilters].filter((f) => !nextFilters.has(f));
 
