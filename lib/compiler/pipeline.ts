@@ -8,7 +8,7 @@ import { validateSubset } from "./openapi/subset-validator";
 import { resolveRefs } from "./openapi/ref-resolver";
 import { canonicalize, canonicalStringify } from "./openapi/canonicalize";
 import { sha256Hash } from "./hash";
-import { buildApiIR, deriveCapabilities } from "./apiir";
+import { buildApiIR, deriveCapabilities, deriveIdentityFields } from "./apiir";
 import type { ApiIR, Capabilities } from "./apiir";
 import { llmPlan } from "./uiplan/llm-plan";
 import type { UiPlanIR } from "./uiplan/uiplan.schema";
@@ -82,6 +82,10 @@ export async function compileOpenAPI(
   }
 
   deriveCapabilities(buildResult.apiIr);
+  const identityResult = deriveIdentityFields(buildResult.apiIr);
+  if (!identityResult.success) {
+    return { success: false, errors: [identityResult.error] };
+  }
   const capabilitiesBySlug: Record<string, Capabilities> = Object.fromEntries(
     buildResult.apiIr.resources.map((r) => [r.key, r.capabilities!])
   );

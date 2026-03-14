@@ -30,6 +30,8 @@ export interface ResourceIR {
   operations: OperationIR[];
   /** Derived from operations; set by deriveCapabilities(). */
   capabilities?: Capabilities;
+  /** Path param names for detail/update/delete; set by deriveIdentityFields(). MVP: length 0 or 1. */
+  identityFields?: string[];
 }
 
 export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";

@@ -20,7 +20,7 @@ import { join } from "path";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR, deriveCapabilities } from "@/lib/compiler/apiir";
+import { buildApiIR, deriveCapabilities, deriveIdentityFields } from "@/lib/compiler/apiir";
 
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const APIIR_DIR = join(FIXTURES_DIR, "apiir");
@@ -81,6 +81,11 @@ function processSource(source: Source): number {
     }
 
     deriveCapabilities(buildResult.apiIr);
+    const identityResult = deriveIdentityFields(buildResult.apiIr);
+    if (!identityResult.success) {
+      console.error(`[${file}] Identity derivation failed: ${identityResult.error.message}`);
+      continue;
+    }
 
     writeFileSync(
       outputPath,

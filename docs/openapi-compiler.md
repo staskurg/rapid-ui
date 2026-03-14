@@ -96,6 +96,17 @@ Errors include `code`, `stage`, `message`, and optional `jsonPointer`.
 | ---- | ------- |
 | `UISPEC_INVALID` | Lowering produced invalid UISpec |
 
+## ApiIR Fixtures
+
+ApiIR JSON fixtures live in `tests/compiler/fixtures/apiir/` and are generated from OpenAPI YAML fixtures.
+
+| Script | Purpose |
+| ------ | ------- |
+| `npm run fixtures:generate-apiir` | Regenerate ApiIR JSON from YAML (parse → build → deriveCapabilities → deriveIdentityFields). Run after changing OpenAPI fixtures or derivation logic. |
+| `npm run fixtures:verify-apiir` | Verify that JSON fixtures match what the pipeline would produce. Catches stale fixtures or JSON round-trip bugs. Run after changing derivation logic. |
+
+If `fixtures:verify-apiir` reports mismatches, run `fixtures:generate-apiir` and commit the updated JSON.
+
 ## Demo Specs
 
 Built-in OpenAPI files for quick testing:

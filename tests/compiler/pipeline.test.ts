@@ -57,6 +57,8 @@ describe("compileOpenAPI full pipeline", () => {
     expect(result.resourceNames).toContain("Users");
     expect(result.resourceSlugs).toContain("users");
     expect(stringify(result.specs)).toMatchSnapshot();
+    const users = result.apiIr.resources.find((r) => r.name === "Users");
+    expect(users?.identityFields).toEqual(["userId"]);
   });
 
   it("golden Products spec → full compile → UISpec snapshot", async () => {
@@ -71,6 +73,8 @@ describe("compileOpenAPI full pipeline", () => {
     expect(result.resourceNames).toContain("Products");
     expect(result.resourceSlugs).toContain("products");
     expect(stringify(result.specs)).toMatchSnapshot();
+    const products = result.apiIr.resources.find((r) => r.name === "Products");
+    expect(products?.identityFields).toEqual(["sku"]);
   });
 
   it("same OpenAPI → same UISpec (determinism)", async () => {
@@ -120,5 +124,39 @@ describe("compileOpenAPI full pipeline", () => {
     expect(result.resourceNames).toContain("Tasks");
     expect(result.resourceSlugs).toContain("users");
     expect(result.resourceSlugs).toContain("tasks");
+  });
+
+  it("identityFieldsBySlug derivation from apiIr matches rowToEntry logic", async () => {
+    const yaml = readFileSync(
+      join(FIXTURES, "demo", "demo_users_tasks_v3.yaml"),
+      "utf-8"
+    );
+    const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const apiIr = result.apiIr;
+    // Same derivation as lib/db/compilations.ts rowToEntry
+    const identityFieldsBySlug: Record<string, string[]> = Object.fromEntries(
+      (apiIr.resources ?? []).map((r) => [r.key, r.identityFields ?? []])
+    );
+    expect(identityFieldsBySlug.users).toEqual(["userId"]);
+    expect(identityFieldsBySlug.tasks).toEqual(["taskId"]);
+    expect(Object.keys(identityFieldsBySlug)).toEqual(
+      expect.arrayContaining(["users", "tasks"])
+    );
+  });
+
+  it("create-only resource → identityFieldsBySlug[slug] = []", async () => {
+    const yaml = readFileSync(
+      join(FIXTURES, "capability-specs", "create-only-spec.yaml"),
+      "utf-8"
+    );
+    const result = await compileOpenAPI(yaml, { llmPlanFn: mockLlmPlan });
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const identityFieldsBySlug: Record<string, string[]> = Object.fromEntries(
+      (result.apiIr.resources ?? []).map((r) => [r.key, r.identityFields ?? []])
+    );
+    expect(identityFieldsBySlug.items).toEqual([]);
   });
 });

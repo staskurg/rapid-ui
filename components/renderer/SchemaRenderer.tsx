@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import type { UISpec } from "@/lib/spec/types";
 import type { CrudAdapter } from "@/lib/adapters";
+import type { Capabilities } from "@/lib/compiler/apiir";
 import { getCellValue } from "@/lib/utils/getCellValue";
 import { Plus, Loader2 } from "lucide-react";
 
@@ -23,11 +24,22 @@ interface SchemaRendererProps {
   spec: UISpec;
   initialData?: Record<string, unknown>[];
   adapter?: CrudAdapter;
+  /** Full capabilities from ApiIR; used for capability-driven layout. */
+  capabilities?: Capabilities;
+  /** Path param names for identity lookup; used for IdentityLayout. */
+  identityFields?: string[];
   /** When changed, triggers a refetch (e.g. after reset). */
   refreshTrigger?: number;
 }
 
-export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger }: SchemaRendererProps) {
+export function SchemaRenderer({
+  spec,
+  initialData = [],
+  adapter,
+  capabilities: _capabilities,
+  identityFields: _identityFields = [],
+  refreshTrigger,
+}: SchemaRendererProps) {
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
   const [editRecord, setEditRecord] = React.useState<Record<string, unknown> | null>(null);

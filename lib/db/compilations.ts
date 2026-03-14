@@ -13,6 +13,7 @@ export interface CompilationEntry {
   resourceSlugs: string[];
   apiIr: ApiIR;
   capabilitiesBySlug: Record<string, Capabilities>;
+  identityFieldsBySlug: Record<string, string[]>;
   openapiCanonicalHash: string;
   accountId?: string;
   name?: string;
@@ -68,12 +69,16 @@ function rowToEntry(row: Record<string, unknown>): CompilationEntry {
   const capabilitiesBySlug: Record<string, Capabilities> = Object.fromEntries(
     (apiIr.resources ?? []).map((r) => [r.key, r.capabilities!])
   );
+  const identityFieldsBySlug: Record<string, string[]> = Object.fromEntries(
+    (apiIr.resources ?? []).map((r) => [r.key, r.identityFields ?? []])
+  );
   return {
     specs: (row.specs as Record<string, UISpec>) ?? {},
     resourceNames: (row.resource_names as string[]) ?? [],
     resourceSlugs: (row.resource_slugs as string[]) ?? [],
     apiIr,
     capabilitiesBySlug,
+    identityFieldsBySlug,
     openapiCanonicalHash: (row.openapi_canonical_hash as string) ?? "",
     accountId: row.account_id as string | undefined,
     name: row.name as string | undefined,
@@ -87,7 +92,10 @@ function rowToEntry(row: Record<string, unknown>): CompilationEntry {
 
 export async function putCompilation(
   id: string,
-  entry: Omit<CompilationEntry, "createdAt" | "updatedAt" | "capabilitiesBySlug"> &
+  entry: Omit<
+    CompilationEntry,
+    "createdAt" | "updatedAt" | "capabilitiesBySlug" | "identityFieldsBySlug"
+  > &
     Partial<Pick<CompilationEntry, "createdAt" | "updatedAt">>
 ): Promise<void> {
   return withDbErrorHandling("putCompilation", async () => {

@@ -1,0 +1,63 @@
+# INVALID — resource has detail with {userId} and update with {id}; different identity param names.
+# Tests deriveIdentityFields rejection when ops use different path param names (userId vs id).
+# Note: This is NOT nested multi-param (e.g. /orgs/{orgId}/users/{userId}) — that fails earlier
+# at buildApiIR. Here we have two single-param paths grouped as one resource; ambiguous identity.
+# Should fail at ApiIR stage with IR_INVALID (Multi-param path not supported for MVP).
+openapi: 3.0.3
+info:
+  title: Multi-Param Identity Test
+  version: 1.0.0
+paths:
+  /items/{userId}:
+    get:
+      operationId: getItemByUserId
+      summary: Get by userId
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  userId:
+                    type: string
+                required: [id, userId]
+  /items/{id}:
+    patch:
+      operationId: updateItemById
+      summary: Update by id
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                required: [id, name]

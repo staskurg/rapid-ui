@@ -17,6 +17,9 @@ todos:
   - id: phase1-comparator-renderer
     content: Comparator tolerate missing sections; renderer capability wiring
     status: completed
+  - id: phase1-identity-renderer
+    content: Identity fields in ApiIR; capability-driven renderer (TableLayout, IdentityLayout, FormLayout)
+    status: pending
   - id: phase1-eval-path
     content: compileToApiIR; eval golden-specs path; generate:apiir-fixtures
     status: pending
@@ -52,22 +55,22 @@ isProject: false
 ## Current State vs Blueprint
 
 
-| Blueprint Stage           | Current State                                                                  | Gap                                                                                                         |
-| ------------------------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| Raw input layer           | None — compile receives string directly                                        | Add UTF-8/LF normalization, raw spec hash, persist hash (Phase 1)                                           |
-| Parse                     | Exists in [lib/compiler/openapi/parser.ts](lib/compiler/openapi/parser.ts)     | Reject unsupported versions (2.x, 1.x, missing, malformed) before any compiler work; stable error code      |
-| Subset validation         | Exists; generic error codes                                                    | Add stable codes: `OAS_UNSUPPORTED_ONEOF`; use existing `OAS_INVALID_RESPONSE_STRUCTURE` for primitive root |
-| Reference resolution      | Exists; rejects external refs                                                  | Already has `OAS_EXTERNAL_REF`                                                                              |
-| Canonicalization          | Exists                                                                         | Minor: canonical hash output                                                                                |
-| ApiIR                     | Exists                                                                         | Array-root/wrapped-list normalization                                                                       |
-| **Capability derivation** | **Missing** — mock-adapter hardcodes all true                                  | **New stage**: derive from operations, **embed in ApiIR** (`apiIr.resources[].capabilities`)                |
-| LLM phase                 | Exists                                                                         | Update prompt: renderer constraints, nested paths, JSON fallback                                            |
-| UiPlanIR normalize        | Exists in [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts) | Validate `field.path` exists in ApiIR; reject invented fields                                               |
-| Lowering                  | Exists                                                                         | UISpec optional sections (`table?`, `form?`, `detail?`, `filters?`); capability-driven modes                |
-| Renderer                  | Exists; adapter has capabilities                                               | Renderer receives UISpec + capabilities only (never ApiIR); derive mode from capabilities at render time    |
-| Evals                     | `eval:ai`, `eval:llm` with similarity                                          | Hash-based pass/fail; 20 runs; Layer 1–3 report structure                                                   |
-| Snapshots                 | Golden plan: ApiIR only                                                        | Add UISpec snapshots after determinism                                                                      |
-| Invalid spec regression   | 1 test, 1 spec                                                                 | Dedicated specs per error type; stable error codes                                                          |
+| Blueprint Stage           | Current State                                                                  | Gap                                                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Raw input layer           | None — compile receives string directly                                        | Add UTF-8/LF normalization, raw spec hash, persist hash (Phase 1)                                                                                   |
+| Parse                     | Exists in [lib/compiler/openapi/parser.ts](lib/compiler/openapi/parser.ts)     | Reject unsupported versions (2.x, 1.x, missing, malformed) before any compiler work; stable error code                                              |
+| Subset validation         | Exists; generic error codes                                                    | Add stable codes: `OAS_UNSUPPORTED_ONEOF`; use existing `OAS_INVALID_RESPONSE_STRUCTURE` for primitive root                                         |
+| Reference resolution      | Exists; rejects external refs                                                  | Already has `OAS_EXTERNAL_REF`                                                                                                                      |
+| Canonicalization          | Exists                                                                         | Minor: canonical hash output                                                                                                                        |
+| ApiIR                     | Exists                                                                         | Array-root/wrapped-list normalization; add `identityFields` to ResourceIR (Phase 1.4.5)                                                             |
+| **Capability derivation** | **Missing** — mock-adapter hardcodes all true                                  | **New stage**: derive from operations, **embed in ApiIR** (`apiIr.resources[].capabilities`)                                                        |
+| LLM phase                 | Exists                                                                         | Update prompt: renderer constraints, nested paths, JSON fallback                                                                                    |
+| UiPlanIR normalize        | Exists in [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts) | Validate `field.path` exists in ApiIR; reject invented fields                                                                                       |
+| Lowering                  | Exists                                                                         | UISpec optional sections (`table?`, `form?`, `detail?`, `filters?`); capability-driven modes                                                        |
+| Renderer                  | Exists; adapter has capabilities                                               | Renderer receives UISpec + capabilities + identityFields; capability-driven layouts (TableLayout, IdentityLayout, FormLayout); never inspects ApiIR |
+| Evals                     | `eval:ai`, `eval:llm` with similarity                                          | Hash-based pass/fail; 20 runs; Layer 1–3 report structure                                                                                           |
+| Snapshots                 | Golden plan: ApiIR only                                                        | Add UISpec snapshots after determinism                                                                                                              |
+| Invalid spec regression   | 1 test, 1 spec                                                                 | Dedicated specs per error type; stable error codes                                                                                                  |
 
 
 ---
@@ -86,6 +89,7 @@ flowchart TB
         P1B[UISpec optional sections]
         P1C[UiPlanIR normalization]
         P1D[Comparator + Renderer wiring]
+        P1D5[Identity fields + Capability-driven renderer]
         P1E[Raw input layer]
         P1F[Prompt updates]
         P1G[Eval golden-specs path]
@@ -212,6 +216,23 @@ flowchart TB
 
 **Checkpoint 1.4:** `extractFingerprint(spec)` with missing `table`/`form` does not throw. Renderer renders a list-only resource without form. `npm test` passes; manual smoke test in dev app.
 
+### 1.4.5 Identity Fields + Capability-Driven Renderer
+
+**Reference:** Full implementation plan at [.cursor/plans/identity_fields_and_capability-driven_renderer_7e022f14.plan.md](.cursor/plans/identity_fields_and_capability-driven_renderer_7e022f14.plan.md)
+
+**Goal:** Introduce resource identity fields in ApiIR and refactor the renderer to use capability-driven layout rules. Enables entity-only, mutation-only, and future multi-param APIs. Must complete **before** LLM prompt updates (1.5c) so the renderer correctly interprets all 12 capability scenarios.
+
+**Summary of changes:**
+
+- **ApiIR:** Add `identityFields: string[]` to ResourceIR; derive from path params (detail/update/delete ops). MVP: `identityFields.length === 1`; no invented `["id"]` fallback.
+- **Runtime:** Pass `capabilities` and `identityFields` from page/CompiledUIContent to SchemaRenderer.
+- **Renderer:** Three-layer architecture — `resolveNavigation(capabilities)` → switch to TableLayout | IdentityLayout | FormLayout. Add IdentityLookup, DetailView. Assert `mode === "identity" && identityFields.length === 0` → throw (guardrail).
+- **Layouts:** TableLayout (Filters + DataTable + DetailPanel), IdentityLayout (IdentityLookup + DetailView/EditForm), FormLayout (Form + CreateButton for create-only).
+
+**Does not change:** Lowering, evals, snapshots, LLM prompt.
+
+**Checkpoint 1.4.5:** All 12 capability scenarios produce correct UI per scenario table in identity plan. create-only shows form only (no table); detail-only shows IdentityLookup → DetailView; list-detail shows row click → DetailView.
+
 ### 1.5 Capability Specs Setup + Eval Validation (Before Prompt Updates)
 
 Before updating the LLM prompt, validate that the pipeline and evals work correctly across the capability matrix. **Minimal set** — focus on capability coverage; more evals on golden specs later. Use standard eval report output (no separate findings doc).
@@ -236,7 +257,7 @@ Before updating the LLM prompt, validate that the pipeline and evals work correc
   - `create-update-spec.yaml` — POST + PATCH /{id} (form only, both create and update)
   - `detail-update-spec.yaml` — GET /{id} + PATCH (detail + form, no list)
 - **Do NOT create** `list-create-update-spec.yaml` — we do not support edit without GET for individual item (simplify: require list, detail, create, update when update is present).
-- **Update** [scripts/generate-apiir-fixtures.ts](scripts/generate-apiir-fixtures.ts): add capability-specs source; **call `deriveCapabilities(apiIr)`** before writing so fixtures match pipeline output (ApiIR must include capabilities).
+- **Update** [scripts/generate-apiir-fixtures.ts](scripts/generate-apiir-fixtures.ts): add capability-specs source; **call `deriveCapabilities(apiIr)`** and **derive identityFields** before writing so fixtures match pipeline output (ApiIR must include capabilities and identityFields).
 - **Update** [tests/compiler/lowering.test.ts](tests/compiler/lowering.test.ts): change `loadApiIr` paths to `capability-specs/list-only-spec.yaml`, etc.
 - **Run** `npm run fixtures:generate-apiir` — produces `tests/compiler/fixtures/apiir/capability-specs/*.json`
 
@@ -263,7 +284,12 @@ Before updating the LLM prompt, validate that the pipeline and evals work correc
 - **Run** `npm run eval:ai -- --dir capability-specs --runs 5` — validate full pipeline produces valid UISpecs; sections match capabilities per table above
 - **Use standard eval reports** — no separate findings doc; eval output goes to `eval/reports/` as usual.
 
-**Checkpoint 1.5b:** Evals complete without crashes for all capability specs. Fix any capability/lowering/renderer issues before prompt work.
+**Capability validation (built into evals):**
+
+- **Option A — UISpec section validation (eval:ai):** After each successful compile, assert UISpec sections match capabilities. `list` → `spec.table` must exist; `detail` → `spec.detail`; `create|update` → `spec.form`. Absent capabilities → corresponding sections must be absent. Implemented in [eval/utils/capability-validation.ts](eval/utils/capability-validation.ts); wired into eval:ai.
+- **Option B — UiPlanIR capability validation (eval:llm):** After each llmPlan run, assert the LLM did not output non-empty fields for views without capability. E.g. list-only → `detail`, `create`, `edit` views must be empty. Catches prompt drift. Implemented in capability-validation.ts; wired into eval:llm. Violations reported as `capabilityViolations` in report.
+
+**Checkpoint 1.5b:** Evals complete without crashes for all capability specs. Option A and B pass (no section mismatches, no capability violations). Fix any capability/lowering/renderer/prompt issues before prompt work.
 
 ### 1.5c Prompt Updates
 
@@ -461,6 +487,7 @@ Golden OpenAPI specs must generate ApiIR fixtures used by `eval:llm`.
 
 - **UiPlanIR Normalization** → Phase 1.3 (invented paths, field ordering)
 - **Renderer Capability Wiring** → Phase 1.4 (adapter capabilities, SchemaRenderer missing sections)
+- **Identity Fields + Capability-Driven Renderer** → Phase 1.4.5; full plan at [identity_fields_and_capability-driven_renderer_7e022f14.plan.md](.cursor/plans/identity_fields_and_capability-driven_renderer_7e022f14.plan.md)
 
 ---
 
@@ -471,7 +498,8 @@ Golden OpenAPI specs must generate ApiIR fixtures used by `eval:llm`.
 | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `lib/compiler/input/normalize.ts` (or in pipeline) | Create/Update — UTF-8/LF normalization, raw hash                                                                                                                                                                                               |
 | `lib/compiler/apiir/capabilities.ts`               | Create — derive capabilities; embed in ResourceIR                                                                                                                                                                                              |
-| `lib/compiler/apiir/types.ts`                      | Update — add `capabilities` to ResourceIR                                                                                                                                                                                                      |
+| `lib/compiler/apiir/build.ts` or `identity.ts`     | Update — derive identityFields from operations; enforce length 1 for MVP                                                                                                                                                                       |
+| `lib/compiler/apiir/types.ts`                      | Update — add `capabilities`, `identityFields` to ResourceIR                                                                                                                                                                                    |
 | `lib/compiler/pipeline.ts`                         | Update — add `compileToApiIR(spec)`; add `compileToUISpec(spec, { llmPlanFn })`; embed capabilities; pass capabilities explicitly to lower()                                                                                                   |
 | `lib/spec/schema.ts`                               | Update — optional table/form/detail/filters                                                                                                                                                                                                    |
 | `lib/compiler/lowering/lower.ts`                   | Update — lower(apiIr, uiPlan, capabilitiesBySlug: Record<string, Capabilities>); assertCapabilityConsistency; validateUISpecAgainstCapabilities after lower, before return                                                                     |
@@ -481,9 +509,15 @@ Golden OpenAPI specs must generate ApiIR fixtures used by `eval:llm`.
 | `lib/compiler/uiplan/prompt.system.txt`            | Update — renderer constraints, nested paths                                                                                                                                                                                                    |
 | `lib/compiler/openapi/subset-validator.ts`         | Update — stable error codes                                                                                                                                                                                                                    |
 | `lib/adapters/mock-adapter.ts`                     | Update — accept capabilities param (derived from ApiIR)                                                                                                                                                                                        |
-| `app/u/[id]/[resource]/page.tsx`                   | Update — derive capabilities from apiIr; pass to content                                                                                                                                                                                       |
-| `components/compiler/CompiledUIContent.tsx`        | Update — accept capabilities; pass to adapter                                                                                                                                                                                                  |
-| `components/renderer/SchemaRenderer.tsx`           | Update — handle missing sections; use adapter capabilities                                                                                                                                                                                     |
+| `app/u/[id]/[resource]/page.tsx`                   | Update — derive capabilities, identityFields from apiIr; pass to content                                                                                                                                                                       |
+| `components/compiler/CompiledUIContent.tsx`        | Update — accept capabilities, identityFields; pass to SchemaRenderer                                                                                                                                                                           |
+| `components/renderer/SchemaRenderer.tsx`           | Refactor — resolveNavigation; TableLayout/IdentityLayout/FormLayout; assert identity when mode=identity                                                                                                                                        |
+| `components/renderer/navigation.ts`                | Create — resolveNavigation(capabilities) pure function                                                                                                                                                                                         |
+| `components/renderer/TableLayout.tsx`              | Create — Filters + DataTable + DetailPanel                                                                                                                                                                                                     |
+| `components/renderer/IdentityLayout.tsx`           | Create — IdentityLookup + DetailView/EditForm                                                                                                                                                                                                  |
+| `components/renderer/FormLayout.tsx`               | Create — Form + CreateButton (create-only)                                                                                                                                                                                                     |
+| `components/renderer/IdentityLookup.tsx`           | Create — inputs for identityFields; View/Edit button                                                                                                                                                                                           |
+| `components/renderer/DetailView.tsx`               | Create — render record from spec.detail.fields                                                                                                                                                                                                 |
 | `eval/eval-ai.ts`, `eval/eval-llm-only.ts`         | Update — hash-based pass/fail, report layers, golden-specs path + subdir scan                                                                                                                                                                  |
 | `eval/utils/comparator.ts`                         | Update — tolerate missing `table`, `form`, `filters`, `detail` in extractFingerprint and related functions                                                                                                                                     |
 | `eval/utils/report-schema.ts`                      | Update — Layer 1–3 structure                                                                                                                                                                                                                   |
@@ -565,8 +599,8 @@ Golden OpenAPI specs must generate ApiIR fixtures used by `eval:llm`.
 
 ```
 OpenAPI → Parse → Subset Validation → Resolve Refs → Canonicalize → ApiIR
-   → deriveCapabilities() → LLM (presentation only) → Normalize UiPlanIR
-   → Lower → Validate UISpec → UISpec → Renderer
+   → deriveCapabilities() → deriveIdentityFields() → LLM (presentation only) → Normalize UiPlanIR
+   → Lower → Validate UISpec → UISpec → Renderer(UISpec, Capabilities, IdentityFields, Adapter)
 ```
 
 Protected by: evals (determinism), snapshots (regression), invalid tests (subset boundary).
@@ -604,6 +638,7 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 8. `lower(apiIr, uiPlan, capabilitiesBySlug: Record<string, Capabilities>)` is the canonical signature.
 9. Production pipeline always calls `normalizeUiPlanIR(uiPlan, apiIr)`.
 10. `OAS_UNSUPPORTED_ONEOF` for `oneOf` only; keep `anyOf`/`allOf` under existing generic code unless needed later.
+11. Renderer receives UISpec + capabilities + identityFields; never inspects ApiIR. Identity fields derived in ApiIR; no invented `["id"]` fallback.
 
 ---
 
@@ -616,7 +651,7 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 
 **Phase 0:** 0.1 Parser → 0.2 Error codes → **Checkpoint 0**
 
-**Phase 1:** 1.1 Capabilities → 1.2 UISpec optional → 1.3 UiPlanIR normalize → 1.4 Comparator + Renderer → 1.5a Capability-specs fixtures → 1.5b Eval validation → 1.5c Prompt → 1.6 Raw input → 1.7 compileToApiIR + eval path → 1.8 Golden compile → **Checkpoint 1.8**
+**Phase 1:** 1.1 Capabilities → 1.2 UISpec optional → 1.3 UiPlanIR normalize → 1.4 Comparator + Renderer → **1.4.5 Identity fields + Capability-driven renderer** → 1.5a Capability-specs fixtures → 1.5b Eval validation → 1.5c Prompt → 1.6 Raw input → 1.7 compileToApiIR + eval path → 1.8 Golden compile → **Checkpoint 1.8**
 
 **Phase 2:** 2.1 Hash-based pass/fail → 2.2 Report layers → 2.3 Stabilization loop → **Checkpoint 2.3**
 
@@ -632,9 +667,10 @@ Protected by: evals (determinism), snapshots (regression), invalid tests (subset
 2. **Capability derivation** — everything downstream depends on it.
 3. **UISpec optional sections** — schema + lowering.
 4. **Comparator update** — prevent crashes during evals (`spec.table?.columns ?? []`, etc.).
-5. **Capability specs setup + eval validation** — move specs to capability-specs/, generate ApiIR (with deriveCapabilities), run eval:llm and eval:ai (--runs 5); use standard eval reports.
-6. **Raw input layer + rawSpecHash** — safe once pipeline compiles.
-7. **Golden-spec compilation** — run 22 specs; fix failures.
+5. **Identity fields + Capability-driven renderer** — per [identity plan](.cursor/plans/identity_fields_and_capability-driven_renderer_7e022f14.plan.md); before LLM prompt updates.
+6. **Capability specs setup + eval validation** — move specs to capability-specs/, generate ApiIR (with deriveCapabilities + identityFields), run eval:llm and eval:ai (--runs 5); use standard eval reports.
+7. **Raw input layer + rawSpecHash** — safe once pipeline compiles.
+8. **Golden-spec compilation** — run 22 specs; fix failures.
 
 Each layer stable before the next.
 
@@ -651,6 +687,7 @@ Each layer stable before the next.
 | 1     | 1.2 UISpec optional     | Unit test: list-only resource → table, no form                              |
 | 1     | 1.3 UiPlanIR            | Unit test: invented path → `UIPLAN_INVENTED_FIELD_PATH`                     |
 | 1     | 1.4 Comparator/Renderer | extractFingerprint no throw; renderer smoke test                            |
+| 1     | 1.4.5 Identity/Renderer | All 12 capability scenarios correct UI; see identity plan                   |
 | 1     | 1.5a Fixtures           | capability-specs folder + generate-apiir                                    |
 | 1     | 1.5b Eval validation    | eval:llm + eval:ai on capability-specs (--runs 5); standard eval reports    |
 | 1     | 1.5c Prompt             | (Deferred to 1.8)                                                           |

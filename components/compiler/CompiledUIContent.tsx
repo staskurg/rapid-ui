@@ -32,6 +32,7 @@ interface CompiledUIContentProps {
   resourceNames: string[];
   resourceSlugs: string[];
   capabilities?: Capabilities;
+  identityFields?: string[];
   diffFromPrevious?: DiffFromPrevious;
   updatedAt?: string;
 }
@@ -54,6 +55,7 @@ export function CompiledUIContent({
   resourceNames,
   resourceSlugs,
   capabilities,
+  identityFields = [],
   diffFromPrevious,
   updatedAt,
 }: CompiledUIContentProps) {
@@ -104,7 +106,12 @@ export function CompiledUIContent({
         }
       />
       <main className="flex-1 overflow-auto p-6">
-        <SchemaRenderer spec={spec} adapter={adapter} />
+        <SchemaRenderer
+          spec={spec}
+          adapter={adapter}
+          capabilities={capabilities}
+          identityFields={identityFields}
+        />
       </main>
 
       {hasDiff(diffFromPrevious) && (

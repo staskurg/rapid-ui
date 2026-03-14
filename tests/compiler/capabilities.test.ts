@@ -1,5 +1,5 @@
 /**
- * Capability derivation tests — Phase 1.1.
+ * Capability derivation tests.
  * deriveCapabilitiesForResource, deriveCapabilities, pipeline embedding.
  */
 

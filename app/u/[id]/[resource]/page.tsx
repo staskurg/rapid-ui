@@ -63,6 +63,7 @@ export default async function GeneratedUIPage({
   }
 
   const capabilities = entry.capabilitiesBySlug[resource];
+  const identityFields = entry.identityFieldsBySlug[resource] ?? [];
 
   logCompilationPageLoad({
     id,
@@ -81,6 +82,7 @@ export default async function GeneratedUIPage({
       resourceNames={entry.resourceNames}
       resourceSlugs={entry.resourceSlugs}
       capabilities={capabilities}
+      identityFields={identityFields}
       diffFromPrevious={entry.diffFromPrevious}
       updatedAt={entry.updatedAt}
     />

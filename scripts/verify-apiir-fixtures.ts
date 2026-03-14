@@ -1,9 +1,19 @@
 #!/usr/bin/env tsx
 /**
  * Verify that ApiIR JSON fixtures match what the pipeline produces.
- * Run: npx tsx scripts/verify-apiir-fixtures.ts
  *
- * If they differ, the fixtures are stale or there's a JSON round-trip bug.
+ * For each OpenAPI YAML fixture (demo, capability-specs, valid-specs-*), runs:
+ *   parse → validate → resolve → build → deriveCapabilities → deriveIdentityFields
+ * and compares the result to the corresponding JSON file on disk.
+ *
+ * Use this to catch:
+ *   - Stale fixtures (derivation logic changed but fixtures not regenerated)
+ *   - JSON round-trip bugs
+ *
+ * Run after changing deriveIdentityFields, deriveCapabilities, or build logic.
+ * If mismatches occur, run `npm run fixtures:generate-apiir` and commit.
+ *
+ * Usage: npm run fixtures:verify-apiir
  */
 
 import { readFileSync, readdirSync, existsSync } from "fs";
@@ -11,7 +21,7 @@ import { join } from "path";
 import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
 import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
 import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR, apiIrStringify } from "@/lib/compiler/apiir";
+import { buildApiIR, deriveCapabilities, deriveIdentityFields, apiIrStringify } from "@/lib/compiler/apiir";
 
 const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
 const APIIR_DIR = join(FIXTURES_DIR, "apiir");
@@ -21,6 +31,7 @@ type Source = { yamlDir: string; apiirSubdir: string };
 function main() {
   const sources: Source[] = [
     { yamlDir: join(FIXTURES_DIR, "demo"), apiirSubdir: "demo" },
+    { yamlDir: join(FIXTURES_DIR, "capability-specs"), apiirSubdir: "capability-specs" },
     { yamlDir: join(FIXTURES_DIR, "valid-specs-api-guru"), apiirSubdir: "valid-specs-api-guru" },
     { yamlDir: join(FIXTURES_DIR, "valid-specs-github"), apiirSubdir: "valid-specs-github" },
   ];
@@ -66,6 +77,13 @@ function main() {
       const buildResult = buildApiIR(resolveResult.doc);
       if (!buildResult.success) {
         console.log(`[${apiirSubdir}/${baseName}] SKIP - build failed`);
+        continue;
+      }
+
+      deriveCapabilities(buildResult.apiIr);
+      const identityResult = deriveIdentityFields(buildResult.apiIr);
+      if (!identityResult.success) {
+        console.log(`[${apiirSubdir}/${baseName}] SKIP - identity derivation failed (multi-param)`);
         continue;
       }
 
