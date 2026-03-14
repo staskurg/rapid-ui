@@ -19,6 +19,15 @@ import type { CrudAdapter } from "@/lib/adapters";
 import type { Capabilities } from "@/lib/compiler/apiir";
 import { getCellValue } from "@/lib/utils/getCellValue";
 import { Plus, Loader2 } from "lucide-react";
+import {
+  resolveNavigation,
+  normalizeAdapterCapabilities,
+  MODE_TABLE,
+  MODE_IDENTITY,
+  MODE_FORM,
+  type RendererMode,
+} from "./navigation";
+import { RendererInvariantError } from "@/lib/renderer/errors";
 
 interface SchemaRendererProps {
   spec: UISpec;
@@ -36,10 +45,43 @@ export function SchemaRenderer({
   spec,
   initialData = [],
   adapter,
-  capabilities: _capabilities,
-  identityFields: _identityFields = [],
+  capabilities: capabilitiesProp,
+  identityFields: identityFieldsProp,
   refreshTrigger,
 }: SchemaRendererProps) {
+  const identityFields = React.useMemo(
+    () => identityFieldsProp ?? [],
+    [identityFieldsProp]
+  );
+
+  // Capabilities resolution: prop overrides; never merge; never invent
+  const capabilities: Capabilities = React.useMemo(() => {
+    if (capabilitiesProp) return capabilitiesProp;
+    if (adapter?.capabilities)
+      return normalizeAdapterCapabilities(adapter.capabilities);
+    throw new RendererInvariantError("Missing capabilities");
+  }, [capabilitiesProp, adapter?.capabilities]);
+
+  const mode: RendererMode = resolveNavigation(capabilities);
+
+  // Assert: identity mode requires identityFields
+  if (mode === MODE_IDENTITY && identityFields.length === 0) {
+    throw new RendererInvariantError(
+      "Identity mode requires identityFields.length > 0"
+    );
+  }
+
+  // Guard: identity mode with adapter requires getById
+  if (
+    mode === MODE_IDENTITY &&
+    adapter &&
+    typeof adapter.getById !== "function"
+  ) {
+    throw new RendererInvariantError(
+      "Adapter missing getById for identity mode"
+    );
+  }
+
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
   const [editRecord, setEditRecord] = React.useState<Record<string, unknown> | null>(null);
@@ -49,20 +91,20 @@ export function SchemaRenderer({
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false);
   const [deleteTargetId, setDeleteTargetId] = React.useState<string | number | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
-  const [loading, setLoading] = React.useState(!!adapter);
+  const [loading, setLoading] = React.useState(!!adapter && !!capabilities.list);
   const [error, setError] = React.useState<string | null>(null);
 
-  const idField = spec.idField ?? "id";
-  const capabilities = adapter?.capabilities ?? {
-    create: true,
-    read: true,
-    update: true,
-    delete: true,
-  };
+  // Identity mode state
+  const [lookupValues, setLookupValues] = React.useState<Record<string, string>>({});
+  const [lookedUpRecord, setLookedUpRecord] = React.useState<Record<string, unknown> | null>(null);
+  const [lookupLoading, setLookupLoading] = React.useState(false);
+  const [lookupError, setLookupError] = React.useState<string | null>(null);
 
-  // Adapter mode: fetch list on mount and when adapter changes
+  const idField = spec.idField ?? "id";
+
+  // List fetch: only when adapter && capabilities.list
   React.useEffect(() => {
-    if (!adapter) return;
+    if (!adapter || !capabilities.list) return;
     let cancelled = false;
     const startTime = Date.now();
     setLoading(true);
@@ -93,9 +135,9 @@ export function SchemaRenderer({
     return () => {
       cancelled = true;
     };
-  }, [adapter]);
+  }, [adapter, capabilities.list]);
 
-  // initialData mode: sync when initialData changes
+  // initialData mode: sync when initialData changes (no adapter)
   React.useEffect(() => {
     if (!adapter) {
       setData(initialData);
@@ -103,7 +145,7 @@ export function SchemaRenderer({
   }, [adapter, initialData]);
 
   const refetch = React.useCallback(async () => {
-    if (!adapter) return;
+    if (!adapter || !capabilities.list) return;
     setError(null);
     try {
       const records = await adapter.list();
@@ -111,14 +153,14 @@ export function SchemaRenderer({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load data");
     }
-  }, [adapter]);
+  }, [adapter, capabilities.list]);
 
   // Refetch when refreshTrigger changes (e.g. after reset)
   React.useEffect(() => {
-    if (adapter && (refreshTrigger ?? 0) > 0) {
+    if (adapter && capabilities.list && (refreshTrigger ?? 0) > 0) {
       refetch();
     }
-  }, [adapter, refreshTrigger, refetch]);
+  }, [adapter, capabilities.list, refreshTrigger, refetch]);
 
   // Get record ID
   const getRecordId = React.useCallback(
@@ -155,7 +197,7 @@ export function SchemaRenderer({
             // String search (case-insensitive)
             const searchStr = String(filterValue).toLowerCase();
             return String(recordValue || "").toLowerCase().includes(searchStr);
-          
+
           case "number":
             // Number range filter
             if (typeof filterValue === "object" && filterValue !== null) {
@@ -166,15 +208,15 @@ export function SchemaRenderer({
               return true;
             }
             return true;
-          
+
           case "boolean":
             // Boolean exact match
             return recordValue === filterValue;
-          
+
           case "enum":
             // Enum exact match
             return recordValue === filterValue;
-          
+
           default:
             return true;
         }
@@ -223,6 +265,7 @@ export function SchemaRenderer({
           setSelectedRecord(null);
           setEditRecord(null);
           setIsEditModalOpen(false);
+          setLookedUpRecord(null);
           await refetch();
         } catch (err) {
           setError(err instanceof Error ? err.message : "Update failed");
@@ -238,6 +281,7 @@ export function SchemaRenderer({
         setSelectedRecord(null);
         setEditRecord(null);
         setIsEditModalOpen(false);
+        setLookedUpRecord(null);
       }
     },
     [adapter, getRecordId, refetch]
@@ -296,12 +340,57 @@ export function SchemaRenderer({
     setFilters(newFilters);
   }, []);
 
+  // Identity mode: lookup handler
+  const handleIdentityLookup = React.useCallback(
+    async (action: "view" | "edit") => {
+      const idValue = lookupValues[identityFields[0]];
+      if (idValue === undefined || idValue === "") return;
+      const id = /^\d+$/.test(idValue) ? Number(idValue) : idValue;
+      if (!adapter?.getById) return;
+
+      setLookupError(null);
+      setLookupLoading(true);
+      try {
+        const record = await adapter.getById(id);
+        setLookedUpRecord(record);
+        if (action === "edit" || !spec.detail) {
+          setSelectedRecord(record);
+          setEditRecord(record);
+          setIsEditModalOpen(true);
+        }
+      } catch (err) {
+        setLookupError(err instanceof Error ? err.message : "Failed to load record");
+      } finally {
+        setLookupLoading(false);
+      }
+    },
+    [adapter, identityFields, lookupValues, spec.detail]
+  );
+
+  const handleIdentityLookupChange = React.useCallback(
+    (field: string, value: string) => {
+      setLookupValues((prev) => ({ ...prev, [field]: value }));
+      setLookedUpRecord(null);
+      setLookupError(null);
+    },
+    []
+  );
+
+  const closeIdentityEdit = React.useCallback(() => {
+    setIsEditModalOpen(false);
+    setSelectedRecord(null);
+    setEditRecord(null);
+    setLookedUpRecord(null);
+  }, []);
+
+  const displayError = error ?? lookupError;
+
   return (
     <div className="space-y-4">
       {/* Error banner */}
-      {error && (
+      {displayError && (
         <div className="rounded-md border border-destructive/50 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-          {error}
+          {displayError}
         </div>
       )}
 
@@ -312,7 +401,7 @@ export function SchemaRenderer({
         </div>
       )}
 
-      {/* Header with Create Button — derive mode from capabilities at render time */}
+      {/* Header with Create Button */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{spec.entity} Management</h1>
@@ -330,26 +419,113 @@ export function SchemaRenderer({
         )}
       </div>
 
-      {/* Filters Panel */}
-      {(spec.filters ?? []).length > 0 && (
-        <FiltersPanel spec={spec} filters={filters} onFilterChange={handleFilterChange} />
+      {/* Mode-based rendering */}
+      {mode === MODE_TABLE && (
+        <>
+          {/* Filters Panel */}
+          {(spec.filters ?? []).length > 0 && (
+            <FiltersPanel spec={spec} filters={filters} onFilterChange={handleFilterChange} />
+          )}
+
+          {/* Loading state */}
+          {loading ? (
+            <div className="flex items-center justify-center rounded-md border py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <DataTable
+              data={filteredData}
+              spec={spec}
+              onEdit={capabilities.update ? handleEdit : undefined}
+              onDelete={capabilities.delete ? handleDeleteRequest : undefined}
+            />
+          )}
+        </>
       )}
 
-      {/* Loading state */}
-      {loading ? (
-        <div className="flex items-center justify-center rounded-md border py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : (
-        <DataTable
-          data={filteredData}
-          spec={spec}
-          onEdit={capabilities.update ? handleEdit : undefined}
-          onDelete={capabilities.delete ? handleDeleteRequest : undefined}
-        />
+      {mode === MODE_IDENTITY && (
+        <>
+          {/* IdentityLookup (inline) */}
+          <div className="flex flex-wrap items-end gap-2" data-testid="identity-lookup">
+            {identityFields.map((field) => {
+              const fieldDef = spec.fields.find((f) => f.name === field);
+              return (
+                <div key={field} className="flex flex-col gap-1">
+                  <label className="text-sm font-medium">{fieldDef?.label ?? field}</label>
+                  <input
+                    type="text"
+                    className="rounded-md border px-3 py-2 text-sm"
+                    value={lookupValues[field] ?? ""}
+                    onChange={(e) => handleIdentityLookupChange(field, e.target.value)}
+                    placeholder={`Enter ${fieldDef?.label ?? field}`}
+                    data-testid={`identity-input-${field}`}
+                  />
+                </div>
+              );
+            })}
+            <div className="flex gap-2">
+              {spec.detail && (
+                <Button
+                  onClick={() => handleIdentityLookup("view")}
+                  disabled={lookupLoading}
+                  data-testid="identity-view-btn"
+                >
+                  {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "View"}
+                </Button>
+              )}
+              {(capabilities.update || !spec.detail) && (
+                <Button
+                  onClick={() => handleIdentityLookup("edit")}
+                  disabled={lookupLoading}
+                  data-testid="identity-edit-btn"
+                >
+                  {lookupLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Edit"}
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* DetailView (inline) when spec.detail exists and record loaded */}
+          {spec.detail && lookedUpRecord && !isEditModalOpen && (
+            <div className="rounded-md border p-4" data-testid="detail-view">
+              {spec.detail.fields.map((fieldName) => {
+                const field = spec.fields.find((f) => f.name === fieldName);
+                const value = getCellValue(lookedUpRecord, fieldName);
+                return (
+                  <div key={fieldName} className="flex gap-2 py-1">
+                    <span className="font-medium text-muted-foreground">
+                      {field?.label ?? fieldName}:
+                    </span>
+                    <span>{String(value ?? "")}</span>
+                  </div>
+                );
+              })}
+              {capabilities.update && (
+                <Button
+                  className="mt-2"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSelectedRecord(lookedUpRecord);
+                    setEditRecord(lookedUpRecord);
+                    setIsEditModalOpen(true);
+                  }}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Create Modal — only when create capability (form section present per capability consistency) */}
+      {mode === MODE_FORM && (
+        <p className="text-muted-foreground">
+          Use the Create button above to add a new {spec.entity.toLowerCase()}.
+        </p>
+      )}
+
+      {/* Create Modal — when create capability */}
       {capabilities.create && (
         <FormModal
           spec={spec}
@@ -360,16 +536,20 @@ export function SchemaRenderer({
         />
       )}
 
-      {/* Edit Modal — only when update capability */}
+      {/* Edit Modal — when update capability (table or identity mode) */}
       {capabilities.update && (
         <FormModal
           spec={spec}
           isOpen={isEditModalOpen}
-          onClose={() => {
-            setIsEditModalOpen(false);
-            setSelectedRecord(null);
-            setEditRecord(null);
-          }}
+          onClose={
+            mode === MODE_IDENTITY
+              ? closeIdentityEdit
+              : () => {
+                  setIsEditModalOpen(false);
+                  setSelectedRecord(null);
+                  setEditRecord(null);
+                }
+          }
           onSubmit={(record: Record<string, unknown>) => {
             const recordForId = editRecord ?? selectedRecord;
             if (recordForId) {

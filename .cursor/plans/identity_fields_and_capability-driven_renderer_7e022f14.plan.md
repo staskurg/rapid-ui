@@ -90,7 +90,7 @@ function normalizeAdapterCapabilities(adapter: AdapterCapabilities): Capabilitie
 | ----------- | ----------- | --------------------------------------------------------------------------------------- |
 | **Phase 1** | Done        | identityFields in ApiIR; deriveIdentityFields; pipeline integration                     |
 | **Phase 2** | Done        | identityFieldsBySlug in CompilationEntry; page/CompiledUIContent pass to SchemaRenderer |
-| **Phase 3** | Not started | resolveNavigation; mode switch; inline conditional rendering; skip list when !list      |
+| **Phase 3** | Done        | resolveNavigation; mode switch; inline conditional rendering; skip list when !list      |
 | **Phase 4** | Not started | Extract TableLayout, IdentityLayout, FormLayout; IdentityLookup, DetailView             |
 
 
@@ -103,11 +103,9 @@ function normalizeAdapterCapabilities(adapter: AdapterCapabilities): Capabilitie
 - **ApiIR**: [lib/compiler/apiir/types.ts](lib/compiler/apiir/types.ts) — `ResourceIR` has `identityFields`; `deriveIdentityFields` in [lib/compiler/apiir/identity.ts](lib/compiler/apiir/identity.ts)
 - **Runtime**: [lib/db/compilations.ts](lib/db/compilations.ts) — `identityFieldsBySlug` derived in rowToEntry; page passes to CompiledUIContent
 - **CompiledUIContent**: [components/compiler/CompiledUIContent.tsx](components/compiler/CompiledUIContent.tsx) — passes `capabilities` and `identityFields` to SchemaRenderer
-- **Renderer**: [components/renderer/SchemaRenderer.tsx](components/renderer/SchemaRenderer.tsx) — receives capabilities/identityFields but **ignores them**; always shows DataTable; always calls `adapter.list()`; never renders `spec.detail`
+- **Renderer**: [components/renderer/SchemaRenderer.tsx](components/renderer/SchemaRenderer.tsx) — capability-driven; mode = resolveNavigation; table/identity/form modes; adapter.list() only when capabilities.list
 - **Operations**: [lib/compiler/apiir/operations.ts](lib/compiler/apiir/operations.ts) — extracts path params; sets `identifierParam` per operation
 - **Lowering**: [lib/compiler/lowering/lower.ts](lib/compiler/lowering/lower.ts) — capability-aware UISpec (spec.table/form/detail); spec.detail may be absent when capabilities.detail but no valid detail fields
-
-**Gaps for Phase 3:** SchemaRenderer must use capabilities prop as source of truth (never merge with adapter); add resolveNavigation; call `adapter.list()` only when `adapter && capabilities.list`; inline conditional rendering for table/identity/form modes (no layout components yet); handle `spec.detail` undefined in identity mode.
 
 ---
 
@@ -364,9 +362,9 @@ The renderer must **never attempt to render sections that don't exist**. Lowerin
 | `lib/db/compilations.ts`                    | 2     | Done   | identityFieldsBySlug in rowToEntry (from apiIr)                                 |
 | `app/u/[id]/[resource]/page.tsx`            | 2     | Done   | Pass identityFields to CompiledUIContent (use `[]` when absent)                 |
 | `components/compiler/CompiledUIContent.tsx` | 2     | Done   | Pass capabilities + identityFields to SchemaRenderer                            |
-| `components/renderer/navigation.ts`         | 3     | Todo   | Create — resolveNavigation(capabilities); normalizeAdapterCapabilities(adapter) |
-| `lib/renderer/errors.ts` or inline          | 3     | Todo   | Add RendererInvariantError for mode=identity && identityFields.length===0       |
-| `components/renderer/SchemaRenderer.tsx`    | 3     | Todo   | Use capabilities prop; mode = resolveNavigation; inline conditional rendering   |
+| `components/renderer/navigation.ts`         | 3     | Done   | Create — resolveNavigation(capabilities); normalizeAdapterCapabilities(adapter) |
+| `lib/renderer/errors.ts`                    | 3     | Done   | RendererInvariantError for mode=identity && identityFields.length===0           |
+| `components/renderer/SchemaRenderer.tsx`    | 3     | Done   | Use capabilities prop; mode = resolveNavigation; inline conditional rendering   |
 | `components/renderer/TableLayout.tsx`       | 4     | Todo   | Create — Filters + DataTable + FormModal (row click → edit)                     |
 | `components/renderer/IdentityLayout.tsx`    | 4     | Todo   | Create — IdentityLookup + DetailView/EditForm                                   |
 | `components/renderer/FormLayout.tsx`        | 4     | Todo   | Create — Form + CreateButton (create-only only)                                 |

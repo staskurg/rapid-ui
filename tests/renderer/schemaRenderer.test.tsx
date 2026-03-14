@@ -4,6 +4,16 @@ import userEvent from '@testing-library/user-event';
 import { SchemaRenderer } from '@/components/renderer/SchemaRenderer';
 import type { UISpec } from '@/lib/spec/types';
 import type { CrudAdapter } from '@/lib/adapters';
+import type { Capabilities } from '@/lib/compiler/apiir';
+
+/** Full CRUD capabilities for table-mode tests with initialData (no adapter). */
+const fullCapabilities: Capabilities = {
+  list: true,
+  detail: true,
+  create: true,
+  update: true,
+  delete: true,
+};
 
 // Mock the child components to focus on SchemaRenderer state logic
 vi.mock('@/components/renderer/DataTable', () => ({
@@ -140,7 +150,9 @@ describe('SchemaRenderer State Management', () => {
   describe('Create Record', () => {
     it('should add new record to data array', async () => {
       const user = userEvent.setup();
-      const { container } = render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
+      const { container } = render(
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
+      );
 
       // Verify initial count
       const initialRecords = container.querySelectorAll('[data-testid^="record-"]');
@@ -168,7 +180,9 @@ describe('SchemaRenderer State Management', () => {
 
     it('should generate ID for new record if not provided', async () => {
       const user = userEvent.setup();
-      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
+      render(
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
+      );
 
       // Open create modal
       const createButton = screen.getByText(/create user/i);
@@ -190,7 +204,9 @@ describe('SchemaRenderer State Management', () => {
   describe('Update Record', () => {
     it('should update existing record in data array', async () => {
       const user = userEvent.setup();
-      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
+      render(
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
+      );
 
       // Click edit on first record
       const editButton = screen.getByTestId('edit-0');
@@ -231,7 +247,11 @@ describe('SchemaRenderer State Management', () => {
       };
 
       render(
-        <SchemaRenderer spec={specWithEmail} initialData={dataWithMoreFields} />
+        <SchemaRenderer
+          spec={specWithEmail}
+          initialData={dataWithMoreFields}
+          capabilities={fullCapabilities}
+        />
       );
 
       // Edit record
@@ -259,7 +279,9 @@ describe('SchemaRenderer State Management', () => {
   describe('Delete Record', () => {
     it('should remove record from data array', async () => {
       const user = userEvent.setup();
-      const { container } = render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
+      const { container } = render(
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
+      );
 
       // Get initial records
       const initialRecords = container.querySelectorAll('[data-testid^="record-"]');
@@ -291,7 +313,9 @@ describe('SchemaRenderer State Management', () => {
   describe('Filter Application', () => {
     it('should filter data based on filter values', async () => {
       const user = userEvent.setup();
-      render(<SchemaRenderer spec={mockSpec} initialData={initialData} />);
+      render(
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
+      );
 
       // Apply filter
       const filterInput = screen.getByTestId('filter-input');
@@ -346,12 +370,175 @@ describe('SchemaRenderer State Management', () => {
         expect(screen.getByText(/view user records/i)).toBeInTheDocument();
       });
     });
+
+    it('renders DataTable and Filters; adapter.list() is called', async () => {
+      const listAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: false, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue(initialData),
+      };
+      const listSpec: UISpec = {
+        ...mockSpec,
+        table: { columns: ['id', 'name'] },
+        form: undefined,
+        filters: ['name'],
+      };
+      render(<SchemaRenderer spec={listSpec} adapter={listAdapter} />);
+      await waitFor(() => {
+        expect(screen.getByTestId('data-table')).toBeInTheDocument();
+        expect(screen.getByTestId('filters-panel')).toBeInTheDocument();
+        expect(listAdapter.list).toHaveBeenCalled();
+      });
+    });
+  });
+
+  describe('Create-only (form mode)', () => {
+    it('renders Form only, no DataTable, adapter.list() not called', async () => {
+      const createOnlyAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: true, read: false, update: false, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue([]),
+      };
+      const createOnlySpec: UISpec = {
+        ...mockSpec,
+        table: undefined,
+        form: { fields: ['name'] },
+        filters: [],
+      };
+      render(
+        <SchemaRenderer
+          spec={createOnlySpec}
+          adapter={createOnlyAdapter}
+          capabilities={{ list: false, detail: false, create: true, update: false, delete: false }}
+        />
+      );
+      expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+      expect(createOnlyAdapter.list).not.toHaveBeenCalled();
+      expect(screen.getByText(/create user/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Detail-only (identity mode)', () => {
+    it('renders IdentityLookup UI, no DataTable, adapter.list() not called', async () => {
+      const detailAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: false, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue([]),
+        getById: vi.fn().mockResolvedValue({ id: 1, name: 'Alice' }),
+      };
+      const detailSpec: UISpec = {
+        ...mockSpec,
+        table: undefined,
+        form: { fields: ['name'] },
+        detail: { fields: ['id', 'name'] },
+        filters: [],
+      };
+      render(
+        <SchemaRenderer
+          spec={detailSpec}
+          adapter={detailAdapter}
+          capabilities={{ list: false, detail: true, create: false, update: false, delete: false }}
+          identityFields={['id']}
+        />
+      );
+      expect(screen.getByTestId('identity-lookup')).toBeInTheDocument();
+      expect(screen.queryByTestId('data-table')).not.toBeInTheDocument();
+      expect(detailAdapter.list).not.toHaveBeenCalled();
+    });
+
+    it('shows EditForm after lookup when spec.detail is undefined', async () => {
+      const user = userEvent.setup();
+      const detailAdapter: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: true, delete: false },
+        getSample: vi.fn().mockResolvedValue([]),
+        list: vi.fn().mockResolvedValue([]),
+        getById: vi.fn().mockResolvedValue({ id: 1, name: 'Alice' }),
+      };
+      const detailSpecNoDetail: UISpec = {
+        ...mockSpec,
+        table: undefined,
+        form: { fields: ['name'] },
+        detail: undefined,
+        filters: [],
+      };
+      render(
+        <SchemaRenderer
+          spec={detailSpecNoDetail}
+          adapter={detailAdapter}
+          capabilities={{ list: false, detail: true, create: false, update: true, delete: false }}
+          identityFields={['id']}
+        />
+      );
+      const idInput = screen.getByTestId('identity-input-id');
+      await user.type(idInput, '1');
+      const editBtn = screen.getByTestId('identity-edit-btn');
+      await user.click(editBtn);
+      await waitFor(() => {
+        expect(screen.getByTestId('form-modal')).toBeInTheDocument();
+        expect(screen.queryByTestId('detail-view')).not.toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('RendererInvariantError', () => {
+    it('throws when mode=identity with identityFields=[]', () => {
+      expect(() =>
+        render(
+          <SchemaRenderer
+            spec={{ ...mockSpec, table: undefined, form: { fields: ['name'] } }}
+            adapter={{
+              mode: 'mock',
+              capabilities: { create: false, read: true, update: true, delete: false },
+              getSample: vi.fn(),
+              list: vi.fn(),
+              getById: vi.fn().mockResolvedValue({}),
+            }}
+            capabilities={{ list: false, detail: false, create: false, update: true, delete: false }}
+            identityFields={[]}
+          />
+        )
+      ).toThrow(/Identity mode requires identityFields/);
+    });
+
+    it('throws when mode=identity with adapter but no adapter.getById', () => {
+      const adapterNoGetById: CrudAdapter = {
+        mode: 'mock',
+        capabilities: { create: false, read: true, update: true, delete: false },
+        getSample: vi.fn(),
+        list: vi.fn(),
+      };
+      expect(() =>
+        render(
+          <SchemaRenderer
+            spec={{ ...mockSpec, table: undefined, form: { fields: ['name'] } }}
+            adapter={adapterNoGetById}
+            capabilities={{ list: false, detail: false, create: false, update: true, delete: false }}
+            identityFields={['id']}
+          />
+        )
+      ).toThrow(/Adapter missing getById for identity mode/);
+    });
+
+    it('throws when neither capabilities prop nor adapter', () => {
+      expect(() =>
+        render(
+          <SchemaRenderer
+            spec={mockSpec}
+            initialData={initialData}
+          />
+        )
+      ).toThrow(/Missing capabilities/);
+    });
   });
 
   describe('Initial Data Sync', () => {
     it('should sync data when initialData prop changes', async () => {
       const { container, rerender } = render(
-        <SchemaRenderer spec={mockSpec} initialData={initialData} />
+        <SchemaRenderer spec={mockSpec} initialData={initialData} capabilities={fullCapabilities} />
       );
 
       // Wait for initial render
@@ -366,7 +553,9 @@ describe('SchemaRenderer State Management', () => {
         { id: 5, name: 'Eve' },
       ];
 
-      rerender(<SchemaRenderer spec={mockSpec} initialData={newData} />);
+      rerender(
+        <SchemaRenderer spec={mockSpec} initialData={newData} capabilities={fullCapabilities} />
+      );
 
       // Verify new data appears
       await waitFor(() => {
