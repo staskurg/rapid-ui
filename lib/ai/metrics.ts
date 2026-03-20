@@ -11,10 +11,10 @@
  */
 
 /** Source of the OpenAI call: production API or eval harness */
-export type OpenAICallSource = "api" | "eval";
+export type OpenAICallSource = 'api' | 'eval';
 
 /** Success or error status */
-export type OpenAICallStatus = "success" | "error";
+export type OpenAICallStatus = 'success' | 'error';
 
 /**
  * Event payload for each OpenAI API call.
@@ -48,11 +48,11 @@ const sinks: MetricsSink[] = [];
 
 /** ANSI colors for console output */
 const C = {
-  cyan: "\x1b[36m",
-  green: "\x1b[32m",
-  red: "\x1b[31m",
-  dim: "\x1b[2m",
-  reset: "\x1b[0m",
+  cyan: '\x1b[36m',
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  dim: '\x1b[2m',
+  reset: '\x1b[0m',
 };
 
 /**
@@ -61,19 +61,19 @@ const C = {
  */
 function consoleSink(event: OpenAICallEvent): void {
   const logEvent = {
-    event: "openai_call",
+    event: 'openai_call',
     timestamp: event.timestamp,
-    "gen_ai.request.model": event.model,
-    "gen_ai.operation.duration_ms": event.duration_ms,
-    "gen_ai.usage.input_tokens": event.prompt_tokens,
-    "gen_ai.usage.output_tokens": event.completion_tokens,
-    "rapidui.source": event.source,
-    "gen_ai.response.status": event.status,
+    'gen_ai.request.model': event.model,
+    'gen_ai.operation.duration_ms': event.duration_ms,
+    'gen_ai.usage.input_tokens': event.prompt_tokens,
+    'gen_ai.usage.output_tokens': event.completion_tokens,
+    'rapidui.source': event.source,
+    'gen_ai.response.status': event.status,
   };
 
-  const isDev = process.env.NODE_ENV !== "production";
+  const isDev = process.env.NODE_ENV !== 'production';
   if (isDev) {
-    const statusColor = event.status === "success" ? C.green : C.red;
+    const statusColor = event.status === 'success' ? C.green : C.red;
     const json = JSON.stringify(logEvent, null, 2);
     console.log(
       `${C.cyan}[OpenAI]${C.reset} ${statusColor}${event.status}${C.reset}\n${C.dim}${json}${C.reset}`
@@ -127,27 +127,27 @@ export function logCompilationPageLoad(event: {
   currentSpec: unknown;
   apiIrSummary?: { title: string; version: string; resourceCount: number };
 }): void {
-  if (process.env.OPENAI_METRICS_DISABLED === "true") {
+  if (process.env.OPENAI_METRICS_DISABLED === 'true') {
     return;
   }
 
   const logEvent = {
-    event: "compilation_page_load",
+    event: 'compilation_page_load',
     timestamp: new Date().toISOString(),
-    "rapidui.compilation.id": event.id,
-    "rapidui.compilation.resource": event.resource,
-    "rapidui.compilation.display_name": event.displayName,
-    "rapidui.compilation.resource_names": event.resourceNames,
-    "rapidui.compilation.resource_slugs": event.resourceSlugs,
-    "rapidui.compilation.current_spec": event.currentSpec,
+    'rapidui.compilation.id': event.id,
+    'rapidui.compilation.resource': event.resource,
+    'rapidui.compilation.display_name': event.displayName,
+    'rapidui.compilation.resource_names': event.resourceNames,
+    'rapidui.compilation.resource_slugs': event.resourceSlugs,
+    'rapidui.compilation.current_spec': event.currentSpec,
     ...(event.apiIrSummary && {
-      "rapidui.apiir.title": event.apiIrSummary.title,
-      "rapidui.apiir.version": event.apiIrSummary.version,
-      "rapidui.apiir.resource_count": event.apiIrSummary.resourceCount,
+      'rapidui.apiir.title': event.apiIrSummary.title,
+      'rapidui.apiir.version': event.apiIrSummary.version,
+      'rapidui.apiir.resource_count': event.apiIrSummary.resourceCount,
     }),
   };
 
-  const isDev = process.env.NODE_ENV !== "production";
+  const isDev = process.env.NODE_ENV !== 'production';
   if (isDev) {
     const json = JSON.stringify(logEvent, null, 2);
     console.log(
@@ -165,7 +165,7 @@ export function logCompilationPageLoad(event: {
  * Set OPENAI_METRICS_DISABLED=true to disable (e.g. in CI to reduce noise).
  */
 export function recordOpenAICall(event: OpenAICallEvent): void {
-  if (process.env.OPENAI_METRICS_DISABLED === "true") {
+  if (process.env.OPENAI_METRICS_DISABLED === 'true') {
     return;
   }
 
@@ -178,12 +178,10 @@ export function recordOpenAICall(event: OpenAICallEvent): void {
     try {
       const result = sink(normalized);
       if (result instanceof Promise) {
-        result.catch((err) =>
-          console.error("[metrics] Sink error:", err)
-        );
+        result.catch((err) => console.error('[metrics] Sink error:', err));
       }
     } catch (err) {
-      console.error("[metrics] Sink error:", err);
+      console.error('[metrics] Sink error:', err);
     }
   }
 }

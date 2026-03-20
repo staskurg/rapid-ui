@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
-import { getCompilation } from "@/lib/compiler/store";
+import { redirect } from 'next/navigation';
+import { getCompilation } from '@/lib/compiler/store';
 
 export default async function CompilationRootPage({
   params,
@@ -12,24 +12,22 @@ export default async function CompilationRootPage({
   const { resource: resourceParam } = await searchParams;
 
   if (!id?.trim()) {
-    redirect("/");
+    redirect('/');
   }
   const entry = await getCompilation(id);
 
   if (!entry) {
-    redirect("/");
+    redirect('/');
   }
 
   const firstResource = entry.resourceSlugs[0];
   if (!firstResource) {
-    redirect("/");
+    redirect('/');
   }
 
   // If ?resource=slug is present and valid, use it; else use first resource
   const targetResource =
-    resourceParam && entry.resourceSlugs.includes(resourceParam)
-      ? resourceParam
-      : firstResource;
+    resourceParam && entry.resourceSlugs.includes(resourceParam) ? resourceParam : firstResource;
 
   redirect(`/u/${id}/${targetResource}`);
 }

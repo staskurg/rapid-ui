@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import * as React from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Dialog,
   DialogContent,
@@ -11,26 +11,26 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import type { UISpec, Field } from "@/lib/spec/types";
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import type { UISpec, Field } from '@/lib/spec/types';
 import {
   buildNestedSchema,
   buildNestedDefaults,
   getErrorByPath,
   mergeNested,
-} from "@/lib/utils/formSchema";
-import { Loader2 } from "lucide-react";
+} from '@/lib/utils/formSchema';
+import { Loader2 } from 'lucide-react';
 
 interface FormModalProps {
   spec: UISpec;
@@ -38,7 +38,7 @@ interface FormModalProps {
   onClose: () => void;
   onSubmit: (data: Record<string, unknown>) => void | Promise<void>;
   initialValues?: Record<string, unknown>;
-  mode?: "create" | "edit";
+  mode?: 'create' | 'edit';
   /** When true (edit mode), show "Loading record..." instead of form. */
   isLoadingInitialValues?: boolean;
 }
@@ -49,7 +49,7 @@ export function FormModal({
   onClose,
   onSubmit,
   initialValues,
-  mode = "create",
+  mode = 'create',
   isLoadingInitialValues = false,
 }: FormModalProps) {
   // Nested Zod schema matching RHF's structure (register("profile.firstName") -> nested)
@@ -58,10 +58,7 @@ export function FormModal({
   type FormData = z.infer<typeof formSchema>;
 
   // Nested defaults for optional boolean fields (profile.newsletter -> { profile: { newsletter: false } })
-  const getDefaultValues = React.useMemo(
-    () => buildNestedDefaults(spec),
-    [spec]
-  );
+  const getDefaultValues = React.useMemo(() => buildNestedDefaults(spec), [spec]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -104,10 +101,10 @@ export function FormModal({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? `Create ${spec.entity}` : `Edit ${spec.entity}`}
+            {mode === 'create' ? `Create ${spec.entity}` : `Edit ${spec.entity}`}
           </DialogTitle>
           <DialogDescription>
-            {mode === "create"
+            {mode === 'create'
               ? `Add a new ${spec.entity.toLowerCase()} to the system.`
               : `Update the ${spec.entity.toLowerCase()} information.`}
           </DialogDescription>
@@ -127,47 +124,45 @@ export function FormModal({
               </DialogFooter>
             </>
           ) : (
-          <>
-          {spec.form.fields.map((fieldName) => {
-            const field = spec.fields.find((f) => f.name === fieldName);
-            if (!field) return null;
+            <>
+              {spec.form.fields.map((fieldName) => {
+                const field = spec.fields.find((f) => f.name === fieldName);
+                if (!field) return null;
 
-            return (
-              <div key={fieldName} className="space-y-2">
-                <Label htmlFor={fieldName}>
-                  {field.label}
-                  {field.required && <span className="text-destructive ml-1">*</span>}
-                </Label>
-                {renderField(field, form)}
-                {getErrorByPath(form.formState.errors, fieldName) && (
-                  <p className="text-sm text-destructive">
-                    {String(
-                      getErrorByPath(form.formState.errors, fieldName)?.message
+                return (
+                  <div key={fieldName} className="space-y-2">
+                    <Label htmlFor={fieldName}>
+                      {field.label}
+                      {field.required && <span className="text-destructive ml-1">*</span>}
+                    </Label>
+                    {renderField(field, form)}
+                    {getErrorByPath(form.formState.errors, fieldName) && (
+                      <p className="text-sm text-destructive">
+                        {String(getErrorByPath(form.formState.errors, fieldName)?.message)}
+                      </p>
                     )}
-                  </p>
-                )}
-              </div>
-            );
-          })}
+                  </div>
+                );
+              })}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {mode === "create" ? "Creating..." : "Saving..."}
-                </>
-              ) : mode === "create" ? (
-                "Create"
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </DialogFooter>
-          </>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      {mode === 'create' ? 'Creating...' : 'Saving...'}
+                    </>
+                  ) : mode === 'create' ? (
+                    'Create'
+                  ) : (
+                    'Save Changes'
+                  )}
+                </Button>
+              </DialogFooter>
+            </>
           )}
         </form>
       </DialogContent>
@@ -181,7 +176,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
   const disabled = field.readOnly === true;
 
   switch (field.type) {
-    case "string":
+    case 'string':
       return (
         <Input
           id={fieldName}
@@ -190,7 +185,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           disabled={disabled}
         />
       );
-    case "number":
+    case 'number':
       return (
         <Input
           id={fieldName}
@@ -200,7 +195,7 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           disabled={disabled}
         />
       );
-    case "boolean":
+    case 'boolean':
       // Register the field to ensure it's tracked by react-hook-form
       form.register(fieldName);
       return (
@@ -218,13 +213,11 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           </Label>
         </div>
       );
-    case "enum":
+    case 'enum':
       return (
         <Select
-          value={typeof value === "string" ? value : ""}
-          onValueChange={(val) =>
-            form.setValue(fieldName, val, { shouldValidate: true })
-          }
+          value={typeof value === 'string' ? value : ''}
+          onValueChange={(val) => form.setValue(fieldName, val, { shouldValidate: true })}
           disabled={disabled}
         >
           <SelectTrigger id={fieldName}>
@@ -239,19 +232,19 @@ function renderField(field: Field, form: UseFormReturn<Record<string, unknown>>)
           </SelectContent>
         </Select>
       );
-    case "object":
+    case 'object':
       return (
         <textarea
           id={fieldName}
           className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           value={
-            value != null && typeof value === "object"
+            value != null && typeof value === 'object'
               ? JSON.stringify(value, null, 2)
-              : String(value ?? "")
+              : String(value ?? '')
           }
           onChange={(e) => {
             try {
-              const parsed = JSON.parse(e.target.value || "{}");
+              const parsed = JSON.parse(e.target.value || '{}');
               form.setValue(fieldName, parsed, { shouldValidate: true });
             } catch {
               form.setValue(fieldName, e.target.value, { shouldValidate: true });

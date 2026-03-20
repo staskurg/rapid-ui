@@ -8,35 +8,31 @@
  * Seed: For predefined, generated once per account from fixtures. For custom, starts empty.
  */
 
-import {
-  getDataSourceId,
-  getPredefinedDataForDataSource,
-  isPredefinedSpec,
-} from "./fixtures";
-import { getObjectSchema } from "../lowering/schema-to-field";
-import type { JsonSchema } from "../apiir/types";
-import type { UISpec } from "@/lib/spec/types";
+import { getDataSourceId, getPredefinedDataForDataSource, isPredefinedSpec } from './fixtures';
+import { getObjectSchema } from '../lowering/schema-to-field';
+import type { JsonSchema } from '../apiir/types';
+import type { UISpec } from '@/lib/spec/types';
 
 /** Collect dot paths for createdAt/updatedAt from schema (top-level and nested). */
 function collectTimestampPaths(
   schema: JsonSchema,
-  prefix = ""
+  prefix = ''
 ): { createdAt: string[]; updatedAt: string[] } {
   const createdAt: string[] = [];
   const updatedAt: string[] = [];
   const objSchema = getObjectSchema(schema);
-  if (!objSchema?.properties || typeof objSchema.properties !== "object") {
+  if (!objSchema?.properties || typeof objSchema.properties !== 'object') {
     return { createdAt, updatedAt };
   }
   for (const [key, prop] of Object.entries(objSchema.properties)) {
-    if (!prop || typeof prop !== "object") continue;
+    if (!prop || typeof prop !== 'object') continue;
     const path = prefix ? `${prefix}.${key}` : key;
     const lower = key.toLowerCase();
-    if (lower === "createdat") createdAt.push(path);
-    else if (lower === "updatedat") updatedAt.push(path);
-    else if (prop.type === "object" && prop.properties) {
+    if (lower === 'createdat') createdAt.push(path);
+    else if (lower === 'updatedat') updatedAt.push(path);
+    else if (prop.type === 'object' && prop.properties) {
       const nested = collectTimestampPaths(
-        { type: "object", properties: prop.properties } as JsonSchema,
+        { type: 'object', properties: prop.properties } as JsonSchema,
         path
       );
       createdAt.push(...nested.createdAt);
@@ -47,11 +43,11 @@ function collectTimestampPaths(
 }
 
 function setByPath(obj: Record<string, unknown>, path: string, value: unknown): void {
-  const parts = path.split(".");
+  const parts = path.split('.');
   const leaf = parts.pop()!;
   let cur: Record<string, unknown> = obj;
   for (const p of parts) {
-    if (!(p in cur) || typeof cur[p] !== "object") cur[p] = {};
+    if (!(p in cur) || typeof cur[p] !== 'object') cur[p] = {};
     cur = cur[p] as Record<string, unknown>;
   }
   cur[leaf] = value;
@@ -59,8 +55,8 @@ function setByPath(obj: Record<string, unknown>, path: string, value: unknown): 
 
 function getByPath(obj: Record<string, unknown>, path: string): unknown {
   let cur: unknown = obj;
-  for (const p of path.split(".")) {
-    if (cur == null || typeof cur !== "object") return undefined;
+  for (const p of path.split('.')) {
+    if (cur == null || typeof cur !== 'object') return undefined;
     cur = (cur as Record<string, unknown>)[p];
   }
   return cur;
@@ -114,7 +110,7 @@ export function getRecords(
   spec: UISpec,
   openapiCanonicalHash: string
 ): Record<string, unknown>[] {
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const data = getOrCreateResource(
     accountId,
     compilationId,
@@ -135,7 +131,7 @@ export function createRecord(
   openapiCanonicalHash: string,
   input: Record<string, unknown>
 ): Record<string, unknown> {
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const data = getOrCreateResource(
     accountId,
     compilationId,
@@ -170,7 +166,7 @@ export function getById(
   openapiCanonicalHash: string,
   id: string | number
 ): Record<string, unknown> | undefined {
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const data = getOrCreateResource(
     accountId,
     compilationId,
@@ -192,7 +188,7 @@ export function updateRecord(
   id: string | number,
   input: Record<string, unknown>
 ): Record<string, unknown> | undefined {
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const data = getOrCreateResource(
     accountId,
     compilationId,
@@ -227,7 +223,7 @@ export function deleteRecord(
   openapiCanonicalHash: string,
   id: string | number
 ): boolean {
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const data = getOrCreateResource(
     accountId,
     compilationId,

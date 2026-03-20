@@ -3,7 +3,7 @@
  * accountId persisted in localStorage for multi-compilation listing.
  */
 
-const ACCOUNT_ID_KEY = "rapidui_account_id";
+const ACCOUNT_ID_KEY = 'rapidui_account_id';
 
 /**
  * Get or create a persistent account ID. Reads from localStorage;
@@ -11,8 +11,8 @@ const ACCOUNT_ID_KEY = "rapidui_account_id";
  * Must be called in browser (uses localStorage).
  */
 export function getOrCreateAccountId(): string {
-  if (typeof window === "undefined") {
-    throw new Error("getOrCreateAccountId requires browser environment");
+  if (typeof window === 'undefined') {
+    throw new Error('getOrCreateAccountId requires browser environment');
   }
   let id = localStorage.getItem(ACCOUNT_ID_KEY);
   if (!id) {
@@ -28,8 +28,8 @@ export function getOrCreateAccountId(): string {
  * Must be called in browser.
  */
 export function resetAccountId(): string {
-  if (typeof window === "undefined") {
-    throw new Error("resetAccountId requires browser environment");
+  if (typeof window === 'undefined') {
+    throw new Error('resetAccountId requires browser environment');
   }
   localStorage.removeItem(ACCOUNT_ID_KEY);
   const id = crypto.randomUUID();

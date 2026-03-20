@@ -2,9 +2,9 @@
  * Postgres-backed compilation store.
  * Requires POSTGRES_URL or DATABASE_URL.
  */
-import { neon } from "@neondatabase/serverless";
-import type { UISpec } from "@/lib/spec/types";
-import type { ApiIR } from "@/lib/compiler/apiir";
+import { neon } from '@neondatabase/serverless';
+import type { UISpec } from '@/lib/spec/types';
+import type { ApiIR } from '@/lib/compiler/apiir';
 
 export interface CompilationEntry {
   specs: Record<string, UISpec>;
@@ -14,12 +14,12 @@ export interface CompilationEntry {
   openapiCanonicalHash: string;
   accountId?: string;
   name?: string;
-  status?: "success" | "failed";
+  status?: 'success' | 'failed';
   errors?: unknown[];
   diffFromPrevious?: {
     byPage: Array<{
       name: string;
-      type: "added" | "removed" | "unchanged";
+      type: 'added' | 'removed' | 'unchanged';
       addedFields: string[];
       removedFields: string[];
     }>;
@@ -31,7 +31,7 @@ export interface CompilationEntry {
 export interface CompilationListItem {
   id: string;
   name: string;
-  status: "success" | "failed";
+  status: 'success' | 'failed';
   createdAt?: string;
   updatedAt?: string;
 }
@@ -39,7 +39,7 @@ export interface CompilationListItem {
 function getSql() {
   const url = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("POSTGRES_URL or DATABASE_URL is required");
+    throw new Error('POSTGRES_URL or DATABASE_URL is required');
   }
   return neon(url);
 }
@@ -60,12 +60,12 @@ function rowToEntry(row: Record<string, unknown>): CompilationEntry {
     resourceNames: (row.resource_names as string[]) ?? [],
     resourceSlugs: (row.resource_slugs as string[]) ?? [],
     apiIr: row.api_ir as ApiIR,
-    openapiCanonicalHash: (row.openapi_canonical_hash as string) ?? "",
+    openapiCanonicalHash: (row.openapi_canonical_hash as string) ?? '',
     accountId: row.account_id as string | undefined,
     name: row.name as string | undefined,
-    status: (row.status as "success" | "failed") ?? "success",
+    status: (row.status as 'success' | 'failed') ?? 'success',
     errors: row.errors as unknown[] | undefined,
-    diffFromPrevious: row.diff_from_previous as CompilationEntry["diffFromPrevious"],
+    diffFromPrevious: row.diff_from_previous as CompilationEntry['diffFromPrevious'],
     createdAt: row.created_at as string | undefined,
     updatedAt: row.updated_at as string | undefined,
   };
@@ -73,10 +73,10 @@ function rowToEntry(row: Record<string, unknown>): CompilationEntry {
 
 export async function putCompilation(
   id: string,
-  entry: Omit<CompilationEntry, "createdAt" | "updatedAt"> &
-    Partial<Pick<CompilationEntry, "createdAt" | "updatedAt">>
+  entry: Omit<CompilationEntry, 'createdAt' | 'updatedAt'> &
+    Partial<Pick<CompilationEntry, 'createdAt' | 'updatedAt'>>
 ): Promise<void> {
-  return withDbErrorHandling("putCompilation", async () => {
+  return withDbErrorHandling('putCompilation', async () => {
     const sql = getSql();
     const now = new Date().toISOString();
 
@@ -88,7 +88,7 @@ export async function putCompilation(
       ${id},
       ${entry.accountId ?? null},
       ${entry.name ?? null},
-      ${entry.status ?? "success"},
+      ${entry.status ?? 'success'},
       ${JSON.stringify(entry.specs)},
       ${JSON.stringify(entry.apiIr)},
       ${entry.openapiCanonicalHash},
@@ -116,10 +116,8 @@ export async function putCompilation(
   });
 }
 
-export async function getCompilation(
-  id: string
-): Promise<CompilationEntry | undefined> {
-  return withDbErrorHandling("getCompilation", async () => {
+export async function getCompilation(id: string): Promise<CompilationEntry | undefined> {
+  return withDbErrorHandling('getCompilation', async () => {
     const sql = getSql();
     const rows = await sql`
       SELECT * FROM compilations WHERE id = ${id} LIMIT 1
@@ -131,7 +129,7 @@ export async function getCompilation(
 }
 
 export async function hasCompilation(id: string): Promise<boolean> {
-  return withDbErrorHandling("hasCompilation", async () => {
+  return withDbErrorHandling('hasCompilation', async () => {
     const sql = getSql();
     const rows = await sql`
       SELECT 1 FROM compilations WHERE id = ${id} LIMIT 1
@@ -140,10 +138,8 @@ export async function hasCompilation(id: string): Promise<boolean> {
   });
 }
 
-export async function listCompilationsByAccount(
-  accountId: string
-): Promise<CompilationListItem[]> {
-  return withDbErrorHandling("listCompilationsByAccount", async () => {
+export async function listCompilationsByAccount(accountId: string): Promise<CompilationListItem[]> {
+  return withDbErrorHandling('listCompilationsByAccount', async () => {
     const sql = getSql();
     const rows = await sql`
       SELECT id, name, status, created_at, updated_at
@@ -155,7 +151,7 @@ export async function listCompilationsByAccount(
     return rows.map((row: Record<string, unknown>) => ({
       id: row.id as string,
       name: (row.name as string) ?? (row.id as string),
-      status: (row.status as "success" | "failed") ?? "success",
+      status: (row.status as 'success' | 'failed') ?? 'success',
       createdAt: row.created_at as string | undefined,
       updatedAt: row.updated_at as string | undefined,
     }));
@@ -163,7 +159,7 @@ export async function listCompilationsByAccount(
 }
 
 export async function deleteCompilation(id: string): Promise<void> {
-  return withDbErrorHandling("deleteCompilation", async () => {
+  return withDbErrorHandling('deleteCompilation', async () => {
     const sql = getSql();
     await sql`DELETE FROM compilations WHERE id = ${id}`;
   });

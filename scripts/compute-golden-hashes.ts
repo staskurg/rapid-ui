@@ -9,41 +9,41 @@
  * copy the output hashes into fixtures.ts, and the mock store will correctly route to
  * the right predefined JSON.
  */
-import { readFileSync } from "fs";
-import { join } from "path";
-import { parseOpenAPI } from "../lib/compiler/openapi/parser";
-import { resolveRefs } from "../lib/compiler/openapi/ref-resolver";
-import { validateSubset } from "../lib/compiler/openapi/subset-validator";
-import { canonicalize, canonicalStringify } from "../lib/compiler/openapi/canonicalize";
-import { sha256Hash } from "../lib/compiler/hash";
+import { readFileSync } from 'fs';
+import { join } from 'path';
+import { parseOpenAPI } from '../lib/compiler/openapi/parser';
+import { resolveRefs } from '../lib/compiler/openapi/ref-resolver';
+import { validateSubset } from '../lib/compiler/openapi/subset-validator';
+import { canonicalize, canonicalStringify } from '../lib/compiler/openapi/canonicalize';
+import { sha256Hash } from '../lib/compiler/hash';
 
 const FIXTURES = [
-  "tests/compiler/fixtures/demo/golden_openapi_users_tagged_3_0.yaml",
-  "tests/compiler/fixtures/demo/golden_openapi_products_path_3_1.yaml",
-  "tests/compiler/fixtures/demo/demo_users_tasks_v1.yaml",
-  "tests/compiler/fixtures/demo/demo_users_tasks_v2.yaml",
-  "tests/compiler/fixtures/demo/demo_users_tasks_v3.yaml",
+  'tests/compiler/fixtures/demo/golden_openapi_users_tagged_3_0.yaml',
+  'tests/compiler/fixtures/demo/golden_openapi_products_path_3_1.yaml',
+  'tests/compiler/fixtures/demo/demo_users_tasks_v1.yaml',
+  'tests/compiler/fixtures/demo/demo_users_tasks_v2.yaml',
+  'tests/compiler/fixtures/demo/demo_users_tasks_v3.yaml',
 ];
 
 for (const p of FIXTURES) {
-  const yaml = readFileSync(join(process.cwd(), p), "utf8");
+  const yaml = readFileSync(join(process.cwd(), p), 'utf8');
   const parse = parseOpenAPI(yaml);
   if (!parse.success) {
-    console.error(p, "parse failed:", parse.error);
+    console.error(p, 'parse failed:', parse.error);
     continue;
   }
   const validate = validateSubset(parse.doc);
   if (!validate.success) {
-    console.error(p, "validate failed:", validate.errors);
+    console.error(p, 'validate failed:', validate.errors);
     continue;
   }
   const resolve = resolveRefs(parse.doc);
   if (!resolve.success) {
-    console.error(p, "resolve failed:", resolve.error);
+    console.error(p, 'resolve failed:', resolve.error);
     continue;
   }
   const canonical = canonicalize(resolve.doc);
   const str = canonicalStringify(canonical);
   const hash = sha256Hash(str);
-  console.log(p.split("/").pop(), "->", hash);
+  console.log(p.split('/').pop(), '->', hash);
 }

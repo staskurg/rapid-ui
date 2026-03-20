@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Input } from "@/components/ui/input";
+import * as React from 'react';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import type { UISpec, Field } from "@/lib/spec/types";
-import { X } from "lucide-react";
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import type { UISpec, Field } from '@/lib/spec/types';
+import { X } from 'lucide-react';
 
 interface FiltersPanelProps {
   spec: UISpec;
@@ -20,16 +20,12 @@ interface FiltersPanelProps {
   onFilterChange: (filters: Record<string, unknown>) => void;
 }
 
-export function FiltersPanel({
-  spec,
-  filters,
-  onFilterChange,
-}: FiltersPanelProps) {
+export function FiltersPanel({ spec, filters, onFilterChange }: FiltersPanelProps) {
   const fieldMap = new Map(spec.fields.map((f) => [f.name, f]));
 
   const handleFilterChange = (fieldName: string, value: unknown) => {
     const newFilters = { ...filters };
-    if (value === "" || value === null || value === undefined) {
+    if (value === '' || value === null || value === undefined) {
       delete newFilters[fieldName];
     } else {
       newFilters[fieldName] = value;
@@ -52,12 +48,7 @@ export function FiltersPanel({
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold">Filters</h3>
         {hasActiveFilters && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearFilters}
-            className="h-8"
-          >
+          <Button variant="ghost" size="sm" onClick={clearFilters} className="h-8">
             <X className="h-4 w-4 mr-1" />
             Clear
           </Button>
@@ -83,33 +74,30 @@ export function FiltersPanel({
   );
 }
 
-function renderFilterInput(
-  field: Field,
-  value: unknown,
-  onChange: (value: unknown) => void
-) {
+function renderFilterInput(field: Field, value: unknown, onChange: (value: unknown) => void) {
   switch (field.type) {
-    case "string":
+    case 'string':
       return (
         <Input
           id={`filter-${field.name}`}
           type="text"
           placeholder={`Search ${field.label.toLowerCase()}...`}
-          value={typeof value === "string" ? value : ""}
+          value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value)}
         />
       );
-    case "number":
-      const numberValue = value && typeof value === "object" && "min" in value && "max" in value
-        ? value as { min?: number; max?: number }
-        : { min: undefined, max: undefined };
+    case 'number':
+      const numberValue =
+        value && typeof value === 'object' && 'min' in value && 'max' in value
+          ? (value as { min?: number; max?: number })
+          : { min: undefined, max: undefined };
       return (
         <div className="flex gap-2">
           <Input
             id={`filter-${field.name}-min`}
             type="number"
             placeholder="Min"
-            value={numberValue.min ?? ""}
+            value={numberValue.min ?? ''}
             onChange={(e) =>
               onChange({
                 ...numberValue,
@@ -121,7 +109,7 @@ function renderFilterInput(
             id={`filter-${field.name}-max`}
             type="number"
             placeholder="Max"
-            value={numberValue.max ?? ""}
+            value={numberValue.max ?? ''}
             onChange={(e) =>
               onChange({
                 ...numberValue,
@@ -131,15 +119,15 @@ function renderFilterInput(
           />
         </div>
       );
-    case "boolean":
+    case 'boolean':
       return (
         <Select
-          value={value === undefined ? "all" : String(value)}
+          value={value === undefined ? 'all' : String(value)}
           onValueChange={(val) => {
-            if (val === "all") {
+            if (val === 'all') {
               onChange(undefined);
             } else {
-              onChange(val === "true");
+              onChange(val === 'true');
             }
           }}
         >
@@ -153,11 +141,11 @@ function renderFilterInput(
           </SelectContent>
         </Select>
       );
-    case "enum":
+    case 'enum':
       return (
         <Select
-          value={typeof value === "string" ? value : "all"}
-          onValueChange={(val) => onChange(val === "all" ? undefined : val)}
+          value={typeof value === 'string' ? value : 'all'}
+          onValueChange={(val) => onChange(val === 'all' ? undefined : val)}
         >
           <SelectTrigger id={`filter-${field.name}`}>
             <SelectValue />
@@ -172,14 +160,14 @@ function renderFilterInput(
           </SelectContent>
         </Select>
       );
-    case "object":
+    case 'object':
       return null; // object type not filterable
     default:
       return (
         <Input
           id={`filter-${field.name}`}
           type="text"
-          value={typeof value === "string" ? value : ""}
+          value={typeof value === 'string' ? value : ''}
           onChange={(e) => onChange(e.target.value)}
         />
       );

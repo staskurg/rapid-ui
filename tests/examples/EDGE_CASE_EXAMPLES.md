@@ -11,9 +11,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ## 🧪 Edge Case Test Examples
 
 ### Edge Case 1: Special Characters in Field Names
+
 **Purpose:** Test field name sanitization and label generation
 
 **JSON Payload:**
+
 ```json
 {
   "id": 1,
@@ -27,6 +29,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ All fields are parsed correctly
 - ✅ Labels are generated properly (special chars handled)
 - ✅ Field names in spec match JSON keys exactly
@@ -36,9 +39,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 2: Null, Undefined, and Empty Values
+
 **Purpose:** Test handling of null, undefined, empty strings, zero, and false
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -63,6 +68,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Null values don't break parsing
 - ✅ Empty strings are handled as strings
 - ✅ Zero is detected as number (not boolean)
@@ -73,9 +79,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 3: Single Object (Not Array)
+
 **Purpose:** Test single object payload handling
 
 **JSON Payload:**
+
 ```json
 {
   "id": 1,
@@ -86,6 +94,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Single object is parsed correctly
 - ✅ UI generates from single object
 - ✅ Table shows one row
@@ -95,9 +104,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 4: Number Edge Cases
+
 **Purpose:** Test various number formats and edge cases
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -120,6 +131,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Very small numbers display correctly
 - ✅ Very large numbers display correctly
 - ✅ Negative numbers handled properly
@@ -130,9 +142,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 5: Enum Detection Threshold (6+ Values)
+
 **Purpose:** Test enum vs string detection with 6+ values
 
 **JSON Payload:**
+
 ```json
 [
   { "id": 1, "status": "active" },
@@ -145,6 +159,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Status should be detected as **string** (not enum) because >5 distinct values
 - ✅ Filter should be text search (not dropdown)
 - ✅ Enum threshold logic works correctly
@@ -152,9 +167,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 6: Enum Detection Threshold (Exactly 5 Values)
+
 **Purpose:** Test enum detection with exactly 5 values
 
 **JSON Payload:**
+
 ```json
 [
   { "id": 1, "priority": "option1" },
@@ -166,6 +183,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Priority should be detected as **enum** (exactly 5 values)
 - ✅ Filter should be dropdown with 5 options
 - ✅ Form should have select dropdown with options
@@ -173,9 +191,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 7: Very Long Text Fields
+
 **Purpose:** Test layout with very long text content
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -194,6 +214,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Long text wraps or truncates properly
 - ✅ Table layout doesn't break
 - ✅ Forms handle long text correctly
@@ -202,9 +223,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 8: Unicode, Emoji, and Special Characters
+
 **Purpose:** Test international characters and special symbols
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -225,6 +248,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Unicode characters display correctly
 - ✅ Emojis render properly
 - ✅ Special characters don't break parsing
@@ -234,9 +258,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 9: Deeply Nested Objects
+
 **Purpose:** Test nested object flattening (6+ levels)
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -271,6 +297,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Nested objects are flattened correctly
 - ✅ Field names use dot notation (e.g., "deeply.nested.object.with.many.levels")
 - ✅ Labels are generated properly from nested paths
@@ -280,9 +307,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 10: Boolean Type Confusion
+
 **Purpose:** Test boolean vs string/number confusion
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -307,6 +336,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ booleanTrue/booleanFalse are detected as **boolean** type
 - ✅ stringTrue/stringFalse are detected as **string** type
 - ✅ numberOne/numberZero are detected as **number** type
@@ -317,9 +347,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 11: Date/Time Formats
+
 **Purpose:** Test various date representations (should be strings)
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -340,6 +372,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ All date fields are detected as **string** type (not date)
 - ✅ Timestamp (number) is detected as **number** type
 - ✅ Date strings display correctly
@@ -349,9 +382,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 12: Empty Structures
+
 **Purpose:** Test empty objects and arrays within payload
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -372,6 +407,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Empty objects don't break parsing
 - ✅ Empty arrays don't break parsing
 - ✅ Null values are handled
@@ -381,9 +417,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 13: Mixed Types in Same Field (Invalid Data)
+
 **Purpose:** Test handling of inconsistent types (edge case)
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -402,6 +440,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Parser handles mixed types (uses first non-null value type)
 - ✅ Type inference works correctly
 - ✅ UI renders without errors
@@ -410,25 +449,28 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 14: Very Large Array
+
 **Purpose:** Test performance with larger datasets
 
 **JSON Payload:**
+
 ```json
 [
-  {"id": 1, "name": "Item 1", "value": 10},
-  {"id": 2, "name": "Item 2", "value": 20},
-  {"id": 3, "name": "Item 3", "value": 30},
-  {"id": 4, "name": "Item 4", "value": 40},
-  {"id": 5, "name": "Item 5", "value": 50},
-  {"id": 6, "name": "Item 6", "value": 60},
-  {"id": 7, "name": "Item 7", "value": 70},
-  {"id": 8, "name": "Item 8", "value": 80},
-  {"id": 9, "name": "Item 9", "value": 90},
-  {"id": 10, "name": "Item 10", "value": 100}
+  { "id": 1, "name": "Item 1", "value": 10 },
+  { "id": 2, "name": "Item 2", "value": 20 },
+  { "id": 3, "name": "Item 3", "value": 30 },
+  { "id": 4, "name": "Item 4", "value": 40 },
+  { "id": 5, "name": "Item 5", "value": 50 },
+  { "id": 6, "name": "Item 6", "value": 60 },
+  { "id": 7, "name": "Item 7", "value": 70 },
+  { "id": 8, "name": "Item 8", "value": 80 },
+  { "id": 9, "name": "Item 9", "value": 90 },
+  { "id": 10, "name": "Item 10", "value": 100 }
 ]
 ```
 
 **What to Verify:**
+
 - ✅ Large arrays parse correctly
 - ✅ Table renders all rows
 - ✅ Performance is acceptable
@@ -438,9 +480,11 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ---
 
 ### Edge Case 15: Missing Fields Across Records
+
 **Purpose:** Test optional fields that don't exist in all records
 
 **JSON Payload:**
+
 ```json
 [
   {
@@ -461,6 +505,7 @@ Use these examples to test edge case handling in the UI. Copy and paste them int
 ```
 
 **What to Verify:**
+
 - ✅ Optional fields are detected correctly
 - ✅ Fields missing in some records are marked as optional
 - ✅ Forms handle optional fields properly

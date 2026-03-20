@@ -4,15 +4,15 @@
  * Produces byte-stable ApiIR JSON.
  */
 
-import stringify from "fast-json-stable-stringify";
-import type { ApiIR, ResourceIR, OperationIR } from "./types";
-import type { CompilerError } from "../errors";
-import { groupOperations } from "./grouping";
-import { mapOperation } from "./operations";
-import { slugify } from "@/lib/utils/slugify";
-import { sha256Hash } from "../hash";
+import stringify from 'fast-json-stable-stringify';
+import type { ApiIR, ResourceIR, OperationIR } from './types';
+import type { CompilerError } from '../errors';
+import { groupOperations } from './grouping';
+import { mapOperation } from './operations';
+import { slugify } from '@/lib/utils/slugify';
+import { sha256Hash } from '../hash';
 
-const KIND_ORDER: OperationIR["kind"][] = ["list", "detail", "create", "update", "delete"];
+const KIND_ORDER: OperationIR['kind'][] = ['list', 'detail', 'create', 'update', 'delete'];
 
 function sortOperations(ops: OperationIR[]): OperationIR[] {
   return [...ops].sort((a, b) => {
@@ -42,17 +42,17 @@ export type BuildApiIROutput = BuildApiIRResult | BuildApiIRFailure;
  */
 export function buildApiIR(doc: Record<string, unknown>): BuildApiIROutput {
   const info = doc.info as Record<string, unknown> | undefined;
-  const title = (info?.title as string) ?? "API";
-  const version = (info?.version as string) ?? "1.0.0";
+  const title = (info?.title as string) ?? 'API';
+  const version = (info?.version as string) ?? '1.0.0';
 
   const paths = doc.paths as Record<string, unknown> | undefined;
-  if (!paths || typeof paths !== "object") {
+  if (!paths || typeof paths !== 'object') {
     return {
       success: false,
       error: {
-        code: "IR_INVALID",
-        stage: "ApiIR",
-        message: "No paths in OpenAPI document",
+        code: 'IR_INVALID',
+        stage: 'ApiIR',
+        message: 'No paths in OpenAPI document',
       },
     };
   }

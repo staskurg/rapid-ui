@@ -2,7 +2,7 @@
 
 **Purpose:** Define the structure and content of the Phase 4 corpus report. The corpus report is the **empirical map of the OpenAPI ecosystem** — it tells you how reality differs from RUS-v1 language design and determines the RUS-v2 roadmap.
 
-> The corpus report answers: *How many real APIs naturally fit into RUS-v1, and why don't others?*
+> The corpus report answers: _How many real APIs naturally fit into RUS-v1, and why don't others?_
 
 ---
 
@@ -10,12 +10,12 @@
 
 The report covers four layers of insight:
 
-| Layer | Focus | Key metrics |
-| ----- | ----- | ----------- |
-| **1. Compatibility** | Pass rate, near-pass, fixability, endpoint coverage | Pass rate; near-pass %; fix cost distribution; endpoint coverage; Natural Fit Score |
-| **2. Ecosystem Structure** | API patterns, schema composition, path structure | CRUD patterns; schema reuse; complexity; path depth |
-| **3. Language Design** | Rejection reasons, feature usage, error locations | Rejection distribution; feature presence; error location heatmap; compatibility projection |
-| **4. System Health** | Compiler stability, performance, IR size | Determinism; compile time; crash count; IR metrics |
+| Layer                      | Focus                                               | Key metrics                                                                                |
+| -------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| **1. Compatibility**       | Pass rate, near-pass, fixability, endpoint coverage | Pass rate; near-pass %; fix cost distribution; endpoint coverage; Natural Fit Score        |
+| **2. Ecosystem Structure** | API patterns, schema composition, path structure    | CRUD patterns; schema reuse; complexity; path depth                                        |
+| **3. Language Design**     | Rejection reasons, feature usage, error locations   | Rejection distribution; feature presence; error location heatmap; compatibility projection |
+| **4. System Health**       | Compiler stability, performance, IR size            | Determinism; compile time; crash count; IR metrics                                         |
 
 ---
 
@@ -41,12 +41,12 @@ Pass rate: X%
 
 **Interpretation guide:**
 
-| Pass rate | Interpretation |
-| --------- | -------------- |
-| <1% | Subset too strict |
-| **4–7%** | **Strong contract language** (predicted range) |
-| 20–30% | More compatibility |
-| 80%+ | Too loose, not deterministic |
+| Pass rate | Interpretation                                 |
+| --------- | ---------------------------------------------- |
+| <1%       | Subset too strict                              |
+| **4–7%**  | **Strong contract language** (predicted range) |
+| 20–30%    | More compatibility                             |
+| 80%+      | Too loose, not deterministic                   |
 
 **Why it matters:** A single number that validates or invalidates the prediction. The 4–7% range signals you're building a **language**, not a parser — similar to strict-mode compilers that shape ecosystems.
 
@@ -80,11 +80,11 @@ Some rejected APIs are easy to fix; others require redesigning the API.
 
 **Required output:** Classify each rejection category by fix cost:
 
-| Fix cost | Definition | Example issues |
-| -------- | ---------- | -------------- |
+| Fix cost    | Definition                          | Example issues                         |
+| ----------- | ----------------------------------- | -------------------------------------- |
 | **Trivial** | Remove keyword or pick first option | example, multiple success (pick first) |
-| **Medium** | Schema refactor or flattening | allOf inheritance, external $ref |
-| **Hard** | API redesign required | complex polymorphism, nested paths |
+| **Medium**  | Schema refactor or flattening       | allOf inheritance, external $ref       |
+| **Hard**    | API redesign required               | complex polymorphism, nested paths     |
 
 ```
 REJECTION FIX COST
@@ -177,15 +177,15 @@ multiple tags per operation        XX%
 
 **Mapping to error codes:** Categorize by `CompilerErrorCode` where applicable:
 
-| Error code | Report category |
-| ---------- | --------------- |
-| `OAS_UNSUPPORTED_SCHEMA_KEYWORD` | oneOf/anyOf/allOf, example, default, pattern, etc. (split by message/keyword) |
-| `OAS_INVALID_SCHEMA_SHAPE` | required⊆properties, array→items, object→properties, enum↔type, additionalProperties |
-| `OAS_INVALID_OPERATION_STRUCTURE` | empty paths, no supported ops, path-level params, missing request body, GET/DELETE with body, zero ops |
-| `OAS_INVALID_RESPONSE_STRUCTURE` | multiple success, wrong content type, empty schema, root schema primitive |
-| `OAS_INVALID_PARAMETER` | path param non-primitive, query param complex schema |
-| `OAS_EXTERNAL_REF` / `OAS_CIRCULAR_REF` | external $ref, circular ref |
-| `OAS_AMBIGUOUS_RESOURCE_GROUPING` | mixed tags, multiple tags per op |
+| Error code                              | Report category                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `OAS_UNSUPPORTED_SCHEMA_KEYWORD`        | oneOf/anyOf/allOf, example, default, pattern, etc. (split by message/keyword)                          |
+| `OAS_INVALID_SCHEMA_SHAPE`              | required⊆properties, array→items, object→properties, enum↔type, additionalProperties                   |
+| `OAS_INVALID_OPERATION_STRUCTURE`       | empty paths, no supported ops, path-level params, missing request body, GET/DELETE with body, zero ops |
+| `OAS_INVALID_RESPONSE_STRUCTURE`        | multiple success, wrong content type, empty schema, root schema primitive                              |
+| `OAS_INVALID_PARAMETER`                 | path param non-primitive, query param complex schema                                                   |
+| `OAS_EXTERNAL_REF` / `OAS_CIRCULAR_REF` | external $ref, circular ref                                                                            |
+| `OAS_AMBIGUOUS_RESOURCE_GROUPING`       | mixed tags, multiple tags per op                                                                       |
 
 **Why it matters:** This is the **RUS-v2 roadmap**. Top 10 rejection reasons ranked by frequency = prioritized expansion candidates.
 
@@ -540,15 +540,18 @@ Payments         XX%
 
 ```markdown
 # RapidUI RUS-v1 Corpus Report
+
 **Date:** YYYY-MM-DD
 
 ## SAMPLING METHOD
+
 Source: APIs.guru
 Selection: random
 Total available: ~2000 APIs
 Sample size: 100
 
 ## LAYER 1: COMPATIBILITY
+
 Pass rate: M/N (X%)
 Near-pass (single violation): XX%
 Endpoint coverage: Y/Z (W%)
@@ -556,22 +559,27 @@ Fix cost: Low XX% | Medium XX% | High XX%
 Natural Fit Score: pass_rate + easy_fix_rate = XX%
 
 ## LAYER 2: ECOSYSTEM
+
 [CRUD patterns, schema reuse, complexity, path structure]
 
 ## LAYER 3: LANGUAGE DESIGN
+
 [Top rejection reasons, error location heatmap, feature presence]
 Compatibility projection: [if we add X, Y, Z → ~XX%]
 
 ## LAYER 4: SYSTEM HEALTH
+
 Determinism: 100%
 Compile time: avg X ms, max Y ms
 Compiler crashes: 0
 IR metrics: [resources, fields]
 
 ## RUS-v2 ROADMAP IMPLICATIONS
+
 [Top 5 expansion candidates based on rejection distribution]
 
 ## EXAMPLES
+
 [3–5 real PASS and FAIL API examples]
 ```
 
@@ -597,13 +605,13 @@ IR metrics: [resources, fields]
 
 Pre-define mapping from rejection category to fix cost:
 
-| Category | Typical fix cost |
-| -------- | ---------------- |
-| example, default | Trivial |
-| multiple success (pick first) | Trivial |
-| external $ref | Medium |
-| allOf / oneOf | Medium |
-| complex polymorphism, nested paths | Hard |
+| Category                           | Typical fix cost |
+| ---------------------------------- | ---------------- |
+| example, default                   | Trivial          |
+| multiple success (pick first)      | Trivial          |
+| external $ref                      | Medium           |
+| allOf / oneOf                      | Medium           |
+| complex polymorphism, nested paths | Hard             |
 
 ### Sample size
 
@@ -632,12 +640,12 @@ The corpus report is not just testing the compiler. It answers:
 
 The following four metrics unlock the most strategic insight (per platform-company practice):
 
-| # | Metric | Why critical |
-|---|--------|--------------|
-| 1 | **Near-pass analysis** | Which rule change unlocks the most APIs |
-| 2 | **Fixability cost** | Pass + easy fix = true ecosystem potential |
-| 3 | **Endpoint coverage** | May support most CRUD endpoints even when full spec fails |
-| 4 | **CRUD pattern distribution** | RapidUI is a CRUD UI generator; alignment with reality matters |
+| #   | Metric                        | Why critical                                                   |
+| --- | ----------------------------- | -------------------------------------------------------------- |
+| 1   | **Near-pass analysis**        | Which rule change unlocks the most APIs                        |
+| 2   | **Fixability cost**           | Pass + easy fix = true ecosystem potential                     |
+| 3   | **Endpoint coverage**         | May support most CRUD endpoints even when full spec fails      |
+| 4   | **CRUD pattern distribution** | RapidUI is a CRUD UI generator; alignment with reality matters |
 
 ---
 

@@ -18,6 +18,7 @@ Operation must have success response with JSON schema
 ```
 
 **Trigger when:**
+
 - no success response
 - OR no JSON media type
 - OR JSON media type without schema
@@ -25,11 +26,13 @@ Operation must have success response with JSON schema
 Keep separate error for primitive root responses.
 
 **Add hint to error message:**
+
 ```
 RapidUI requires a JSON response body to generate UI.
 ```
 
 **Documentation** (in `docs/openapi-subset-v1.md`):
+
 ```
 An operation must expose a success response containing a JSON schema.
 RapidUI currently treats HTTP 200 and 201 responses as success responses during validation.
@@ -43,14 +46,15 @@ Add:
 
 ```ts
 const UNSUPPORTED_HINTS: Record<string, string> = {
-  oneOf: "RapidUI does not support polymorphic schemas.",
-  anyOf: "RapidUI does not support polymorphic schemas.",
-  allOf: "RapidUI does not support schema composition.",
-  discriminator: "RapidUI does not support polymorphic schemas.",
+  oneOf: 'RapidUI does not support polymorphic schemas.',
+  anyOf: 'RapidUI does not support polymorphic schemas.',
+  allOf: 'RapidUI does not support schema composition.',
+  discriminator: 'RapidUI does not support polymorphic schemas.',
 };
 ```
 
 Emit:
+
 ```
 Unsupported schema keyword: oneOf
 RapidUI does not support polymorphic schemas.
@@ -69,6 +73,7 @@ Add six groups of tests.
 ### 1. Annotation stripping
 
 Ensure canonical output is identical when these are added/removed:
+
 - `description`
 - `deprecated`
 - `xml`
@@ -111,10 +116,10 @@ These two specs should produce identical ApiIR:
 parameters:
   - name: limit
     in: query
-    schema: { type: "integer" }
+    schema: { type: 'integer' }
   - name: offset
     in: query
-    schema: { type: "integer" }
+    schema: { type: 'integer' }
 ```
 
 vs
@@ -123,10 +128,10 @@ vs
 parameters:
   - name: offset
     in: query
-    schema: { type: "integer" }
+    schema: { type: 'integer' }
   - name: limit
     in: query
-    schema: { type: "integer" }
+    schema: { type: 'integer' }
 ```
 
 **Expected:** same ApiIR hash
@@ -172,6 +177,7 @@ OpenAPI → Canonical Spec → ApiIR → UiPlanIR (LLM) → UISpec → UI
 ```
 
 **Guarantees:**
+
 - Same OpenAPI spec always produces identical UI
 - Annotation changes do not affect output
 - Contract changes produce deterministic UI diffs
@@ -211,6 +217,7 @@ Add report section:
 
 ```markdown
 ### Other bucket breakdown
+
 | Sub-rule | Specs affected |
 ```
 
@@ -280,11 +287,11 @@ These are v2 features.
 
 ## Execution Order
 
-| Hour | Tasks |
-|------|-------|
-| 0–1 | Validator: success-response rule + unsupported hints |
-| 1–3 | Tests: canonicalization, determinism, media-type noise, parameter order noise |
-| 3–4 | Docs: subset contract, compiler invariant, README pointer |
-| 4–5 | Optional: other bucket breakdown. Run `corpus:report`. Observe only. |
-| 5 | Corpus rerun. Record pass rate. |
-| 6 | Freeze subset. |
+| Hour | Tasks                                                                         |
+| ---- | ----------------------------------------------------------------------------- |
+| 0–1  | Validator: success-response rule + unsupported hints                          |
+| 1–3  | Tests: canonicalization, determinism, media-type noise, parameter order noise |
+| 3–4  | Docs: subset contract, compiler invariant, README pointer                     |
+| 4–5  | Optional: other bucket breakdown. Run `corpus:report`. Observe only.          |
+| 5    | Corpus rerun. Record pass rate.                                               |
+| 6    | Freeze subset.                                                                |

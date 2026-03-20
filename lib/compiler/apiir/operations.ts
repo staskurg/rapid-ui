@@ -5,13 +5,13 @@
  * Content negotiation: select application/json when present (multiple content types allowed).
  */
 
-import type { CompilerError } from "../errors";
-import { createError } from "../errors";
-import type { OperationIR, JsonSchema } from "./types";
-import type { RawOperation } from "./grouping";
-import { selectJsonContent } from "../openapi/content";
+import type { CompilerError } from '../errors';
+import { createError } from '../errors';
+import type { OperationIR, JsonSchema } from './types';
+import type { RawOperation } from './grouping';
+import { selectJsonContent } from '../openapi/content';
 
-const SUCCESS_CODES = ["200", "201"];
+const SUCCESS_CODES = ['200', '201'];
 
 function extractPathParams(path: string): string[] {
   const matches = path.match(/\{([^}]+)\}/g);
@@ -23,10 +23,10 @@ function getSuccessSchema(
   _doc: Record<string, unknown>
 ): JsonSchema | null {
   const responses = op.responses as Record<string, unknown> | undefined;
-  if (!responses || typeof responses !== "object") return null;
+  if (!responses || typeof responses !== 'object') return null;
   for (const code of SUCCESS_CODES) {
     const resp = responses[code];
-    if (!resp || typeof resp !== "object") continue;
+    if (!resp || typeof resp !== 'object') continue;
     const content = (resp as Record<string, unknown>).content as
       | Record<string, unknown>
       | undefined;
@@ -41,7 +41,7 @@ function getRequestSchema(
   _doc: Record<string, unknown>
 ): JsonSchema | null {
   const body = op.requestBody as Record<string, unknown> | undefined;
-  if (!body || typeof body !== "object") return null;
+  if (!body || typeof body !== 'object') return null;
   const content = body.content as Record<string, unknown> | undefined;
   const selected = selectJsonContent(content);
   return selected ? (selected.schema as JsonSchema) : null;
@@ -51,30 +51,30 @@ function inferKind(
   method: string,
   path: string,
   pathParams: string[]
-): { kind: OperationIR["kind"]; identifierParam?: string } | null {
+): { kind: OperationIR['kind']; identifierParam?: string } | null {
   const m = method.toLowerCase();
-  if (m === "get") {
-    if (pathParams.length === 0) return { kind: "list" };
-    if (pathParams.length === 1) return { kind: "detail", identifierParam: pathParams[0] };
+  if (m === 'get') {
+    if (pathParams.length === 0) return { kind: 'list' };
+    if (pathParams.length === 1) return { kind: 'detail', identifierParam: pathParams[0] };
     return null;
   }
-  if (m === "post") {
-    if (pathParams.length === 0) return { kind: "create" };
+  if (m === 'post') {
+    if (pathParams.length === 0) return { kind: 'create' };
     return null;
   }
-  if (m === "put" || m === "patch") {
-    if (pathParams.length === 1) return { kind: "update", identifierParam: pathParams[0] };
+  if (m === 'put' || m === 'patch') {
+    if (pathParams.length === 1) return { kind: 'update', identifierParam: pathParams[0] };
     return null;
   }
-  if (m === "delete") {
-    if (pathParams.length === 1) return { kind: "delete", identifierParam: pathParams[0] };
+  if (m === 'delete') {
+    if (pathParams.length === 1) return { kind: 'delete', identifierParam: pathParams[0] };
     return null;
   }
   return null;
 }
 
 function stableOperationId(method: string, path: string, operationId?: string): string {
-  if (operationId && typeof operationId === "string" && operationId.trim()) {
+  if (operationId && typeof operationId === 'string' && operationId.trim()) {
     return operationId.trim();
   }
   return `${method.toUpperCase()}:${path}`;
@@ -82,24 +82,25 @@ function stableOperationId(method: string, path: string, operationId?: string): 
 
 /** Merge path-level and op-level parameters; op overrides by (name, in). Count query params. */
 function countQueryParams(pathItem: Record<string, unknown>, op: Record<string, unknown>): number {
-  const paramKey = (p: Record<string, unknown>) =>
-    `${String(p.in ?? "")}:${String(p.name ?? "")}`;
+  const paramKey = (p: Record<string, unknown>) => `${String(p.in ?? '')}:${String(p.name ?? '')}`;
   const merged = new Map<string, Record<string, unknown>>();
   const pathLevelParams = pathItem.parameters as Record<string, unknown>[] | undefined;
   const opParams = op.parameters as Record<string, unknown>[] | undefined;
   if (pathLevelParams && Array.isArray(pathLevelParams)) {
     for (const p of pathLevelParams) {
-      if (p && typeof p === "object") merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
+      if (p && typeof p === 'object')
+        merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
     }
   }
   if (opParams && Array.isArray(opParams)) {
     for (const p of opParams) {
-      if (p && typeof p === "object") merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
+      if (p && typeof p === 'object')
+        merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
     }
   }
   let count = 0;
   for (const param of merged.values()) {
-    if (param.in === "query") count++;
+    if (param.in === 'query') count++;
   }
   return count;
 }
@@ -120,45 +121,42 @@ export type MapOperationOutput = MapOperationResult | MapOperationFailure;
  * Map a raw operation to OperationIR.
  * Requires doc with resolved refs for schema lookup.
  */
-export function mapOperation(
-  raw: RawOperation,
-  doc: Record<string, unknown>
-): MapOperationOutput {
+export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): MapOperationOutput {
   const pathParams = extractPathParams(raw.path);
   const kindResult = inferKind(raw.method, raw.path, pathParams);
   if (!kindResult) {
     return {
       success: false,
       error: createError(
-        "IR_INVALID",
-        "ApiIR",
-        `Non-CRUD operation: ${raw.method.toUpperCase()} ${raw.path} (path params: ${pathParams.join(", ") || "none"})`,
-        `/paths/${raw.path.replace(/\//g, "~1")}/${raw.method}`
+        'IR_INVALID',
+        'ApiIR',
+        `Non-CRUD operation: ${raw.method.toUpperCase()} ${raw.path} (path params: ${pathParams.join(', ') || 'none'})`,
+        `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
       ),
     };
   }
 
   const pathItem = (doc.paths as Record<string, unknown>)?.[raw.path];
-  if (!pathItem || typeof pathItem !== "object") {
+  if (!pathItem || typeof pathItem !== 'object') {
     return {
       success: false,
       error: createError(
-        "IR_INVALID",
-        "ApiIR",
+        'IR_INVALID',
+        'ApiIR',
         `Path not found: ${raw.path}`,
-        `/paths/${raw.path.replace(/\//g, "~1")}`
+        `/paths/${raw.path.replace(/\//g, '~1')}`
       ),
     };
   }
   const opObj = (pathItem as Record<string, unknown>)[raw.method];
-  if (!opObj || typeof opObj !== "object") {
+  if (!opObj || typeof opObj !== 'object') {
     return {
       success: false,
       error: createError(
-        "IR_INVALID",
-        "ApiIR",
+        'IR_INVALID',
+        'ApiIR',
         `Operation not found: ${raw.method} ${raw.path}`,
-        `/paths/${raw.path.replace(/\//g, "~1")}/${raw.method}`
+        `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
       ),
     };
   }
@@ -169,25 +167,25 @@ export function mapOperation(
     return {
       success: false,
       error: createError(
-        "IR_INVALID",
-        "ApiIR",
+        'IR_INVALID',
+        'ApiIR',
         `No 200/201 application/json response: ${raw.method.toUpperCase()} ${raw.path}`,
-        `/paths/${raw.path.replace(/\//g, "~1")}/${raw.method}`
+        `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
       ),
     };
   }
 
   let requestSchema: JsonSchema | undefined;
-  if (kindResult.kind === "create" || kindResult.kind === "update") {
+  if (kindResult.kind === 'create' || kindResult.kind === 'update') {
     const req = getRequestSchema(op, doc);
     if (!req) {
       return {
         success: false,
         error: createError(
-        "IR_INVALID",
-        "ApiIR",
+          'IR_INVALID',
+          'ApiIR',
           `${raw.method.toUpperCase()} requires requestBody`,
-          `/paths/${raw.path.replace(/\//g, "~1")}/${raw.method}`
+          `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
         ),
       };
     }
@@ -195,7 +193,7 @@ export function mapOperation(
   }
 
   const id = stableOperationId(raw.method, raw.path, raw.operationId);
-  const method = raw.method.toUpperCase() as OperationIR["method"];
+  const method = raw.method.toUpperCase() as OperationIR['method'];
   const queryParamCount = countQueryParams(pathItem as Record<string, unknown>, op);
 
   return {

@@ -4,10 +4,7 @@
  * Used when FormModal receives nested record; form fields use dot-path names.
  */
 
-export function flattenRecord(
-  obj: Record<string, unknown>,
-  prefix = ""
-): Record<string, unknown> {
+export function flattenRecord(obj: Record<string, unknown>, prefix = ''): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(obj)) {
@@ -16,7 +13,7 @@ export function flattenRecord(
     if (
       value !== null &&
       value !== undefined &&
-      typeof value === "object" &&
+      typeof value === 'object' &&
       !Array.isArray(value) &&
       !(value instanceof Date)
     ) {

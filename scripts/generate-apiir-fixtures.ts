@@ -12,16 +12,16 @@
  * Usage: npm run fixtures:generate-apiir
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "fs";
-import { join } from "path";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR } from "@/lib/compiler/apiir";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
+import { buildApiIR } from '@/lib/compiler/apiir';
 
-const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
-const APIIR_DIR = join(FIXTURES_DIR, "apiir");
-const DEMO_DIR = join(FIXTURES_DIR, "demo");
+const FIXTURES_DIR = join(process.cwd(), 'tests/compiler/fixtures');
+const APIIR_DIR = join(FIXTURES_DIR, 'apiir');
+const DEMO_DIR = join(FIXTURES_DIR, 'demo');
 
 type Source = { inputDir: string; outputSubdir: string };
 
@@ -34,7 +34,7 @@ function processSource(source: Source): number {
   }
 
   const files = readdirSync(inputDir).filter(
-    (f) => f.endsWith(".yaml") || f.endsWith(".yml") || f.endsWith(".json")
+    (f) => f.endsWith('.yaml') || f.endsWith('.yml') || f.endsWith('.json')
   );
 
   if (files.length === 0) {
@@ -47,11 +47,11 @@ function processSource(source: Source): number {
 
   let processed = 0;
   for (const file of files) {
-    const baseName = file.replace(/\.(yaml|yml|json)$/i, "");
+    const baseName = file.replace(/\.(yaml|yml|json)$/i, '');
     const inputPath = join(inputDir, file);
     const outputPath = join(outputDir, `${baseName}.json`);
 
-    const content = readFileSync(inputPath, "utf-8");
+    const content = readFileSync(inputPath, 'utf-8');
     const parseResult = parseOpenAPI(content);
 
     if (!parseResult.success) {
@@ -61,7 +61,9 @@ function processSource(source: Source): number {
 
     const validateResult = validateSubset(parseResult.doc);
     if (!validateResult.success) {
-      console.error(`[${file}] Validation failed: ${validateResult.errors.map((e) => e.message).join("; ")}`);
+      console.error(
+        `[${file}] Validation failed: ${validateResult.errors.map((e) => e.message).join('; ')}`
+      );
       continue;
     }
 
@@ -77,10 +79,7 @@ function processSource(source: Source): number {
       continue;
     }
 
-    writeFileSync(
-      outputPath,
-      JSON.stringify(buildResult.apiIr, null, 2)
-    );
+    writeFileSync(outputPath, JSON.stringify(buildResult.apiIr, null, 2));
     console.log(`Generated: ${outputPath}`);
     processed++;
   }
@@ -99,9 +98,9 @@ function main() {
   }
 
   const sources: Source[] = [
-    { inputDir: DEMO_DIR, outputSubdir: "demo" },
-    { inputDir: join(FIXTURES_DIR, "valid-specs-api-guru"), outputSubdir: "valid-specs-api-guru" },
-    { inputDir: join(FIXTURES_DIR, "valid-specs-github"), outputSubdir: "valid-specs-github" },
+    { inputDir: DEMO_DIR, outputSubdir: 'demo' },
+    { inputDir: join(FIXTURES_DIR, 'valid-specs-api-guru'), outputSubdir: 'valid-specs-api-guru' },
+    { inputDir: join(FIXTURES_DIR, 'valid-specs-github'), outputSubdir: 'valid-specs-github' },
   ];
 
   let total = 0;
@@ -111,7 +110,7 @@ function main() {
   }
 
   if (total === 0) {
-    console.log("No OpenAPI fixtures found (excluding invalid).");
+    console.log('No OpenAPI fixtures found (excluding invalid).');
     process.exit(0);
   }
 

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,7 +8,7 @@ import {
   type ColumnDef,
   type SortingState,
   flexRender,
-} from "@tanstack/react-table";
+} from '@tanstack/react-table';
 import {
   Table,
   TableBody,
@@ -16,13 +16,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import type { UISpec, Field } from "@/lib/spec/types";
-import { getCellValue } from "@/lib/utils/getCellValue";
-import { formatDateForDisplay } from "@/lib/utils/formatDate";
-import { Pencil, Trash2 } from "lucide-react";
+} from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import type { UISpec, Field } from '@/lib/spec/types';
+import { getCellValue } from '@/lib/utils/getCellValue';
+import { formatDateForDisplay } from '@/lib/utils/formatDate';
+import { Pencil, Trash2 } from 'lucide-react';
 
 interface DataTableProps {
   data: Record<string, unknown>[];
@@ -38,41 +38,37 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
   const columns = React.useMemo<ColumnDef<Record<string, unknown>>[]>(() => {
     const fieldMap = new Map(spec.fields.map((f) => [f.name, f]));
 
-    const cols: ColumnDef<Record<string, unknown>>[] = spec.table.columns.map(
-      (fieldName) => {
-        const field = fieldMap.get(fieldName);
-        const accessor = {
-          id: fieldName,
-          accessorFn: (row: Record<string, unknown>) =>
-            getCellValue(row, fieldName),
-        };
+    const cols: ColumnDef<Record<string, unknown>>[] = spec.table.columns.map((fieldName) => {
+      const field = fieldMap.get(fieldName);
+      const accessor = {
+        id: fieldName,
+        accessorFn: (row: Record<string, unknown>) => getCellValue(row, fieldName),
+      };
 
-        if (!field) {
-          return {
-            ...accessor,
-            header: fieldName,
-            cell: ({ getValue }: { getValue: () => unknown }) =>
-              String(getValue() ?? ""),
-          };
-        }
-
+      if (!field) {
         return {
           ...accessor,
-          header: field.label,
-          cell: ({ getValue }: { getValue: () => unknown }) => {
-            const value = getValue();
-            return renderCell(value, field);
-          },
+          header: fieldName,
+          cell: ({ getValue }: { getValue: () => unknown }) => String(getValue() ?? ''),
         };
       }
-    );
+
+      return {
+        ...accessor,
+        header: field.label,
+        cell: ({ getValue }: { getValue: () => unknown }) => {
+          const value = getValue();
+          return renderCell(value, field);
+        },
+      };
+    });
 
     // Add actions column only when onEdit or onDelete is provided
     if (onEdit !== undefined || onDelete !== undefined) {
-      const idFieldName = spec.idField ?? "id";
+      const idFieldName = spec.idField ?? 'id';
       cols.push({
-        id: "actions",
-        header: "Actions",
+        id: 'actions',
+        header: 'Actions',
         cell: ({ row }) => {
           const record = row.original;
           const recordId: string | number =
@@ -133,10 +129,7 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
                 <TableHead key={header.id}>
                   {header.isPlaceholder
                     ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
+                    : flexRender(header.column.columnDef.header, header.getContext())}
                 </TableHead>
               ))}
             </TableRow>
@@ -145,10 +138,7 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
         <TableBody>
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
+              <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'}>
                 {row.getVisibleCells().map((cell) => (
                   <TableCell key={cell.id}>
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -169,7 +159,6 @@ export function DataTable({ data, spec, onEdit, onDelete }: DataTableProps) {
   );
 }
 
-
 /**
  * Render a cell value based on field type
  */
@@ -178,38 +167,34 @@ function renderCell(value: unknown, field: Field): React.ReactNode {
     return <span className="text-muted-foreground">—</span>;
   }
 
-  if (typeof value === "object" && !Array.isArray(value) && value !== null) {
+  if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
     const obj = value as Record<string, unknown>;
     const parts = Object.entries(obj)
-      .filter(([, v]) => v != null && v !== "")
+      .filter(([, v]) => v != null && v !== '')
       .map(([, v]) => {
         const formatted = formatDateForDisplay(v);
         return formatted ?? String(v);
       });
-    return <span>{parts.join(" · ")}</span>;
+    return <span>{parts.join(' · ')}</span>;
   }
 
   switch (field.type) {
-    case "string": {
+    case 'string': {
       const formatted = formatDateForDisplay(value);
       return <span>{formatted ?? String(value)}</span>;
     }
-    case "number":
+    case 'number':
       return <span>{Number(value).toLocaleString()}</span>;
-    case "boolean":
-      return (
-        <Badge variant={value ? "default" : "secondary"}>
-          {value ? "True" : "False"}
-        </Badge>
-      );
-    case "enum":
+    case 'boolean':
+      return <Badge variant={value ? 'default' : 'secondary'}>{value ? 'True' : 'False'}</Badge>;
+    case 'enum':
       return <Badge variant="outline">{String(value)}</Badge>;
-    case "object": {
+    case 'object': {
       const str =
-        value != null && typeof value === "object"
-          ? JSON.stringify(value).slice(0, 80) + (JSON.stringify(value).length > 80 ? "…" : "")
-          : String(value ?? "");
-      return <span title={typeof value === "object" ? JSON.stringify(value) : str}>{str}</span>;
+        value != null && typeof value === 'object'
+          ? JSON.stringify(value).slice(0, 80) + (JSON.stringify(value).length > 80 ? '…' : '')
+          : String(value ?? '');
+      return <span title={typeof value === 'object' ? JSON.stringify(value) : str}>{str}</span>;
     }
     default:
       return <span>{String(value)}</span>;

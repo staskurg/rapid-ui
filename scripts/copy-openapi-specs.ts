@@ -15,10 +15,10 @@ import {
   statSync,
   rmSync,
   existsSync,
-} from "fs";
-import { join, relative, extname } from "path";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-const SPEC_EXTENSIONS = [".yaml", ".yml", ".json"];
+} from 'fs';
+import { join, relative, extname } from 'path';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+const SPEC_EXTENSIONS = ['.yaml', '.yml', '.json'];
 
 function findSpecFiles(dir: string, baseDir: string): string[] {
   const results: string[] = [];
@@ -42,27 +42,27 @@ function findSpecFiles(dir: string, baseDir: string): string[] {
 
 function isOpenApi30Or31(doc: Record<string, unknown>): boolean {
   const openapi = doc.openapi;
-  if (typeof openapi !== "string") return false;
-  return openapi.startsWith("3.0") || openapi.startsWith("3.1");
+  if (typeof openapi !== 'string') return false;
+  return openapi.startsWith('3.0') || openapi.startsWith('3.1');
 }
 
 function sanitizeFilename(relPath: string): string {
-  return relPath.replace(/\//g, "__").replace(/\\/g, "__");
+  return relPath.replace(/\//g, '__').replace(/\\/g, '__');
 }
 
 function main(): number {
   const args = process.argv.slice(2);
-  let openapiDir = join(process.cwd(), "..", "openapi-directory", "APIs");
+  let openapiDir = join(process.cwd(), '..', 'openapi-directory', 'APIs');
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--openapi-dir" && args[i + 1]) {
+    if (args[i] === '--openapi-dir' && args[i + 1]) {
       openapiDir = args[++i];
     }
   }
 
-  const outputBase = join(process.cwd(), "scripts", "corpus-data", "specs", "api_guru");
+  const outputBase = join(process.cwd(), 'scripts', 'corpus-data', 'specs', 'api_guru');
 
-  console.log("Scanning OpenAPI specs...");
+  console.log('Scanning OpenAPI specs...');
   console.log(`  Source: ${openapiDir}`);
   console.log(`  Output: ${outputBase}`);
 
@@ -81,7 +81,7 @@ function main(): number {
   let invalid = 0;
   const progressInterval = Math.max(100, Math.floor(specFiles.length / 20));
 
-  console.log("\nValidating specs (OpenAPI 3.0.x/3.1.x)...");
+  console.log('\nValidating specs (OpenAPI 3.0.x/3.1.x)...');
   for (let idx = 0; idx < specFiles.length; idx++) {
     const filePath = specFiles[idx];
     if ((idx + 1) % progressInterval === 0 || idx === specFiles.length - 1) {
@@ -89,7 +89,7 @@ function main(): number {
     }
     let content: string;
     try {
-      content = readFileSync(filePath, "utf-8");
+      content = readFileSync(filePath, 'utf-8');
     } catch {
       invalid++;
       continue;
@@ -109,7 +109,7 @@ function main(): number {
     const relPath = relative(openapiDir, filePath);
     validSpecs.push({ path: filePath, relPath });
   }
-  console.log(""); // newline after \r
+  console.log(''); // newline after \r
 
   console.log(`Valid OpenAPI 3.0.x/3.1.x: ${validSpecs.length}`);
   console.log(`Skipped (Swagger 2.0 or other): ${skipped}`);
@@ -148,7 +148,7 @@ function main(): number {
       process.stdout.write(`  ${i + 1}/${validSpecs.length} copied\r`);
     }
   }
-  console.log("");
+  console.log('');
 
   console.log(`\nDone. Copied ${copied} specs to ${outputBase}`);
   return 0;

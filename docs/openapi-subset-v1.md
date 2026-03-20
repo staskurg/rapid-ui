@@ -19,6 +19,7 @@ OpenAPI → Canonical Spec → ApiIR → UiPlanIR (LLM) → UISpec → UI
 ```
 
 **Guarantees:**
+
 - Same OpenAPI spec always produces identical UI
 - Annotation changes do not affect output
 - Contract changes produce deterministic UI diffs
@@ -29,12 +30,12 @@ OpenAPI → Canonical Spec → ApiIR → UiPlanIR (LLM) → UISpec → UI
 
 RapidUI compiles a **deterministic subset** and normalizes common OpenAPI noise at the contract boundary. The compiler does not add flexibility—it adds deterministic normalization.
 
-| Rule | Behavior |
-|------|----------|
-| **JSON media type selection** | When multiple content types exist (e.g. `application/json` + `application/xml`), select `application/json` or types ending with `+json` (e.g. `application/vnd.api+json`). Fail if none present. |
-| **Annotation schema keywords** | `uniqueItems`, `minItems`, `maxItems`, `xml`, `externalDocs` are stripped during canonicalization. They do not affect the compiled output. |
-| **additionalProperties** | `false` → closed object; `true` → map&lt;string, unknown&gt;; schema → map&lt;string, schema&gt;. Map types compile to opaque object field in UI. |
-| **Empty object** | `type: object` without `properties` → ObjectOpaque. Rendered as single "Data" placeholder (schema-shape, not fake field). |
+| Rule                           | Behavior                                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **JSON media type selection**  | When multiple content types exist (e.g. `application/json` + `application/xml`), select `application/json` or types ending with `+json` (e.g. `application/vnd.api+json`). Fail if none present. |
+| **Annotation schema keywords** | `uniqueItems`, `minItems`, `maxItems`, `xml`, `externalDocs` are stripped during canonicalization. They do not affect the compiled output.                                                       |
+| **additionalProperties**       | `false` → closed object; `true` → map&lt;string, unknown&gt;; schema → map&lt;string, schema&gt;. Map types compile to opaque object field in UI.                                                |
+| **Empty object**               | `type: object` without `properties` → ObjectOpaque. Rendered as single "Data" placeholder (schema-shape, not fake field).                                                                        |
 
 Pipeline order: **validate** → **resolve $ref** → **canonicalize** (strip annotations) → **buildApiIR** → **lower**.
 
@@ -84,11 +85,11 @@ Pipeline order: **validate** → **resolve $ref** → **canonicalize** (strip an
 
 | Method | Supported |
 | ------ | --------- |
-| GET    | ✅ |
-| POST   | ✅ |
-| PUT    | ✅ |
-| PATCH  | ✅ |
-| DELETE | ✅ |
+| GET    | ✅        |
+| POST   | ✅        |
+| PUT    | ✅        |
+| PATCH  | ✅        |
+| DELETE | ✅        |
 
 - **Unsupported methods:** Ignored (not rejected)
 - **Path must have at least one supported operation** → else reject (no empty-path grouping)
@@ -217,15 +218,15 @@ Internal canonical numeric type = `number`. `integer` and `number` treated equiv
 
 Error codes are a stable public interface. Must not change between patch releases. Error categories must not be overloaded.
 
-| Code | Stage | Use for |
-| ---- | ----- | ------- |
-| `OAS_UNSUPPORTED_SCHEMA_KEYWORD` | Subset | Unknown schema keyword; oneOf, anyOf, allOf |
-| `OAS_INVALID_SCHEMA_SHAPE` | Subset | Hygiene: required⊆properties; array→items; object→properties; enum↔type; additionalProperties≠false; $ref+extra keys |
-| `OAS_INVALID_OPERATION_STRUCTURE` | Subset | Empty paths; path has no supported ops; missing request body; GET/DELETE with body; missing success response; zero ops globally |
-| `OAS_INVALID_RESPONSE_STRUCTURE` | Subset | Wrong content type; empty schema; root schema primitive |
-| `OAS_INVALID_PARAMETER` | Subset | Path param not primitive; query param schema invalid (non-primitive, unsupported keyword) |
-| `OAS_INVALID_REF` | Resolve | External ref; circular ref; invalid ref target |
-| `OAS_AMBIGUOUS_RESOURCE_GROUPING` | ApiIR | Mixed tags; multiple tags per op; no CRUD ops |
+| Code                              | Stage   | Use for                                                                                                                         |
+| --------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `OAS_UNSUPPORTED_SCHEMA_KEYWORD`  | Subset  | Unknown schema keyword; oneOf, anyOf, allOf                                                                                     |
+| `OAS_INVALID_SCHEMA_SHAPE`        | Subset  | Hygiene: required⊆properties; array→items; object→properties; enum↔type; additionalProperties≠false; $ref+extra keys            |
+| `OAS_INVALID_OPERATION_STRUCTURE` | Subset  | Empty paths; path has no supported ops; missing request body; GET/DELETE with body; missing success response; zero ops globally |
+| `OAS_INVALID_RESPONSE_STRUCTURE`  | Subset  | Wrong content type; empty schema; root schema primitive                                                                         |
+| `OAS_INVALID_PARAMETER`           | Subset  | Path param not primitive; query param schema invalid (non-primitive, unsupported keyword)                                       |
+| `OAS_INVALID_REF`                 | Resolve | External ref; circular ref; invalid ref target                                                                                  |
+| `OAS_AMBIGUOUS_RESOURCE_GROUPING` | ApiIR   | Mixed tags; multiple tags per op; no CRUD ops                                                                                   |
 
 ---
 
@@ -269,7 +270,7 @@ npm run corpus:pattern-mining -- --repo api-guru   # or --repo github
 
 Specs that pass RUS-v1 validation are extracted per repository and copied to `tests/compiler/fixtures/valid-specs-{repo}/` (api-guru, github). These serve as:
 
-- **Regression tests** — All valid-specs-* fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
+- **Regression tests** — All valid-specs-\* fixtures must pass `check:openapi` (see `tests/compiler/check-openapi.test.ts`)
 - **LLM determinism testing** — Use these real APIs to validate LLM output stability across runs
 
 ---

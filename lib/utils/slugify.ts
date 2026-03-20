@@ -4,11 +4,13 @@
  * e.g. "Users" → "users", "My Resource" → "my-resource"
  */
 export function slugify(s: string): string {
-  return s
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "") || "resource";
+  return (
+    s
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '') || 'resource'
+  );
 }

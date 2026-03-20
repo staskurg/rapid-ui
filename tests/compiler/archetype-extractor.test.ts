@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect } from 'vitest';
 import {
   getObjectSchema,
   deriveOperationPattern,
@@ -8,110 +8,104 @@ import {
   classifyResourceArchetypes,
   classifySpecArchetypes,
   ARCHETYPES,
-} from "@/scripts/corpus-data/archetype-extractor";
-import type { ResourceIR } from "@/lib/compiler/apiir";
+} from '@/scripts/corpus-data/archetype-extractor';
+import type { ResourceIR } from '@/lib/compiler/apiir';
 
-describe("getObjectSchema", () => {
-  it("returns object schema for type: object", () => {
-    const schema = { type: "object", properties: { foo: { type: "string" } } };
+describe('getObjectSchema', () => {
+  it('returns object schema for type: object', () => {
+    const schema = { type: 'object', properties: { foo: { type: 'string' } } };
     expect(getObjectSchema(schema)).toBe(schema);
   });
 
-  it("returns items schema for array with items.type: object", () => {
-    const items = { type: "object", properties: { id: { type: "string" } } };
-    const schema = { type: "array", items };
+  it('returns items schema for array with items.type: object', () => {
+    const items = { type: 'object', properties: { id: { type: 'string' } } };
+    const schema = { type: 'array', items };
     expect(getObjectSchema(schema)).toBe(items);
   });
 
-  it("returns null for array with items.type: string", () => {
-    const schema = { type: "array", items: { type: "string" } };
+  it('returns null for array with items.type: string', () => {
+    const schema = { type: 'array', items: { type: 'string' } };
     expect(getObjectSchema(schema)).toBeNull();
   });
 
-  it("returns null for primitive types", () => {
-    expect(getObjectSchema({ type: "string" })).toBeNull();
-    expect(getObjectSchema({ type: "number" })).toBeNull();
-    expect(getObjectSchema({ type: "boolean" })).toBeNull();
+  it('returns null for primitive types', () => {
+    expect(getObjectSchema({ type: 'string' })).toBeNull();
+    expect(getObjectSchema({ type: 'number' })).toBeNull();
+    expect(getObjectSchema({ type: 'boolean' })).toBeNull();
   });
 
-  it("returns null for array without items", () => {
-    const schema = { type: "array" };
+  it('returns null for array without items', () => {
+    const schema = { type: 'array' };
     expect(getObjectSchema(schema)).toBeNull();
   });
 });
 
-describe("deriveOperationPattern", () => {
-  const op = (kind: "list" | "detail" | "create" | "update" | "delete") => ({
+describe('deriveOperationPattern', () => {
+  const op = (kind: 'list' | 'detail' | 'create' | 'update' | 'delete') => ({
     id: kind,
-    method: "GET" as const,
+    method: 'GET' as const,
     kind,
-    path: "/",
-    responseSchema: { type: "object" },
+    path: '/',
+    responseSchema: { type: 'object' },
   });
 
-  it("returns create_only when only create", () => {
-    expect(deriveOperationPattern([op("create")])).toBe("create_only");
+  it('returns create_only when only create', () => {
+    expect(deriveOperationPattern([op('create')])).toBe('create_only');
   });
 
-  it("returns list_only when only list", () => {
-    expect(deriveOperationPattern([op("list")])).toBe("list_only");
+  it('returns list_only when only list', () => {
+    expect(deriveOperationPattern([op('list')])).toBe('list_only');
   });
 
-  it("returns detail_only when only detail", () => {
-    expect(deriveOperationPattern([op("detail")])).toBe("detail_only");
+  it('returns detail_only when only detail', () => {
+    expect(deriveOperationPattern([op('detail')])).toBe('detail_only');
   });
 
-  it("returns list_create when list and create", () => {
-    expect(deriveOperationPattern([op("list"), op("create")])).toBe("list_create");
+  it('returns list_create when list and create', () => {
+    expect(deriveOperationPattern([op('list'), op('create')])).toBe('list_create');
   });
 
-  it("returns list_detail when list and detail", () => {
-    expect(deriveOperationPattern([op("list"), op("detail")])).toBe("list_detail");
+  it('returns list_detail when list and detail', () => {
+    expect(deriveOperationPattern([op('list'), op('detail')])).toBe('list_detail');
   });
 
-  it("returns list_detail_create when list, detail, and create", () => {
-    expect(deriveOperationPattern([op("list"), op("detail"), op("create")])).toBe(
-      "list_detail_create"
+  it('returns list_detail_create when list, detail, and create', () => {
+    expect(deriveOperationPattern([op('list'), op('detail'), op('create')])).toBe(
+      'list_detail_create'
     );
   });
 
-  it("returns crud when all five operations", () => {
+  it('returns crud when all five operations', () => {
     expect(
-      deriveOperationPattern([
-        op("list"),
-        op("detail"),
-        op("create"),
-        op("update"),
-        op("delete"),
-      ])
-    ).toBe("crud");
+      deriveOperationPattern([op('list'), op('detail'), op('create'), op('update'), op('delete')])
+    ).toBe('crud');
   });
 
-  it("returns other when mixed non-standard combo", () => {
-    expect(deriveOperationPattern([op("list"), op("update")])).toBe("other");
+  it('returns other when mixed non-standard combo', () => {
+    expect(deriveOperationPattern([op('list'), op('update')])).toBe('other');
   });
 });
 
-describe("extractResourceMetrics", () => {
-  it("extracts metrics from minimal create-only resource", () => {
+describe('extractResourceMetrics', () => {
+  it('extracts metrics from minimal create-only resource', () => {
     const resource: ResourceIR = {
-      name: "Tasks",
-      key: "tasks",
+      name: 'Tasks',
+      key: 'tasks',
       operations: [
         {
-          id: "POST:/tasks",
-          method: "POST",
-          kind: "create",
-          path: "/tasks",
+          id: 'POST:/tasks',
+          method: 'POST',
+          kind: 'create',
+          path: '/tasks',
           requestSchema: {
-            type: "object",
-            required: ["title"],
+            type: 'object',
+            required: ['title'],
             properties: {
-              title: { type: "string" },
-              done: { type: "boolean" },
+              title: { type: 'string' },
+              done: { type: 'boolean' },
             },
           },
-          responseSchema: { type: "object" },
+          responseSchema: { type: 'object' },
         },
       ],
     };
@@ -119,31 +113,31 @@ describe("extractResourceMetrics", () => {
     expect(m.fieldCount).toBe(2);
     expect(m.requiredCount).toBe(1);
     expect(m.optionalCount).toBe(1);
-    expect(m.operationPattern).toBe("create_only");
+    expect(m.operationPattern).toBe('create_only');
     expect(m.operationCount).toBe(1);
-    expect(m.listResponseShape).toBe("unknown");
+    expect(m.listResponseShape).toBe('unknown');
   });
 
-  it("computes depth: User { address { city } } → depth = 1", () => {
+  it('computes depth: User { address { city } } → depth = 1', () => {
     const resource: ResourceIR = {
-      name: "Users",
-      key: "users",
+      name: 'Users',
+      key: 'users',
       operations: [
         {
-          id: "GET:/users",
-          method: "GET",
-          kind: "list",
-          path: "/users",
+          id: 'GET:/users',
+          method: 'GET',
+          kind: 'list',
+          path: '/users',
           responseSchema: {
-            type: "array",
+            type: 'array',
             items: {
-              type: "object",
+              type: 'object',
               properties: {
-                id: { type: "string" },
+                id: { type: 'string' },
                 address: {
-                  type: "object",
+                  type: 'object',
                   properties: {
-                    city: { type: "string" },
+                    city: { type: 'string' },
                   },
                 },
               },
@@ -156,27 +150,27 @@ describe("extractResourceMetrics", () => {
     expect(m.maxDepth).toBe(1);
   });
 
-  it("computes depth: User { address { country { code } } } → depth = 2", () => {
+  it('computes depth: User { address { country { code } } } → depth = 2', () => {
     const resource: ResourceIR = {
-      name: "Users",
-      key: "users",
+      name: 'Users',
+      key: 'users',
       operations: [
         {
-          id: "GET:/users",
-          method: "GET",
-          kind: "list",
-          path: "/users",
+          id: 'GET:/users',
+          method: 'GET',
+          kind: 'list',
+          path: '/users',
           responseSchema: {
-            type: "array",
+            type: 'array',
             items: {
-              type: "object",
+              type: 'object',
               properties: {
                 address: {
-                  type: "object",
+                  type: 'object',
                   properties: {
                     country: {
-                      type: "object",
-                      properties: { code: { type: "string" } },
+                      type: 'object',
+                      properties: { code: { type: 'string' } },
                     },
                   },
                 },
@@ -190,43 +184,43 @@ describe("extractResourceMetrics", () => {
     expect(m.maxDepth).toBe(2);
   });
 
-  it("listResponseShape: array_root when list returns array", () => {
+  it('listResponseShape: array_root when list returns array', () => {
     const resource: ResourceIR = {
-      name: "Items",
-      key: "items",
+      name: 'Items',
+      key: 'items',
       operations: [
         {
-          id: "GET:/items",
-          method: "GET",
-          kind: "list",
-          path: "/items",
+          id: 'GET:/items',
+          method: 'GET',
+          kind: 'list',
+          path: '/items',
           responseSchema: {
-            type: "array",
-            items: { type: "object", properties: { id: { type: "string" } } },
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'string' } } },
           },
         },
       ],
     };
     const m = extractResourceMetrics(resource);
-    expect(m.listResponseShape).toBe("array_root");
+    expect(m.listResponseShape).toBe('array_root');
   });
 
-  it("listResponseShape: object_wrapped when list returns { data: [...] }", () => {
+  it('listResponseShape: object_wrapped when list returns { data: [...] }', () => {
     const resource: ResourceIR = {
-      name: "Items",
-      key: "items",
+      name: 'Items',
+      key: 'items',
       operations: [
         {
-          id: "GET:/items",
-          method: "GET",
-          kind: "list",
-          path: "/items",
+          id: 'GET:/items',
+          method: 'GET',
+          kind: 'list',
+          path: '/items',
           responseSchema: {
-            type: "object",
+            type: 'object',
             properties: {
               data: {
-                type: "array",
-                items: { type: "object", properties: { id: { type: "string" } } },
+                type: 'array',
+                items: { type: 'object', properties: { id: { type: 'string' } } },
               },
             },
           },
@@ -234,59 +228,90 @@ describe("extractResourceMetrics", () => {
       ],
     };
     const m = extractResourceMetrics(resource);
-    expect(m.listResponseShape).toBe("object_wrapped");
+    expect(m.listResponseShape).toBe('object_wrapped');
   });
 
-  it("listResponseShape: unknown when no list op or primitive array", () => {
+  it('listResponseShape: unknown when no list op or primitive array', () => {
     const resourceNoList: ResourceIR = {
-      name: "Tasks",
-      key: "tasks",
+      name: 'Tasks',
+      key: 'tasks',
       operations: [
         {
-          id: "POST:/tasks",
-          method: "POST",
-          kind: "create",
-          path: "/tasks",
-          requestSchema: { type: "object", properties: {} },
-          responseSchema: { type: "object" },
+          id: 'POST:/tasks',
+          method: 'POST',
+          kind: 'create',
+          path: '/tasks',
+          requestSchema: { type: 'object', properties: {} },
+          responseSchema: { type: 'object' },
         },
       ],
     };
-    expect(extractResourceMetrics(resourceNoList).listResponseShape).toBe("unknown");
+    expect(extractResourceMetrics(resourceNoList).listResponseShape).toBe('unknown');
 
     const resourcePrimitiveArray: ResourceIR = {
-      name: "Ids",
-      key: "ids",
+      name: 'Ids',
+      key: 'ids',
       operations: [
         {
-          id: "GET:/ids",
-          method: "GET",
-          kind: "list",
-          path: "/ids",
+          id: 'GET:/ids',
+          method: 'GET',
+          kind: 'list',
+          path: '/ids',
           responseSchema: {
-            type: "object",
+            type: 'object',
             properties: {
-              ids: { type: "array", items: { type: "string" } },
+              ids: { type: 'array', items: { type: 'string' } },
             },
           },
         },
       ],
     };
-    expect(extractResourceMetrics(resourcePrimitiveArray).listResponseShape).toBe("unknown");
+    expect(extractResourceMetrics(resourcePrimitiveArray).listResponseShape).toBe('unknown');
   });
 });
 
-describe("aggregateSpecMetrics", () => {
-  it("aggregates resource metrics into spec metrics", () => {
+describe('aggregateSpecMetrics', () => {
+  it('aggregates resource metrics into spec metrics', () => {
     const r1 = extractResourceMetrics({
-      name: "A",
-      key: "a",
-      operations: [{ id: "1", method: "GET", kind: "list", path: "/", responseSchema: { type: "array", items: { type: "object", properties: { x: { type: "string" } } } } }],
+      name: 'A',
+      key: 'a',
+      operations: [
+        {
+          id: '1',
+          method: 'GET',
+          kind: 'list',
+          path: '/',
+          responseSchema: {
+            type: 'array',
+            items: { type: 'object', properties: { x: { type: 'string' } } },
+          },
+        },
+      ],
     });
     const r2 = extractResourceMetrics({
-      name: "B",
-      key: "b",
-      operations: [{ id: "2", method: "GET", kind: "list", path: "/", responseSchema: { type: "array", items: { type: "object", properties: { a: { type: "string" }, b: { type: "string" }, c: { type: "string" }, d: { type: "string" }, e: { type: "string" } } } } }],
+      name: 'B',
+      key: 'b',
+      operations: [
+        {
+          id: '2',
+          method: 'GET',
+          kind: 'list',
+          path: '/',
+          responseSchema: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                a: { type: 'string' },
+                b: { type: 'string' },
+                c: { type: 'string' },
+                d: { type: 'string' },
+                e: { type: 'string' },
+              },
+            },
+          },
+        },
+      ],
     });
     const spec = aggregateSpecMetrics([r1, r2]);
     expect(spec.resourceCount).toBe(2);
@@ -295,8 +320,8 @@ describe("aggregateSpecMetrics", () => {
   });
 });
 
-describe("computeSpecComplexityScore", () => {
-  it("computes score from spec metrics", () => {
+describe('computeSpecComplexityScore', () => {
+  it('computes score from spec metrics', () => {
     const score = computeSpecComplexityScore({
       resourceCount: 2,
       operationCount: 5,
@@ -309,8 +334,14 @@ describe("computeSpecComplexityScore", () => {
   });
 });
 
-describe("classifyResourceArchetypes", () => {
-  const emptySpec: { resourceCount: number; operationCount: number; maxFieldsPerResource: number; maxDepth: number; maxArrayOfObjects: number } = {
+describe('classifyResourceArchetypes', () => {
+  const emptySpec: {
+    resourceCount: number;
+    operationCount: number;
+    maxFieldsPerResource: number;
+    maxDepth: number;
+    maxArrayOfObjects: number;
+  } = {
     resourceCount: 1,
     operationCount: 1,
     maxFieldsPerResource: 4,
@@ -318,22 +349,22 @@ describe("classifyResourceArchetypes", () => {
     maxArrayOfObjects: 0,
   };
 
-  it("simple_create: fields≤4, depth=0, create_only", () => {
+  it('simple_create: fields≤4, depth=0, create_only', () => {
     const resource: ResourceIR = {
-      name: "Tasks",
-      key: "tasks",
+      name: 'Tasks',
+      key: 'tasks',
       operations: [
         {
-          id: "POST:/tasks",
-          method: "POST",
-          kind: "create",
-          path: "/tasks",
+          id: 'POST:/tasks',
+          method: 'POST',
+          kind: 'create',
+          path: '/tasks',
           requestSchema: {
-            type: "object",
-            required: ["title"],
-            properties: { title: { type: "string" }, done: { type: "boolean" } },
+            type: 'object',
+            required: ['title'],
+            properties: { title: { type: 'string' }, done: { type: 'boolean' } },
           },
-          responseSchema: { type: "object" },
+          responseSchema: { type: 'object' },
         },
       ],
     };
@@ -342,29 +373,29 @@ describe("classifyResourceArchetypes", () => {
     expect(archetypes).toContain(ARCHETYPES.SIMPLE_CREATE);
   });
 
-  it("optional_heavy: required≤2, optional≥5", () => {
+  it('optional_heavy: required≤2, optional≥5', () => {
     const resource: ResourceIR = {
-      name: "Items",
-      key: "items",
+      name: 'Items',
+      key: 'items',
       operations: [
         {
-          id: "POST:/items",
-          method: "POST",
-          kind: "create",
-          path: "/items",
+          id: 'POST:/items',
+          method: 'POST',
+          kind: 'create',
+          path: '/items',
           requestSchema: {
-            type: "object",
-            required: ["id"],
+            type: 'object',
+            required: ['id'],
             properties: {
-              id: { type: "string" },
-              a: { type: "string" },
-              b: { type: "string" },
-              c: { type: "string" },
-              d: { type: "string" },
-              e: { type: "string" },
+              id: { type: 'string' },
+              a: { type: 'string' },
+              b: { type: 'string' },
+              c: { type: 'string' },
+              d: { type: 'string' },
+              e: { type: 'string' },
             },
           },
-          responseSchema: { type: "object" },
+          responseSchema: { type: 'object' },
         },
       ],
     };
@@ -374,90 +405,111 @@ describe("classifyResourceArchetypes", () => {
   });
 
   it.each([
-    ["simple_list", { fields: 2, pattern: "list_only" as const }],
-    ["list_detail", { fields: 3, pattern: "list_detail" as const }],
-    ["list_create", { fields: 3, pattern: "list_create" as const }],
-    ["full_crud", { fields: 4, pattern: "crud" as const }],
-    ["enum_heavy", { enums: 2 }],
-    ["array_of_objects", { arrayOfObjects: 1 }],
-    ["nested_depth_1", { depth: 1 }],
-    ["nested_depth_2", { depth: 2 }],
-    ["map_schema", { map: true }],
-    ["large_resource", { fields: 15 }],
-    ["array_heavy", { arrayOfObjects: 2 }],
-    ["deep_schema", { depth: 3 }],
-    ["many_enum_values", { maxEnumValues: 10 }],
-    ["nullable_fields", { nullable: 2 }],
-    ["mixed_schema_types", { enum: 1, arrayOfObjects: 1, nestedObject: 1 }],
-    ["array_root_list", { listShape: "array_root" as const }],
-    ["wrapped_list_response", { listShape: "object_wrapped" as const }],
-  ])("classifies %s", (archetype, config) => {
-    const op = (kind: "list" | "detail" | "create" | "update" | "delete") => ({
+    ['simple_list', { fields: 2, pattern: 'list_only' as const }],
+    ['list_detail', { fields: 3, pattern: 'list_detail' as const }],
+    ['list_create', { fields: 3, pattern: 'list_create' as const }],
+    ['full_crud', { fields: 4, pattern: 'crud' as const }],
+    ['enum_heavy', { enums: 2 }],
+    ['array_of_objects', { arrayOfObjects: 1 }],
+    ['nested_depth_1', { depth: 1 }],
+    ['nested_depth_2', { depth: 2 }],
+    ['map_schema', { map: true }],
+    ['large_resource', { fields: 15 }],
+    ['array_heavy', { arrayOfObjects: 2 }],
+    ['deep_schema', { depth: 3 }],
+    ['many_enum_values', { maxEnumValues: 10 }],
+    ['nullable_fields', { nullable: 2 }],
+    ['mixed_schema_types', { enum: 1, arrayOfObjects: 1, nestedObject: 1 }],
+    ['array_root_list', { listShape: 'array_root' as const }],
+    ['wrapped_list_response', { listShape: 'object_wrapped' as const }],
+  ])('classifies %s', (archetype, config) => {
+    const op = (kind: 'list' | 'detail' | 'create' | 'update' | 'delete') => ({
       id: kind,
-      method: "GET" as const,
+      method: 'GET' as const,
       kind,
-      path: "/",
-      responseSchema: { type: "object" },
+      path: '/',
+      responseSchema: { type: 'object' },
     });
 
     let resource: ResourceIR;
-    if ("pattern" in config) {
-      const kinds = config.pattern === "list_only" ? ["list"] : config.pattern === "list_detail" ? ["list", "detail"] : config.pattern === "list_create" ? ["list", "create"] : ["list", "detail", "create", "update", "delete"];
+    if ('pattern' in config) {
+      const kinds =
+        config.pattern === 'list_only'
+          ? ['list']
+          : config.pattern === 'list_detail'
+            ? ['list', 'detail']
+            : config.pattern === 'list_create'
+              ? ['list', 'create']
+              : ['list', 'detail', 'create', 'update', 'delete'];
       resource = {
-        name: "R",
-        key: "r",
-        operations: kinds.map((k) => op(k as "list" | "detail" | "create" | "update" | "delete")),
+        name: 'R',
+        key: 'r',
+        operations: kinds.map((k) => op(k as 'list' | 'detail' | 'create' | 'update' | 'delete')),
       };
     } else {
-      resource = { name: "R", key: "r", operations: [op("list")] };
+      resource = { name: 'R', key: 'r', operations: [op('list')] };
     }
 
     const props: Record<string, unknown> = {};
-    if ("fields" in config) {
-      for (let i = 0; i < config.fields; i++) props[`f${i}`] = { type: "string" };
+    if ('fields' in config) {
+      for (let i = 0; i < config.fields; i++) props[`f${i}`] = { type: 'string' };
     }
-    if ("enums" in config) {
-      for (let i = 0; i < config.enums; i++) props[`e${i}`] = { type: "string", enum: ["a", "b"] };
+    if ('enums' in config) {
+      for (let i = 0; i < config.enums; i++) props[`e${i}`] = { type: 'string', enum: ['a', 'b'] };
     }
-    if ("arrayOfObjects" in config) {
+    if ('arrayOfObjects' in config) {
       for (let i = 0; i < config.arrayOfObjects; i++) {
-        props[`arr${i}`] = { type: "array", items: { type: "object", properties: { x: { type: "string" } } } };
+        props[`arr${i}`] = {
+          type: 'array',
+          items: { type: 'object', properties: { x: { type: 'string' } } },
+        };
       }
     }
-    if ("depth" in config) {
-      let nested: Record<string, unknown> = { x: { type: "string" } };
+    if ('depth' in config) {
+      let nested: Record<string, unknown> = { x: { type: 'string' } };
       for (let i = 1; i < config.depth; i++) {
-        nested = { inner: { type: "object", properties: nested } };
+        nested = { inner: { type: 'object', properties: nested } };
       }
-      props.nested = { type: "object", properties: nested };
+      props.nested = { type: 'object', properties: nested };
     }
-    if ("map" in config && config.map) {
-      props.extra = { type: "object", additionalProperties: { type: "string" } };
+    if ('map' in config && config.map) {
+      props.extra = { type: 'object', additionalProperties: { type: 'string' } };
     }
-    if ("nullable" in config) {
-      for (let i = 0; i < config.nullable; i++) props[`n${i}`] = { type: "string", nullable: true };
+    if ('nullable' in config) {
+      for (let i = 0; i < config.nullable; i++) props[`n${i}`] = { type: 'string', nullable: true };
     }
-    if ("maxEnumValues" in config) {
-      props.bigEnum = { type: "string", enum: Array.from({ length: config.maxEnumValues }, (_, i) => `v${i}`) };
+    if ('maxEnumValues' in config) {
+      props.bigEnum = {
+        type: 'string',
+        enum: Array.from({ length: config.maxEnumValues }, (_, i) => `v${i}`),
+      };
     }
-    if ("enum" in config && "arrayOfObjects" in config && "nestedObject" in config) {
-      props.e = { type: "string", enum: ["a"] };
-      props.arr = { type: "array", items: { type: "object", properties: { x: { type: "string" } } } };
-      props.obj = { type: "object", properties: { y: { type: "string" } } };
+    if ('enum' in config && 'arrayOfObjects' in config && 'nestedObject' in config) {
+      props.e = { type: 'string', enum: ['a'] };
+      props.arr = {
+        type: 'array',
+        items: { type: 'object', properties: { x: { type: 'string' } } },
+      };
+      props.obj = { type: 'object', properties: { y: { type: 'string' } } };
     }
-    if ("listShape" in config) {
+    if ('listShape' in config) {
       resource.operations[0] = {
         ...resource.operations[0],
-        kind: "list",
+        kind: 'list',
         responseSchema:
-          config.listShape === "array_root"
-            ? { type: "array", items: { type: "object", properties: props } }
-            : { type: "object", properties: { data: { type: "array", items: { type: "object", properties: props } } } },
+          config.listShape === 'array_root'
+            ? { type: 'array', items: { type: 'object', properties: props } }
+            : {
+                type: 'object',
+                properties: {
+                  data: { type: 'array', items: { type: 'object', properties: props } },
+                },
+              },
       };
     } else if (Object.keys(props).length > 0) {
       resource.operations[0] = {
         ...resource.operations[0],
-        responseSchema: { type: "array", items: { type: "object", properties: props } },
+        responseSchema: { type: 'array', items: { type: 'object', properties: props } },
       };
     }
 
@@ -467,45 +519,97 @@ describe("classifyResourceArchetypes", () => {
   });
 });
 
-describe("classifySpecArchetypes", () => {
-  it("mixed_operations: spec has ≥1 create_only AND ≥1 list_only AND ≥1 detail_only", () => {
+describe('classifySpecArchetypes', () => {
+  it('mixed_operations: spec has ≥1 create_only AND ≥1 list_only AND ≥1 detail_only', () => {
     const createOnly = extractResourceMetrics({
-      name: "A",
-      key: "a",
-      operations: [{ id: "1", method: "POST", kind: "create", path: "/", requestSchema: { type: "object" }, responseSchema: { type: "object" } }],
+      name: 'A',
+      key: 'a',
+      operations: [
+        {
+          id: '1',
+          method: 'POST',
+          kind: 'create',
+          path: '/',
+          requestSchema: { type: 'object' },
+          responseSchema: { type: 'object' },
+        },
+      ],
     });
     const listOnly = extractResourceMetrics({
-      name: "B",
-      key: "b",
-      operations: [{ id: "2", method: "GET", kind: "list", path: "/", responseSchema: { type: "array", items: { type: "object" } } }],
+      name: 'B',
+      key: 'b',
+      operations: [
+        {
+          id: '2',
+          method: 'GET',
+          kind: 'list',
+          path: '/',
+          responseSchema: { type: 'array', items: { type: 'object' } },
+        },
+      ],
     });
     const detailOnly = extractResourceMetrics({
-      name: "C",
-      key: "c",
-      operations: [{ id: "3", method: "GET", kind: "detail", path: "/:id", identifierParam: "id", responseSchema: { type: "object" } }],
+      name: 'C',
+      key: 'c',
+      operations: [
+        {
+          id: '3',
+          method: 'GET',
+          kind: 'detail',
+          path: '/:id',
+          identifierParam: 'id',
+          responseSchema: { type: 'object' },
+        },
+      ],
     });
     const spec = aggregateSpecMetrics([createOnly, listOnly, detailOnly]);
     const archetypes = classifySpecArchetypes(spec, [createOnly, listOnly, detailOnly]);
     expect(archetypes).toContain(ARCHETYPES.MIXED_OPERATIONS);
   });
 
-  it("multi_resource: resourceCount ≥ 3", () => {
+  it('multi_resource: resourceCount ≥ 3', () => {
     const resources = [
-      extractResourceMetrics({ name: "A", key: "a", operations: [{ id: "1", method: "GET", kind: "list", path: "/", responseSchema: { type: "object" } }] }),
-      extractResourceMetrics({ name: "B", key: "b", operations: [{ id: "2", method: "GET", kind: "list", path: "/", responseSchema: { type: "object" } }] }),
-      extractResourceMetrics({ name: "C", key: "c", operations: [{ id: "3", method: "GET", kind: "list", path: "/", responseSchema: { type: "object" } }] }),
+      extractResourceMetrics({
+        name: 'A',
+        key: 'a',
+        operations: [
+          { id: '1', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+        ],
+      }),
+      extractResourceMetrics({
+        name: 'B',
+        key: 'b',
+        operations: [
+          { id: '2', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+        ],
+      }),
+      extractResourceMetrics({
+        name: 'C',
+        key: 'c',
+        operations: [
+          { id: '3', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+        ],
+      }),
     ];
     const spec = aggregateSpecMetrics(resources);
     const archetypes = classifySpecArchetypes(spec, resources);
     expect(archetypes).toContain(ARCHETYPES.MULTI_RESOURCE);
   });
 
-  it("large_api: resourceCount ≥ 10", () => {
+  it('large_api: resourceCount ≥ 10', () => {
     const resources = Array.from({ length: 10 }, (_, i) =>
       extractResourceMetrics({
         name: `R${i}`,
         key: `r${i}`,
-        operations: [{ id: String(i), method: "GET", kind: "list", path: "/", responseSchema: { type: "object" } }],
+        operations: [
+          {
+            id: String(i),
+            method: 'GET',
+            kind: 'list',
+            path: '/',
+            responseSchema: { type: 'object' },
+          },
+        ],
       })
     );
     const spec = aggregateSpecMetrics(resources);

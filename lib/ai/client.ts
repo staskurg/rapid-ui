@@ -2,11 +2,11 @@
  * OpenAI Client - Initializes and exports OpenAI client instance
  */
 
-import OpenAI from "openai";
+import OpenAI from 'openai';
 
 /** Request timeout in ms. 2 min for complex payloads; override via OPENAI_TIMEOUT_MS env. */
 const REQUEST_TIMEOUT_MS =
-  typeof process.env.OPENAI_TIMEOUT_MS === "string"
+  typeof process.env.OPENAI_TIMEOUT_MS === 'string'
     ? parseInt(process.env.OPENAI_TIMEOUT_MS, 10)
     : 120_000;
 
@@ -15,13 +15,11 @@ const REQUEST_TIMEOUT_MS =
  */
 function getApiKey(): string {
   const apiKey = process.env.OPENAI_API_KEY;
-  
+
   if (!apiKey) {
-    throw new Error(
-      "OPENAI_API_KEY is not set. Please add it to your .env.local file."
-    );
+    throw new Error('OPENAI_API_KEY is not set. Please add it to your .env.local file.');
   }
-  
+
   return apiKey;
 }
 
@@ -43,7 +41,7 @@ export function getOpenAIClient(): OpenAI {
       throw error;
     }
   }
-  
+
   return clientInstance;
 }
 

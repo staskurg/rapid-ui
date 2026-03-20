@@ -13,13 +13,13 @@
  * Output: scripts/corpus-data/reports/raw-{NAME}-{timestamp}.json
  */
 
-import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, statSync } from "fs";
-import { join, relative } from "path";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR } from "@/lib/compiler/apiir";
-const SPEC_EXTENSIONS = [".yaml", ".yml", ".json"];
+import { readFileSync, readdirSync, existsSync, mkdirSync, writeFileSync, statSync } from 'fs';
+import { join, relative } from 'path';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
+import { buildApiIR } from '@/lib/compiler/apiir';
+const SPEC_EXTENSIONS = ['.yaml', '.yml', '.json'];
 
 interface CorpusResult {
   path: string;
@@ -52,12 +52,15 @@ interface RawOutput {
 }
 
 function getSpecId(filePath: string): string {
-  const base = filePath.split("/").pop() ?? filePath;
-  const ext = base.lastIndexOf(".");
+  const base = filePath.split('/').pop() ?? filePath;
+  const ext = base.lastIndexOf('.');
   return ext > 0 ? base.slice(0, ext) : base;
 }
 
-function collectSpecFiles(dir: string, recurse: boolean): Array<{ absPath: string; relPath: string }> {
+function collectSpecFiles(
+  dir: string,
+  recurse: boolean
+): Array<{ absPath: string; relPath: string }> {
   const cwd = process.cwd();
   const out: Array<{ absPath: string; relPath: string }> = [];
 
@@ -71,7 +74,7 @@ function collectSpecFiles(dir: string, recurse: boolean): Array<{ absPath: strin
           walk(abs);
         }
       } else {
-        const ext = e.toLowerCase().slice(e.lastIndexOf("."));
+        const ext = e.toLowerCase().slice(e.lastIndexOf('.'));
         if (SPEC_EXTENSIONS.includes(ext)) {
           out.push({ absPath: abs, relPath: relative(cwd, abs) });
         }
@@ -83,11 +86,7 @@ function collectSpecFiles(dir: string, recurse: boolean): Array<{ absPath: strin
   return out;
 }
 
-function runSpec(
-  absPath: string,
-  relPath: string,
-  cwd: string
-): CorpusResult {
+function runSpec(absPath: string, relPath: string, cwd: string): CorpusResult {
   const result: CorpusResult = {
     path: relPath,
     valid: false,
@@ -102,7 +101,7 @@ function runSpec(
 
   let content: string;
   try {
-    content = readFileSync(absPath, "utf-8");
+    content = readFileSync(absPath, 'utf-8');
   } catch (err) {
     result.parseFailed = true;
     result.parseError = err instanceof Error ? err.message : String(err);
@@ -120,8 +119,7 @@ function runSpec(
     }
 
     const openapi = parseResult.doc.openapi;
-    result.openapiVersion =
-      typeof openapi === "string" ? openapi : undefined;
+    result.openapiVersion = typeof openapi === 'string' ? openapi : undefined;
 
     const validateResult = validateSubset(parseResult.doc);
     if (!validateResult.success) {
@@ -181,7 +179,7 @@ function runSpec(
     result.crashed = true;
     result.errors = [
       {
-        code: "COMPILER_CRASH",
+        code: 'COMPILER_CRASH',
         message: err instanceof Error ? err.message : String(err),
       },
     ];
@@ -192,14 +190,14 @@ function runSpec(
 }
 
 const REPO_CONFIG: Record<string, { specsDir: string; outputName: string; recurse: boolean }> = {
-  "api-guru": {
-    specsDir: "scripts/corpus-data/specs/api_guru",
-    outputName: "api-guru",
+  'api-guru': {
+    specsDir: 'scripts/corpus-data/specs/api_guru',
+    outputName: 'api-guru',
     recurse: false,
   },
   github: {
-    specsDir: "scripts/corpus-data/specs/github",
-    outputName: "github",
+    specsDir: 'scripts/corpus-data/specs/github',
+    outputName: 'github',
     recurse: true,
   },
 };
@@ -211,7 +209,7 @@ function main(): number {
   let recurse = false;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--repo" && args[i + 1]) {
+    if (args[i] === '--repo' && args[i + 1]) {
       const repo = args[++i];
       const config = REPO_CONFIG[repo];
       if (!config) {
@@ -221,30 +219,32 @@ function main(): number {
       specsDirArg = config.specsDir;
       outputName = config.outputName;
       recurse = config.recurse;
-    } else if (args[i] === "--api-guru") {
-      specsDirArg = "scripts/corpus-data/specs/api_guru";
-      outputName = "api-guru";
-    } else if (args[i] === "--specs-dir" && args[i + 1]) {
+    } else if (args[i] === '--api-guru') {
+      specsDirArg = 'scripts/corpus-data/specs/api_guru';
+      outputName = 'api-guru';
+    } else if (args[i] === '--specs-dir' && args[i + 1]) {
       specsDirArg = args[++i];
-    } else if (args[i] === "--output-name" && args[i + 1]) {
+    } else if (args[i] === '--output-name' && args[i + 1]) {
       outputName = args[++i];
-    } else if (args[i] === "--recurse") {
+    } else if (args[i] === '--recurse') {
       recurse = true;
     }
   }
 
-  if (specsDirArg == null || outputName == null || outputName === "") {
-    console.error("Usage: npm run corpus:run -- --repo REPO [--recurse]");
-    console.error("   or: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]");
-    console.error("  REPO: api-guru | github");
-    console.error("Example: npm run corpus:run -- --repo api-guru");
-    console.error("Example: npm run corpus:run -- --repo github");
-    console.error("Example: npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic");
+  if (specsDirArg == null || outputName == null || outputName === '') {
+    console.error('Usage: npm run corpus:run -- --repo REPO [--recurse]');
+    console.error('   or: npm run corpus:run -- --specs-dir PATH --output-name NAME [--recurse]');
+    console.error('  REPO: api-guru | github');
+    console.error('Example: npm run corpus:run -- --repo api-guru');
+    console.error('Example: npm run corpus:run -- --repo github');
+    console.error(
+      'Example: npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-generic --output-name github-generic'
+    );
     return 1;
   }
 
   const cwd = process.cwd();
-  const reportsDir = join(cwd, "scripts", "corpus-data", "reports");
+  const reportsDir = join(cwd, 'scripts', 'corpus-data', 'reports');
   const specsDir = join(cwd, specsDirArg);
 
   if (!existsSync(specsDir)) {
@@ -259,7 +259,7 @@ function main(): number {
     return 1;
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const outputPath = join(reportsDir, `raw-${outputName}-${timestamp}.json`);
 
   mkdirSync(reportsDir, { recursive: true });
@@ -275,7 +275,7 @@ function main(): number {
     results.push(r);
 
     if (!r.parseFailed) {
-      const file = relPath.split("/").pop() ?? relPath;
+      const file = relPath.split('/').pop() ?? relPath;
       cleanList.push({
         id: getSpecId(file),
         path: relPath,
@@ -287,7 +287,7 @@ function main(): number {
       process.stdout.write(`  ${i + 1}/${specFiles.length} processed\r`);
     }
   }
-  console.log("");
+  console.log('');
 
   const validCount = results.filter((r) => r.valid).length;
   const crashCount = results.filter((r) => r.crashed).length;
@@ -303,10 +303,12 @@ function main(): number {
     results,
   };
 
-  writeFileSync(outputPath, JSON.stringify(output, null, 2), "utf-8");
+  writeFileSync(outputPath, JSON.stringify(output, null, 2), 'utf-8');
 
   console.log(`\nDone. Output: ${outputPath}`);
-  console.log(`  Valid: ${validCount}/${results.length} (${((validCount / results.length) * 100).toFixed(1)}%)`);
+  console.log(
+    `  Valid: ${validCount}/${results.length} (${((validCount / results.length) * 100).toFixed(1)}%)`
+  );
   console.log(`  Parse failures: ${parseFailCount}`);
   console.log(`  Compiler crashes: ${crashCount}`);
 

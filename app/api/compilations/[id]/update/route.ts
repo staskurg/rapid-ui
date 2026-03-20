@@ -1,32 +1,29 @@
-import { NextResponse } from "next/server";
-import { getCompilation, putCompilation } from "@/lib/compiler/store";
-import { compileOpenAPI } from "@/lib/compiler/pipeline";
-import { computeMultiSpecDiff } from "@/lib/spec/diff";
-import { formatMultiSpecDiffForDisplay } from "@/lib/spec/diffFormatters";
+import { NextResponse } from 'next/server';
+import { getCompilation, putCompilation } from '@/lib/compiler/store';
+import { compileOpenAPI } from '@/lib/compiler/pipeline';
+import { computeMultiSpecDiff } from '@/lib/spec/diff';
+import { formatMultiSpecDiffForDisplay } from '@/lib/spec/diffFormatters';
 
-export async function POST(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   let body: { openapi?: string; accountId?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { errors: [{ code: "PARSE_ERROR", message: "Invalid JSON body" }] },
+      { errors: [{ code: 'PARSE_ERROR', message: 'Invalid JSON body' }] },
       { status: 400 }
     );
   }
 
   const openapi = body.openapi;
-  if (typeof openapi !== "string" || !openapi.trim()) {
+  if (typeof openapi !== 'string' || !openapi.trim()) {
     return NextResponse.json(
       {
         errors: [
           {
-            code: "OAS_PARSE_ERROR",
-            stage: "Parse",
-            message: "Missing or empty openapi field",
+            code: 'OAS_PARSE_ERROR',
+            stage: 'Parse',
+            message: 'Missing or empty openapi field',
           },
         ],
       },
@@ -34,16 +31,15 @@ export async function POST(
     );
   }
 
-  const accountId =
-    typeof body.accountId === "string" ? body.accountId.trim() : undefined;
+  const accountId = typeof body.accountId === 'string' ? body.accountId.trim() : undefined;
   if (!accountId) {
     return NextResponse.json(
       {
         errors: [
           {
-            code: "OAS_PARSE_ERROR",
-            stage: "Parse",
-            message: "Missing accountId",
+            code: 'OAS_PARSE_ERROR',
+            stage: 'Parse',
+            message: 'Missing accountId',
           },
         ],
       },
@@ -55,15 +51,15 @@ export async function POST(
   const entry = await getCompilation(id);
 
   if (!entry) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   if (entry.accountId !== accountId) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const result = await compileOpenAPI(openapi, {
-    source: "api",
+    source: 'api',
     id,
   });
 
@@ -72,14 +68,9 @@ export async function POST(
   }
 
   const multiDiff = computeMultiSpecDiff(entry.specs, result.specs);
-  const diffFromPrevious = formatMultiSpecDiffForDisplay(
-    multiDiff,
-    entry.specs,
-    result.specs
-  );
+  const diffFromPrevious = formatMultiSpecDiffForDisplay(multiDiff, entry.specs, result.specs);
 
-  const name =
-    result.apiIr.api.title || result.resourceNames[0] || "Untitled";
+  const name = result.apiIr.api.title || result.resourceNames[0] || 'Untitled';
 
   await putCompilation(id, {
     specs: result.specs,
@@ -89,7 +80,7 @@ export async function POST(
     openapiCanonicalHash: result.openapiCanonicalHash,
     accountId,
     name,
-    status: "success",
+    status: 'success',
     diffFromPrevious,
   });
 

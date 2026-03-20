@@ -22,9 +22,9 @@ export interface ResourceIR {
   operations: OperationIR[];
 }
 
-export type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-export type OperationKind = "list" | "detail" | "create" | "update" | "delete";
+export type OperationKind = 'list' | 'detail' | 'create' | 'update' | 'delete';
 
 export interface OperationIR {
   /** Stable deterministic id (e.g. operationId or method:path). */

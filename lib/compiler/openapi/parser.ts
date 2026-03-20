@@ -3,10 +3,10 @@
  * Detects version (3.0 vs 3.1) and returns parsed document.
  */
 
-import { parse as parseYaml } from "yaml";
-import type { CompilerError } from "../errors";
+import { parse as parseYaml } from 'yaml';
+import type { CompilerError } from '../errors';
 
-export type OpenApiVersion = "3.0" | "3.1";
+export type OpenApiVersion = '3.0' | '3.1';
 
 export interface ParseResult {
   success: true;
@@ -23,14 +23,14 @@ export type ParseOutput = ParseResult | ParseFailure;
 
 function detectVersion(doc: Record<string, unknown>): OpenApiVersion {
   const openapi = doc.openapi;
-  if (typeof openapi !== "string") return "3.0";
-  if (openapi.startsWith("3.1")) return "3.1";
-  return "3.0";
+  if (typeof openapi !== 'string') return '3.0';
+  if (openapi.startsWith('3.1')) return '3.1';
+  return '3.0';
 }
 
 function looksLikeJson(input: string): boolean {
   const trimmed = input.trim();
-  return trimmed.startsWith("{") || trimmed.startsWith("[");
+  return trimmed.startsWith('{') || trimmed.startsWith('[');
 }
 
 /**
@@ -41,9 +41,9 @@ export function parseOpenAPI(input: string): ParseOutput {
     return {
       success: false,
       error: {
-        code: "OAS_PARSE_ERROR",
-        stage: "Parse",
-        message: "Empty input",
+        code: 'OAS_PARSE_ERROR',
+        stage: 'Parse',
+        message: 'Empty input',
       },
     };
   }
@@ -59,19 +59,19 @@ export function parseOpenAPI(input: string): ParseOutput {
         return {
           success: false,
           error: {
-            code: "OAS_PARSE_ERROR",
-            stage: "Parse",
-            message: "YAML parsed to null/undefined",
+            code: 'OAS_PARSE_ERROR',
+            stage: 'Parse',
+            message: 'YAML parsed to null/undefined',
           },
         };
       }
-      if (typeof parsed !== "object" || Array.isArray(parsed)) {
+      if (typeof parsed !== 'object' || Array.isArray(parsed)) {
         return {
           success: false,
           error: {
-            code: "OAS_PARSE_ERROR",
-            stage: "Parse",
-            message: "Expected object root",
+            code: 'OAS_PARSE_ERROR',
+            stage: 'Parse',
+            message: 'Expected object root',
           },
         };
       }
@@ -85,8 +85,8 @@ export function parseOpenAPI(input: string): ParseOutput {
     return {
       success: false,
       error: {
-        code: "OAS_PARSE_ERROR",
-        stage: "Parse",
+        code: 'OAS_PARSE_ERROR',
+        stage: 'Parse',
         message: `Parse error: ${message}`,
       },
     };

@@ -3,9 +3,9 @@
  * Machine-readable format for CI, trend analysis, prompt debugging.
  */
 
-import type { MultiSpecDiff } from "@/lib/spec/diff";
+import type { MultiSpecDiff } from '@/lib/spec/diff';
 
-export type EvalType = "full" | "llm-only";
+export type EvalType = 'full' | 'llm-only';
 
 export interface ReportConfig {
   runs: number;
@@ -78,7 +78,8 @@ export function buildFullReport(
     const diff: FixtureDiff = {};
     // Include diffs whenever there's drift (< 100%), not just on failure
     if (r.minSimilarity < 1 && r.worstPair) {
-      if (r.worstPair.structuralDifferences?.length) diff.structural = r.worstPair.structuralDifferences;
+      if (r.worstPair.structuralDifferences?.length)
+        diff.structural = r.worstPair.structuralDifferences;
       if (r.unifiedDiff) diff.unified = r.unifiedDiff;
       if (r.multiSpecDiff) diff.multiSpecDiff = r.multiSpecDiff;
     }
@@ -97,7 +98,7 @@ export function buildFullReport(
   });
 
   return {
-    evalType: "full",
+    evalType: 'full',
     timestamp: new Date().toISOString(),
     config: { runs: config.runs, parallel: config.parallel },
     summary: {
@@ -153,7 +154,7 @@ export function buildLlmOnlyReport(
   });
 
   return {
-    evalType: "llm-only",
+    evalType: 'llm-only',
     timestamp: new Date().toISOString(),
     config: { runs: config.runs, parallel: config.parallel },
     summary: {

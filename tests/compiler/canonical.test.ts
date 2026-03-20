@@ -1,19 +1,19 @@
-import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { canonicalize, canonicalStringify } from "@/lib/compiler/openapi/canonicalize";
-import { buildApiIR } from "@/lib/compiler/apiir/build";
-import { sha256Hash } from "@/lib/compiler/hash";
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
+import { canonicalize, canonicalStringify } from '@/lib/compiler/openapi/canonicalize';
+import { buildApiIR } from '@/lib/compiler/apiir/build';
+import { sha256Hash } from '@/lib/compiler/hash';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FIXTURES = join(__dirname, "fixtures");
+const FIXTURES = join(__dirname, 'fixtures');
 
 function loadAndProcess(specPath: string) {
-  const yaml = readFileSync(join(FIXTURES, specPath), "utf-8");
+  const yaml = readFileSync(join(FIXTURES, specPath), 'utf-8');
   const parseResult = parseOpenAPI(yaml);
   if (!parseResult.success) throw new Error(`Parse failed: ${parseResult.error.message}`);
   const validateResult = validateSubset(parseResult.doc);
@@ -30,25 +30,25 @@ function docToApiIrHash(doc: Record<string, unknown>): string {
   return result.apiIrHash;
 }
 
-describe("canonicalization and hashing", () => {
-  it("golden_openapi_users_tagged_3_0.yaml produces stable canonical JSON", () => {
-    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
+describe('canonicalization and hashing', () => {
+  it('golden_openapi_users_tagged_3_0.yaml produces stable canonical JSON', () => {
+    const doc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
     const str = canonicalStringify(doc);
 
     expect(str).toMatchSnapshot();
   });
 
-  it("golden_openapi_products_path_3_1.yaml produces stable canonical JSON", () => {
-    const doc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
+  it('golden_openapi_products_path_3_1.yaml produces stable canonical JSON', () => {
+    const doc = loadAndProcess('demo/golden_openapi_products_path_3_1.yaml');
     const str = canonicalStringify(doc);
 
     expect(str).toMatchSnapshot();
   });
 
-  it("same spec with reordered keys produces same canonical JSON", () => {
+  it('same spec with reordered keys produces same canonical JSON', () => {
     const yaml = readFileSync(
-      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
-      "utf-8"
+      join(FIXTURES, 'demo', 'golden_openapi_users_tagged_3_0.yaml'),
+      'utf-8'
     );
     const parse1 = parseOpenAPI(yaml);
     const parse2 = parseOpenAPI(yaml);
@@ -70,18 +70,18 @@ describe("canonicalization and hashing", () => {
     expect(str1).toBe(str2);
   });
 
-  it("JSON with different key order produces same canonical output", () => {
+  it('JSON with different key order produces same canonical output', () => {
     const specA = {
-      openapi: "3.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
-                    schema: { type: "object", properties: { id: { type: "string" } } },
+                  'application/json': {
+                    schema: { type: 'object', properties: { id: { type: 'string' } } },
                   },
                 },
               },
@@ -92,13 +92,13 @@ describe("canonicalization and hashing", () => {
     };
     const specB = {
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
-                    schema: { properties: { id: { type: "string" } }, type: "object" },
+                  'application/json': {
+                    schema: { properties: { id: { type: 'string' } }, type: 'object' },
                   },
                 },
               },
@@ -106,8 +106,8 @@ describe("canonicalization and hashing", () => {
           },
         },
       },
-      info: { version: "1", title: "T" },
-      openapi: "3.0",
+      info: { version: '1', title: 'T' },
+      openapi: '3.0',
     };
     const validateA = validateSubset(specA);
     const validateB = validateSubset(specB);
@@ -124,8 +124,8 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("same canonical JSON produces same hash", () => {
-    const doc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
+  it('same canonical JSON produces same hash', () => {
+    const doc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
     const canonical = canonicalize(doc);
     const hash1 = sha256Hash(canonical);
     const hash2 = sha256Hash(canonical);
@@ -133,9 +133,9 @@ describe("canonicalization and hashing", () => {
     expect(hash1).toMatch(/^[a-f0-9]{64}$/);
   });
 
-  it("different specs produce different hashes", () => {
-    const usersDoc = loadAndProcess("demo/golden_openapi_users_tagged_3_0.yaml");
-    const productsDoc = loadAndProcess("demo/golden_openapi_products_path_3_1.yaml");
+  it('different specs produce different hashes', () => {
+    const usersDoc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
+    const productsDoc = loadAndProcess('demo/golden_openapi_products_path_3_1.yaml');
     const usersCanonical = canonicalize(usersDoc);
     const productsCanonical = canonicalize(productsDoc);
     const usersHash = sha256Hash(usersCanonical);
@@ -143,36 +143,36 @@ describe("canonicalization and hashing", () => {
     expect(usersHash).not.toBe(productsHash);
   });
 
-  it("rejects circular $ref", () => {
+  it('rejects circular $ref', () => {
     const doc = {
-      openapi: "3.0.0",
-      info: { title: "Test", version: "1.0" },
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
       paths: {},
       components: {
         schemas: {
-          A: { type: "object", properties: { b: { $ref: "#/components/schemas/B" } } },
-          B: { type: "object", properties: { a: { $ref: "#/components/schemas/A" } } },
+          A: { type: 'object', properties: { b: { $ref: '#/components/schemas/B' } } },
+          B: { type: 'object', properties: { a: { $ref: '#/components/schemas/A' } } },
         },
       },
     } as Record<string, unknown>;
     const result = resolveRefs(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.error.code).toBe("OAS_CIRCULAR_REF");
+    expect(result.error.code).toBe('OAS_CIRCULAR_REF');
   });
 
-  it("rejects external $ref", () => {
+  it('rejects external $ref', () => {
     const doc = {
-      openapi: "3.0.0",
-      info: { title: "Test", version: "1.0" },
+      openapi: '3.0.0',
+      info: { title: 'Test', version: '1.0' },
       paths: {
-        "/users": {
+        '/users': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
-                    schema: { $ref: "https://example.com/schema.json" },
+                  'application/json': {
+                    schema: { $ref: 'https://example.com/schema.json' },
                   },
                 },
               },
@@ -184,25 +184,25 @@ describe("canonicalization and hashing", () => {
     const result = resolveRefs(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.error.code).toBe("OAS_EXTERNAL_REF");
+    expect(result.error.code).toBe('OAS_EXTERNAL_REF');
   });
 
-  it("nullable: true and type: [string,null] produce identical ApiIR hash", () => {
+  it('nullable: true and type: [string,null] produce identical ApiIR hash', () => {
     const specNullable = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
-                        status: { type: "string", nullable: true },
+                        id: { type: 'string' },
+                        status: { type: 'string', nullable: true },
                       },
                     },
                   },
@@ -214,20 +214,20 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specUnion = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
-                        status: { type: ["string", "null"] },
+                        id: { type: 'string' },
+                        status: { type: ['string', 'null'] },
                       },
                     },
                   },
@@ -251,23 +251,23 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("properties order A,B,C vs C,B,A produce identical canonical hash", () => {
+  it('properties order A,B,C vs C,B,A produce identical canonical hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        a: { type: "string" },
-                        b: { type: "string" },
-                        c: { type: "string" },
+                        a: { type: 'string' },
+                        b: { type: 'string' },
+                        c: { type: 'string' },
                       },
                     },
                   },
@@ -279,21 +279,21 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        c: { type: "string" },
-                        b: { type: "string" },
-                        a: { type: "string" },
+                        c: { type: 'string' },
+                        b: { type: 'string' },
+                        a: { type: 'string' },
                       },
                     },
                   },
@@ -317,20 +317,20 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("paths order X,Y vs Y,X produce identical ApiIR hash", () => {
+  it('paths order X,Y vs Y,X produce identical ApiIR hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/a": {
+        '/a': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -338,15 +338,15 @@ describe("canonicalization and hashing", () => {
             },
           },
         },
-        "/b": {
+        '/b': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -357,18 +357,18 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/b": {
+        '/b': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -376,15 +376,15 @@ describe("canonicalization and hashing", () => {
             },
           },
         },
-        "/a": {
+        '/a': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -407,24 +407,24 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("annotation keywords uniqueItems, xml, externalDocs produce identical canonical output when present vs absent", () => {
+  it('annotation keywords uniqueItems, xml, externalDocs produce identical canonical output when present vs absent', () => {
     const base = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
+                        id: { type: 'string' },
                         tags: {
-                          type: "array",
-                          items: { type: "string" },
+                          type: 'array',
+                          items: { type: 'string' },
                         },
                       },
                     },
@@ -439,24 +439,24 @@ describe("canonicalization and hashing", () => {
     const withAnnotations = {
       ...base,
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
+                        id: { type: 'string' },
                         tags: {
-                          type: "array",
-                          items: { type: "string" },
+                          type: 'array',
+                          items: { type: 'string' },
                           uniqueItems: true,
                           minItems: 0,
                           maxItems: 100,
-                          xml: { name: "tag" },
-                          externalDocs: { url: "https://example.com" },
+                          xml: { name: 'tag' },
+                          externalDocs: { url: 'https://example.com' },
                         },
                       },
                     },
@@ -481,20 +481,20 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("description and deprecated produce identical canonical output when present vs absent", () => {
+  it('description and deprecated produce identical canonical output when present vs absent', () => {
     const base = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -507,18 +507,18 @@ describe("canonicalization and hashing", () => {
     const withAnnotations = {
       ...base,
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      description: "Item list",
+                      type: 'object',
+                      description: 'Item list',
                       deprecated: true,
                       properties: {
-                        id: { type: "string", description: "Item id", deprecated: false },
+                        id: { type: 'string', description: 'Item id', deprecated: false },
                       },
                     },
                   },
@@ -542,20 +542,20 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("application/vnd.api+json selected when application/json absent", () => {
+  it('application/vnd.api+json selected when application/json absent', () => {
     const doc = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/vnd.api+json": {
+                  'application/vnd.api+json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -569,24 +569,24 @@ describe("canonicalization and hashing", () => {
     expect(result.success).toBe(true);
   });
 
-  it("annotation stripping: description, deprecated, xml, externalDocs, uniqueItems produce identical canonical output", () => {
+  it('annotation stripping: description, deprecated, xml, externalDocs, uniqueItems produce identical canonical output', () => {
     const base = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
+                        id: { type: 'string' },
                         tags: {
-                          type: "array",
-                          items: { type: "string" },
+                          type: 'array',
+                          items: { type: 'string' },
                         },
                       },
                     },
@@ -601,26 +601,26 @@ describe("canonicalization and hashing", () => {
     const withAllAnnotations = {
       ...base,
       paths: {
-        "/items": {
+        '/items': {
           get: {
-            description: "List items",
+            description: 'List items',
             deprecated: true,
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      description: "Item schema",
+                      type: 'object',
+                      description: 'Item schema',
                       deprecated: false,
                       properties: {
-                        id: { type: "string", description: "ID field" },
+                        id: { type: 'string', description: 'ID field' },
                         tags: {
-                          type: "array",
-                          items: { type: "string" },
+                          type: 'array',
+                          items: { type: 'string' },
                           uniqueItems: true,
-                          xml: { name: "tag" },
-                          externalDocs: { url: "https://example.com" },
+                          xml: { name: 'tag' },
+                          externalDocs: { url: 'https://example.com' },
                         },
                       },
                     },
@@ -645,19 +645,19 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("media type ordering: application/xml first vs application/json first produces same canonical output", () => {
-    const schema = { type: "object", properties: { id: { type: "string" } } };
+  it('media type ordering: application/xml first vs application/json first produces same canonical output', () => {
+    const schema = { type: 'object', properties: { id: { type: 'string' } } };
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/xml": { schema: { ...schema } },
-                  "application/json": { schema: { ...schema } },
+                  'application/xml': { schema: { ...schema } },
+                  'application/json': { schema: { ...schema } },
                 },
               },
             },
@@ -666,16 +666,16 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": { schema: { ...schema } },
-                  "application/xml": { schema: { ...schema } },
+                  'application/json': { schema: { ...schema } },
+                  'application/xml': { schema: { ...schema } },
                 },
               },
             },
@@ -696,19 +696,19 @@ describe("canonicalization and hashing", () => {
     expect(strA).toBe(strB);
   });
 
-  it("media-type noise: application/xml + application/json vs application/json only produce same ApiIR hash", () => {
-    const schema = { type: "object", properties: { id: { type: "string" } } };
+  it('media-type noise: application/xml + application/json vs application/json only produce same ApiIR hash', () => {
+    const schema = { type: 'object', properties: { id: { type: 'string' } } };
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/xml": { schema: { ...schema } },
-                  "application/json": { schema: { ...schema } },
+                  'application/xml': { schema: { ...schema } },
+                  'application/json': { schema: { ...schema } },
                 },
               },
             },
@@ -717,15 +717,15 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": { schema: { ...schema } },
+                  'application/json': { schema: { ...schema } },
                 },
               },
             },
@@ -746,22 +746,22 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("contract change detection: add/remove field produces different ApiIR hash", () => {
+  it('contract change detection: add/remove field produces different ApiIR hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
-                        name: { type: "string" },
+                        id: { type: 'string' },
+                        name: { type: 'string' },
                       },
                     },
                   },
@@ -773,19 +773,19 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
+                        id: { type: 'string' },
                       },
                     },
                   },
@@ -809,26 +809,26 @@ describe("canonicalization and hashing", () => {
     expect(hashA).not.toBe(hashB);
   });
 
-  it("parameter ordering noise: limit,offset vs offset,limit produce same ApiIR hash", () => {
+  it('parameter ordering noise: limit,offset vs offset,limit produce same ApiIR hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             parameters: [
-              { name: "limit", in: "query", schema: { type: "integer" } },
-              { name: "offset", in: "query", schema: { type: "integer" } },
+              { name: 'limit', in: 'query', schema: { type: 'integer' } },
+              { name: 'offset', in: 'query', schema: { type: 'integer' } },
             ],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "array",
+                      type: 'array',
                       items: {
-                        type: "object",
-                        properties: { id: { type: "string" } },
+                        type: 'object',
+                        properties: { id: { type: 'string' } },
                       },
                     },
                   },
@@ -840,24 +840,24 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             parameters: [
-              { name: "offset", in: "query", schema: { type: "integer" } },
-              { name: "limit", in: "query", schema: { type: "integer" } },
+              { name: 'offset', in: 'query', schema: { type: 'integer' } },
+              { name: 'limit', in: 'query', schema: { type: 'integer' } },
             ],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "array",
+                      type: 'array',
                       items: {
-                        type: "object",
-                        properties: { id: { type: "string" } },
+                        type: 'object',
+                        properties: { id: { type: 'string' } },
                       },
                     },
                   },
@@ -881,22 +881,22 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("property order noise: id,name vs name,id produce same ApiIR hash", () => {
+  it('property order noise: id,name vs name,id produce same ApiIR hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string" },
-                        name: { type: "string" },
+                        id: { type: 'string' },
+                        name: { type: 'string' },
                       },
                     },
                   },
@@ -908,20 +908,20 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/x": {
+        '/x': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        name: { type: "string" },
-                        id: { type: "string" },
+                        name: { type: 'string' },
+                        id: { type: 'string' },
                       },
                     },
                   },
@@ -945,22 +945,22 @@ describe("canonicalization and hashing", () => {
     expect(hashA).toBe(hashB);
   });
 
-  it("operations order get,post vs post,get produce identical ApiIR hash", () => {
+  it('operations order get,post vs post,get produce identical ApiIR hash', () => {
     const specA = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "array",
+                      type: 'array',
                       items: {
-                        type: "object",
-                        properties: { id: { type: "string" } },
+                        type: 'object',
+                        properties: { id: { type: 'string' } },
                       },
                     },
                   },
@@ -971,21 +971,21 @@ describe("canonicalization and hashing", () => {
           post: {
             requestBody: {
               content: {
-                "application/json": {
+                'application/json': {
                   schema: {
-                    type: "object",
-                    properties: { name: { type: "string" } },
+                    type: 'object',
+                    properties: { name: { type: 'string' } },
                   },
                 },
               },
             },
             responses: {
-              "201": {
+              '201': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -996,28 +996,28 @@ describe("canonicalization and hashing", () => {
       },
     } as Record<string, unknown>;
     const specB = {
-      openapi: "3.0.0",
-      info: { title: "T", version: "1" },
+      openapi: '3.0.0',
+      info: { title: 'T', version: '1' },
       paths: {
-        "/items": {
+        '/items': {
           post: {
             requestBody: {
               content: {
-                "application/json": {
+                'application/json': {
                   schema: {
-                    type: "object",
-                    properties: { name: { type: "string" } },
+                    type: 'object',
+                    properties: { name: { type: 'string' } },
                   },
                 },
               },
             },
             responses: {
-              "201": {
+              '201': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -1026,14 +1026,14 @@ describe("canonicalization and hashing", () => {
           },
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "array",
+                      type: 'array',
                       items: {
-                        type: "object",
-                        properties: { id: { type: "string" } },
+                        type: 'object',
+                        properties: { id: { type: 'string' } },
                       },
                     },
                   },

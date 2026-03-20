@@ -4,23 +4,23 @@
  * Retry max 2 on validation failure.
  */
 
-import { readFileSync } from "fs";
-import path from "path";
-import type { ApiIR } from "../apiir";
-import { apiIrStringify } from "../apiir";
-import { getOpenAIClient } from "@/lib/ai/client";
-import { recordOpenAICall } from "@/lib/ai/metrics";
-import type { OpenAICallSource } from "@/lib/ai/metrics";
-import { sha256Hash } from "../hash";
-import type { CompilerError } from "../errors";
-import { UiPlanIRSchema } from "./uiplan.schema";
-import type { UiPlanIR } from "./uiplan.schema";
-import { buildUserPrompt } from "./prompt.user";
-import { normalizeUiPlanIR } from "./normalize";
-import { formatZodError } from "./format-errors";
-import { ZodError } from "zod";
+import { readFileSync } from 'fs';
+import path from 'path';
+import type { ApiIR } from '../apiir';
+import { apiIrStringify } from '../apiir';
+import { getOpenAIClient } from '@/lib/ai/client';
+import { recordOpenAICall } from '@/lib/ai/metrics';
+import type { OpenAICallSource } from '@/lib/ai/metrics';
+import { sha256Hash } from '../hash';
+import type { CompilerError } from '../errors';
+import { UiPlanIRSchema } from './uiplan.schema';
+import type { UiPlanIR } from './uiplan.schema';
+import { buildUserPrompt } from './prompt.user';
+import { normalizeUiPlanIR } from './normalize';
+import { formatZodError } from './format-errors';
+import { ZodError } from 'zod';
 
-const MODEL = "gpt-4.1-mini-2025-04-14";
+const MODEL = 'gpt-4.1-mini-2025-04-14';
 const MAX_RETRIES = 2;
 /** Fixed seed for reproducible outputs when supported by the model. */
 const SEED = 42;
@@ -59,7 +59,7 @@ export async function llmPlan(
   apiIr: ApiIR,
   options?: { source?: OpenAICallSource; llmPlanFn?: (apiIr: ApiIR) => UiPlanIR }
 ): Promise<LlmPlanOutput> {
-  const source = options?.source ?? "api";
+  const source = options?.source ?? 'api';
 
   // Optional mock for tests (CI without API key)
   if (options?.llmPlanFn) {
@@ -73,17 +73,16 @@ export async function llmPlan(
     return {
       success: false,
       error: {
-        code: "UIPLAN_LLM_UNAVAILABLE",
-        stage: "UiPlan",
-        message:
-          "OPENAI_API_KEY is not set. Add it to .env.local to use LLM planning.",
+        code: 'UIPLAN_LLM_UNAVAILABLE',
+        stage: 'UiPlan',
+        message: 'OPENAI_API_KEY is not set. Add it to .env.local to use LLM planning.',
       },
     };
   }
 
   const systemPrompt = readFileSync(
-    path.join(process.cwd(), "lib/compiler/uiplan/prompt.system.txt"),
-    "utf-8"
+    path.join(process.cwd(), 'lib/compiler/uiplan/prompt.system.txt'),
+    'utf-8'
   );
   const userPrompt = buildUserPrompt(apiIrStringify(apiIr));
 
@@ -99,12 +98,12 @@ export async function llmPlan(
       const completion = await client.chat.completions.create({
         model: MODEL,
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
         ],
         temperature: 0,
         seed: SEED,
-        response_format: { type: "json_object" },
+        response_format: { type: 'json_object' },
         max_tokens: 4096,
       });
 
@@ -120,14 +119,14 @@ export async function llmPlan(
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
           source,
-          status: "error",
+          status: 'error',
         });
         return {
           success: false,
           error: {
-            code: "UIPLAN_INVALID",
-            stage: "UiPlan",
-            message: "LLM returned empty response",
+            code: 'UIPLAN_INVALID',
+            stage: 'UiPlan',
+            message: 'LLM returned empty response',
           },
         };
       }
@@ -144,14 +143,14 @@ export async function llmPlan(
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
           source,
-          status: "error",
+          status: 'error',
         });
         return {
           success: false,
           error: {
-            code: "UIPLAN_INVALID",
-            stage: "UiPlan",
-            message: "LLM response is not valid JSON",
+            code: 'UIPLAN_INVALID',
+            stage: 'UiPlan',
+            message: 'LLM response is not valid JSON',
           },
         };
       }
@@ -168,7 +167,7 @@ export async function llmPlan(
           prompt_tokens: promptTokens,
           completion_tokens: completionTokens,
           source,
-          status: "success",
+          status: 'success',
         });
 
         return {
@@ -191,15 +190,15 @@ export async function llmPlan(
         prompt_tokens: promptTokens,
         completion_tokens: completionTokens,
         source,
-        status: "error",
+        status: 'error',
       });
 
       return {
         success: false,
         error: errors[0] ?? {
-          code: "UIPLAN_INVALID",
-          stage: "UiPlan",
-          message: "UiPlanIR validation failed",
+          code: 'UIPLAN_INVALID',
+          stage: 'UiPlan',
+          message: 'UiPlanIR validation failed',
         },
       };
     } catch (err) {
@@ -211,16 +210,15 @@ export async function llmPlan(
         prompt_tokens: 0,
         completion_tokens: 0,
         source,
-        status: "error",
+        status: 'error',
       });
 
-      const message =
-        err instanceof Error ? err.message : "Unknown LLM error";
+      const message = err instanceof Error ? err.message : 'Unknown LLM error';
       return {
         success: false,
         error: {
-          code: "UIPLAN_LLM_UNAVAILABLE",
-          stage: "UiPlan",
+          code: 'UIPLAN_LLM_UNAVAILABLE',
+          stage: 'UiPlan',
           message: `LLM call failed: ${message}`,
         },
       };
@@ -231,11 +229,10 @@ export async function llmPlan(
   const errors = lastZodError ? formatZodError(lastZodError) : [];
   return {
     success: false,
-    error:
-      errors[0] ?? ({
-        code: "UIPLAN_INVALID" as const,
-        stage: "UiPlan" as const,
-        message: "UiPlanIR validation failed after retries",
-      }),
+    error: errors[0] ?? {
+      code: 'UIPLAN_INVALID' as const,
+      stage: 'UiPlan' as const,
+      message: 'UiPlanIR validation failed after retries',
+    },
   };
 }

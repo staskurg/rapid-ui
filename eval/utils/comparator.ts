@@ -2,10 +2,10 @@
  * Structural comparison utilities for detecting drift across AI runs
  */
 
-import * as Diff from "diff";
-import stringify from "fast-json-stable-stringify";
-import type { UISpec } from "@/lib/spec/types";
-import type { UiPlanIR } from "@/lib/compiler/uiplan/uiplan.schema";
+import * as Diff from 'diff';
+import stringify from 'fast-json-stable-stringify';
+import type { UISpec } from '@/lib/spec/types';
+import type { UiPlanIR } from '@/lib/compiler/uiplan/uiplan.schema';
 
 export interface StructuralFingerprint {
   fieldNames: Set<string>;
@@ -27,16 +27,14 @@ export interface ComparisonResult {
  */
 export function extractFingerprint(spec: UISpec): StructuralFingerprint {
   const fieldNames = new Set<string>(spec.fields.map((f) => f.name));
-  const fieldTypes = new Map<string, string>(
-    spec.fields.map((f) => [f.name, f.type])
-  );
+  const fieldTypes = new Map<string, string>(spec.fields.map((f) => [f.name, f.type]));
   const tableColumns = new Set<string>(spec.table.columns);
   const formFields = new Set<string>(spec.form.fields);
   const filterFields = new Set<string>(spec.filters);
   const enumFields = new Map<string, string[]>();
 
   spec.fields.forEach((field) => {
-    if (field.type === "enum" && field.options) {
+    if (field.type === 'enum' && field.options) {
       enumFields.set(field.name, [...field.options].sort());
     }
   });
@@ -62,17 +60,15 @@ export function compareFingerprints(
 
   // Compare field names
   const allFieldNames = new Set([...fp1.fieldNames, ...fp2.fieldNames]);
-  const commonFields = new Set(
-    [...fp1.fieldNames].filter((f) => fp2.fieldNames.has(f))
-  );
+  const commonFields = new Set([...fp1.fieldNames].filter((f) => fp2.fieldNames.has(f)));
   const onlyIn1 = [...fp1.fieldNames].filter((f) => !fp2.fieldNames.has(f));
   const onlyIn2 = [...fp2.fieldNames].filter((f) => !fp1.fieldNames.has(f));
 
   if (onlyIn1.length > 0) {
-    differences.push(`Fields only in run 1: ${onlyIn1.join(", ")}`);
+    differences.push(`Fields only in run 1: ${onlyIn1.join(', ')}`);
   }
   if (onlyIn2.length > 0) {
-    differences.push(`Fields only in run 2: ${onlyIn2.join(", ")}`);
+    differences.push(`Fields only in run 2: ${onlyIn2.join(', ')}`);
   }
 
   // Compare field types for common fields
@@ -80,22 +76,17 @@ export function compareFingerprints(
     const type1 = fp1.fieldTypes.get(fieldName);
     const type2 = fp2.fieldTypes.get(fieldName);
     if (type1 !== type2) {
-      differences.push(
-        `Field '${fieldName}' has different types: ${type1} vs ${type2}`
-      );
+      differences.push(`Field '${fieldName}' has different types: ${type1} vs ${type2}`);
     }
   });
 
   // Compare enum options
-  const allEnumFields = new Set([
-    ...fp1.enumFields.keys(),
-    ...fp2.enumFields.keys(),
-  ]);
+  const allEnumFields = new Set([...fp1.enumFields.keys(), ...fp2.enumFields.keys()]);
   allEnumFields.forEach((fieldName) => {
     const options1 = fp1.enumFields.get(fieldName) || [];
     const options2 = fp2.enumFields.get(fieldName) || [];
-    const opts1Str = options1.join(",");
-    const opts2Str = options2.join(",");
+    const opts1Str = options1.join(',');
+    const opts2Str = options2.join(',');
     if (opts1Str !== opts2Str) {
       differences.push(
         `Enum field '${fieldName}' has different options: [${opts1Str}] vs [${opts2Str}]`
@@ -104,15 +95,11 @@ export function compareFingerprints(
   });
 
   // Compare table columns
-  const tableDiff1 = [...fp1.tableColumns].filter(
-    (c) => !fp2.tableColumns.has(c)
-  );
-  const tableDiff2 = [...fp2.tableColumns].filter(
-    (c) => !fp1.tableColumns.has(c)
-  );
+  const tableDiff1 = [...fp1.tableColumns].filter((c) => !fp2.tableColumns.has(c));
+  const tableDiff2 = [...fp2.tableColumns].filter((c) => !fp1.tableColumns.has(c));
   if (tableDiff1.length > 0 || tableDiff2.length > 0) {
     differences.push(
-      `Table columns differ: [${[...fp1.tableColumns].join(", ")}] vs [${[...fp2.tableColumns].join(", ")}]`
+      `Table columns differ: [${[...fp1.tableColumns].join(', ')}] vs [${[...fp2.tableColumns].join(', ')}]`
     );
   }
 
@@ -121,7 +108,7 @@ export function compareFingerprints(
   const formDiff2 = [...fp2.formFields].filter((f) => !fp1.formFields.has(f));
   if (formDiff1.length > 0 || formDiff2.length > 0) {
     differences.push(
-      `Form fields differ: [${[...fp1.formFields].join(", ")}] vs [${[...fp2.formFields].join(", ")}]`
+      `Form fields differ: [${[...fp1.formFields].join(', ')}] vs [${[...fp2.formFields].join(', ')}]`
     );
   }
 
@@ -130,7 +117,7 @@ export function compareFingerprints(
   const filterDiff2 = [...fp2.filterFields].filter((f) => !fp1.filterFields.has(f));
   if (filterDiff1.length > 0 || filterDiff2.length > 0) {
     differences.push(
-      `Filter fields differ: [${[...fp1.filterFields].join(", ")}] vs [${[...fp2.filterFields].join(", ")}]`
+      `Filter fields differ: [${[...fp1.filterFields].join(', ')}] vs [${[...fp2.filterFields].join(', ')}]`
     );
   }
 
@@ -172,8 +159,7 @@ export function compareFingerprints(
     (f) => fp1.filterFields.has(f) && fp2.filterFields.has(f)
   ).length;
 
-  const similarity =
-    totalElements > 0 ? matchingElements / totalElements : 1.0;
+  const similarity = totalElements > 0 ? matchingElements / totalElements : 1.0;
 
   return {
     similarity,
@@ -185,9 +171,7 @@ export function compareFingerprints(
 /**
  * Compare multiple fingerprints and find the most common structure
  */
-export function compareMultipleFingerprints(
-  fingerprints: StructuralFingerprint[]
-): {
+export function compareMultipleFingerprints(fingerprints: StructuralFingerprint[]): {
   averageSimilarity: number;
   minSimilarity: number;
   maxSimilarity: number;
@@ -227,8 +211,7 @@ export function compareMultipleFingerprints(
   }
 
   const similarities = comparisons.map((c) => c.similarity);
-  const averageSimilarity =
-    similarities.reduce((a, b) => a + b, 0) / similarities.length;
+  const averageSimilarity = similarities.reduce((a, b) => a + b, 0) / similarities.length;
   const minSimilarity = Math.min(...similarities);
   const maxSimilarity = Math.max(...similarities);
 
@@ -280,7 +263,7 @@ export function compareSpecsMulti(
       perResource: {},
       minSimilarity: 0,
       differences: [
-        `Slugs differ: [${[...slugs1].sort().join(", ")}] vs [${[...slugs2].sort().join(", ")}]`,
+        `Slugs differ: [${[...slugs1].sort().join(', ')}] vs [${[...slugs2].sort().join(', ')}]`,
       ],
     };
   }
@@ -290,11 +273,11 @@ export function compareSpecsMulti(
   if (only1.length > 0 || only2.length > 0) {
     return {
       sameSlugs: false,
-      slugMismatch: `Different slugs: only in run1: ${only1.join(", ")}; only in run2: ${only2.join(", ")}`,
+      slugMismatch: `Different slugs: only in run1: ${only1.join(', ')}; only in run2: ${only2.join(', ')}`,
       perResource: {},
       minSimilarity: 0,
       differences: [
-        `Slugs differ: [${[...slugs1].sort().join(", ")}] vs [${[...slugs2].sort().join(", ")}]`,
+        `Slugs differ: [${[...slugs1].sort().join(', ')}] vs [${[...slugs2].sort().join(', ')}]`,
       ],
     };
   }
@@ -327,21 +310,21 @@ export function compareSpecsMulti(
  * Human-readable diff between two canonical strings.
  */
 export function diffCanonical(a: string, b: string): string {
-  const linesA = a.split("\n");
-  const linesB = b.split("\n");
+  const linesA = a.split('\n');
+  const linesB = b.split('\n');
   const maxLen = Math.max(linesA.length, linesB.length);
   const out: string[] = [];
 
   for (let i = 0; i < maxLen; i++) {
-    const la = linesA[i] ?? "";
-    const lb = linesB[i] ?? "";
-    const prefix = la === lb ? "  " : la === "" ? "+ " : lb === "" ? "- " : "! ";
+    const la = linesA[i] ?? '';
+    const lb = linesB[i] ?? '';
+    const prefix = la === lb ? '  ' : la === '' ? '+ ' : lb === '' ? '- ' : '! ';
     const content = la === lb ? la : `run1: ${la} | run2: ${lb}`;
     if (la !== lb) {
       out.push(`${prefix}${content}`);
     }
   }
-  return out.length > 0 ? out.join("\n") : "(identical)";
+  return out.length > 0 ? out.join('\n') : '(identical)';
 }
 
 /**
@@ -359,19 +342,11 @@ export function canonicalUiPlanIR(uiPlan: UiPlanIR): string {
 export function diffUnified(
   a: string,
   b: string,
-  oldHeader = "run1",
-  newHeader = "run2",
+  oldHeader = 'run1',
+  newHeader = 'run2',
   context = 2
 ): string {
-  return Diff.createTwoFilesPatch(
-    oldHeader,
-    newHeader,
-    a,
-    b,
-    oldHeader,
-    newHeader,
-    { context }
-  );
+  return Diff.createTwoFilesPatch(oldHeader, newHeader, a, b, oldHeader, newHeader, { context });
 }
 
 // --- UiPlanIR fingerprint (for LLM-only evals) ---
@@ -389,7 +364,7 @@ export interface UiPlanIRFingerprint {
  */
 export function extractUiPlanIRFingerprint(uiPlan: UiPlanIR): UiPlanIRFingerprint {
   const resourceNames = new Set(uiPlan.resources.map((r) => r.name));
-  const perResource: UiPlanIRFingerprint["perResource"] = {};
+  const perResource: UiPlanIRFingerprint['perResource'] = {};
 
   for (const res of uiPlan.resources) {
     const listPaths = (res.views.list?.fields ?? []).map((f) => f.path).sort();
@@ -419,8 +394,8 @@ export function compareUiPlanIRFingerprints(
   const allRes = new Set<string>([...fp1.resourceNames, ...fp2.resourceNames]);
   const only1 = [...fp1.resourceNames].filter((r) => !fp2.resourceNames.has(r));
   const only2 = [...fp2.resourceNames].filter((r) => !fp1.resourceNames.has(r));
-  if (only1.length > 0) differences.push(`Resources only in run1: ${only1.join(", ")}`);
-  if (only2.length > 0) differences.push(`Resources only in run2: ${only2.join(", ")}`);
+  if (only1.length > 0) differences.push(`Resources only in run1: ${only1.join(', ')}`);
+  if (only2.length > 0) differences.push(`Resources only in run2: ${only2.join(', ')}`);
 
   let totalScore = 0;
   let totalWeight = 0;
@@ -433,7 +408,7 @@ export function compareUiPlanIRFingerprints(
       continue;
     }
 
-    const viewKeys = ["listPaths", "detailPaths", "createPaths", "editPaths"] as const;
+    const viewKeys = ['listPaths', 'detailPaths', 'createPaths', 'editPaths'] as const;
     for (const key of viewKeys) {
       const s1 = new Set(r1[key]);
       const s2 = new Set(r2[key]);
@@ -447,7 +422,7 @@ export function compareUiPlanIRFingerprints(
         const onlyIn2 = [...s2].filter((p) => !s1.has(p));
         if (onlyIn1.length > 0 || onlyIn2.length > 0) {
           differences.push(
-            `[${res}] ${key}: only run1: [${onlyIn1.join(", ")}]; only run2: [${onlyIn2.join(", ")}]`
+            `[${res}] ${key}: only run1: [${onlyIn1.join(', ')}]; only run2: [${onlyIn2.join(', ')}]`
           );
         }
       }

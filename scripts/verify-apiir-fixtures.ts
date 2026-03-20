@@ -6,23 +6,23 @@
  * If they differ, the fixtures are stale or there's a JSON round-trip bug.
  */
 
-import { readFileSync, readdirSync, existsSync } from "fs";
-import { join } from "path";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR, apiIrStringify } from "@/lib/compiler/apiir";
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
+import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir';
 
-const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
-const APIIR_DIR = join(FIXTURES_DIR, "apiir");
+const FIXTURES_DIR = join(process.cwd(), 'tests/compiler/fixtures');
+const APIIR_DIR = join(FIXTURES_DIR, 'apiir');
 
 type Source = { yamlDir: string; apiirSubdir: string };
 
 function main() {
   const sources: Source[] = [
-    { yamlDir: join(FIXTURES_DIR, "demo"), apiirSubdir: "demo" },
-    { yamlDir: join(FIXTURES_DIR, "valid-specs-api-guru"), apiirSubdir: "valid-specs-api-guru" },
-    { yamlDir: join(FIXTURES_DIR, "valid-specs-github"), apiirSubdir: "valid-specs-github" },
+    { yamlDir: join(FIXTURES_DIR, 'demo'), apiirSubdir: 'demo' },
+    { yamlDir: join(FIXTURES_DIR, 'valid-specs-api-guru'), apiirSubdir: 'valid-specs-api-guru' },
+    { yamlDir: join(FIXTURES_DIR, 'valid-specs-github'), apiirSubdir: 'valid-specs-github' },
   ];
 
   let allMatch = true;
@@ -30,12 +30,10 @@ function main() {
   for (const { yamlDir, apiirSubdir } of sources) {
     if (!existsSync(yamlDir)) continue;
 
-    const files = readdirSync(yamlDir).filter(
-      (f) => f.endsWith(".yaml") || f.endsWith(".yml")
-    );
+    const files = readdirSync(yamlDir).filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
 
     for (const file of files) {
-      const baseName = file.replace(/\.(yaml|yml)$/, "");
+      const baseName = file.replace(/\.(yaml|yml)$/, '');
       const yamlPath = join(yamlDir, file);
       const apiIrPath = join(APIIR_DIR, apiirSubdir, `${baseName}.json`);
 
@@ -44,7 +42,7 @@ function main() {
         continue;
       }
 
-      const content = readFileSync(yamlPath, "utf-8");
+      const content = readFileSync(yamlPath, 'utf-8');
       const parseResult = parseOpenAPI(content);
       if (!parseResult.success) {
         console.log(`[${apiirSubdir}/${baseName}] SKIP - parse failed`);
@@ -70,9 +68,7 @@ function main() {
       }
 
       const fromPipeline = apiIrStringify(buildResult.apiIr);
-      const fromFile = apiIrStringify(
-        JSON.parse(readFileSync(apiIrPath, "utf-8"))
-      );
+      const fromFile = apiIrStringify(JSON.parse(readFileSync(apiIrPath, 'utf-8')));
 
       if (fromPipeline === fromFile) {
         console.log(`[${apiirSubdir}/${baseName}] ✓ MATCH`);

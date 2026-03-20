@@ -58,6 +58,7 @@ Both `eval:ai` and `eval:llm` support:
 ```
 
 Both evals write reports to `eval/reports/` (created automatically if missing):
+
 - `report-full-{timestamp}.json` — full pipeline (machine-readable, includes full diffs)
 - `report-full-{timestamp}.txt` — full pipeline (human summary)
 - `report-llm-only-{timestamp}.json` — LLM-only (machine-readable, includes full diffs)

@@ -13,6 +13,7 @@ The Mock API powers CRUD for generated UIs. Compile an OpenAPI spec first, then 
 ## Getting Compilation ID and Resource
 
 After compiling:
+
 - **URL**: `/?spec=abc123` — the `abc123` part is the compilation ID
 - **Resource slugs**: Shown in the UI (e.g. "Users" → slug `users`, "Products" → slug `products`)
 

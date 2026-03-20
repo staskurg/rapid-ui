@@ -83,15 +83,15 @@ graph TB
 
 ## Data Flow
 
-| Stage | Input | Output |
-| ----- | ----- | ------ |
-| Parse | OpenAPI string | Parsed document or error |
-| Validate | Parsed doc | Pass or structured errors |
-| Canonicalize | Resolved doc | Canonical JSON + hash |
-| ApiIR | Canonical doc | Resources, operations, schemas |
-| UiPlanIR | ApiIR | Field plans (labels, order, readOnly) |
-| Lower | UiPlanIR + ApiIR | UISpec per resource |
-| Store | Compilation | Postgres row |
+| Stage        | Input            | Output                                |
+| ------------ | ---------------- | ------------------------------------- |
+| Parse        | OpenAPI string   | Parsed document or error              |
+| Validate     | Parsed doc       | Pass or structured errors             |
+| Canonicalize | Resolved doc     | Canonical JSON + hash                 |
+| ApiIR        | Canonical doc    | Resources, operations, schemas        |
+| UiPlanIR     | ApiIR            | Field plans (labels, order, readOnly) |
+| Lower        | UiPlanIR + ApiIR | UISpec per resource                   |
+| Store        | Compilation      | Postgres row                          |
 
 ## Account & Compilation Model
 
@@ -107,8 +107,8 @@ The `CrudAdapter` interface abstracts data access. MVP v3 uses **MockAdapter** o
 
 ```typescript
 interface CrudAdapter {
-  mode: "mock";
-  capabilities: { create, read, update, delete };
+  mode: 'mock';
+  capabilities: { create; read; update; delete };
 
   getSample(): Promise<Record<string, unknown>[]>;
   list(): Promise<Record<string, unknown>[]>;
@@ -134,42 +134,42 @@ Data is shared per `accountId + compilationId + resource`; no session param. URL
 
 ### Compiler API
 
-| Route | Method | Purpose |
-| ----- | ------ | ------- |
-| `/api/compile-openapi` | POST | Compile OpenAPI string; store in DB; return id, specs, apiIr. Body: `{ openapi, accountId }` |
-| `/api/compilations` | GET | List compilations. Query: `?accountId=...` |
-| `/api/compilations/[id]` | GET | Get compilation detail (specs, apiIr, etc.). Query: `?accountId=...` |
-| `/api/compilations/[id]` | DELETE | Delete compilation. Query: `?accountId=...` |
-| `/api/compilations/[id]/update` | POST | Recompile with new OpenAPI; update in place. Body: `{ openapi, accountId }` |
-| `/api/demo-specs/[name]` | GET | Download demo OpenAPI file (YAML) |
+| Route                           | Method | Purpose                                                                                      |
+| ------------------------------- | ------ | -------------------------------------------------------------------------------------------- |
+| `/api/compile-openapi`          | POST   | Compile OpenAPI string; store in DB; return id, specs, apiIr. Body: `{ openapi, accountId }` |
+| `/api/compilations`             | GET    | List compilations. Query: `?accountId=...`                                                   |
+| `/api/compilations/[id]`        | GET    | Get compilation detail (specs, apiIr, etc.). Query: `?accountId=...`                         |
+| `/api/compilations/[id]`        | DELETE | Delete compilation. Query: `?accountId=...`                                                  |
+| `/api/compilations/[id]/update` | POST   | Recompile with new OpenAPI; update in place. Body: `{ openapi, accountId }`                  |
+| `/api/demo-specs/[name]`        | GET    | Download demo OpenAPI file (YAML)                                                            |
 
 ### Mock API (Runtime)
 
-| Route | Method | Purpose |
-| ----- | ------ | ------- |
-| `/api/mock/[id]/[resource]` | GET | List records |
-| `/api/mock/[id]/[resource]` | POST | Create record |
-| `/api/mock/[id]/[resource]/[paramId]` | GET | Get single record |
-| `/api/mock/[id]/[resource]/[paramId]` | PATCH | Update record |
-| `/api/mock/[id]/[resource]/[paramId]` | DELETE | Delete record |
+| Route                                 | Method | Purpose           |
+| ------------------------------------- | ------ | ----------------- |
+| `/api/mock/[id]/[resource]`           | GET    | List records      |
+| `/api/mock/[id]/[resource]`           | POST   | Create record     |
+| `/api/mock/[id]/[resource]/[paramId]` | GET    | Get single record |
+| `/api/mock/[id]/[resource]/[paramId]` | PATCH  | Update record     |
+| `/api/mock/[id]/[resource]/[paramId]` | DELETE | Delete record     |
 
 ## Compiler Components
 
-| Component | Purpose |
-| --------- | ------- |
-| `OpenApiDropZone.tsx` | Drag-and-drop or click to upload OpenAPI file |
-| `ProgressPanel.tsx` | Shows parse/validate/compile steps; endpoints; View UI link |
-| `CompiledUISidebar.tsx` | Resource switcher for multi-resource compilations |
-| `CompiledUIContent.tsx` | Wraps SchemaRenderer + MockAdapter; diff dialog |
+| Component               | Purpose                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| `OpenApiDropZone.tsx`   | Drag-and-drop or click to upload OpenAPI file               |
+| `ProgressPanel.tsx`     | Shows parse/validate/compile steps; endpoints; View UI link |
+| `CompiledUISidebar.tsx` | Resource switcher for multi-resource compilations           |
+| `CompiledUIContent.tsx` | Wraps SchemaRenderer + MockAdapter; diff dialog             |
 
 ## Renderer Components (Unchanged)
 
-| Component | Purpose |
-| --------- | ------- |
+| Component            | Purpose                                             |
+| -------------------- | --------------------------------------------------- |
 | `SchemaRenderer.tsx` | Main controller; adapter integration; loading/error |
-| `DataTable.tsx` | TanStack Table; optional onEdit/onDelete |
-| `FormModal.tsx` | Create/Edit; nested schema support |
-| `FiltersPanel.tsx` | Type-specific filter inputs |
+| `DataTable.tsx`      | TanStack Table; optional onEdit/onDelete            |
+| `FormModal.tsx`      | Create/Edit; nested schema support                  |
+| `FiltersPanel.tsx`   | Type-specific filter inputs                         |
 
 ## Core Libraries
 
@@ -182,7 +182,7 @@ Data is shared per `accountId + compilationId + resource`; no session param. URL
 - **pipeline.ts** — Orchestrates full compile
 - **store.ts** — Re-exports from `lib/db/compilations`
 - **hash.ts** — sha256 for canonical outputs
-- **errors.ts** — Error taxonomy (OAS_*, IR_*, UIPLAN_*, UISPEC_*)
+- **errors.ts** — Error taxonomy (OAS*\*, IR*\_, UIPLAN\_\_, UISPEC\_\*)
 
 ### DB (`lib/db/`)
 
@@ -226,10 +226,10 @@ corpus:pattern-mining --repo {api-guru|github}  → pattern-mining-{repo}-{times
 
 ### Report Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `corpus:report` | Spec-level compatibility, rejection density, corpus shape, language analysis (resource shape, CRUD patterns, grouping strategy) |
-| `corpus:pattern-mining` | Structural patterns, UI archetypes, operation frequency from ApiIR fixtures |
+| Script                  | Purpose                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `corpus:report`         | Spec-level compatibility, rejection density, corpus shape, language analysis (resource shape, CRUD patterns, grouping strategy) |
+| `corpus:pattern-mining` | Structural patterns, UI archetypes, operation frequency from ApiIR fixtures                                                     |
 
 Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures/valid-specs-{api-guru|github}/`.
 

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { DataTable } from "./DataTable";
-import { FormModal } from "./FormModal";
-import { FiltersPanel } from "./FiltersPanel";
+import * as React from 'react';
+import { Button } from '@/components/ui/button';
+import { DataTable } from './DataTable';
+import { FormModal } from './FormModal';
+import { FiltersPanel } from './FiltersPanel';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -13,11 +13,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import type { UISpec } from "@/lib/spec/types";
-import type { CrudAdapter } from "@/lib/adapters";
-import { getCellValue } from "@/lib/utils/getCellValue";
-import { Plus, Loader2 } from "lucide-react";
+} from '@/components/ui/alert-dialog';
+import type { UISpec } from '@/lib/spec/types';
+import type { CrudAdapter } from '@/lib/adapters';
+import { getCellValue } from '@/lib/utils/getCellValue';
+import { Plus, Loader2 } from 'lucide-react';
 
 interface SchemaRendererProps {
   spec: UISpec;
@@ -27,7 +27,12 @@ interface SchemaRendererProps {
   refreshTrigger?: number;
 }
 
-export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger }: SchemaRendererProps) {
+export function SchemaRenderer({
+  spec,
+  initialData = [],
+  adapter,
+  refreshTrigger,
+}: SchemaRendererProps) {
   const [data, setData] = React.useState<Record<string, unknown>[]>(initialData);
   const [selectedRecord, setSelectedRecord] = React.useState<Record<string, unknown> | null>(null);
   const [editRecord, setEditRecord] = React.useState<Record<string, unknown> | null>(null);
@@ -40,7 +45,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
   const [loading, setLoading] = React.useState(!!adapter);
   const [error, setError] = React.useState<string | null>(null);
 
-  const idField = spec.idField ?? "id";
+  const idField = spec.idField ?? 'id';
   const capabilities = adapter?.capabilities ?? {
     create: true,
     read: true,
@@ -64,7 +69,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "Failed to load data");
+          setError(err instanceof Error ? err.message : 'Failed to load data');
         }
       })
       .finally(() => {
@@ -97,7 +102,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
       const records = await adapter.list();
       setData(records);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load data");
+      setError(err instanceof Error ? err.message : 'Failed to load data');
     }
   }, [adapter]);
 
@@ -112,7 +117,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
   const getRecordId = React.useCallback(
     (record: Record<string, unknown>): string | number => {
       const id = record[idField];
-      if (typeof id === "string" || typeof id === "number") {
+      if (typeof id === 'string' || typeof id === 'number') {
         return id;
       }
       return data.indexOf(record);
@@ -129,7 +134,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
     return data.filter((record) => {
       return spec.filters.every((fieldName) => {
         const filterValue = filters[fieldName];
-        if (filterValue === undefined || filterValue === null || filterValue === "") {
+        if (filterValue === undefined || filterValue === null || filterValue === '') {
           return true; // No filter applied for this field
         }
 
@@ -139,14 +144,16 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         const recordValue = getCellValue(record, fieldName);
 
         switch (field.type) {
-          case "string":
+          case 'string':
             // String search (case-insensitive)
             const searchStr = String(filterValue).toLowerCase();
-            return String(recordValue || "").toLowerCase().includes(searchStr);
-          
-          case "number":
+            return String(recordValue || '')
+              .toLowerCase()
+              .includes(searchStr);
+
+          case 'number':
             // Number range filter
-            if (typeof filterValue === "object" && filterValue !== null) {
+            if (typeof filterValue === 'object' && filterValue !== null) {
               const range = filterValue as { min?: number; max?: number };
               const numValue = Number(recordValue);
               if (range.min !== undefined && numValue < range.min) return false;
@@ -154,15 +161,15 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
               return true;
             }
             return true;
-          
-          case "boolean":
+
+          case 'boolean':
             // Boolean exact match
             return recordValue === filterValue;
-          
-          case "enum":
+
+          case 'enum':
             // Enum exact match
             return recordValue === filterValue;
-          
+
           default:
             return true;
         }
@@ -181,15 +188,15 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           setIsCreateModalOpen(false);
           await refetch();
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Create failed");
+          setError(err instanceof Error ? err.message : 'Create failed');
           throw err;
         }
       } else {
-        const id = spec.idField ?? "id";
+        const id = spec.idField ?? 'id';
         if (!payload[id]) {
           const maxId = data.reduce((max, r) => {
             const v = r[id];
-            if (typeof v === "number" && v > max) return v;
+            if (typeof v === 'number' && v > max) return v;
             return max;
           }, 0);
           payload[id] = maxId + 1;
@@ -213,7 +220,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           setIsEditModalOpen(false);
           await refetch();
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Update failed");
+          setError(err instanceof Error ? err.message : 'Update failed');
           throw err;
         }
       } else {
@@ -246,7 +253,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
         setDeleteTargetId(null);
         await refetch();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Delete failed");
+        setError(err instanceof Error ? err.message : 'Delete failed');
       } finally {
         setDeleteLoading(false);
       }
@@ -268,7 +275,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           const fresh = await adapter.getById(id);
           setEditRecord(fresh);
         } catch (err) {
-          setError(err instanceof Error ? err.message : "Failed to load record");
+          setError(err instanceof Error ? err.message : 'Failed to load record');
           setEditRecord(record);
         } finally {
           setEditLoading(false);
@@ -294,7 +301,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
       )}
 
       {/* Read-only preview banner (external API) */}
-      {adapter?.mode === "external" && (
+      {adapter?.mode === 'external' && (
         <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm text-amber-700 dark:text-amber-400">
           Read-only preview — external API does not support create, edit, or delete
         </div>
@@ -361,8 +368,8 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
           }
         }}
         initialValues={
-          editRecord ?? selectedRecord
-            ? (editRecord ?? selectedRecord) as Record<string, unknown>
+          (editRecord ?? selectedRecord)
+            ? ((editRecord ?? selectedRecord) as Record<string, unknown>)
             : undefined
         }
         mode="edit"
@@ -370,7 +377,10 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
       />
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
+      <AlertDialog
+        open={deleteTargetId !== null}
+        onOpenChange={(open) => !open && setDeleteTargetId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete record</AlertDialogTitle>
@@ -392,7 +402,7 @@ export function SchemaRenderer({ spec, initialData = [], adapter, refreshTrigger
                   Deleting...
                 </>
               ) : (
-                "Delete"
+                'Delete'
               )}
             </Button>
           </AlertDialogFooter>

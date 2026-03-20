@@ -3,11 +3,11 @@
  * Produces deterministic UISpec consumed by existing SchemaRenderer.
  */
 
-import { UISpecSchema } from "@/lib/spec/schema";
-import type { UISpec, Field } from "@/lib/spec/types";
-import type { ApiIR, ResourceIR } from "../apiir/types";
-import type { UiPlanIR, ResourcePlan, FieldPlan } from "../uiplan/uiplan.schema";
-import { slugify } from "@/lib/utils/slugify";
+import { UISpecSchema } from '@/lib/spec/schema';
+import type { UISpec, Field } from '@/lib/spec/types';
+import type { ApiIR, ResourceIR } from '../apiir/types';
+import type { UiPlanIR, ResourcePlan, FieldPlan } from '../uiplan/uiplan.schema';
+import { slugify } from '@/lib/utils/slugify';
 import {
   extractSchemaFields,
   getObjectShape,
@@ -15,9 +15,9 @@ import {
   SCHEMA_SHAPE_PLACEHOLDER,
   schemaToField,
   type FieldInfo,
-} from "./schema-to-field";
-import { createError } from "../errors";
-import type { CompilerError } from "../errors";
+} from './schema-to-field';
+import { createError } from '../errors';
+import type { CompilerError } from '../errors';
 
 export interface LowerResult {
   success: true;
@@ -36,9 +36,7 @@ export type LowerOutput = LowerResult | LowerFailure;
  * Keyed by resource slug. Each UISpec validated with UISpecSchema.
  */
 export function lower(uiPlan: UiPlanIR, apiIr: ApiIR): LowerOutput {
-  const resourceMap = new Map(
-    apiIr.resources.map((r) => [slugify(r.name), r] as const)
-  );
+  const resourceMap = new Map(apiIr.resources.map((r) => [slugify(r.name), r] as const));
 
   const specs: Record<string, UISpec> = {};
 
@@ -49,8 +47,8 @@ export function lower(uiPlan: UiPlanIR, apiIr: ApiIR): LowerOutput {
       return {
         success: false,
         error: createError(
-          "UISPEC_INVALID",
-          "Lowering",
+          'UISPEC_INVALID',
+          'Lowering',
           `Resource "${plan.name}" not found in ApiIR`
         ),
       };
@@ -97,12 +95,7 @@ function lowerResource(
   // Schema-shape placeholder: when resource has opaque/map shape (fieldless), add display placeholder
   if (fields.length === 0 && hasOpaqueOrMapShape(resource)) {
     fields.push(
-      schemaToField(
-        SCHEMA_SHAPE_PLACEHOLDER,
-        undefined,
-        { type: "object", required: false },
-        false
-      )
+      schemaToField(SCHEMA_SHAPE_PLACEHOLDER, undefined, { type: 'object', required: false }, false)
     );
   }
 
@@ -110,16 +103,16 @@ function lowerResource(
     return {
       success: false,
       error: createError(
-        "UISPEC_INVALID",
-        "Lowering",
+        'UISPEC_INVALID',
+        'Lowering',
         `Resource "${plan.name}" has no valid fields`
       ),
     };
   }
 
-  const listPaths = getViewPaths(plan, "list");
-  const createPaths = getViewPaths(plan, "create");
-  const editPaths = getViewPaths(plan, "edit");
+  const listPaths = getViewPaths(plan, 'list');
+  const createPaths = getViewPaths(plan, 'create');
+  const editPaths = getViewPaths(plan, 'edit');
 
   const tableColumns = listPaths.filter((p) => schemaMap.has(p));
   const formFields = mergeFormFields(createPaths, editPaths);
@@ -128,7 +121,7 @@ function lowerResource(
   const validFormFields = formFields.filter((p) => fieldNames.has(p));
   const validTableColumns = tableColumns.filter((p) => fieldNames.has(p));
 
-  const filterableTypes = new Set(["string", "number", "enum"]);
+  const filterableTypes = new Set(['string', 'number', 'enum']);
   const filters = listPaths.filter((p) => {
     const info = schemaMap.get(p);
     return info && filterableTypes.has(info.type);
@@ -151,10 +144,10 @@ function lowerResource(
     return {
       success: false,
       error: createError(
-        "UISPEC_INVALID",
-        "Lowering",
-        first?.message ?? "UISpec validation failed",
-        first?.path?.join("/")
+        'UISPEC_INVALID',
+        'Lowering',
+        first?.message ?? 'UISpec validation failed',
+        first?.path?.join('/')
       ),
     };
   }
@@ -163,8 +156,8 @@ function lowerResource(
 }
 
 function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
-  const listOp = resource.operations.find((o) => o.kind === "list");
-  const detailOp = resource.operations.find((o) => o.kind === "detail");
+  const listOp = resource.operations.find((o) => o.kind === 'list');
+  const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const schemas: Record<string, unknown>[] = [];
   if (listOp?.responseSchema) schemas.push(listOp.responseSchema as Record<string, unknown>);
   if (detailOp?.responseSchema) schemas.push(detailOp.responseSchema as Record<string, unknown>);
@@ -172,7 +165,7 @@ function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
     const objSchema = getObjectSchema(schema);
     if (objSchema) {
       const shape = getObjectShape(objSchema);
-      if (shape === "opaque" || shape === "map") return true;
+      if (shape === 'opaque' || shape === 'map') return true;
     }
   }
   return false;
@@ -181,10 +174,10 @@ function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
 function mergeSchemaFields(resource: ResourceIR): Map<string, FieldInfo> {
   const merged = new Map<string, FieldInfo>();
 
-  const listOp = resource.operations.find((o) => o.kind === "list");
-  const detailOp = resource.operations.find((o) => o.kind === "detail");
-  const createOp = resource.operations.find((o) => o.kind === "create");
-  const updateOp = resource.operations.find((o) => o.kind === "update");
+  const listOp = resource.operations.find((o) => o.kind === 'list');
+  const detailOp = resource.operations.find((o) => o.kind === 'detail');
+  const createOp = resource.operations.find((o) => o.kind === 'create');
+  const updateOp = resource.operations.find((o) => o.kind === 'update');
 
   const schemas: Record<string, unknown>[] = [];
   if (listOp?.responseSchema) schemas.push(listOp.responseSchema as Record<string, unknown>);
@@ -214,7 +207,7 @@ function mergeSchemaFields(resource: ResourceIR): Map<string, FieldInfo> {
 
 function collectFieldPlans(plan: ResourcePlan): Map<string, FieldPlan> {
   const map = new Map<string, FieldPlan>();
-  const views = ["list", "detail", "create", "edit"] as const;
+  const views = ['list', 'detail', 'create', 'edit'] as const;
   for (const view of views) {
     const viewPlan = plan.views[view];
     if (!viewPlan) continue;
@@ -225,7 +218,7 @@ function collectFieldPlans(plan: ResourcePlan): Map<string, FieldPlan> {
   return map;
 }
 
-function getViewPaths(plan: ResourcePlan, view: keyof ResourcePlan["views"]): string[] {
+function getViewPaths(plan: ResourcePlan, view: keyof ResourcePlan['views']): string[] {
   const viewPlan = plan.views[view];
   if (!viewPlan) return [];
   return viewPlan.fields.map((f) => f.path);
@@ -243,24 +236,23 @@ function mergeFormFields(createPaths: string[], editPaths: string[]): string[] {
 }
 
 function inferIdField(resource: ResourceIR): string | undefined {
-  const detailOp = resource.operations.find((o) => o.kind === "detail");
-  const updateOp = resource.operations.find((o) => o.kind === "update");
-  const deleteOp = resource.operations.find((o) => o.kind === "delete");
+  const detailOp = resource.operations.find((o) => o.kind === 'detail');
+  const updateOp = resource.operations.find((o) => o.kind === 'update');
+  const deleteOp = resource.operations.find((o) => o.kind === 'delete');
 
-  const param =
-    detailOp?.identifierParam ??
-    updateOp?.identifierParam ??
-    deleteOp?.identifierParam;
+  const param = detailOp?.identifierParam ?? updateOp?.identifierParam ?? deleteOp?.identifierParam;
 
   if (!param) return undefined;
 
-  const listOp = resource.operations.find((o) => o.kind === "list");
+  const listOp = resource.operations.find((o) => o.kind === 'list');
   const schema = listOp?.responseSchema;
   if (!schema) return param;
 
-  const objSchema = schema.type === "array" ? schema.items : schema;
-  const props = (objSchema as Record<string, unknown>)?.properties as Record<string, unknown> | undefined;
-  if (props && "id" in props) return "id";
+  const objSchema = schema.type === 'array' ? schema.items : schema;
+  const props = (objSchema as Record<string, unknown>)?.properties as
+    | Record<string, unknown>
+    | undefined;
+  if (props && 'id' in props) return 'id';
 
   return param;
 }

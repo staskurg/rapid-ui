@@ -3,12 +3,12 @@
  * Injects schema + ApiIR JSON. Replace <API_IR_JSON_HERE> with canonical JSON.
  */
 
-import { readFileSync } from "fs";
-import path from "path";
+import { readFileSync } from 'fs';
+import path from 'path';
 
 const UIplanSchemaJson = (() => {
-  const p = path.join(process.cwd(), "lib/compiler/uiplan/uiplan.schema.json");
-  return JSON.parse(readFileSync(p, "utf-8"));
+  const p = path.join(process.cwd(), 'lib/compiler/uiplan/uiplan.schema.json');
+  return JSON.parse(readFileSync(p, 'utf-8'));
 })();
 
 const USER_PROMPT_TEMPLATE = `Transform the following ApiIR JSON into UiPlanIR JSON.
@@ -53,7 +53,7 @@ ApiIR JSON INPUT:
  */
 export function buildUserPrompt(apiIrJson: string): string {
   return USER_PROMPT_TEMPLATE.replace(
-    "<UIplan_SCHEMA_JSON>",
+    '<UIplan_SCHEMA_JSON>',
     JSON.stringify(UIplanSchemaJson, null, 2)
-  ).replace("<API_IR_JSON_HERE>", apiIrJson);
+  ).replace('<API_IR_JSON_HERE>', apiIrJson);
 }

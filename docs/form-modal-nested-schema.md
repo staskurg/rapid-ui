@@ -32,9 +32,9 @@ z.object({
   email: z.string(),
   profile: z.object({
     firstName: z.string(),
-    lastName: z.string()
-  })
-})
+    lastName: z.string(),
+  }),
+});
 ```
 
 - Flat fields (`email`) → top-level keys
@@ -55,7 +55,7 @@ Builds nested default values for optional boolean fields:
 Resolves error messages for nested paths:
 
 ```ts
-getErrorByPath(form.formState.errors, "profile.firstName")
+getErrorByPath(form.formState.errors, 'profile.firstName');
 // → errors?.profile?.firstName?.message
 ```
 
@@ -78,13 +78,13 @@ Deep merge for combining defaults with initialValues. Ensures optional booleans 
 
 ## Data Flow
 
-| Stage | Data shape | Example |
-|-------|------------|---------|
-| API response | Nested | `{ profile: { firstName: "Alice" } }` |
-| UISpec fields | Flat names (dot paths) | `"profile.firstName"` |
-| RHF with register("profile.firstName") | Nested | `{ profile: { firstName: "Alice" } }` |
-| Zod schema | Nested | `z.object({ profile: z.object({ firstName: z.string() }) })` |
-| Submit payload | Nested | Adapter receives nested |
+| Stage                                  | Data shape             | Example                                                      |
+| -------------------------------------- | ---------------------- | ------------------------------------------------------------ |
+| API response                           | Nested                 | `{ profile: { firstName: "Alice" } }`                        |
+| UISpec fields                          | Flat names (dot paths) | `"profile.firstName"`                                        |
+| RHF with register("profile.firstName") | Nested                 | `{ profile: { firstName: "Alice" } }`                        |
+| Zod schema                             | Nested                 | `z.object({ profile: z.object({ firstName: z.string() }) })` |
+| Submit payload                         | Nested                 | Adapter receives nested                                      |
 
 ## flattenRecord / unflattenRecord
 

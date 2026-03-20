@@ -2,7 +2,7 @@
  * Spec diff utility — computes structured diff between two UISpecs.
  */
 
-import type { Field, UISpec } from "./schema";
+import type { Field, UISpec } from './schema';
 
 export type UISpecMap = Record<string, UISpec>;
 
@@ -56,29 +56,21 @@ export function computeSpecDiff(prev: UISpec, next: UISpec): SpecDiff {
 
   const prevTableCols = new Set(prev.table.columns);
   const nextTableCols = new Set(next.table.columns);
-  const tableColumnsAdded = [...nextTableCols].filter(
-    (c) => !prevTableCols.has(c)
-  );
-  const tableColumnsRemoved = [...prevTableCols].filter(
-    (c) => !nextTableCols.has(c)
-  );
+  const tableColumnsAdded = [...nextTableCols].filter((c) => !prevTableCols.has(c));
+  const tableColumnsRemoved = [...prevTableCols].filter((c) => !nextTableCols.has(c));
 
   const prevFormFields = new Set(prev.form.fields);
   const nextFormFields = new Set(next.form.fields);
-  const formFieldsAdded = [...nextFormFields].filter(
-    (f) => !prevFormFields.has(f)
-  );
-  const formFieldsRemoved = [...prevFormFields].filter(
-    (f) => !nextFormFields.has(f)
-  );
+  const formFieldsAdded = [...nextFormFields].filter((f) => !prevFormFields.has(f));
+  const formFieldsRemoved = [...prevFormFields].filter((f) => !nextFormFields.has(f));
 
   const prevFilters = new Set(prev.filters);
   const nextFilters = new Set(next.filters);
   const filtersAdded = [...nextFilters].filter((f) => !prevFilters.has(f));
   const filtersRemoved = [...prevFilters].filter((f) => !nextFilters.has(f));
 
-  const prevIdField = prev.idField ?? "id";
-  const nextIdField = next.idField ?? "id";
+  const prevIdField = prev.idField ?? 'id';
+  const nextIdField = next.idField ?? 'id';
   const idFieldChanged = prevIdField !== nextIdField;
 
   return {
@@ -106,10 +98,7 @@ export interface MultiSpecDiff {
  * Compute diff between two multi-resource UISpec maps.
  * Keys are resource slugs (e.g. "users", "tasks").
  */
-export function computeMultiSpecDiff(
-  prevSpecs: UISpecMap,
-  nextSpecs: UISpecMap
-): MultiSpecDiff {
+export function computeMultiSpecDiff(prevSpecs: UISpecMap, nextSpecs: UISpecMap): MultiSpecDiff {
   const prevKeys = new Set(Object.keys(prevSpecs));
   const nextKeys = new Set(Object.keys(nextSpecs));
 

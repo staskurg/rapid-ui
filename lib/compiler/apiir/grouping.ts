@@ -5,12 +5,12 @@
  * Ambiguous → compile error.
  */
 
-import type { CompilerError } from "../errors";
-import { createError } from "../errors";
-import { slugify } from "@/lib/utils/slugify";
+import type { CompilerError } from '../errors';
+import { createError } from '../errors';
+import { slugify } from '@/lib/utils/slugify';
 
-const PATH_PREFIXES = ["api", "v1", "v2", "v3"];
-const METHODS = ["get", "post", "put", "patch", "delete"] as const;
+const PATH_PREFIXES = ['api', 'v1', 'v2', 'v3'];
+const METHODS = ['get', 'post', 'put', 'patch', 'delete'] as const;
 
 export interface RawOperation {
   path: string;
@@ -21,9 +21,9 @@ export interface RawOperation {
 
 function extractPathSegments(path: string): string[] {
   return path
-    .split("/")
+    .split('/')
     .filter(Boolean)
-    .filter((seg) => !seg.startsWith("{"));
+    .filter((seg) => !seg.startsWith('{'));
 }
 
 function stripPrefixes(segments: string[]): string[] {
@@ -39,7 +39,7 @@ function getPathBasedResourceKey(path: string): string {
   const stripped = stripPrefixes(segments);
   const first = stripped[0];
   if (!first) {
-    return "resource";
+    return 'resource';
   }
   return first.toLowerCase();
 }
@@ -49,7 +49,7 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
 }
 
-export type GroupingStrategy = "tag" | "path";
+export type GroupingStrategy = 'tag' | 'path';
 
 export interface GroupingResult {
   success: true;
@@ -70,17 +70,15 @@ export type GroupingOutput = GroupingResult | GroupingFailure;
  * Uses tag-based grouping if ALL operations have exactly one tag.
  * Otherwise uses path-based grouping.
  */
-export function groupOperations(
-  paths: Record<string, unknown>
-): GroupingOutput {
+export function groupOperations(paths: Record<string, unknown>): GroupingOutput {
   const allOps: RawOperation[] = [];
 
   for (const [pathKey, pathItem] of Object.entries(paths)) {
-    if (!pathItem || typeof pathItem !== "object") continue;
+    if (!pathItem || typeof pathItem !== 'object') continue;
     const pathObj = pathItem as Record<string, unknown>;
     for (const method of METHODS) {
       const op = pathObj[method];
-      if (!op || typeof op !== "object") continue;
+      if (!op || typeof op !== 'object') continue;
       const opObj = op as Record<string, unknown>;
       allOps.push({
         path: pathKey,
@@ -95,33 +93,27 @@ export function groupOperations(
     return {
       success: false,
       error: createError(
-        "OAS_AMBIGUOUS_RESOURCE_GROUPING",
-        "ApiIR",
-        "No CRUD operations found in paths"
+        'OAS_AMBIGUOUS_RESOURCE_GROUPING',
+        'ApiIR',
+        'No CRUD operations found in paths'
       ),
     };
   }
 
-  const hasAnyTag = allOps.some(
-    (op) => Array.isArray(op.tags) && op.tags.length === 1
-  );
-  const hasNoTag = allOps.some(
-    (op) => !op.tags || op.tags.length === 0
-  );
+  const hasAnyTag = allOps.some((op) => Array.isArray(op.tags) && op.tags.length === 1);
+  const hasNoTag = allOps.some((op) => !op.tags || op.tags.length === 0);
   if (hasAnyTag && hasNoTag) {
     return {
       success: false,
       error: createError(
-        "OAS_AMBIGUOUS_RESOURCE_GROUPING",
-        "ApiIR",
-        "Mixed resource grouping: some operations have tags and some do not; use either all tagged or all untagged"
+        'OAS_AMBIGUOUS_RESOURCE_GROUPING',
+        'ApiIR',
+        'Mixed resource grouping: some operations have tags and some do not; use either all tagged or all untagged'
       ),
     };
   }
 
-  const allHaveSingleTag = allOps.every(
-    (op) => Array.isArray(op.tags) && op.tags.length === 1
-  );
+  const allHaveSingleTag = allOps.every((op) => Array.isArray(op.tags) && op.tags.length === 1);
 
   if (allHaveSingleTag) {
     const groups = new Map<string, { name: string; operations: RawOperation[] }>();
@@ -140,7 +132,7 @@ export function groupOperations(
     }
     return {
       success: true,
-      strategy: "tag",
+      strategy: 'tag',
       groups,
     };
   }
@@ -161,7 +153,7 @@ export function groupOperations(
   }
   return {
     success: true,
-    strategy: "path",
+    strategy: 'path',
     groups,
   };
 }

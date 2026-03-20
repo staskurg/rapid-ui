@@ -4,10 +4,10 @@
  * Excludes array-of-primitive fields (UISpec has no array type).
  */
 
-import type { Field } from "@/lib/spec/types";
-import type { JsonSchema } from "../apiir/types";
+import type { Field } from '@/lib/spec/types';
+import type { JsonSchema } from '../apiir/types';
 
-export type FieldType = "string" | "number" | "boolean" | "enum" | "object";
+export type FieldType = 'string' | 'number' | 'boolean' | 'enum' | 'object';
 
 export interface FieldInfo {
   type: FieldType;
@@ -19,32 +19,32 @@ export interface FieldInfo {
  * Get the effective object schema. For list response (array), use items schema.
  */
 export function getObjectSchema(schema: JsonSchema): JsonSchema | null {
-  if (schema.type === "array") {
+  if (schema.type === 'array') {
     const items = schema.items as JsonSchema | undefined;
-    return items && typeof items === "object" ? items : null;
+    return items && typeof items === 'object' ? items : null;
   }
-  if (schema.type === "object") return schema;
+  if (schema.type === 'object') return schema;
   return null;
 }
 
 /** Object schema shape — distinguishes fixed (properties) vs map vs opaque. */
-export type ObjectShape = "fixed" | "map" | "opaque";
+export type ObjectShape = 'fixed' | 'map' | 'opaque';
 
 /**
  * Infer object schema shape. Fixed = has properties; Map = additionalProperties only; Opaque = empty.
  */
 export function getObjectShape(schema: JsonSchema): ObjectShape {
   const props = schema.properties as Record<string, unknown> | undefined;
-  const hasProps = props && typeof props === "object" && Object.keys(props).length > 0;
+  const hasProps = props && typeof props === 'object' && Object.keys(props).length > 0;
   const ap = schema.additionalProperties;
 
-  if (hasProps) return "fixed";
-  if (ap === true || (ap && typeof ap === "object")) return "map";
-  return "opaque";
+  if (hasProps) return 'fixed';
+  if (ap === true || (ap && typeof ap === 'object')) return 'map';
+  return 'opaque';
 }
 
 /** Placeholder path for schema-shape display (opaque/map). Not a real field — UISpec requires min 1 field. $ prefix prevents collision with real backend field names. */
-export const SCHEMA_SHAPE_PLACEHOLDER = "$payload";
+export const SCHEMA_SHAPE_PLACEHOLDER = '$payload';
 
 /**
  * Extract flat map of path -> FieldInfo from JSON Schema.
@@ -64,9 +64,9 @@ export function extractSchemaFields(
   const props = objSchema.properties as Record<string, JsonSchema> | undefined;
   const required = (objSchema.required as string[] | undefined) ?? requiredAtRoot;
 
-  if (props && typeof props === "object" && Object.keys(props).length > 0) {
+  if (props && typeof props === 'object' && Object.keys(props).length > 0) {
     for (const [key, propSchema] of Object.entries(props)) {
-      if (!propSchema || typeof propSchema !== "object") continue;
+      if (!propSchema || typeof propSchema !== 'object') continue;
       collectFields(propSchema, key, new Set(required), result);
     }
   }
@@ -82,22 +82,27 @@ function collectFields(
   out: Map<string, FieldInfo>,
   currentKey?: string
 ): void {
-  const key = currentKey ?? path.split(".").pop() ?? path;
+  const key = currentKey ?? path.split('.').pop() ?? path;
   const isRequired = parentRequired.has(key);
 
-  if (schema.type === "array") {
+  if (schema.type === 'array') {
     const items = schema.items as JsonSchema | undefined;
-    if (!items || typeof items !== "object") return;
+    if (!items || typeof items !== 'object') return;
     const itemType = items.type as string | undefined;
-    if (itemType === "string" || itemType === "number" || itemType === "integer" || itemType === "boolean") {
+    if (
+      itemType === 'string' ||
+      itemType === 'number' ||
+      itemType === 'integer' ||
+      itemType === 'boolean'
+    ) {
       return; // Exclude array-of-primitive
     }
-    if (itemType === "object") {
+    if (itemType === 'object') {
       const itemProps = items.properties as Record<string, JsonSchema> | undefined;
       const itemRequired = (items.required as string[] | undefined) ?? [];
       if (itemProps) {
         for (const [k, v] of Object.entries(itemProps)) {
-          if (!v || typeof v !== "object") continue;
+          if (!v || typeof v !== 'object') continue;
           collectFields(v, `${path}.${k}`, new Set(itemRequired), out, k);
         }
       }
@@ -105,12 +110,12 @@ function collectFields(
     return;
   }
 
-  if (schema.type === "object") {
+  if (schema.type === 'object') {
     const props = schema.properties as Record<string, JsonSchema> | undefined;
     const required = (schema.required as string[] | undefined) ?? [];
     if (props) {
       for (const [k, v] of Object.entries(props)) {
-        if (!v || typeof v !== "object") continue;
+        if (!v || typeof v !== 'object') continue;
         collectFields(v, `${path}.${k}`, new Set(required), out, k);
       }
     }
@@ -124,8 +129,8 @@ function collectFields(
     type,
     required: isRequired,
   };
-  if (type === "enum" && Array.isArray(schema.enum)) {
-    info.options = schema.enum.filter((v): v is string => typeof v === "string");
+  if (type === 'enum' && Array.isArray(schema.enum)) {
+    info.options = schema.enum.filter((v): v is string => typeof v === 'string');
     if (info.options.length === 0) return;
   }
 
@@ -133,16 +138,18 @@ function collectFields(
 }
 
 function inferFieldType(schema: JsonSchema): FieldType | null {
-  if (Array.isArray(schema.enum) && schema.enum.length > 0) return "enum";
+  if (Array.isArray(schema.enum) && schema.enum.length > 0) return 'enum';
   const t = schema.type;
   if (Array.isArray(t)) {
-    const first = t.find((x) => x === "string" || x === "number" || x === "integer" || x === "boolean");
-    if (first === "integer") return "number";
+    const first = t.find(
+      (x) => x === 'string' || x === 'number' || x === 'integer' || x === 'boolean'
+    );
+    if (first === 'integer') return 'number';
     if (first) return first as FieldType;
     return null;
   }
-  if (t === "integer") return "number";
-  if (t === "string" || t === "number" || t === "boolean") return t as FieldType;
+  if (t === 'integer') return 'number';
+  if (t === 'string' || t === 'number' || t === 'boolean') return t as FieldType;
   return null;
 }
 
@@ -163,7 +170,7 @@ export function schemaToField(
     type: info.type,
     required: info.required,
   };
-  if (info.type === "enum" && info.options?.length) {
+  if (info.type === 'enum' && info.options?.length) {
     field.options = info.options;
   }
   if (readOnly === true) {
@@ -173,7 +180,10 @@ export function schemaToField(
 }
 
 function pathToLabel(path: string): string {
-  if (path === SCHEMA_SHAPE_PLACEHOLDER) return "Data"; // UI label; internal path is $payload
-  const last = path.split(".").pop() ?? path;
-  return last.replace(/([A-Z])/g, " $1").replace(/^./, (c) => c.toUpperCase()).trim();
+  if (path === SCHEMA_SHAPE_PLACEHOLDER) return 'Data'; // UI label; internal path is $payload
+  const last = path.split('.').pop() ?? path;
+  return last
+    .replace(/([A-Z])/g, ' $1')
+    .replace(/^./, (c) => c.toUpperCase())
+    .trim();
 }

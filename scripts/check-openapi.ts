@@ -6,18 +6,18 @@
  * Usage: npm run check:openapi -- path/to/spec.yaml
  */
 
-import { readFileSync, existsSync } from "fs";
-import { resolve } from "path";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { resolveRefs } from "@/lib/compiler/openapi/ref-resolver";
-import { buildApiIR } from "@/lib/compiler/apiir";
-import type { CompilerError } from "@/lib/compiler/errors";
+import { readFileSync, existsSync } from 'fs';
+import { resolve } from 'path';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
+import { buildApiIR } from '@/lib/compiler/apiir';
+import type { CompilerError } from '@/lib/compiler/errors';
 
 function main(): number {
   const specPath = process.argv[2];
   if (!specPath) {
-    console.error("Usage: npm run check:openapi -- <path-to-spec.yaml|.json>");
+    console.error('Usage: npm run check:openapi -- <path-to-spec.yaml|.json>');
     process.exit(1);
   }
 
@@ -29,7 +29,7 @@ function main(): number {
 
   let content: string;
   try {
-    content = readFileSync(absPath, "utf-8");
+    content = readFileSync(absPath, 'utf-8');
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.error(`Failed to read file: ${msg}`);
@@ -60,14 +60,14 @@ function main(): number {
     return 1;
   }
 
-  console.log("VALID");
+  console.log('VALID');
   return 0;
 }
 
 function printInvalid(errors: CompilerError[]): void {
-  console.log("INVALID");
+  console.log('INVALID');
   for (const e of errors) {
-    const pointer = e.jsonPointer ? ` (${e.jsonPointer})` : "";
+    const pointer = e.jsonPointer ? ` (${e.jsonPointer})` : '';
     console.log(`  ${e.code}: ${e.message}${pointer}`);
   }
 }

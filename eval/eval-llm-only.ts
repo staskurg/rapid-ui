@@ -7,24 +7,24 @@
  * Requires OPENAI_API_KEY.
  */
 
-import { writeFileSync, mkdirSync, existsSync } from "fs";
-import { join } from "path";
+import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join } from 'path';
 
-const REPORTS_DIR = join(process.cwd(), "eval/reports");
+const REPORTS_DIR = join(process.cwd(), 'eval/reports');
 import {
   getApiIRFixtures,
   evaluateLlmOnlyFixture,
   type LlmOnlyFixtureResult,
-} from "./utils/llm-only-eval";
-import { buildLlmOnlyReport } from "./utils/report-schema";
+} from './utils/llm-only-eval';
+import { buildLlmOnlyReport } from './utils/report-schema';
 
 const DEFAULT_RUNS = 5;
-const FIXTURES_APIIR_DIR = join(process.cwd(), "tests/compiler/fixtures/apiir");
+const FIXTURES_APIIR_DIR = join(process.cwd(), 'tests/compiler/fixtures/apiir');
 
 function requireOpenAIKey(): void {
   if (!process.env.OPENAI_API_KEY?.trim()) {
     throw new Error(
-      "OPENAI_API_KEY is required for evals. Add it to .env.local to run LLM determinism evaluation."
+      'OPENAI_API_KEY is required for evals. Add it to .env.local to run LLM determinism evaluation.'
     );
   }
 }
@@ -40,7 +40,7 @@ function parseArgs(): {
 } {
   const args = process.argv.slice(2);
   let runs = DEFAULT_RUNS;
-  let dir = "demo";
+  let dir = 'demo';
   let fixtureName: string | undefined;
   let quick = false;
   let json = false;
@@ -48,25 +48,25 @@ function parseArgs(): {
   let outputDir = REPORTS_DIR;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--dir" && args[i + 1]) {
+    if (args[i] === '--dir' && args[i + 1]) {
       dir = args[++i];
-    } else if (args[i] === "--quick" || args[i] === "-q") {
+    } else if (args[i] === '--quick' || args[i] === '-q') {
       quick = true;
       runs = 5; // plan: 5 runs for llm-only in quick
-    } else if (args[i] === "--runs" && args[i + 1]) {
+    } else if (args[i] === '--runs' && args[i + 1]) {
       runs = parseInt(args[i + 1], 10);
       i++;
-    } else if (args[i] === "--fixture" && args[i + 1]) {
+    } else if (args[i] === '--fixture' && args[i + 1]) {
       fixtureName = args[i + 1];
       i++;
-    } else if (args[i] === "--output-dir" && args[i + 1]) {
+    } else if (args[i] === '--output-dir' && args[i + 1]) {
       outputDir = args[i + 1];
       i++;
-    } else if (args[i] === "--json") {
+    } else if (args[i] === '--json') {
       json = true;
-    } else if (args[i] === "--parallel" || args[i] === "-p") {
+    } else if (args[i] === '--parallel' || args[i] === '-p') {
       parallel = true;
-    } else if (args[i] === "--help" || args[i] === "-h") {
+    } else if (args[i] === '--help' || args[i] === '-h') {
       console.log(`
 LLM-only evaluation (ApiIR → UiPlanIR determinism)
 
@@ -101,7 +101,7 @@ async function main() {
 
   let fixtures = getApiIRFixtures(apiIrDir);
   if (config.fixtureName) {
-    const base = config.fixtureName.replace(/\.json$/i, "");
+    const base = config.fixtureName.replace(/\.json$/i, '');
     const match = fixtures.find((p) => p.endsWith(`${base}.json`));
     if (match) {
       fixtures = [match];
@@ -112,55 +112,41 @@ async function main() {
   }
 
   if (fixtures.length === 0) {
-    console.error(
-      "No ApiIR fixtures found. Run: npm run fixtures:generate-apiir"
-    );
+    console.error('No ApiIR fixtures found. Run: npm run fixtures:generate-apiir');
     process.exit(1);
   }
 
-  console.log("LLM-only Evaluation (ApiIR → UiPlanIR)");
-  console.log("=".repeat(50));
+  console.log('LLM-only Evaluation (ApiIR → UiPlanIR)');
+  console.log('='.repeat(50));
   console.log(`Dir: fixtures/apiir/${config.dir}`);
-  console.log(`Runs per fixture: ${config.runs}${config.parallel ? " (parallel)" : ""}`);
+  console.log(`Runs per fixture: ${config.runs}${config.parallel ? ' (parallel)' : ''}`);
   console.log(`Fixtures: ${fixtures.length}`);
-  console.log("");
+  console.log('');
 
   const results: LlmOnlyFixtureResult[] = [];
 
   if (config.parallel) {
     // Parallel runs per fixture only (not fixtures) — avoids rate limits
     for (const fixturePath of fixtures) {
-      const name = fixturePath.split("/").pop()?.replace(".json", "") ?? "?";
+      const name = fixturePath.split('/').pop()?.replace('.json', '') ?? '?';
       console.log(`\nEvaluating: ${name} (${config.runs} runs in parallel)`);
-      const result = await evaluateLlmOnlyFixture(
-        fixturePath,
-        config.runs,
-        true
-      );
+      const result = await evaluateLlmOnlyFixture(fixturePath, config.runs, true);
       results.push(result);
-      const statuses = result.runs.map((r) =>
-        r.uiPlan ? "✓" : `✗ (${r.error ?? "?"})`
-      );
-      console.log(`  ${statuses.join(" ")}`);
+      const statuses = result.runs.map((r) => (r.uiPlan ? '✓' : `✗ (${r.error ?? '?'})`));
+      console.log(`  ${statuses.join(' ')}`);
       console.log(
         `  Valid: ${result.validRuns}/${result.totalRuns}, Similarity: ${(result.minSimilarity * 100).toFixed(1)}% (min)`
       );
     }
   } else {
     for (const fixturePath of fixtures) {
-      const name = fixturePath.split("/").pop()?.replace(".json", "") ?? "?";
+      const name = fixturePath.split('/').pop()?.replace('.json', '') ?? '?';
       console.log(`\nEvaluating: ${name} (${config.runs} runs)`);
-      const result = await evaluateLlmOnlyFixture(
-        fixturePath,
-        config.runs,
-        false
-      );
+      const result = await evaluateLlmOnlyFixture(fixturePath, config.runs, false);
       results.push(result);
 
-      const statuses = result.runs.map((r) =>
-        r.uiPlan ? "✓" : `✗ (${r.error ?? "?"})`
-      );
-      console.log(`  ${statuses.join(" ")}`);
+      const statuses = result.runs.map((r) => (r.uiPlan ? '✓' : `✗ (${r.error ?? '?'})`));
+      console.log(`  ${statuses.join(' ')}`);
       console.log(
         `  Valid: ${result.validRuns}/${result.totalRuns}, Similarity: ${(result.minSimilarity * 100).toFixed(1)}% (min)`
       );
@@ -178,7 +164,7 @@ async function main() {
   const noValidRuns = totalValid === 0;
 
   if (noValidRuns) {
-    console.error("\nNo valid runs. Eval failed.");
+    console.error('\nNo valid runs. Eval failed.');
     if (config.json) {
       console.log(
         JSON.stringify({
@@ -192,26 +178,28 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\n" + "=".repeat(50));
-  console.log("Summary");
-  console.log("=".repeat(50));
+  console.log('\n' + '='.repeat(50));
+  console.log('Summary');
+  console.log('='.repeat(50));
   console.log(`Validity: ${(validityRate * 100).toFixed(1)}%`);
   console.log(`Min similarity (across fixtures): ${(minSimAcross * 100).toFixed(1)}%`);
-  console.log(allPassed ? "\n✅ Passed" : "\n⚠️ Failed");
+  console.log(allPassed ? '\n✅ Passed' : '\n⚠️ Failed');
 
   if (!allPassed) {
     const failedWithDiffs = results.filter(
       (r) => !r.passed && r.similarityDifferences && r.similarityDifferences.length > 0
     );
     for (const r of failedWithDiffs) {
-      console.log(`\n  Diff [${r.fixtureName}] (similarity ${(r.minSimilarity * 100).toFixed(1)}%):`);
+      console.log(
+        `\n  Diff [${r.fixtureName}] (similarity ${(r.minSimilarity * 100).toFixed(1)}%):`
+      );
       r.similarityDifferences!.forEach((d) => console.log(`    ${d}`));
     }
   }
 
   if (config.outputDir) {
     mkdirSync(config.outputDir, { recursive: true });
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
     const jsonReport = buildLlmOnlyReport(
       { runs: config.runs, parallel: config.parallel ?? false },
       results,
@@ -228,13 +216,13 @@ async function main() {
       `LLM-only Eval Report - ${new Date().toISOString()}`,
       `Validity: ${(validityRate * 100).toFixed(1)}%`,
       `Min similarity (across fixtures): ${(minSimAcross * 100).toFixed(1)}%`,
-      "",
+      '',
       ...results.map(
         (r) =>
           `${r.fixtureName}: valid ${r.validRuns}/${r.totalRuns}, sim ${(r.minSimilarity * 100).toFixed(1)}%`
       ),
     ];
-    writeFileSync(txtPath, lines.join("\n"));
+    writeFileSync(txtPath, lines.join('\n'));
     console.log(`\nReports: ${jsonPath}, ${txtPath}`);
   }
 
@@ -247,9 +235,7 @@ async function main() {
         errors: results.flatMap((r) => r.errors),
         similarityDifferences: results
           .filter((r) => r.similarityDifferences?.length)
-          .flatMap((r) =>
-            r.similarityDifferences!.map((d) => `[${r.fixtureName}] ${d}`)
-          ),
+          .flatMap((r) => r.similarityDifferences!.map((d) => `[${r.fixtureName}] ${d}`)),
       })
     );
   }

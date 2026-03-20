@@ -3,8 +3,8 @@
  * Consolidated format "Field Label (Table, Form, Filters)" — one line per field.
  */
 
-import type { MultiSpecDiff, SpecDiff, UISpecMap } from "./diff";
-import type { UISpec } from "./schema";
+import type { MultiSpecDiff, SpecDiff, UISpecMap } from './diff';
+import type { UISpec } from './schema';
 
 const MAX_ITEMS = 7;
 
@@ -16,7 +16,7 @@ function getFieldLabel(spec: UISpec | undefined, fieldName: string): string {
 
 function humanize(name: string): string {
   return name
-    .replace(/([A-Z])/g, " $1")
+    .replace(/([A-Z])/g, ' $1')
     .replace(/^./, (s) => s.toUpperCase())
     .trim();
 }
@@ -29,7 +29,7 @@ export interface FormatDiffResult {
 /** Per-page diff entry for display. */
 export interface DiffPageEntry {
   name: string;
-  type: "added" | "removed" | "unchanged";
+  type: 'added' | 'removed' | 'unchanged';
   addedFields: string[];
   removedFields: string[];
 }
@@ -39,11 +39,11 @@ export interface FormatMultiSpecDiffResult {
   byPage: DiffPageEntry[];
 }
 
-type Area = "Table" | "Form" | "Filters";
+type Area = 'Table' | 'Form' | 'Filters';
 
 function formatAreas(areas: Area[]): string {
-  if (areas.length === 0) return "";
-  return ` (${areas.join(", ")})`;
+  if (areas.length === 0) return '';
+  return ` (${areas.join(', ')})`;
 }
 
 /**
@@ -88,72 +88,65 @@ export function formatDiffForDisplay(
 
   // Entity change
   if (diff.entityChanged) {
-    addedMap.set(`Entity: ${nextSpec?.entity ?? "—"}`, []);
-    removedMap.set(`Entity: ${prevSpec?.entity ?? "—"}`, []);
+    addedMap.set(`Entity: ${nextSpec?.entity ?? '—'}`, []);
+    removedMap.set(`Entity: ${prevSpec?.entity ?? '—'}`, []);
   }
 
   // Fields: add/remove with areas
   for (const name of diff.fieldsAdded) {
     const areas: Area[] = [];
-    if (diff.tableColumnsAdded.includes(name)) areas.push("Table");
-    if (diff.formFieldsAdded.includes(name)) areas.push("Form");
-    if (diff.filtersAdded.includes(name)) areas.push("Filters");
+    if (diff.tableColumnsAdded.includes(name)) areas.push('Table');
+    if (diff.formFieldsAdded.includes(name)) areas.push('Form');
+    if (diff.filtersAdded.includes(name)) areas.push('Filters');
     addField(addedMap, name, areas, nextSpec);
   }
   for (const name of diff.fieldsRemoved) {
     const areas: Area[] = [];
-    if (diff.tableColumnsRemoved.includes(name)) areas.push("Table");
-    if (diff.formFieldsRemoved.includes(name)) areas.push("Form");
-    if (diff.filtersRemoved.includes(name)) areas.push("Filters");
+    if (diff.tableColumnsRemoved.includes(name)) areas.push('Table');
+    if (diff.formFieldsRemoved.includes(name)) areas.push('Form');
+    if (diff.filtersRemoved.includes(name)) areas.push('Filters');
     addField(removedMap, name, areas, prevSpec);
   }
 
   // Table/Form/Filters-only changes (field exists, just area change)
   for (const name of diff.tableColumnsAdded) {
-    if (!diff.fieldsAdded.includes(name))
-      addArea(addedMap, name, "Table", nextSpec);
+    if (!diff.fieldsAdded.includes(name)) addArea(addedMap, name, 'Table', nextSpec);
   }
   for (const name of diff.tableColumnsRemoved) {
-    if (!diff.fieldsRemoved.includes(name))
-      addArea(removedMap, name, "Table", prevSpec);
+    if (!diff.fieldsRemoved.includes(name)) addArea(removedMap, name, 'Table', prevSpec);
   }
   for (const name of diff.formFieldsAdded) {
-    if (!diff.fieldsAdded.includes(name))
-      addArea(addedMap, name, "Form", nextSpec);
+    if (!diff.fieldsAdded.includes(name)) addArea(addedMap, name, 'Form', nextSpec);
   }
   for (const name of diff.formFieldsRemoved) {
-    if (!diff.fieldsRemoved.includes(name))
-      addArea(removedMap, name, "Form", prevSpec);
+    if (!diff.fieldsRemoved.includes(name)) addArea(removedMap, name, 'Form', prevSpec);
   }
   for (const name of diff.filtersAdded) {
-    if (!diff.fieldsAdded.includes(name))
-      addArea(addedMap, name, "Filters", nextSpec);
+    if (!diff.fieldsAdded.includes(name)) addArea(addedMap, name, 'Filters', nextSpec);
   }
   for (const name of diff.filtersRemoved) {
-    if (!diff.fieldsRemoved.includes(name))
-      addArea(removedMap, name, "Filters", prevSpec);
+    if (!diff.fieldsRemoved.includes(name)) addArea(removedMap, name, 'Filters', prevSpec);
   }
 
   // Fields changed (label/type)
   for (const { prev, next } of diff.fieldsChanged) {
     removedMap.set(prev.label, []);
-    addedMap.set(
-      prev.label !== next.label ? next.label : `${prev.label} (type changed)`,
-      []
-    );
+    addedMap.set(prev.label !== next.label ? next.label : `${prev.label} (type changed)`, []);
   }
 
   // idField
   if (diff.idFieldChanged) {
-    addedMap.set(`ID field: ${nextSpec?.idField ?? "id"}`, []);
-    removedMap.set(`ID field: ${prevSpec?.idField ?? "id"}`, []);
+    addedMap.set(`ID field: ${nextSpec?.idField ?? 'id'}`, []);
+    removedMap.set(`ID field: ${prevSpec?.idField ?? 'id'}`, []);
   }
 
   // Convert maps to arrays: "Label (Table, Form)" or "Label"
   const added: string[] = [];
   for (const [label, areas] of addedMap) {
     if (areas.length > 0) {
-      areas.sort((a, b) => ["Table", "Form", "Filters"].indexOf(a) - ["Table", "Form", "Filters"].indexOf(b));
+      areas.sort(
+        (a, b) => ['Table', 'Form', 'Filters'].indexOf(a) - ['Table', 'Form', 'Filters'].indexOf(b)
+      );
       added.push(`${label}${formatAreas(areas)}`);
     } else {
       added.push(label);
@@ -162,7 +155,9 @@ export function formatDiffForDisplay(
   const removed: string[] = [];
   for (const [label, areas] of removedMap) {
     if (areas.length > 0) {
-      areas.sort((a, b) => ["Table", "Form", "Filters"].indexOf(a) - ["Table", "Form", "Filters"].indexOf(b));
+      areas.sort(
+        (a, b) => ['Table', 'Form', 'Filters'].indexOf(a) - ['Table', 'Form', 'Filters'].indexOf(b)
+      );
       removed.push(`${label}${formatAreas(areas)}`);
     } else {
       removed.push(label);
@@ -208,12 +203,10 @@ export function formatMultiSpecDiffForDisplay(
   for (const slug of multiDiff.resourcesAdded) {
     const spec = nextSpecs[slug];
     const name = spec?.entity ?? humanize(slug);
-    const addedFields = spec
-      ? spec.fields.map((f) => f.label ?? humanize(f.name))
-      : [];
+    const addedFields = spec ? spec.fields.map((f) => f.label ?? humanize(f.name)) : [];
     byPage.push({
       name,
-      type: "added",
+      type: 'added',
       addedFields,
       removedFields: [],
     });
@@ -260,7 +253,7 @@ export function formatMultiSpecDiffForDisplay(
     if (addedFields.length > 0 || removedFields.length > 0) {
       byPage.push({
         name,
-        type: "unchanged",
+        type: 'unchanged',
         addedFields: [...new Set(addedFields)],
         removedFields: [...new Set(removedFields)],
       });
@@ -271,12 +264,10 @@ export function formatMultiSpecDiffForDisplay(
   for (const slug of multiDiff.resourcesRemoved) {
     const spec = prevSpecs[slug];
     const name = spec?.entity ?? humanize(slug);
-    const removedFields = spec
-      ? spec.fields.map((f) => f.label ?? humanize(f.name))
-      : [];
+    const removedFields = spec ? spec.fields.map((f) => f.label ?? humanize(f.name)) : [];
     byPage.push({
       name,
-      type: "removed",
+      type: 'removed',
       addedFields: [],
       removedFields,
     });

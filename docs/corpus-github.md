@@ -23,7 +23,7 @@ npm run corpus:github-crawl -- --limit 2
 npm run corpus:github-crawl -- --no-crud-filter
 ```
 
-Output: `scripts/corpus-data/specs/github/` (group-generic, group-frameworks/*, group-crud, group-vendors, etc.)
+Output: `scripts/corpus-data/specs/github/` (group-generic, group-frameworks/\*, group-crud, group-vendors, etc.)
 
 ### 2. Run validation
 
@@ -37,7 +37,7 @@ npm run corpus:run -- --specs-dir scripts/corpus-data/specs/github/group-framewo
 # ... etc
 ```
 
-Output: `scripts/corpus-data/reports/raw-github-{timestamp}.json` (or raw-github-{group}-*.json for per-group)
+Output: `scripts/corpus-data/reports/raw-github-{timestamp}.json` (or raw-github-{group}-\*.json for per-group)
 
 ### 3. Report (optional)
 

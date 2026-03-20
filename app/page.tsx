@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { Suspense } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import { Sparkles, Trash2, Upload, Loader2, FileText, Download, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
-import { OpenApiDropZone } from "@/components/connect/OpenApiDropZone";
-import { ProgressPanel } from "@/components/compiler/ProgressPanel";
-import type { Step } from "@/components/compiler/ProgressPanel";
-import type { EndpointInfo } from "@/components/compiler/ProgressPanel";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
-import { getOrCreateAccountId, resetAccountId } from "@/lib/session";
-import type { ApiIR } from "@/lib/compiler/apiir/types";
-import type { CompilerError } from "@/lib/compiler/errors";
+import * as React from 'react';
+import { Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Sparkles, Trash2, Upload, Loader2, FileText, Download, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
+import { OpenApiDropZone } from '@/components/connect/OpenApiDropZone';
+import { ProgressPanel } from '@/components/compiler/ProgressPanel';
+import type { Step } from '@/components/compiler/ProgressPanel';
+import type { EndpointInfo } from '@/components/compiler/ProgressPanel';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
+import { getOrCreateAccountId, resetAccountId } from '@/lib/session';
+import type { ApiIR } from '@/lib/compiler/apiir/types';
+import type { CompilerError } from '@/lib/compiler/errors';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,7 +23,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -31,28 +31,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-const ACCEPT = ".yaml,.yml,.json";
+const ACCEPT = '.yaml,.yml,.json';
 
 /** Demo specs available for download. Keys match API route param. */
 const DEMO_SPECS: { id: string; label: string }[] = [
-  { id: "golden_openapi_users_tagged_3_0", label: "Golden Users" },
-  { id: "golden_openapi_products_path_3_1", label: "Golden Products" },
-  { id: "demo_users_tasks_v1", label: "Demo v1 (Users only)" },
-  { id: "demo_users_tasks_v2", label: "Demo v2 (Users + Tasks)" },
-  { id: "demo_users_tasks_v3", label: "Demo v3 (updated fields)" },
+  { id: 'golden_openapi_users_tagged_3_0', label: 'Golden Users' },
+  { id: 'golden_openapi_products_path_3_1', label: 'Golden Products' },
+  { id: 'demo_users_tasks_v1', label: 'Demo v1 (Users only)' },
+  { id: 'demo_users_tasks_v2', label: 'Demo v2 (Users + Tasks)' },
+  { id: 'demo_users_tasks_v3', label: 'Demo v3 (updated fields)' },
 ];
 
 /** URL param value during new spec compilation. Replaced with real id when done. */
-const COMPILING_SPEC_ID = "__compiling__";
+const COMPILING_SPEC_ID = '__compiling__';
 
 interface CompilationListItem {
   id: string;
   name: string;
-  status: "success" | "failed";
+  status: 'success' | 'failed';
 }
 
 interface CompilationDetail {
@@ -66,7 +66,7 @@ interface CompilationDetail {
   diffFromPrevious?: {
     byPage: Array<{
       name: string;
-      type: "added" | "removed" | "unchanged";
+      type: 'added' | 'removed' | 'unchanged';
       addedFields: string[];
       removedFields: string[];
     }>;
@@ -75,11 +75,17 @@ interface CompilationDetail {
 }
 
 type CompileState =
-  | { status: "parsing" }
-  | { status: "validating" }
-  | { status: "compiling" }
-  | { status: "success"; id: string; url: string; resourceNames: string[]; specs: Record<string, unknown> }
-  | { status: "error"; errors: CompilerError[] };
+  | { status: 'parsing' }
+  | { status: 'validating' }
+  | { status: 'compiling' }
+  | {
+      status: 'success';
+      id: string;
+      url: string;
+      resourceNames: string[];
+      specs: Record<string, unknown>;
+    }
+  | { status: 'error'; errors: CompilerError[] };
 
 function apiIrToEndpoints(apiIr: ApiIR): EndpointInfo[] {
   const endpoints: EndpointInfo[] = [];
@@ -98,9 +104,9 @@ function apiIrToEndpoints(apiIr: ApiIR): EndpointInfo[] {
 function CompilerPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const specParam = searchParams.get("spec");
+  const specParam = searchParams.get('spec');
 
-  const [origin, setOrigin] = React.useState("");
+  const [origin, setOrigin] = React.useState('');
   const [items, setItems] = React.useState<CompilationListItem[]>([]);
   const [detail, setDetail] = React.useState<CompilationDetail | null>(null);
   const [listLoading, setListLoading] = React.useState(true);
@@ -111,9 +117,10 @@ function CompilerPageContent() {
   /** Set when compile succeeds and we use replaceState (Next.js may not sync). Cleared on manual navigation. */
   const [completedSpecId, setCompletedSpecId] = React.useState<string | null>(null);
   /** Shown in list when compiling a new spec (before we have the real id) */
-  const [compilingNewItem, setCompilingNewItem] = React.useState<{ id: string; name: string } | null>(
-    null
-  );
+  const [compilingNewItem, setCompilingNewItem] = React.useState<{
+    id: string;
+    name: string;
+  } | null>(null);
   const [deleteTargetId, setDeleteTargetId] = React.useState<string | null>(null);
   const [deleteLoading, setDeleteLoading] = React.useState(false);
   const [resetSessionOpen, setResetSessionOpen] = React.useState(false);
@@ -133,7 +140,7 @@ function CompilerPageContent() {
         : specParam);
 
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       setOrigin(window.location.origin);
       setAccountId(getOrCreateAccountId());
     }
@@ -150,11 +157,11 @@ function CompilerPageContent() {
       if (res.ok) {
         setItems(data.items ?? []);
       } else {
-        toast.error("Failed to load compilations", { description: data.error });
+        toast.error('Failed to load compilations', { description: data.error });
       }
     } catch (err) {
-      toast.error("Failed to load compilations", {
-        description: err instanceof Error ? err.message : "Network error",
+      toast.error('Failed to load compilations', {
+        description: err instanceof Error ? err.message : 'Network error',
       });
     } finally {
       setListLoading(false);
@@ -175,7 +182,7 @@ function CompilerPageContent() {
           setDetail({
             id: data.id,
             name: data.name ?? data.id,
-            status: data.status ?? "success",
+            status: data.status ?? 'success',
             specs: data.specs ?? {},
             resourceNames: data.resourceNames ?? [],
             resourceSlugs: data.resourceSlugs ?? [],
@@ -186,13 +193,13 @@ function CompilerPageContent() {
         } else if (res.status === 404 || res.status === 403) {
           setDetail(null);
           setCompletedSpecId(null);
-          router.replace("/", { scroll: false });
+          router.replace('/', { scroll: false });
         } else {
-          toast.error("Failed to load spec", { description: data.error });
+          toast.error('Failed to load spec', { description: data.error });
         }
       } catch (err) {
-        toast.error("Failed to load spec", {
-          description: err instanceof Error ? err.message : "Network error",
+        toast.error('Failed to load spec', {
+          description: err instanceof Error ? err.message : 'Network error',
         });
       } finally {
         setDetailLoading(false);
@@ -220,7 +227,7 @@ function CompilerPageContent() {
       } else if (!listLoading) {
         setDetail(null);
         setCompletedSpecId(null);
-        router.replace("/", { scroll: false });
+        router.replace('/', { scroll: false });
       }
     } else {
       setDetail(null);
@@ -234,53 +241,52 @@ function CompilerPageContent() {
       const yieldToUI = () => new Promise<void>((r) => setTimeout(r, 0));
 
       setCompileTargetId(null);
-      setCompilingNewItem({ id: COMPILING_SPEC_ID, name: "Compiling..." });
-      setCompileState({ status: "parsing" });
+      setCompilingNewItem({ id: COMPILING_SPEC_ID, name: 'Compiling...' });
+      setCompileState({ status: 'parsing' });
       await yieldToUI();
 
       const parseResult = parseOpenAPI(content);
       if (!parseResult.success) {
         setCompileState({
-          status: "error",
-          errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: parseResult.error.message }],
+          status: 'error',
+          errors: [{ code: 'OAS_PARSE_ERROR', stage: 'Parse', message: parseResult.error.message }],
         });
         setCompilingNewItem(null);
-        toast.error("Parse failed", { description: parseResult.error.message });
+        toast.error('Parse failed', { description: parseResult.error.message });
         return;
       }
 
-      setCompileState({ status: "validating" });
+      setCompileState({ status: 'validating' });
       await yieldToUI();
 
       const validateResult = validateSubset(parseResult.doc);
       if (!validateResult.success) {
-        setCompileState({ status: "error", errors: validateResult.errors });
+        setCompileState({ status: 'error', errors: validateResult.errors });
         setCompilingNewItem(null);
-        toast.error("Validation failed", {
+        toast.error('Validation failed', {
           description: `${validateResult.errors.length} error(s) found`,
         });
         return;
       }
 
-      setCompileState({ status: "compiling" });
+      setCompileState({ status: 'compiling' });
 
       try {
-        const res = await fetch("/api/compile-openapi", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/compile-openapi', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ openapi: content, accountId: ac }),
         });
         const data = await res.json();
 
         if (!res.ok) {
-          const errors: CompilerError[] =
-            data.errors ?? [
-              { code: "UISPEC_INVALID", stage: "Lowering", message: "Compilation failed" },
-            ];
-          setCompileState({ status: "error", errors });
+          const errors: CompilerError[] = data.errors ?? [
+            { code: 'UISPEC_INVALID', stage: 'Lowering', message: 'Compilation failed' },
+          ];
+          setCompileState({ status: 'error', errors });
           setCompilingNewItem(null);
-          toast.error("Compilation failed", {
-            description: errors[0]?.message ?? "Unknown error",
+          toast.error('Compilation failed', {
+            description: errors[0]?.message ?? 'Unknown error',
           });
           return;
         }
@@ -293,7 +299,7 @@ function CompilerPageContent() {
           setDetail({
             id: data.id,
             name: data.name ?? data.id,
-            status: "success",
+            status: 'success',
             specs: data.specs ?? {},
             resourceNames: data.resourceNames ?? [],
             resourceSlugs: data.resourceSlugs ?? [],
@@ -302,25 +308,25 @@ function CompilerPageContent() {
         }
 
         const newUrl = `/?spec=${encodeURIComponent(data.id)}`;
-        window.history.replaceState(null, "", newUrl);
+        window.history.replaceState(null, '', newUrl);
         setCompletedSpecId(data.id);
         setCompileState(null);
 
-        toast.success("Compilation complete", {
+        toast.success('Compilation complete', {
           description: `View UI for ${data.resourceNames?.length ?? 0} resource(s)`,
         });
       } catch (err) {
         const errors: CompilerError[] = [
           {
-            code: "UISPEC_INVALID",
-            stage: "Lowering",
-            message: err instanceof Error ? err.message : "Compilation failed",
+            code: 'UISPEC_INVALID',
+            stage: 'Lowering',
+            message: err instanceof Error ? err.message : 'Compilation failed',
           },
         ];
-        setCompileState({ status: "error", errors });
+        setCompileState({ status: 'error', errors });
         setCompilingNewItem(null);
-        toast.error("Compilation failed", {
-          description: err instanceof Error ? err.message : "Network or server error",
+        toast.error('Compilation failed', {
+          description: err instanceof Error ? err.message : 'Network or server error',
         });
       }
     },
@@ -328,7 +334,7 @@ function CompilerPageContent() {
   );
 
   const handleDropZoneError = React.useCallback((message: string) => {
-    toast.error("Upload failed", { description: message });
+    toast.error('Upload failed', { description: message });
   }, []);
 
   const handleCompileDemoSpec = React.useCallback(
@@ -337,12 +343,12 @@ function CompilerPageContent() {
       setDemoSpecsOpen(false);
       try {
         const res = await fetch(`/api/demo-specs/${encodeURIComponent(specId)}`);
-        if (!res.ok) throw new Error("Failed to fetch spec");
+        if (!res.ok) throw new Error('Failed to fetch spec');
         const content = await res.text();
         await handleFile(content);
       } catch (err) {
-        toast.error("Failed to load demo spec", {
-          description: err instanceof Error ? err.message : "Unknown error",
+        toast.error('Failed to load demo spec', {
+          description: err instanceof Error ? err.message : 'Unknown error',
         });
       }
     },
@@ -366,7 +372,7 @@ function CompilerPageContent() {
     setCompilingNewItem(null);
     if (effectiveSpecParam === COMPILING_SPEC_ID) {
       setCompletedSpecId(null);
-      router.replace("/", { scroll: false });
+      router.replace('/', { scroll: false });
     }
   }, [effectiveSpecParam, router]);
 
@@ -378,14 +384,14 @@ function CompilerPageContent() {
   const handleUpdateFileChange = React.useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      e.target.value = "";
+      e.target.value = '';
       const id = updateTargetIdRef.current;
       updateTargetIdRef.current = null;
       if (!file || !id || !ac) return;
 
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      if (!["yaml", "yml", "json"].includes(ext ?? "")) {
-        toast.error("Unsupported file type. Use .yaml, .yml, or .json");
+      const ext = file.name.split('.').pop()?.toLowerCase();
+      if (!['yaml', 'yml', 'json'].includes(ext ?? '')) {
+        toast.error('Unsupported file type. Use .yaml, .yml, or .json');
         return;
       }
 
@@ -393,8 +399,8 @@ function CompilerPageContent() {
       try {
         content = await file.text();
       } catch (err) {
-        toast.error("Failed to read file", {
-          description: err instanceof Error ? err.message : "Unknown error",
+        toast.error('Failed to read file', {
+          description: err instanceof Error ? err.message : 'Unknown error',
         });
         return;
       }
@@ -402,52 +408,51 @@ function CompilerPageContent() {
       const yieldToUI = () => new Promise<void>((r) => setTimeout(r, 0));
 
       setCompileTargetId(id);
-      setCompileState({ status: "parsing" });
+      setCompileState({ status: 'parsing' });
       await yieldToUI();
 
       const parseResult = parseOpenAPI(content);
       if (!parseResult.success) {
         setCompileState({
-          status: "error",
-          errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: parseResult.error.message }],
+          status: 'error',
+          errors: [{ code: 'OAS_PARSE_ERROR', stage: 'Parse', message: parseResult.error.message }],
         });
         setCompileTargetId(null);
-        toast.error("Parse failed", { description: parseResult.error.message });
+        toast.error('Parse failed', { description: parseResult.error.message });
         return;
       }
 
-      setCompileState({ status: "validating" });
+      setCompileState({ status: 'validating' });
       await yieldToUI();
 
       const validateResult = validateSubset(parseResult.doc);
       if (!validateResult.success) {
-        setCompileState({ status: "error", errors: validateResult.errors });
+        setCompileState({ status: 'error', errors: validateResult.errors });
         setCompileTargetId(null);
-        toast.error("Validation failed", {
+        toast.error('Validation failed', {
           description: `${validateResult.errors.length} error(s) found`,
         });
         return;
       }
 
-      setCompileState({ status: "compiling" });
+      setCompileState({ status: 'compiling' });
 
       try {
         const res = await fetch(`/api/compilations/${encodeURIComponent(id)}/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ openapi: content, accountId: ac }),
         });
         const data = await res.json();
 
         if (!res.ok) {
-          const errors: CompilerError[] =
-            data.errors ?? [
-              { code: "UISPEC_INVALID", stage: "Lowering", message: "Update failed" },
-            ];
-          setCompileState({ status: "error", errors });
+          const errors: CompilerError[] = data.errors ?? [
+            { code: 'UISPEC_INVALID', stage: 'Lowering', message: 'Update failed' },
+          ];
+          setCompileState({ status: 'error', errors });
           setCompileTargetId(null);
-          toast.error("Update failed", {
-            description: errors[0]?.message ?? data.error ?? "Unknown error",
+          toast.error('Update failed', {
+            description: errors[0]?.message ?? data.error ?? 'Unknown error',
           });
           return;
         }
@@ -459,7 +464,7 @@ function CompilerPageContent() {
           setDetail({
             id,
             name: data.name ?? id,
-            status: "success",
+            status: 'success',
             specs: data.specs ?? {},
             resourceNames: data.resourceNames ?? [],
             resourceSlugs: data.resourceSlugs ?? [],
@@ -468,21 +473,21 @@ function CompilerPageContent() {
           });
         }
 
-        toast.success("Spec updated");
+        toast.success('Spec updated');
         setCompileState(null);
         setCompileTargetId(null);
       } catch (err) {
         const errors: CompilerError[] = [
           {
-            code: "UISPEC_INVALID",
-            stage: "Lowering",
-            message: err instanceof Error ? err.message : "Update failed",
+            code: 'UISPEC_INVALID',
+            stage: 'Lowering',
+            message: err instanceof Error ? err.message : 'Update failed',
           },
         ];
-        setCompileState({ status: "error", errors });
+        setCompileState({ status: 'error', errors });
         setCompileTargetId(null);
-        toast.error("Update failed", {
-          description: err instanceof Error ? err.message : "Network error",
+        toast.error('Update failed', {
+          description: err instanceof Error ? err.message : 'Network error',
         });
       }
     },
@@ -499,21 +504,21 @@ function CompilerPageContent() {
     try {
       const res = await fetch(
         `/api/compilations/${encodeURIComponent(deleteTargetId)}?accountId=${encodeURIComponent(ac)}`,
-        { method: "DELETE" }
+        { method: 'DELETE' }
       );
       if (res.ok) {
-        toast.success("Spec deleted");
+        toast.success('Spec deleted');
         if (effectiveSpecParam === deleteTargetId) {
-          router.replace("/", { scroll: false });
+          router.replace('/', { scroll: false });
         }
         fetchList();
       } else {
         const data = await res.json();
-        toast.error("Delete failed", { description: data.error ?? "Unknown error" });
+        toast.error('Delete failed', { description: data.error ?? 'Unknown error' });
       }
     } catch (err) {
-      toast.error("Delete failed", {
-        description: err instanceof Error ? err.message : "Network error",
+      toast.error('Delete failed', {
+        description: err instanceof Error ? err.message : 'Network error',
       });
     } finally {
       setDeleteLoading(false);
@@ -528,67 +533,68 @@ function CompilerPageContent() {
     setItems([]);
     setDetail(null);
     setCompletedSpecId(null);
-    router.replace("/", { scroll: false });
-    toast.success("Session reset", {
-      description: "You now have a fresh account. Your previous compilations are still in the database.",
+    router.replace('/', { scroll: false });
+    toast.success('Session reset', {
+      description:
+        'You now have a fresh account. Your previous compilations are still in the database.',
     });
   }, [router]);
 
   const steps: Step[] = React.useMemo(() => {
     if (compileState) {
-      const err = compileState.status === "error" ? compileState.errors[0] : null;
-      const parseErr = err?.stage === "Parse";
-      const validateErr = err?.stage === "Subset";
-      const compileErr = compileState.status === "error" && !parseErr && !validateErr;
+      const err = compileState.status === 'error' ? compileState.errors[0] : null;
+      const parseErr = err?.stage === 'Parse';
+      const validateErr = err?.stage === 'Subset';
+      const compileErr = compileState.status === 'error' && !parseErr && !validateErr;
       const { status } = compileState;
       return [
         {
-          id: "parse",
-          label: "Parse YAML/JSON",
+          id: 'parse',
+          label: 'Parse YAML/JSON',
           status:
-            status === "parsing"
-              ? "running"
+            status === 'parsing'
+              ? 'running'
               : parseErr
-                ? "error"
-                : status === "validating" || status === "compiling" || status === "success"
-                  ? "success"
-                  : "pending",
+                ? 'error'
+                : status === 'validating' || status === 'compiling' || status === 'success'
+                  ? 'success'
+                  : 'pending',
         },
         {
-          id: "validate",
-          label: "Validate subset",
+          id: 'validate',
+          label: 'Validate subset',
           status:
-            status === "parsing"
-              ? "pending"
-              : status === "validating"
-                ? "running"
+            status === 'parsing'
+              ? 'pending'
+              : status === 'validating'
+                ? 'running'
                 : validateErr
-                  ? "error"
-                  : status === "compiling" || status === "success"
-                    ? "success"
-                    : "pending",
+                  ? 'error'
+                  : status === 'compiling' || status === 'success'
+                    ? 'success'
+                    : 'pending',
         },
         {
-          id: "compile",
-          label: "Compile pipeline",
+          id: 'compile',
+          label: 'Compile pipeline',
           status:
-            status === "parsing" || status === "validating"
-              ? "pending"
-              : status === "compiling"
-                ? "running"
-                : status === "success"
-                  ? "success"
+            status === 'parsing' || status === 'validating'
+              ? 'pending'
+              : status === 'compiling'
+                ? 'running'
+                : status === 'success'
+                  ? 'success'
                   : compileErr
-                    ? "error"
-                    : "pending",
+                    ? 'error'
+                    : 'pending',
         },
       ];
     }
     if (detail) {
       return [
-        { id: "parse", label: "Parse YAML/JSON", status: "success" },
-        { id: "validate", label: "Validate subset", status: "success" },
-        { id: "compile", label: "Compile pipeline", status: "success" },
+        { id: 'parse', label: 'Parse YAML/JSON', status: 'success' },
+        { id: 'validate', label: 'Validate subset', status: 'success' },
+        { id: 'compile', label: 'Compile pipeline', status: 'success' },
       ];
     }
     return [];
@@ -596,7 +602,7 @@ function CompilerPageContent() {
 
   const endpoints = detail?.apiIr ? apiIrToEndpoints(detail.apiIr) : [];
   const viewUrl = detail ? `/u/${detail.id}` : null;
-  const compileSuccessUrl = compileState?.status === "success" ? compileState.url : null;
+  const compileSuccessUrl = compileState?.status === 'success' ? compileState.url : null;
 
   if (listLoading) {
     return (
@@ -652,7 +658,7 @@ function CompilerPageContent() {
                   <li key={compilingNewItem.id}>
                     <div
                       className={cn(
-                        "group flex items-center justify-between gap-2 rounded-lg border border-primary/50 bg-primary/5 px-3 py-2"
+                        'group flex items-center justify-between gap-2 rounded-lg border border-primary/50 bg-primary/5 px-3 py-2'
                       )}
                     >
                       <span className="flex min-w-0 items-center gap-2 truncate text-sm font-medium">
@@ -668,19 +674,15 @@ function CompilerPageContent() {
                       role="button"
                       tabIndex={0}
                       onClick={() => handleSpecClick(item.id)}
-                      onKeyDown={(e) =>
-                        e.key === "Enter" && handleSpecClick(item.id)
-                      }
+                      onKeyDown={(e) => e.key === 'Enter' && handleSpecClick(item.id)}
                       className={cn(
-                        "group flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors",
+                        'group flex cursor-pointer select-none items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left transition-colors',
                         effectiveSpecParam === item.id
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/50"
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:bg-muted/50'
                       )}
                     >
-                      <span className="min-w-0 truncate text-sm font-medium">
-                        {item.name}
-                      </span>
+                      <span className="min-w-0 truncate text-sm font-medium">{item.name}</span>
                       <div className="flex shrink-0 items-center gap-1">
                         {compileTargetId === item.id ? (
                           <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -723,22 +725,23 @@ function CompilerPageContent() {
       {/* Right panel: compile flow, empty state, or detail */}
       <main className="min-w-0 flex-1 overflow-y-auto p-6">
         <div className="mb-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-200">
-          Custom specs are in development. Use Golden Users, Golden Products, or Demo (Users + Tasks v1 → v2 → v3).
+          Custom specs are in development. Use Golden Users, Golden Products, or Demo (Users + Tasks
+          v1 → v2 → v3).
         </div>
         <div className="flex w-full flex-col gap-6">
           {compileState ? (
             <>
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <h2 className="text-lg font-semibold">
-                  {compileState.status === "success"
-                    ? "Compilation complete"
-                    : compileState.status === "error"
-                      ? "Compilation failed"
+                  {compileState.status === 'success'
+                    ? 'Compilation complete'
+                    : compileState.status === 'error'
+                      ? 'Compilation failed'
                       : compileTargetId
-                        ? "Updating spec..."
-                        : "Compiling..."}
+                        ? 'Updating spec...'
+                        : 'Compiling...'}
                 </h2>
-                {compileState.status === "error" && (
+                {compileState.status === 'error' && (
                   <Button variant="outline" size="sm" onClick={handleDismissError}>
                     Dismiss
                   </Button>
@@ -746,21 +749,20 @@ function CompilerPageContent() {
               </div>
               <ProgressPanel
                 steps={steps}
-                errors={compileState.status === "error" ? compileState.errors : undefined}
+                errors={compileState.status === 'error' ? compileState.errors : undefined}
                 successUrl={
-                  compileState.status === "success" ? compileSuccessUrl ?? undefined : undefined
+                  compileState.status === 'success' ? (compileSuccessUrl ?? undefined) : undefined
                 }
                 origin={origin}
               />
-              {compileState.status === "success" &&
-                !compileTargetId && (
-                  <div className="space-y-3 rounded-lg border bg-card p-4 shadow-sm">
-                    <h3 className="text-sm font-semibold">Output UISpec</h3>
-                    <pre className="max-h-[400px] overflow-auto rounded-md bg-muted p-3 text-xs">
-                      {JSON.stringify(compileState.specs, null, 2)}
-                    </pre>
-                  </div>
-                )}
+              {compileState.status === 'success' && !compileTargetId && (
+                <div className="space-y-3 rounded-lg border bg-card p-4 shadow-sm">
+                  <h3 className="text-sm font-semibold">Output UISpec</h3>
+                  <pre className="max-h-[400px] overflow-auto rounded-md bg-muted p-3 text-xs">
+                    {JSON.stringify(compileState.specs, null, 2)}
+                  </pre>
+                </div>
+              )}
             </>
           ) : !effectiveSpecParam ? (
             <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-12 text-center">
@@ -838,9 +840,7 @@ function CompilerPageContent() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete spec</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this?
-            </AlertDialogDescription>
+            <AlertDialogDescription>Are you sure you want to delete this?</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleteLoading}>Cancel</AlertDialogCancel>
@@ -858,7 +858,7 @@ function CompilerPageContent() {
                   Deleting...
                 </>
               ) : (
-                "Delete"
+                'Delete'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -876,9 +876,7 @@ function CompilerPageContent() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetSession}>
-              Reset
-            </AlertDialogAction>
+            <AlertDialogAction onClick={handleResetSession}>Reset</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -887,9 +885,7 @@ function CompilerPageContent() {
         <DialogContent showCloseButton={false} className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Demo specs</DialogTitle>
-            <DialogDescription>
-              Download a spec file or compile directly.
-            </DialogDescription>
+            <DialogDescription>Download a spec file or compile directly.</DialogDescription>
           </DialogHeader>
           <ul className="space-y-2 py-2">
             {DEMO_SPECS.map((spec) => (

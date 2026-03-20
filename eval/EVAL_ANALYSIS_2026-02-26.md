@@ -10,14 +10,15 @@ Across 4 reports (2 LLM-only, 2 full pipeline), the model achieves **94–97% si
 
 ### 1. **Inconsistent Field Inclusion (Most Critical)**
 
-| Fixture | Issue | Schema Reality |
-|---------|-------|----------------|
-| demo_users_tasks_v2 | `description` sometimes in create/edit, sometimes not | **Not in schema** — model invents it |
-| demo_users_tasks_v2 | `profile.phone` sometimes in list, sometimes omitted | **In schema** — model omits it |
-| demo_users_tasks_v3 | `description`, `assignee` sometimes in detail | **Not in schema** — model invents them |
-| golden_openapi_products | `inventory.warehouseId` sometimes in list, sometimes omitted | **In schema** — model omits it |
+| Fixture                 | Issue                                                        | Schema Reality                         |
+| ----------------------- | ------------------------------------------------------------ | -------------------------------------- |
+| demo_users_tasks_v2     | `description` sometimes in create/edit, sometimes not        | **Not in schema** — model invents it   |
+| demo_users_tasks_v2     | `profile.phone` sometimes in list, sometimes omitted         | **In schema** — model omits it         |
+| demo_users_tasks_v3     | `description`, `assignee` sometimes in detail                | **Not in schema** — model invents them |
+| golden_openapi_products | `inventory.warehouseId` sometimes in list, sometimes omitted | **In schema** — model omits it         |
 
 **Root cause:** The model does not strictly follow schema boundaries. It sometimes:
+
 - **Adds** fields not in schema (description, assignee, createdAt)
 - **Omits** optional fields that are in schema (profile.phone, inventory.warehouseId)
 
@@ -59,6 +60,7 @@ Across 4 reports (2 LLM-only, 2 full pipeline), the model achieves **94–97% si
 ### C. Add Pre-Output Verification
 
 Add a short checklist the model must mentally run:
+
 - Every list/detail path exists in responseSchema
 - Every create/edit path exists in requestSchema
 - No path was invented (assignee, description when only assigneeId exists)
@@ -73,6 +75,7 @@ Add explicit: `sku` → `SKU` (acronym, uppercase).
 ## Recommended Prompt Edits
 
 See the updated `lib/compiler/uiplan/prompt.system.txt` with:
+
 - Stronger FIELD INCLUSION RULES
 - Corrected Tasks ordering (assigneeId, not assignee)
 - New PATH FIDELITY section

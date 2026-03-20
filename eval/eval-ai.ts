@@ -8,36 +8,25 @@
  * Requires OPENAI_API_KEY.
  */
 
-import {
-  readFileSync,
-  writeFileSync,
-  mkdirSync,
-  readdirSync,
-  existsSync,
-} from "fs";
-import { join } from "path";
-import { compileOpenAPIForEval } from "./utils/compile-openapi";
-import { validateSpecs } from "./utils/validator";
-import {
-  compareSpecsMulti,
-  diffCanonical,
-  canonicalString,
-  diffUnified,
-} from "./utils/comparator";
-import { computeMultiSpecDiff } from "@/lib/spec/diff";
-import { buildFullReport } from "./utils/report-schema";
+import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
+import { compileOpenAPIForEval } from './utils/compile-openapi';
+import { validateSpecs } from './utils/validator';
+import { compareSpecsMulti, diffCanonical, canonicalString, diffUnified } from './utils/comparator';
+import { computeMultiSpecDiff } from '@/lib/spec/diff';
+import { buildFullReport } from './utils/report-schema';
 
 const DEFAULT_RUNS = 5;
-const FIXTURES_DIR = join(process.cwd(), "tests/compiler/fixtures");
-const REPORTS_DIR = join(process.cwd(), "eval/reports");
-const FAILURES_DIR = join(process.cwd(), "eval/fixtures/failures");
+const FIXTURES_DIR = join(process.cwd(), 'tests/compiler/fixtures');
+const REPORTS_DIR = join(process.cwd(), 'eval/reports');
+const FAILURES_DIR = join(process.cwd(), 'eval/fixtures/failures');
 const SIMILARITY_THRESHOLD = 0.9;
 const VALIDITY_THRESHOLD = 0.9;
 
 function requireOpenAIKey(): void {
   if (!process.env.OPENAI_API_KEY?.trim()) {
     throw new Error(
-      "OPENAI_API_KEY is required for evals. Add it to .env.local to run LLM determinism evaluation."
+      'OPENAI_API_KEY is required for evals. Add it to .env.local to run LLM determinism evaluation.'
     );
   }
 }
@@ -57,7 +46,7 @@ function parseArgs(): Config {
   const args = process.argv.slice(2);
   const config: Config = {
     runs: DEFAULT_RUNS,
-    dir: "demo",
+    dir: 'demo',
     quick: false,
     json: false,
     outputDir: REPORTS_DIR,
@@ -67,27 +56,27 @@ function parseArgs(): Config {
 
   for (let i = 0; i < args.length; i++) {
     const arg = args[i];
-    if (arg === "--dir" && args[i + 1]) {
+    if (arg === '--dir' && args[i + 1]) {
       config.dir = args[++i];
-    } else if (arg === "--quick" || arg === "-q") {
+    } else if (arg === '--quick' || arg === '-q') {
       config.quick = true;
       config.runs = 2;
-    } else if (arg === "--runs" && args[i + 1]) {
+    } else if (arg === '--runs' && args[i + 1]) {
       config.runs = parseInt(args[i + 1], 10);
       i++;
-    } else if (arg === "--fixture" && args[i + 1]) {
+    } else if (arg === '--fixture' && args[i + 1]) {
       config.fixtureName = args[i + 1];
       i++;
-    } else if (arg === "--output-dir" && args[i + 1]) {
+    } else if (arg === '--output-dir' && args[i + 1]) {
       config.outputDir = args[i + 1];
       i++;
-    } else if (arg === "--replay-failures") {
+    } else if (arg === '--replay-failures') {
       config.replayFailures = true;
-    } else if (arg === "--json") {
+    } else if (arg === '--json') {
       config.json = true;
-    } else if (arg === "--parallel" || arg === "-p") {
+    } else if (arg === '--parallel' || arg === '-p') {
       config.parallel = true;
-    } else if (arg === "--help" || arg === "-h") {
+    } else if (arg === '--help' || arg === '-h') {
       console.log(`
 Full pipeline evaluation (OpenAPI → UISpec determinism)
 
@@ -122,13 +111,11 @@ interface FailureData {
 
 function getFixtures(config: Config): string[] {
   if (config.replayFailures && existsSync(FAILURES_DIR)) {
-    const files = readdirSync(FAILURES_DIR).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(FAILURES_DIR).filter((f) => f.endsWith('.json'));
     const fixturePaths = new Set<string>();
     for (const f of files) {
       try {
-        const data = JSON.parse(
-          readFileSync(join(FAILURES_DIR, f), "utf-8")
-        ) as FailureData;
+        const data = JSON.parse(readFileSync(join(FAILURES_DIR, f), 'utf-8')) as FailureData;
         if (data.openapiPath && existsSync(data.openapiPath)) {
           fixturePaths.add(data.openapiPath);
         } else if (data.fixtureName) {
@@ -159,13 +146,13 @@ function getFixtures(config: Config): string[] {
   }
 
   return readdirSync(dirPath)
-    .filter((f) => f.endsWith(".yaml") || f.endsWith(".yml"))
+    .filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'))
     .map((f) => join(dirPath, f));
 }
 
 interface RunResult {
   runNumber: number;
-  specs: Record<string, import("@/lib/spec/types").UISpec> | null;
+  specs: Record<string, import('@/lib/spec/types').UISpec> | null;
   valid: boolean;
   errors: string[];
 }
@@ -185,7 +172,7 @@ interface FixtureResult {
     similarity: number;
     structuralDifferences: string[];
   };
-  multiSpecDiff?: import("@/lib/spec/diff").MultiSpecDiff;
+  multiSpecDiff?: import('@/lib/spec/diff').MultiSpecDiff;
   unifiedDiff?: string;
 }
 
@@ -241,8 +228,12 @@ async function evaluateFixture(
   runs: number,
   parallel: boolean
 ): Promise<FixtureResult> {
-  const fixtureName = fixturePath.split("/").pop()?.replace(/\.(yaml|yml)$/, "") ?? "unknown";
-  const openapiString = readFileSync(fixturePath, "utf-8");
+  const fixtureName =
+    fixturePath
+      .split('/')
+      .pop()
+      ?.replace(/\.(yaml|yml)$/, '') ?? 'unknown';
+  const openapiString = readFileSync(fixturePath, 'utf-8');
 
   let runResults: RunResult[];
 
@@ -254,21 +245,16 @@ async function evaluateFixture(
       )
     );
     runResults.sort((a, b) => a.runNumber - b.runNumber);
-    const statuses = runResults.map((r) => (r.valid ? "✓" : `✗`));
-    console.log(statuses.join(" "));
+    const statuses = runResults.map((r) => (r.valid ? '✓' : `✗`));
+    console.log(statuses.join(' '));
   } else {
     runResults = [];
     for (let i = 0; i < runs; i++) {
       const runNumber = i + 1;
       process.stdout.write(`  Run ${runNumber}/${runs}... `);
-      const r = await runSingleEval(
-        fixtureName,
-        fixturePath,
-        openapiString,
-        runNumber
-      );
+      const r = await runSingleEval(fixtureName, fixturePath, openapiString, runNumber);
       runResults.push(r);
-      console.log(r.valid ? "✓" : `✗ ${r.errors[0] ?? "?"}`);
+      console.log(r.valid ? '✓' : `✗ ${r.errors[0] ?? '?'}`);
     }
   }
 
@@ -278,9 +264,9 @@ async function evaluateFixture(
   let minSimilarity = 1;
   const errors = [...new Set(runResults.flatMap((r) => r.errors))];
 
-  let worstPair: FixtureResult["worstPair"];
-  let multiSpecDiff: FixtureResult["multiSpecDiff"];
-  let unifiedDiff: FixtureResult["unifiedDiff"];
+  let worstPair: FixtureResult['worstPair'];
+  let multiSpecDiff: FixtureResult['multiSpecDiff'];
+  let unifiedDiff: FixtureResult['unifiedDiff'];
 
   if (validRuns.length >= 2) {
     let minAcrossPairs = 1;
@@ -289,7 +275,7 @@ async function evaluateFixture(
       for (let j = i + 1; j < validRuns.length; j++) {
         const comp = compareSpecsMulti(validRuns[i].specs!, validRuns[j].specs!);
         if (!comp.sameSlugs) {
-          errors.push(comp.slugMismatch ?? "Slug mismatch");
+          errors.push(comp.slugMismatch ?? 'Slug mismatch');
           minAcrossPairs = 0;
         } else {
           if (comp.minSimilarity < minAcrossPairs) {
@@ -316,16 +302,16 @@ async function evaluateFixture(
       const b = canonicalString(validRuns[j].specs!);
       unifiedDiff = diffUnified(a, b, `Run ${runA}`, `Run ${runB}`);
       if (minAcrossPairs < SIMILARITY_THRESHOLD) {
-        console.log(`\n  Diff (runs ${runA} vs ${runB}, similarity ${(comp.minSimilarity * 100).toFixed(1)}%):`);
+        console.log(
+          `\n  Diff (runs ${runA} vs ${runB}, similarity ${(comp.minSimilarity * 100).toFixed(1)}%):`
+        );
         console.log(diffCanonical(a, b));
       }
     }
   }
 
   const validityRate = validRuns.length / runs;
-  const passed =
-    validityRate >= VALIDITY_THRESHOLD &&
-    minSimilarity >= SIMILARITY_THRESHOLD;
+  const passed = validityRate >= VALIDITY_THRESHOLD && minSimilarity >= SIMILARITY_THRESHOLD;
 
   return {
     fixtureName,
@@ -351,7 +337,7 @@ function saveFailure(
   if (!existsSync(FAILURES_DIR)) {
     mkdirSync(FAILURES_DIR, { recursive: true });
   }
-  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  const ts = new Date().toISOString().replace(/[:.]/g, '-');
   const file = join(FAILURES_DIR, `${fixtureName}-run${runNumber}-${ts}.json`);
   const data: FailureData = {
     fixtureName,
@@ -369,23 +355,25 @@ async function main() {
 
   const fixtures = getFixtures(config);
   if (fixtures.length === 0) {
-    console.error("No fixtures found.");
+    console.error('No fixtures found.');
     process.exit(1);
   }
 
-  console.log("Full Pipeline Evaluation (OpenAPI → UISpec)");
-  console.log("=".repeat(50));
+  console.log('Full Pipeline Evaluation (OpenAPI → UISpec)');
+  console.log('='.repeat(50));
   console.log(`Dir: fixtures/${config.dir}`);
-  console.log(`Runs per fixture: ${config.runs}${config.quick ? " (quick)" : ""}${config.parallel ? " (parallel)" : ""}`);
+  console.log(
+    `Runs per fixture: ${config.runs}${config.quick ? ' (quick)' : ''}${config.parallel ? ' (parallel)' : ''}`
+  );
   console.log(`Fixtures: ${fixtures.length}`);
-  console.log("");
+  console.log('');
 
   const results: FixtureResult[] = [];
 
   if (config.parallel) {
     // Parallel runs per fixture only (not fixtures) — avoids rate limits
     for (const path of fixtures) {
-      const name = path.split("/").pop() ?? "?";
+      const name = path.split('/').pop() ?? '?';
       console.log(`\nFixture: ${name}`);
       const result = await evaluateFixture(path, config.runs, true);
       results.push(result);
@@ -395,7 +383,7 @@ async function main() {
     }
   } else {
     for (const path of fixtures) {
-      const name = path.split("/").pop() ?? "?";
+      const name = path.split('/').pop() ?? '?';
       console.log(`\nFixture: ${name}`);
       const result = await evaluateFixture(path, config.runs, false);
       results.push(result);
@@ -416,7 +404,7 @@ async function main() {
   const noValidRuns = totalValid === 0;
 
   if (noValidRuns) {
-    console.error("\nNo valid runs. Eval failed.");
+    console.error('\nNo valid runs. Eval failed.');
     if (config.json) {
       console.log(
         JSON.stringify({
@@ -430,16 +418,16 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("\n" + "=".repeat(50));
-  console.log("Summary");
-  console.log("=".repeat(50));
+  console.log('\n' + '='.repeat(50));
+  console.log('Summary');
+  console.log('='.repeat(50));
   console.log(`Validity: ${(validityRate * 100).toFixed(1)}%`);
   console.log(`Min similarity: ${(minSimAcross * 100).toFixed(1)}%`);
-  console.log(allPassed ? "\n✅ Passed" : "\n⚠️ Failed");
+  console.log(allPassed ? '\n✅ Passed' : '\n⚠️ Failed');
 
   if (config.outputDir) {
     mkdirSync(config.outputDir, { recursive: true });
-    const ts = new Date().toISOString().replace(/[:.]/g, "-");
+    const ts = new Date().toISOString().replace(/[:.]/g, '-');
     const jsonReport = buildFullReport(
       { runs: config.runs, parallel: config.parallel ?? false },
       results,
@@ -456,13 +444,13 @@ async function main() {
       `Full Pipeline Eval Report - ${new Date().toISOString()}`,
       `Validity: ${(validityRate * 100).toFixed(1)}%`,
       `Min similarity: ${(minSimAcross * 100).toFixed(1)}%`,
-      "",
+      '',
       ...results.map(
         (r) =>
           `${r.fixtureName}: valid ${r.validRuns}/${r.runs.length}, sim ${(r.minSimilarity * 100).toFixed(1)}%`
       ),
     ];
-    writeFileSync(txtPath, lines.join("\n"));
+    writeFileSync(txtPath, lines.join('\n'));
     console.log(`\nReports: ${jsonPath}, ${txtPath}`);
   }
 

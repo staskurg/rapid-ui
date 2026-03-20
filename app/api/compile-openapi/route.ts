@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { compileOpenAPI } from "@/lib/compiler/pipeline";
-import { putCompilation } from "@/lib/compiler/store";
+import { NextResponse } from 'next/server';
+import { compileOpenAPI } from '@/lib/compiler/pipeline';
+import { putCompilation } from '@/lib/compiler/store';
 
 export async function POST(request: Request) {
   let body: { openapi?: string; accountId?: string };
@@ -8,35 +8,38 @@ export async function POST(request: Request) {
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: "Invalid JSON body" }] },
+      { errors: [{ code: 'OAS_PARSE_ERROR', stage: 'Parse', message: 'Invalid JSON body' }] },
       { status: 400 }
     );
   }
 
   const openapi = body.openapi;
-  if (typeof openapi !== "string" || !openapi.trim()) {
+  if (typeof openapi !== 'string' || !openapi.trim()) {
     return NextResponse.json(
-      { errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: "Missing or empty openapi field" }] },
+      {
+        errors: [
+          { code: 'OAS_PARSE_ERROR', stage: 'Parse', message: 'Missing or empty openapi field' },
+        ],
+      },
       { status: 400 }
     );
   }
 
-  const accountId = typeof body.accountId === "string" ? body.accountId : undefined;
+  const accountId = typeof body.accountId === 'string' ? body.accountId : undefined;
   if (!accountId) {
     return NextResponse.json(
-      { errors: [{ code: "OAS_PARSE_ERROR", stage: "Parse", message: "Missing accountId" }] },
+      { errors: [{ code: 'OAS_PARSE_ERROR', stage: 'Parse', message: 'Missing accountId' }] },
       { status: 400 }
     );
   }
 
-  const result = await compileOpenAPI(openapi, { source: "api" });
+  const result = await compileOpenAPI(openapi, { source: 'api' });
 
   if (!result.success) {
     return NextResponse.json({ errors: result.errors }, { status: 422 });
   }
 
-  const name =
-    result.apiIr.api.title || result.resourceNames[0] || "Untitled";
+  const name = result.apiIr.api.title || result.resourceNames[0] || 'Untitled';
 
   await putCompilation(result.id, {
     specs: result.specs,
@@ -46,10 +49,10 @@ export async function POST(request: Request) {
     openapiCanonicalHash: result.openapiCanonicalHash,
     accountId,
     name,
-    status: "success",
+    status: 'success',
   });
 
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const base = process.env.NEXT_PUBLIC_APP_URL ?? '';
   const url = base ? `${base}/u/${result.id}` : `/u/${result.id}`;
 
   return NextResponse.json({

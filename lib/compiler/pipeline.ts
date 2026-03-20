@@ -3,21 +3,21 @@
  * Orchestrates parse → validate → canonicalize → apiir → llm → normalize → lower.
  */
 
-import { parseOpenAPI } from "./openapi/parser";
-import { validateSubset } from "./openapi/subset-validator";
-import { resolveRefs } from "./openapi/ref-resolver";
-import { canonicalize, canonicalStringify } from "./openapi/canonicalize";
-import { sha256Hash } from "./hash";
-import { buildApiIR } from "./apiir";
-import type { ApiIR } from "./apiir";
-import { llmPlan } from "./uiplan/llm-plan";
-import type { UiPlanIR } from "./uiplan/uiplan.schema";
-import { lower } from "./lowering";
-import type { UISpec } from "@/lib/spec/types";
-import type { CompilerError } from "./errors";
-import { slugify } from "@/lib/utils/slugify";
+import { parseOpenAPI } from './openapi/parser';
+import { validateSubset } from './openapi/subset-validator';
+import { resolveRefs } from './openapi/ref-resolver';
+import { canonicalize, canonicalStringify } from './openapi/canonicalize';
+import { sha256Hash } from './hash';
+import { buildApiIR } from './apiir';
+import type { ApiIR } from './apiir';
+import { llmPlan } from './uiplan/llm-plan';
+import type { UiPlanIR } from './uiplan/uiplan.schema';
+import { lower } from './lowering';
+import type { UISpec } from '@/lib/spec/types';
+import type { CompilerError } from './errors';
+import { slugify } from '@/lib/utils/slugify';
 
-export type CompileSource = "api" | "eval";
+export type CompileSource = 'api' | 'eval';
 
 export interface CompileOptions {
   source?: CompileSource;
@@ -56,7 +56,6 @@ export async function compileOpenAPI(
   openapiString: string,
   options?: CompileOptions
 ): Promise<CompileOutput> {
-
   const parseResult = parseOpenAPI(openapiString);
   if (!parseResult.success) {
     return { success: false, errors: [parseResult.error] };
@@ -82,7 +81,7 @@ export async function compileOpenAPI(
   }
 
   const llmResult = await llmPlan(buildResult.apiIr, {
-    source: options?.source ?? "api",
+    source: options?.source ?? 'api',
     llmPlanFn: options?.llmPlanFn,
   });
   if (!llmResult.success) {

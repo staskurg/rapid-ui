@@ -11,7 +11,9 @@ Use these examples to test the AI generation feature. Copy and paste them into t
 ## 🎯 Quick Test Examples
 
 ### Example 1: Simple Product Catalog
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -39,11 +41,13 @@ Use these examples to test the AI generation feature. Copy and paste them into t
 ```
 
 **Intent (Optional):**
+
 ```
 Hide id from table, make name and price searchable, show category in filters
 ```
 
 **Expected Result:**
+
 - Entity: "Product"
 - Table shows: name, price, inStock, category (no id)
 - Filters: name, price, category
@@ -52,7 +56,9 @@ Hide id from table, make name and price searchable, show category in filters
 ---
 
 ### Example 2: User Management with Roles
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -86,11 +92,13 @@ Hide id from table, make name and price searchable, show category in filters
 ```
 
 **Intent (Optional):**
+
 ```
 Make firstName, lastName, and email searchable. Hide createdAt from table but keep it in the form. Show role and active in filters.
 ```
 
 **Expected Result:**
+
 - Entity: "User"
 - Table shows: firstName, lastName, email, role, active (no createdAt, no id)
 - Filters: firstName, lastName, email, role, active
@@ -99,7 +107,9 @@ Make firstName, lastName, and email searchable. Hide createdAt from table but ke
 ---
 
 ### Example 3: Task Management System
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -136,11 +146,13 @@ Make firstName, lastName, and email searchable. Hide createdAt from table but ke
 ```
 
 **Intent (Optional):**
+
 ```
 Make title and assignee searchable. Show priority and status as filters. Hide taskId from table. Keep description in form but not in table.
 ```
 
 **Expected Result:**
+
 - Entity: "Task"
 - Table shows: title, priority, status, assignee, dueDate, estimatedHours
 - Filters: title, assignee, priority, status
@@ -149,7 +161,9 @@ Make title and assignee searchable. Show priority and status as filters. Hide ta
 ---
 
 ### Example 4: E-commerce Orders
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -183,11 +197,13 @@ Make title and assignee searchable. Show priority and status as filters. Hide ta
 ```
 
 **Intent (Optional):**
+
 ```
 Make customerName and product searchable. Show status in filters. Display orderId, customerName, product, quantity, price, and status in table.
 ```
 
 **Expected Result:**
+
 - Entity: "Order"
 - Table shows: orderId, customerName, product, quantity, price, status
 - Filters: customerName, product, status
@@ -196,7 +212,9 @@ Make customerName and product searchable. Show status in filters. Display orderI
 ---
 
 ### Example 5: Blog Posts
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -230,11 +248,13 @@ Make customerName and product searchable. Show status in filters. Display orderI
 ```
 
 **Intent (Optional):**
+
 ```
 Hide id from table. Make title and author searchable. Show category and published status in filters. Keep views visible in table.
 ```
 
 **Expected Result:**
+
 - Entity: "BlogPost" or "Post"
 - Table shows: title, author, category, published, views, publishedDate
 - Filters: title, author, category, published
@@ -243,7 +263,9 @@ Hide id from table. Make title and author searchable. Show category and publishe
 ---
 
 ### Example 6: Inventory Management
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -277,11 +299,13 @@ Hide id from table. Make title and author searchable. Show category and publishe
 ```
 
 **Intent (Optional):**
+
 ```
 Make productName and supplier searchable. Show warehouse in filters. Display all fields except reorderLevel in the table (keep reorderLevel in form only).
 ```
 
 **Expected Result:**
+
 - Entity: "Inventory" or "Product"
 - Table shows: sku, productName, warehouse, quantity, unitPrice, supplier
 - Filters: productName, supplier, warehouse
@@ -290,7 +314,9 @@ Make productName and supplier searchable. Show warehouse in filters. Display all
 ---
 
 ### Example 7: Simple Contact List (No Intent)
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -313,6 +339,7 @@ Make productName and supplier searchable. Show warehouse in filters. Display all
 **Intent:** (Leave empty - test AI's default behavior)
 
 **Expected Result:**
+
 - Entity: "Contact" or "Entity"
 - AI will infer reasonable defaults
 - All fields shown in table
@@ -321,7 +348,9 @@ Make productName and supplier searchable. Show warehouse in filters. Display all
 ---
 
 ### Example 8: Complex Nested Object (Test Flattening)
+
 **JSON Payload:**
+
 ```json
 [
   {
@@ -352,11 +381,13 @@ Make productName and supplier searchable. Show warehouse in filters. Display all
 ```
 
 **Intent (Optional):**
+
 ```
 Flatten nested objects. Make user.name and user.email searchable. Show status in filters.
 ```
 
 **Expected Result:**
+
 - Entity: "Order" or similar
 - Fields flattened: user.name, user.email, order.total, order.items, status
 - Table shows flattened fields
@@ -368,36 +399,42 @@ Flatten nested objects. Make user.name and user.email searchable. Show status in
 ## 🧪 Testing Scenarios
 
 ### Test 1: Basic Functionality
+
 1. Copy Example 1 (Product Catalog)
 2. Leave Intent empty
 3. Click "Generate with AI"
 4. Verify: Spec is generated, UI renders correctly
 
 ### Test 2: Intent Handling
+
 1. Copy Example 2 (User Management)
 2. Add the provided Intent
 3. Click "Generate with AI"
 4. Verify: id is hidden from table, filters include specified fields
 
 ### Test 3: Enum Detection
+
 1. Copy Example 3 (Task Management)
 2. Leave Intent empty
 3. Click "Generate with AI"
 4. Verify: priority and status are detected as enums with options
 
 ### Test 4: Complex Intent
+
 1. Copy Example 4 (E-commerce Orders)
 2. Add the provided Intent
 3. Click "Generate with AI"
 4. Verify: All intent requirements are met
 
 ### Test 5: Field Visibility
+
 1. Copy Example 5 (Blog Posts)
 2. Add the provided Intent
 3. Click "Generate with AI"
 4. Verify: id is hidden, specified fields are searchable/filterable
 
 ### Test 6: Fallback Test (Optional)
+
 1. Use invalid JSON or empty payload
 2. Click "Generate with AI"
 3. Verify: Fallback parser is used, error message is shown

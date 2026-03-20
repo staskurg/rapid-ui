@@ -6,14 +6,14 @@ import type { UISpec } from '@/lib/spec/types';
 
 // Mock the child components to focus on SchemaRenderer state logic
 vi.mock('@/components/renderer/DataTable', () => ({
-  DataTable: ({ 
-    data, 
-    onEdit, 
-    onDelete 
-  }: { 
-    data: Record<string, unknown>[]; 
-    onEdit: (record: Record<string, unknown>) => void; 
-    onDelete: (id: string | number) => void; 
+  DataTable: ({
+    data,
+    onEdit,
+    onDelete,
+  }: {
+    data: Record<string, unknown>[];
+    onEdit: (record: Record<string, unknown>) => void;
+    onDelete: (id: string | number) => void;
   }) => (
     <div data-testid="data-table">
       {data.map((record: Record<string, unknown>, index: number) => {
@@ -23,10 +23,7 @@ vi.mock('@/components/renderer/DataTable', () => ({
           <div key={index} data-testid={`record-${index}`}>
             <span data-testid={`record-id-${index}`}>{String(id ?? '')}</span>
             <span data-testid={`record-name-${index}`}>{String(name ?? '')}</span>
-            <button
-              data-testid={`edit-${index}`}
-              onClick={() => onEdit(record)}
-            >
+            <button data-testid={`edit-${index}`} onClick={() => onEdit(record)}>
               Edit
             </button>
             <button
@@ -47,24 +44,21 @@ vi.mock('@/components/renderer/DataTable', () => ({
 }));
 
 vi.mock('@/components/renderer/FormModal', () => ({
-  FormModal: ({ 
-    isOpen, 
-    onSubmit, 
-    initialValues, 
-    mode 
-  }: { 
-    isOpen: boolean; 
-    onSubmit: (record: Record<string, unknown>) => void; 
-    initialValues?: Record<string, unknown>; 
-    mode: 'create' | 'edit'; 
+  FormModal: ({
+    isOpen,
+    onSubmit,
+    initialValues,
+    mode,
+  }: {
+    isOpen: boolean;
+    onSubmit: (record: Record<string, unknown>) => void;
+    initialValues?: Record<string, unknown>;
+    mode: 'create' | 'edit';
   }) => {
     if (!isOpen) return null;
     return (
       <div data-testid="form-modal" data-mode={mode}>
-        <input
-          data-testid="form-name-input"
-          defaultValue={String(initialValues?.name ?? '')}
-        />
+        <input data-testid="form-name-input" defaultValue={String(initialValues?.name ?? '')} />
         <button
           data-testid="form-submit"
           onClick={() => {
@@ -82,15 +76,17 @@ vi.mock('@/components/renderer/FormModal', () => ({
 }));
 
 vi.mock('@/components/renderer/FiltersPanel', () => ({
-  FiltersPanel: ({ 
-    onFilterChange 
-  }: { 
-    onFilterChange: (filters: Record<string, unknown>) => void; 
+  FiltersPanel: ({
+    onFilterChange,
+  }: {
+    onFilterChange: (filters: Record<string, unknown>) => void;
   }) => (
     <div data-testid="filters-panel">
       <input
         data-testid="filter-input"
-        onChange={(e: React.ChangeEvent<HTMLInputElement>) => onFilterChange({ name: e.target.value })}
+        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+          onFilterChange({ name: e.target.value })
+        }
         placeholder="Filter by name"
       />
     </div>
@@ -213,9 +209,7 @@ describe('SchemaRenderer State Management', () => {
 
     it('should preserve other fields when updating', async () => {
       const user = userEvent.setup();
-      const dataWithMoreFields = [
-        { id: 1, name: 'Alice', email: 'alice@example.com' },
-      ];
+      const dataWithMoreFields = [{ id: 1, name: 'Alice', email: 'alice@example.com' }];
       const specWithEmail: UISpec = {
         ...mockSpec,
         fields: [
@@ -229,9 +223,7 @@ describe('SchemaRenderer State Management', () => {
         ],
       };
 
-      render(
-        <SchemaRenderer spec={specWithEmail} initialData={dataWithMoreFields} />
-      );
+      render(<SchemaRenderer spec={specWithEmail} initialData={dataWithMoreFields} />);
 
       // Edit record
       const editButton = screen.getByTestId('edit-0');
@@ -248,9 +240,7 @@ describe('SchemaRenderer State Management', () => {
 
       // Email should still be present (mocked component doesn't show it, but state should preserve it)
       await waitFor(() => {
-        expect(screen.getByTestId('record-name-0').textContent).toBe(
-          'Alice Updated'
-        );
+        expect(screen.getByTestId('record-name-0').textContent).toBe('Alice Updated');
       });
     });
   });

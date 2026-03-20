@@ -4,7 +4,7 @@
  * stripUndefined only strips undefined; does not strip false or 0.
  */
 
-import type { UiPlanIR, ResourcePlan, ViewPlan, FieldPlan } from "./uiplan.schema";
+import type { UiPlanIR, ResourcePlan, ViewPlan, FieldPlan } from './uiplan.schema';
 
 /**
  * Normalize UiPlanIR into a byte-stable, deterministic form.
@@ -27,12 +27,10 @@ function normalizeResource(resource: ResourcePlan): ResourcePlan {
   };
 }
 
-const VIEW_ORDER = ["list", "detail", "create", "edit"] as const;
+const VIEW_ORDER = ['list', 'detail', 'create', 'edit'] as const;
 type ViewKey = (typeof VIEW_ORDER)[number];
 
-function normalizeViews(
-  views: ResourcePlan["views"]
-): ResourcePlan["views"] {
+function normalizeViews(views: ResourcePlan['views']): ResourcePlan['views'] {
   const normalized: Partial<Record<ViewKey, ViewPlan>> = {};
 
   for (const key of VIEW_ORDER) {

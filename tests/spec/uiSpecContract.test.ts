@@ -32,11 +32,11 @@ describe('UISpec Contract Validation', () => {
     it('should validate simple object fixture', () => {
       const spec = loadFixture('simple-object.json');
       const validated = UISpecSchema.parse(spec);
-      
+
       expect(validated).toBeDefined();
       expect(validated.entity).toBe('Product');
       expect(validated.fields.length).toBeGreaterThan(0);
-      
+
       // Table columns reference existing fields
       const fieldNames = new Set(validated.fields.map((f) => f.name));
       validated.table.columns.forEach((col) => {
@@ -57,7 +57,7 @@ describe('UISpec Contract Validation', () => {
     it('should validate enum structure fixture', () => {
       const spec = loadFixture('enum-structure.json');
       const validated = UISpecSchema.parse(spec);
-      
+
       expect(validated).toBeDefined();
 
       // Verify enum field has options
@@ -71,7 +71,7 @@ describe('UISpec Contract Validation', () => {
     it('should validate edge case fixture', () => {
       const spec = loadFixture('edge-case.json');
       const validated = UISpecSchema.parse(spec);
-      
+
       expect(validated).toBeDefined();
 
       // Verify boolean field
@@ -89,11 +89,7 @@ describe('UISpec Contract Validation', () => {
 
   describe('Renderer Safety Constraints', () => {
     it('should ensure all fixtures pass Zod validation', () => {
-      const fixtures = [
-        'simple-object.json',
-        'enum-structure.json',
-        'edge-case.json',
-      ];
+      const fixtures = ['simple-object.json', 'enum-structure.json', 'edge-case.json'];
 
       fixtures.forEach((fixture) => {
         const spec = loadFixture(fixture);

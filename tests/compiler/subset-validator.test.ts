@@ -1,18 +1,18 @@
-import { describe, it, expect } from "vitest";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { parseOpenAPI } from "@/lib/compiler/openapi/parser";
-import { validateSubset } from "@/lib/compiler/openapi/subset-validator";
+import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
+import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const FIXTURES = join(__dirname, "fixtures");
+const FIXTURES = join(__dirname, 'fixtures');
 
-describe("subset validator", () => {
-  it("golden_openapi_users_tagged_3_0.yaml passes validation", () => {
+describe('subset validator', () => {
+  it('golden_openapi_users_tagged_3_0.yaml passes validation', () => {
     const yaml = readFileSync(
-      join(FIXTURES, "demo", "golden_openapi_users_tagged_3_0.yaml"),
-      "utf-8"
+      join(FIXTURES, 'demo', 'golden_openapi_users_tagged_3_0.yaml'),
+      'utf-8'
     );
     const parseResult = parseOpenAPI(yaml);
     expect(parseResult.success).toBe(true);
@@ -22,10 +22,10 @@ describe("subset validator", () => {
     expect(validateResult.success).toBe(true);
   });
 
-  it("golden_openapi_products_path_3_1.yaml passes validation", () => {
+  it('golden_openapi_products_path_3_1.yaml passes validation', () => {
     const yaml = readFileSync(
-      join(FIXTURES, "demo", "golden_openapi_products_path_3_1.yaml"),
-      "utf-8"
+      join(FIXTURES, 'demo', 'golden_openapi_products_path_3_1.yaml'),
+      'utf-8'
     );
     const parseResult = parseOpenAPI(yaml);
     expect(parseResult.success).toBe(true);
@@ -35,22 +35,22 @@ describe("subset validator", () => {
     expect(validateResult.success).toBe(true);
   });
 
-  it("accepts example, default, pattern, maxLength (v1.1: annotation-only)", () => {
+  it('accepts example, default, pattern, maxLength (v1.1: annotation-only)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: {
-                        id: { type: "string", example: "x" },
-                        name: { type: "string", default: "unknown", maxLength: 100 },
-                        code: { type: "string", pattern: "^[A-Z]+$" },
+                        id: { type: 'string', example: 'x' },
+                        name: { type: 'string', default: 'unknown', maxLength: 100 },
+                        code: { type: 'string', pattern: '^[A-Z]+$' },
                       },
                     },
                   },
@@ -65,20 +65,20 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts additionalProperties: true (v2: map type)", () => {
+  it('accepts additionalProperties: true (v2: map type)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       additionalProperties: true,
-                      properties: { id: { type: "string" } },
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -92,19 +92,19 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts additionalProperties with schema (v2: map<string,schema>)", () => {
+  it('accepts additionalProperties with schema (v2: map<string,schema>)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/metadata": {
+        '/metadata': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      additionalProperties: { type: "string" },
+                      type: 'object',
+                      additionalProperties: { type: 'string' },
                     },
                   },
                 },
@@ -118,20 +118,20 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects required referencing non-existent property", () => {
+  it('rejects required referencing non-existent property', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      required: ["id", "missing"],
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      required: ['id', 'missing'],
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -144,22 +144,22 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_SCHEMA_SHAPE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("non-existent"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_SCHEMA_SHAPE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('non-existent'))).toBe(true);
   });
 
-  it("does not crash on schema with properties: null", () => {
+  it('does not crash on schema with properties: null', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
+                      type: 'object',
                       properties: null,
                     },
                   },
@@ -173,43 +173,43 @@ describe("subset validator", () => {
     expect(() => validateSubset(doc)).not.toThrow();
   });
 
-  it("rejects empty paths", () => {
-    const doc = { openapi: "3.0.0", paths: {} } as Record<string, unknown>;
+  it('rejects empty paths', () => {
+    const doc = { openapi: '3.0.0', paths: {} } as Record<string, unknown>;
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("paths must not be empty"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_OPERATION_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('paths must not be empty'))).toBe(true);
   });
 
-  it("rejects path with no supported methods", () => {
+  it('rejects path with no supported methods', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/webhooks": { options: { summary: "CORS" } },
+        '/webhooks': { options: { summary: 'CORS' } },
       },
     } as Record<string, unknown>;
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("at least one supported"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_OPERATION_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('at least one supported'))).toBe(true);
   });
 
-  it("accepts path-level parameters merged with op params (v1.2)", () => {
+  it('accepts path-level parameters merged with op params (v1.2)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
-          parameters: [{ name: "filter", in: "query", schema: { type: "string" } }],
+        '/items': {
+          parameters: [{ name: 'filter', in: 'query', schema: { type: 'string' } }],
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -223,20 +223,20 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts path-level path param merged with op (v1.2)", () => {
+  it('accepts path-level path param merged with op (v1.2)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items/{id}": {
-          parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+        '/items/{id}': {
+          parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -250,30 +250,30 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts requestBody content with multiple types when application/json present (v2)", () => {
+  it('accepts requestBody content with multiple types when application/json present (v2)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           post: {
             requestBody: {
               content: {
-                "application/json": {
+                'application/json': {
                   schema: {
-                    type: "object",
-                    properties: { name: { type: "string" } },
+                    type: 'object',
+                    properties: { name: { type: 'string' } },
                   },
                 },
-                "application/xml": { schema: { type: "object" } },
+                'application/xml': { schema: { type: 'object' } },
               },
             },
             responses: {
-              "201": {
+              '201': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -287,22 +287,22 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts response content with multiple types when application/json present (v1.2)", () => {
+  it('accepts response content with multiple types when application/json present (v1.2)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
-                  "text/plain": { schema: { type: "string" } },
+                  'text/plain': { schema: { type: 'string' } },
                 },
               },
             },
@@ -314,16 +314,16 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects response content without application/json", () => {
+  it('rejects response content without application/json', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "text/plain": { schema: { type: "string" } },
+                  'text/plain': { schema: { type: 'string' } },
                 },
               },
             },
@@ -334,28 +334,28 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_RESPONSE_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("JSON schema"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_RESPONSE_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('JSON schema'))).toBe(true);
   });
 
-  it("rejects POST with requestBody content but missing schema", () => {
+  it('rejects POST with requestBody content but missing schema', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           post: {
             requestBody: {
               content: {
-                "application/json": {},
+                'application/json': {},
               },
             },
             responses: {
-              "201": {
+              '201': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -368,33 +368,33 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("must have schema"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_OPERATION_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('must have schema'))).toBe(true);
   });
 
-  it("rejects GET with requestBody", () => {
+  it('rejects GET with requestBody', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             requestBody: {
               content: {
-                "application/json": {
+                'application/json': {
                   schema: {
-                    type: "object",
-                    properties: { id: { type: "string" } },
+                    type: 'object',
+                    properties: { id: { type: 'string' } },
                   },
                 },
               },
             },
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -407,43 +407,43 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("must not have requestBody"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_OPERATION_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('must not have requestBody'))).toBe(true);
   });
 
-  it("accepts multiple success responses (200 and 201) — v1.1: pick first deterministically", () => {
+  it('accepts multiple success responses (200 and 201) — v1.1: pick first deterministically', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           post: {
             requestBody: {
               content: {
-                "application/json": {
+                'application/json': {
                   schema: {
-                    type: "object",
-                    properties: { name: { type: "string" } },
+                    type: 'object',
+                    properties: { name: { type: 'string' } },
                   },
                 },
               },
             },
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
               },
-              "201": {
+              '201': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -457,14 +457,14 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects operation with missing success response", () => {
+  it('rejects operation with missing success response', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "404": { description: "Not found" },
+              '404': { description: 'Not found' },
             },
           },
         },
@@ -473,34 +473,36 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_OPERATION_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("success response with JSON schema"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_OPERATION_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('success response with JSON schema'))).toBe(
+      true
+    );
   });
 
-  it("rejects path param with non-primitive schema", () => {
+  it('rejects path param with non-primitive schema', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items/{id}": {
+        '/items/{id}': {
           get: {
             parameters: [
               {
-                name: "id",
-                in: "path",
+                name: 'id',
+                in: 'path',
                 required: true,
                 schema: {
-                  type: "object",
-                  properties: { value: { type: "string" } },
+                  type: 'object',
+                  properties: { value: { type: 'string' } },
                 },
               },
             ],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -513,35 +515,32 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_PARAMETER")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("string or integer"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_PARAMETER')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('string or integer'))).toBe(true);
   });
 
-  it("rejects query param with oneOf", () => {
+  it('rejects query param with oneOf', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             parameters: [
               {
-                name: "filter",
-                in: "query",
+                name: 'filter',
+                in: 'query',
                 schema: {
-                  oneOf: [
-                    { type: "string" },
-                    { type: "integer" },
-                  ],
+                  oneOf: [{ type: 'string' }, { type: 'integer' }],
                 },
               },
             ],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -554,21 +553,21 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_UNSUPPORTED_SCHEMA_KEYWORD")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("polymorphic schemas"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_UNSUPPORTED_SCHEMA_KEYWORD')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('polymorphic schemas'))).toBe(true);
   });
 
-  it("rejects root success schema with primitive type (string)", () => {
+  it('rejects root success schema with primitive type (string)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
-                    schema: { type: "string" },
+                  'application/json': {
+                    schema: { type: 'string' },
                   },
                 },
               },
@@ -580,21 +579,21 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_RESPONSE_STRUCTURE")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("object or array"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_RESPONSE_STRUCTURE')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('object or array'))).toBe(true);
   });
 
-  it("accepts type: object without properties (v2: empty/opaque object)", () => {
+  it('accepts type: object without properties (v2: empty/opaque object)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/config": {
+        '/config': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
-                    schema: { type: "object" },
+                  'application/json': {
+                    schema: { type: 'object' },
                   },
                 },
               },
@@ -607,21 +606,21 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts $ref with annotation keys: nullable, readOnly, title, deprecated (v2)", () => {
+  it('accepts $ref with annotation keys: nullable, readOnly, title, deprecated (v2)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/users/{id}": {
+        '/users/{id}': {
           get: {
-            parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
+            parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      $ref: "#/components/schemas/User",
+                      $ref: '#/components/schemas/User',
                       nullable: true,
-                      description: "User or null",
+                      description: 'User or null',
                     },
                   },
                 },
@@ -633,8 +632,8 @@ describe("subset validator", () => {
       components: {
         schemas: {
           User: {
-            type: "object",
-            properties: { id: { type: "string" }, name: { type: "string" } },
+            type: 'object',
+            properties: { id: { type: 'string' }, name: { type: 'string' } },
           },
         },
       },
@@ -643,19 +642,19 @@ describe("subset validator", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects $ref with structural keys (properties, type, items)", () => {
+  it('rejects $ref with structural keys (properties, type, items)', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      $ref: "#/components/schemas/Item",
-                      type: "object",
+                      $ref: '#/components/schemas/Item',
+                      type: 'object',
                     },
                   },
                 },
@@ -667,8 +666,8 @@ describe("subset validator", () => {
       components: {
         schemas: {
           Item: {
-            type: "object",
-            properties: { id: { type: "string" } },
+            type: 'object',
+            properties: { id: { type: 'string' } },
           },
         },
       },
@@ -676,29 +675,29 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.message.includes("structural key"))).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('structural key'))).toBe(true);
   });
 
-  it("rejects query param with $ref to object schema", () => {
+  it('rejects query param with $ref to object schema', () => {
     const doc = {
-      openapi: "3.0.0",
+      openapi: '3.0.0',
       paths: {
-        "/items": {
+        '/items': {
           get: {
             parameters: [
               {
-                name: "filter",
-                in: "query",
-                schema: { $ref: "#/components/schemas/FilterObject" },
+                name: 'filter',
+                in: 'query',
+                schema: { $ref: '#/components/schemas/FilterObject' },
               },
             ],
             responses: {
-              "200": {
+              '200': {
                 content: {
-                  "application/json": {
+                  'application/json': {
                     schema: {
-                      type: "object",
-                      properties: { id: { type: "string" } },
+                      type: 'object',
+                      properties: { id: { type: 'string' } },
                     },
                   },
                 },
@@ -710,8 +709,8 @@ describe("subset validator", () => {
       components: {
         schemas: {
           FilterObject: {
-            type: "object",
-            properties: { field: { type: "string" } },
+            type: 'object',
+            properties: { field: { type: 'string' } },
           },
         },
       },
@@ -719,7 +718,7 @@ describe("subset validator", () => {
     const result = validateSubset(doc);
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.errors.some((e) => e.code === "OAS_INVALID_PARAMETER")).toBe(true);
-    expect(result.errors.some((e) => e.message.includes("primitive"))).toBe(true);
+    expect(result.errors.some((e) => e.code === 'OAS_INVALID_PARAMETER')).toBe(true);
+    expect(result.errors.some((e) => e.message.includes('primitive'))).toBe(true);
   });
 });

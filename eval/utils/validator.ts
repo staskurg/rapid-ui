@@ -3,8 +3,8 @@
  * Validates structural validity and logical integrity.
  */
 
-import { UISpecSchema } from "@/lib/spec/schema";
-import type { UISpec } from "@/lib/spec/types";
+import { UISpecSchema } from '@/lib/spec/schema';
+import type { UISpec } from '@/lib/spec/types';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -50,17 +50,17 @@ export function checkLogicalIntegrity(spec: UISpec): LogicalIntegrityResult {
 
   // Check table columns
   if (spec.table.columns.length === 0) {
-    issues.push("Table has no columns");
+    issues.push('Table has no columns');
   }
 
   // Check form fields
   if (spec.form.fields.length === 0) {
-    issues.push("Form has no fields");
+    issues.push('Form has no fields');
   }
 
   // Check enum fields have options
   spec.fields.forEach((field) => {
-    if (field.type === "enum") {
+    if (field.type === 'enum') {
       if (!field.options || field.options.length === 0) {
         issues.push(`Enum field '${field.name}' has no options`);
       }
@@ -69,7 +69,7 @@ export function checkLogicalIntegrity(spec: UISpec): LogicalIntegrityResult {
 
   // Check entity name
   if (!spec.entity || spec.entity.trim().length === 0) {
-    issues.push("Entity name is empty");
+    issues.push('Entity name is empty');
   }
 
   return {
@@ -121,9 +121,7 @@ export interface PerSpecValidationResult {
  * Validate multiple UISpecs (Record<slug, UISpec>).
  * All specs must pass for overall validity.
  */
-export function validateSpecs(
-  specs: Record<string, UISpec>
-): {
+export function validateSpecs(specs: Record<string, UISpec>): {
   isValid: boolean;
   errors: string[];
   perSpec: Record<string, PerSpecValidationResult>;
@@ -140,7 +138,7 @@ export function validateSpecs(
       errors: result.errors,
     };
     if (!result.isValid) {
-      errors.push(`[${slug}]: ${result.errors.join("; ")}`);
+      errors.push(`[${slug}]: ${result.errors.join('; ')}`);
     }
   }
 

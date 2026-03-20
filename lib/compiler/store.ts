@@ -10,4 +10,4 @@ export {
   deleteCompilation,
   type CompilationEntry,
   type CompilationListItem,
-} from "@/lib/db/compilations";
+} from '@/lib/db/compilations';

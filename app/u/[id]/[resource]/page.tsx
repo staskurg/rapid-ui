@@ -1,9 +1,9 @@
-import Link from "next/link";
-import { redirect } from "next/navigation";
-import { slugify } from "@/lib/utils/slugify";
-import { getCompilation } from "@/lib/compiler/store";
-import { logCompilationPageLoad } from "@/lib/ai/metrics";
-import { CompiledUIContent } from "@/components/compiler/CompiledUIContent";
+import Link from 'next/link';
+import { redirect } from 'next/navigation';
+import { slugify } from '@/lib/utils/slugify';
+import { getCompilation } from '@/lib/compiler/store';
+import { logCompilationPageLoad } from '@/lib/ai/metrics';
+import { CompiledUIContent } from '@/components/compiler/CompiledUIContent';
 
 export default async function GeneratedUIPage({
   params,
@@ -12,7 +12,7 @@ export default async function GeneratedUIPage({
 }) {
   const { id, resource } = await params;
   if (!id?.trim()) {
-    redirect("/");
+    redirect('/');
   }
   const entry = await getCompilation(id);
 
@@ -20,9 +20,7 @@ export default async function GeneratedUIPage({
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="max-w-md rounded-lg border bg-card p-6 text-center shadow-sm">
-          <h1 className="text-lg font-semibold text-destructive">
-            UI no longer available
-          </h1>
+          <h1 className="text-lg font-semibold text-destructive">UI no longer available</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             This UI is no longer available. Re-upload the OpenAPI spec to regenerate.
           </p>
@@ -38,16 +36,13 @@ export default async function GeneratedUIPage({
   }
 
   const currentSpec = entry.specs[resource];
-  const displayName =
-    entry.resourceNames.find((n) => slugify(n) === resource) ?? resource;
+  const displayName = entry.resourceNames.find((n) => slugify(n) === resource) ?? resource;
 
   if (!currentSpec) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="max-w-md rounded-lg border bg-card p-6 text-center shadow-sm">
-          <h1 className="text-lg font-semibold text-destructive">
-            Resource not found
-          </h1>
+          <h1 className="text-lg font-semibold text-destructive">Resource not found</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             The resource &quot;{resource}&quot; does not exist in this compilation.
           </p>

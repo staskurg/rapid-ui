@@ -10,9 +10,9 @@
  * Requires: GITHUB_TOKEN in .env.local
  */
 
-import { QUERIES } from "./corpus-github-queries";
+import { QUERIES } from './corpus-github-queries';
 
-const GITHUB_API = "https://api.github.com";
+const GITHUB_API = 'https://api.github.com';
 const THROTTLE_MS = 7000; // 9 req/min → ~7s between requests
 
 async function searchCode(
@@ -22,15 +22,15 @@ async function searchCode(
   perPage = 1
 ): Promise<{ total_count: number; incomplete_results: boolean }> {
   const url = new URL(`${GITHUB_API}/search/code`);
-  url.searchParams.set("q", q);
-  url.searchParams.set("page", String(page));
-  url.searchParams.set("per_page", String(perPage));
+  url.searchParams.set('q', q);
+  url.searchParams.set('page', String(page));
+  url.searchParams.set('per_page', String(perPage));
 
   const res = await fetch(url.toString(), {
     headers: {
-      Accept: "application/vnd.github+json",
+      Accept: 'application/vnd.github+json',
       Authorization: `Bearer ${token}`,
-      "X-GitHub-Api-Version": "2022-11-28",
+      'X-GitHub-Api-Version': '2022-11-28',
     },
   });
 
@@ -46,14 +46,20 @@ async function searchCode(
 async function main() {
   const token = process.env.GITHUB_TOKEN;
   if (!token) {
-    console.error("GITHUB_TOKEN is required. Set it in .env.local");
+    console.error('GITHUB_TOKEN is required. Set it in .env.local');
     process.exit(1);
   }
 
-  console.log("GitHub Code Search — result counts per query\n");
+  console.log('GitHub Code Search — result counts per query\n');
   console.log(`Rate limit: 9 req/min. Throttling ${THROTTLE_MS / 1000}s between requests.\n`);
 
-  const results: { group: string; name: string; count: number; incomplete: boolean; error?: string }[] = [];
+  const results: {
+    group: string;
+    name: string;
+    count: number;
+    incomplete: boolean;
+    error?: string;
+  }[] = [];
 
   for (let i = 0; i < QUERIES.length; i++) {
     const { group, name, q } = QUERIES[i];
@@ -62,7 +68,9 @@ async function main() {
     try {
       const data = await searchCode(token, q, 1, 1);
       results.push({ group, name, count: data.total_count, incomplete: data.incomplete_results });
-      console.log(`${progress} ${group}/${name}: ${data.total_count}${data.incomplete_results ? " (incomplete)" : ""}`);
+      console.log(
+        `${progress} ${group}/${name}: ${data.total_count}${data.incomplete_results ? ' (incomplete)' : ''}`
+      );
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       results.push({ group, name, count: -1, incomplete: false, error: msg });
@@ -75,7 +83,7 @@ async function main() {
   }
 
   // Summary by group
-  console.log("\n--- Summary by group ---");
+  console.log('\n--- Summary by group ---');
   const byGroup = new Map<string, number>();
   const hitLimit = results.filter((r) => r.count >= 1000 || r.incomplete);
   for (const r of results) {
@@ -89,7 +97,7 @@ async function main() {
   if (hitLimit.length > 0) {
     console.log(`\n--- Queries at 1000 limit (${hitLimit.length}) ---`);
     for (const r of hitLimit) {
-      console.log(`  ${r.group}/${r.name}: ${r.count}${r.incomplete ? " (incomplete)" : ""}`);
+      console.log(`  ${r.group}/${r.name}: ${r.count}${r.incomplete ? ' (incomplete)' : ''}`);
     }
   }
 }

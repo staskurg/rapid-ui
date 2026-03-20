@@ -76,7 +76,7 @@ Add `POSTGRES_URL` or `DATABASE_URL` to `.env.local`. Neon provides a connection
 
 The app uses a client-generated account ID (stored in localStorage). If you see this in API responses, ensure you’re loading the app in a browser (not headless).
 
-### Compilation fails with OAS_* errors
+### Compilation fails with OAS\_\* errors
 
 Your OpenAPI spec uses unsupported features. Check the error message and [supported subset](./openapi-compiler.md). Common issues: `oneOf`/`anyOf`/`allOf`, multiple path params, missing request body on POST.
 

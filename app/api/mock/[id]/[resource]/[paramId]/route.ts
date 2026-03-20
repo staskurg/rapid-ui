@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getCompilation } from "@/lib/compiler/store";
-import * as mockStore from "@/lib/compiler/mock/store";
-import type { JsonSchema } from "@/lib/compiler/apiir/types";
-import type { UISpec } from "@/lib/spec/types";
+import { NextRequest, NextResponse } from 'next/server';
+import { getCompilation } from '@/lib/compiler/store';
+import * as mockStore from '@/lib/compiler/mock/store';
+import type { JsonSchema } from '@/lib/compiler/apiir/types';
+import type { UISpec } from '@/lib/spec/types';
 
 async function getResourceContext(
   id: string,
@@ -17,19 +17,19 @@ async function getResourceContext(
   | { error: string; status: number }
 > {
   const entry = await getCompilation(id);
-  if (!entry) return { error: "Compilation not found", status: 404 };
+  if (!entry) return { error: 'Compilation not found', status: 404 };
 
   const accountId = entry.accountId;
-  if (!accountId) return { error: "Compilation has no account", status: 400 };
+  if (!accountId) return { error: 'Compilation has no account', status: 400 };
 
   const spec = entry.specs[resource];
-  if (!spec) return { error: "Resource not found", status: 404 };
+  if (!spec) return { error: 'Resource not found', status: 404 };
 
   const resourceIr = entry.apiIr.resources.find((r) => r.key === resource);
-  if (!resourceIr) return { error: "Resource not found", status: 404 };
+  if (!resourceIr) return { error: 'Resource not found', status: 404 };
 
-  const listOp = resourceIr.operations.find((o) => o.kind === "list");
-  const listSchema = listOp?.responseSchema ?? { type: "array", items: { type: "object" } };
+  const listOp = resourceIr.operations.find((o) => o.kind === 'list');
+  const listSchema = listOp?.responseSchema ?? { type: 'array', items: { type: 'object' } };
 
   return {
     accountId,
@@ -46,7 +46,7 @@ export async function GET(
   const { id, resource, paramId } = await params;
 
   const ctx = await getResourceContext(id, resource);
-  if ("error" in ctx) {
+  if ('error' in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }
 
@@ -59,7 +59,7 @@ export async function GET(
     ctx.openapiCanonicalHash,
     paramId
   );
-  if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!record) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(record);
 }
 
@@ -70,7 +70,7 @@ export async function PATCH(
   const { id, resource, paramId } = await params;
 
   const ctx = await getResourceContext(id, resource);
-  if ("error" in ctx) {
+  if ('error' in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }
 
@@ -78,7 +78,7 @@ export async function PATCH(
   try {
     input = await request.json();
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
   const record = mockStore.updateRecord(
@@ -91,7 +91,7 @@ export async function PATCH(
     paramId,
     input
   );
-  if (!record) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!record) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return NextResponse.json(record);
 }
 
@@ -102,7 +102,7 @@ export async function DELETE(
   const { id, resource, paramId } = await params;
 
   const ctx = await getResourceContext(id, resource);
-  if ("error" in ctx) {
+  if ('error' in ctx) {
     return NextResponse.json({ error: ctx.error }, { status: ctx.status });
   }
 
@@ -115,6 +115,6 @@ export async function DELETE(
     ctx.openapiCanonicalHash,
     paramId
   );
-  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!ok) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   return new NextResponse(null, { status: 204 });
 }

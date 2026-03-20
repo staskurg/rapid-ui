@@ -30,9 +30,9 @@ This is normal for **strict contract languages**.
 | System                | Natural compatibility |
 | --------------------- | --------------------- |
 | GraphQL strict schema | ~5–10%                |
-| JSON API strict spec | ~10%                  |
-| gRPC strict proto    | small                 |
-| RapidUI RUS-v1       | ~5%                   |
+| JSON API strict spec  | ~10%                  |
+| gRPC strict proto     | small                 |
+| RapidUI RUS-v1        | ~5%                   |
 
 RapidUI sits in **typical infrastructure territory**.
 
@@ -74,11 +74,11 @@ Examples: GitLab internal endpoints, small SaaS backends, developer tools APIs. 
 
 ## 4. APIs That Will Fail Hard
 
-| Type              | Examples                    | Why they fail                                      |
-| ----------------- | --------------------------- | -------------------------------------------------- |
-| Large enterprise  | Microsoft Graph, Google, AWS | heavy polymorphism, allOf, external refs, complex filters |
-| Commerce          | Shopify, Magento, BigCommerce | complex nested schemas, allOf, deep object graphs  |
-| Generated         | Java framework OpenAPI      | example fields, nullable unions, multiple responses |
+| Type             | Examples                      | Why they fail                                             |
+| ---------------- | ----------------------------- | --------------------------------------------------------- |
+| Large enterprise | Microsoft Graph, Google, AWS  | heavy polymorphism, allOf, external refs, complex filters |
+| Commerce         | Shopify, Magento, BigCommerce | complex nested schemas, allOf, deep object graphs         |
+| Generated        | Java framework OpenAPI        | example fields, nullable unions, multiple responses       |
 
 These APIs are **SDK-driven**, not CRUD-driven.
 
@@ -172,7 +172,7 @@ Support for **3.0 + 3.1** is correct.
 
 ## 11. Key Insight: Most APIs Are Close
 
-> Most APIs are *close* to RUS-v1 but fail due to small issues.
+> Most APIs are _close_ to RUS-v1 but fail due to small issues.
 
 Example failure reasons: example keyword, multiple success responses, external $ref.
 
@@ -196,10 +196,10 @@ RapidUI ecosystem potential ≈ 35–45%
 
 Corpus results will push toward one of two strategies:
 
-| Strategy | Description | Pass rate | Tradeoff |
-| -------- | ----------- | --------- | -------- |
-| **A — Strict language** | RUS-v1 as-is | ~5% | Perfect determinism, limited compatibility |
-| **B — Compatibility layer** | Add allOf, external refs, multiple responses, example | 25–40% | Higher compatibility, harder determinism |
+| Strategy                    | Description                                           | Pass rate | Tradeoff                                   |
+| --------------------------- | ----------------------------------------------------- | --------- | ------------------------------------------ |
+| **A — Strict language**     | RUS-v1 as-is                                          | ~5%       | Perfect determinism, limited compatibility |
+| **B — Compatibility layer** | Add allOf, external refs, multiple responses, example | 25–40%    | Higher compatibility, harder determinism   |
 
 **What successful infrastructure does:** Start with Strategy A, then gradually add Strategy B features (GraphQL, Terraform, Kubernetes, Stripe follow this path).
 
@@ -266,19 +266,20 @@ Valid specs from the corpus run are extracted and copied to `tests/compiler/fixt
 
 **Rejection distribution (actual vs predicted):**
 
-| Category | Predicted | Actual (varies by batch) |
-| -------- | --------- | ------------------------ |
-| oneOf/anyOf/allOf | 28–35% | 5–19% (lower than predicted) |
-| multiple success responses | 18–25% | 1–34% (batch-dependent) |
-| example/default | 10–15% | &lt;3% |
-| operation structure | — | 8–30% (major factor) |
-| schema shape / hygiene | — | 6–28% (major factor) |
-| multiple path params | — | 5–32% (major factor) |
-| other unsupported schema | — | 1–26% |
+| Category                   | Predicted | Actual (varies by batch)     |
+| -------------------------- | --------- | ---------------------------- |
+| oneOf/anyOf/allOf          | 28–35%    | 5–19% (lower than predicted) |
+| multiple success responses | 18–25%    | 1–34% (batch-dependent)      |
+| example/default            | 10–15%    | &lt;3%                       |
+| operation structure        | —         | 8–30% (major factor)         |
+| schema shape / hygiene     | —         | 6–28% (major factor)         |
+| multiple path params       | —         | 5–32% (major factor)         |
+| other unsupported schema   | —         | 1–26%                        |
 
 **Language analysis (passing specs):** Resource shape, CRUD coverage, grouping strategy, spec complexity — see per-batch reports in `scripts/corpus-data/reports/formatted_reports_v1.2/`.
 
 **Top RUS-v2 expansion candidates (aggregate):**
+
 1. multiple success responses
 2. operation structure
 3. other unsupported schema keyword / schema shape
@@ -293,10 +294,10 @@ Valid specs from the corpus run are extracted and copied to `tests/compiler/fixt
 
 ### Pass rates
 
-| Corpus   | Valid | Total | Pass rate | Near-pass | Natural Fit Score |
-| -------- | ----- | ----- | --------- | --------- | ----------------- |
-| API-Guru | 144   | 1970  | 7.3%      | 449 (22.8%) | 8.0%            |
-| GitHub   | 406   | 6768  | 6.0%      | 701 (10.4%) | 7.4%            |
+| Corpus   | Valid | Total | Pass rate | Near-pass   | Natural Fit Score |
+| -------- | ----- | ----- | --------- | ----------- | ----------------- |
+| API-Guru | 144   | 1970  | 7.3%      | 449 (22.8%) | 8.0%              |
+| GitHub   | 406   | 6768  | 6.0%      | 701 (10.4%) | 7.4%              |
 
 **Within predicted 4–7%** for both corpora. GitHub has lower near-pass % due to larger, noisier spec set.
 
@@ -304,37 +305,37 @@ Valid specs from the corpus run are extracted and copied to `tests/compiler/fixt
 
 **API-Guru:**
 
-| Category                    | % of rejections |
-| --------------------------- | --------------- |
-| operation structure         | 27.3%           |
-| parameter invalid           | 18.7%           |
-| oneOf / anyOf / allOf       | 18.5%           |
-| multiple path params       | 15.2%           |
-| response content type       | 8.2%            |
-| other unsupported schema    | 4.4%            |
-| missing request body        | 2.8%            |
-| schema shape / hygiene      | 1.3%            |
-| other                       | 1.2%            |
-| root schema primitive       | 1.0%            |
-| example keyword             | 0.6%            |
-| response schema empty       | 0.6%            |
+| Category                 | % of rejections |
+| ------------------------ | --------------- |
+| operation structure      | 27.3%           |
+| parameter invalid        | 18.7%           |
+| oneOf / anyOf / allOf    | 18.5%           |
+| multiple path params     | 15.2%           |
+| response content type    | 8.2%            |
+| other unsupported schema | 4.4%            |
+| missing request body     | 2.8%            |
+| schema shape / hygiene   | 1.3%            |
+| other                    | 1.2%            |
+| root schema primitive    | 1.0%            |
+| example keyword          | 0.6%            |
+| response schema empty    | 0.6%            |
 
 **GitHub:**
 
-| Category                    | % of rejections |
-| --------------------------- | --------------- |
-| response content type      | 23.8%           |
-| operation structure        | 22.8%           |
-| oneOf / anyOf / allOf      | 14.9%           |
-| missing request body       | 8.8%            |
-| multiple path params       | 8.1%            |
-| root schema primitive      | 4.5%            |
-| parameter invalid           | 4.1%            |
-| other unsupported schema   | 3.5%            |
-| other                       | 2.9%            |
-| schema shape / hygiene     | 2.8%            |
-| response schema empty      | 2.1%            |
-| example keyword            | 1.6%            |
+| Category                 | % of rejections |
+| ------------------------ | --------------- |
+| response content type    | 23.8%           |
+| operation structure      | 22.8%           |
+| oneOf / anyOf / allOf    | 14.9%           |
+| missing request body     | 8.8%            |
+| multiple path params     | 8.1%            |
+| root schema primitive    | 4.5%            |
+| parameter invalid        | 4.1%            |
+| other unsupported schema | 3.5%            |
+| other                    | 2.9%            |
+| schema shape / hygiene   | 2.8%            |
+| response schema empty    | 2.1%            |
+| example keyword          | 1.6%            |
 
 **Prediction vs actual:** Operation structure and response content type dominate more than predicted. oneOf/anyOf/allOf is lower than the 28–35% prediction (now 15–19%). example/default is minimal (&lt;2%). multiple success responses is folded into operation structure in current categorization.
 
@@ -346,13 +347,13 @@ Valid specs from the corpus run are extracted and copied to `tests/compiler/fixt
 
 ### Language analysis (passing specs)
 
-| Metric                    | API-Guru | GitHub |
-| ------------------------- | -------- | ------ |
-| Resources per spec (median) | 1       | 2      |
-| Fields per resource (median) | 4       | 3      |
-| CRUD list                | 65%      | 52%    |
-| CRUD create              | 26%      | 69%    |
-| Grouping tag-based       | 86%      | 63%    |
+| Metric                       | API-Guru | GitHub |
+| ---------------------------- | -------- | ------ |
+| Resources per spec (median)  | 1        | 2      |
+| Fields per resource (median) | 4        | 3      |
+| CRUD list                    | 65%      | 52%    |
+| CRUD create                  | 26%      | 69%    |
+| Grouping tag-based           | 86%      | 63%    |
 
 ### OpenAPI version
 

@@ -15,6 +15,7 @@ RapidUI is a **deterministic compiler**, not an AI UI builder. The LLM is a cons
 3. **View** — Click **View UI** to open the generated CRUD interface at `/u/[id]/[resource]`
 
 The generated UI includes:
+
 - Data table with all list fields
 - Create / Edit / Delete operations
 - Filters and search
@@ -51,22 +52,26 @@ The generated UI includes:
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone git@github.com-personal:staskurg/rapid-ui.git
 cd rapid-ui
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 4. Add to `.env.local`:
+
 ```
 OPENAI_API_KEY=your_api_key_here
 POSTGRES_URL=postgresql://user:pass@host/db
@@ -74,6 +79,7 @@ POSTGRES_URL=postgresql://user:pass@host/db
 ```
 
 5. Run migrations:
+
 ```bash
 npm run db:migrate
 ```
@@ -138,10 +144,10 @@ rapid-ui/
 
 ## Environment Variables
 
-| Variable | Required | Description |
-| -------- | -------- | ----------- |
-| `OPENAI_API_KEY` | Yes | OpenAI API key for LLM planning phase |
-| `POSTGRES_URL` or `DATABASE_URL` | Yes | Postgres connection string for compilations |
+| Variable                         | Required | Description                                 |
+| -------------------------------- | -------- | ------------------------------------------- |
+| `OPENAI_API_KEY`                 | Yes      | OpenAI API key for LLM planning phase       |
+| `POSTGRES_URL` or `DATABASE_URL` | Yes      | Postgres connection string for compilations |
 
 ## Corpus & Subset Validation
 

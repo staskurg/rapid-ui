@@ -5,23 +5,23 @@
  * Runs llmPlan N times, compares via UiPlanIR fingerprint similarity.
  */
 
-import { readFileSync, readdirSync, existsSync } from "fs";
-import { join } from "path";
-import { llmPlan } from "@/lib/compiler/uiplan/llm-plan";
-import { normalizeUiPlanIR } from "@/lib/compiler/uiplan/normalize";
-import type { ApiIR } from "@/lib/compiler/apiir";
+import { readFileSync, readdirSync, existsSync } from 'fs';
+import { join } from 'path';
+import { llmPlan } from '@/lib/compiler/uiplan/llm-plan';
+import { normalizeUiPlanIR } from '@/lib/compiler/uiplan/normalize';
+import type { ApiIR } from '@/lib/compiler/apiir';
 import {
   extractUiPlanIRFingerprint,
   compareUiPlanIRFingerprints,
   canonicalUiPlanIR,
   diffUnified,
-} from "./comparator";
+} from './comparator';
 
 const SIMILARITY_THRESHOLD = 0.9;
 
 export interface LlmOnlyRunResult {
   runNumber: number;
-  uiPlan: import("@/lib/compiler/uiplan/uiplan.schema").UiPlanIR | null;
+  uiPlan: import('@/lib/compiler/uiplan/uiplan.schema').UiPlanIR | null;
   fingerprint: ReturnType<typeof extractUiPlanIRFingerprint> | null;
   error?: string;
 }
@@ -56,16 +56,13 @@ export interface LlmOnlyFixtureResult {
  * Load ApiIR from JSON file.
  */
 export function loadApiIRFromFile(path: string): ApiIR {
-  const content = readFileSync(path, "utf-8");
+  const content = readFileSync(path, 'utf-8');
   return JSON.parse(content) as ApiIR;
 }
 
-async function runSingleLlmPlan(
-  apiIr: ApiIR,
-  runNumber: number
-): Promise<LlmOnlyRunResult> {
+async function runSingleLlmPlan(apiIr: ApiIR, runNumber: number): Promise<LlmOnlyRunResult> {
   try {
-    const llmResult = await llmPlan(apiIr, { source: "eval" });
+    const llmResult = await llmPlan(apiIr, { source: 'eval' });
 
     if (!llmResult.success) {
       return {
@@ -105,9 +102,7 @@ export async function runLlmOnlyEval(
 ): Promise<LlmOnlyRunResult[]> {
   if (parallel) {
     const results = await Promise.all(
-      Array.from({ length: runs }, (_, i) =>
-        runSingleLlmPlan(apiIr, i + 1)
-      )
+      Array.from({ length: runs }, (_, i) => runSingleLlmPlan(apiIr, i + 1))
     );
     return results.sort((a, b) => a.runNumber - b.runNumber);
   }
@@ -128,7 +123,7 @@ export async function evaluateLlmOnlyFixture(
   runs: number,
   parallel = false
 ): Promise<LlmOnlyFixtureResult> {
-  const fixtureName = apiIrPath.split("/").pop()?.replace(".json", "") ?? "unknown";
+  const fixtureName = apiIrPath.split('/').pop()?.replace('.json', '') ?? 'unknown';
   const apiIr = loadApiIRFromFile(apiIrPath);
 
   const runResults = await runLlmOnlyEval(apiIr, runs, parallel);
@@ -178,15 +173,19 @@ export async function evaluateLlmOnlyFixture(
         if (minSimilarity < 1 && validRuns[worst.i].uiPlan && validRuns[worst.j].uiPlan) {
           const canonA = canonicalUiPlanIR(validRuns[worst.i].uiPlan!);
           const canonB = canonicalUiPlanIR(validRuns[worst.j].uiPlan!);
-          unifiedDiff = diffUnified(canonA, canonB, `Run ${worstPair.runA}`, `Run ${worstPair.runB}`);
+          unifiedDiff = diffUnified(
+            canonA,
+            canonB,
+            `Run ${worstPair.runA}`,
+            `Run ${worstPair.runB}`
+          );
         }
       }
     }
   }
 
   const passed =
-    validRuns.length / runs >= SIMILARITY_THRESHOLD &&
-    minSimilarity >= SIMILARITY_THRESHOLD;
+    validRuns.length / runs >= SIMILARITY_THRESHOLD && minSimilarity >= SIMILARITY_THRESHOLD;
 
   return {
     fixtureName,
@@ -219,7 +218,7 @@ export function getApiIRFixtures(apiIrDir: string): string[] {
       const full = join(dir, entry.name);
       if (entry.isDirectory()) {
         walk(full);
-      } else if (entry.name.endsWith(".json")) {
+      } else if (entry.name.endsWith('.json')) {
         results.push(full);
       }
     }

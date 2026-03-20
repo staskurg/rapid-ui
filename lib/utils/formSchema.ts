@@ -8,8 +8,8 @@
  * @see docs/form-modal-nested-schema.md
  */
 
-import { z } from "zod";
-import type { UISpec, Field } from "@/lib/spec/types";
+import { z } from 'zod';
+import type { UISpec, Field } from '@/lib/spec/types';
 
 /**
  * Build a nested Zod schema from UISpec form fields.
@@ -20,9 +20,7 @@ import type { UISpec, Field } from "@/lib/spec/types";
  * // spec.form.fields = ["email", "profile.firstName", "profile.lastName"]
  * // Produces: z.object({ email: z.string(), profile: z.object({ firstName: z.string(), lastName: z.string() }) })
  */
-export function buildNestedSchema(
-  spec: UISpec
-): z.ZodObject<Record<string, z.ZodTypeAny>> {
+export function buildNestedSchema(spec: UISpec): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const rawShape: Record<string, unknown> = {};
 
   for (const fieldName of spec.form.fields) {
@@ -31,12 +29,12 @@ export function buildNestedSchema(
 
     const fieldSchema = buildFieldSchema(field);
 
-    if (fieldName.includes(".")) {
-      const parts = fieldName.split(".");
+    if (fieldName.includes('.')) {
+      const parts = fieldName.split('.');
       const leafKey = parts.pop()!;
       let current: Record<string, unknown> = rawShape;
       for (const part of parts) {
-        if (!(part in current) || typeof current[part] !== "object") {
+        if (!(part in current) || typeof current[part] !== 'object') {
           current[part] = {};
         }
         current = current[part] as Record<string, unknown>;
@@ -53,13 +51,13 @@ export function buildNestedSchema(
 function buildFieldSchema(field: Field): z.ZodTypeAny {
   let schema: z.ZodTypeAny;
   switch (field.type) {
-    case "string":
+    case 'string':
       schema = z.string();
       break;
-    case "number":
+    case 'number':
       schema = z.number();
       break;
-    case "boolean":
+    case 'boolean':
       if (field.required) {
         schema = z.boolean();
       } else {
@@ -69,31 +67,24 @@ function buildFieldSchema(field: Field): z.ZodTypeAny {
         );
       }
       break;
-    case "enum":
+    case 'enum':
       schema = z.enum((field.options || []) as [string, ...string[]]);
       break;
     default:
       schema = z.string();
   }
-  if (!field.required && field.type !== "boolean") {
+  if (!field.required && field.type !== 'boolean') {
     schema = schema.optional();
   }
   return schema;
 }
 
-function toZodObject(
-  obj: Record<string, unknown>
-): z.ZodObject<Record<string, z.ZodTypeAny>> {
+function toZodObject(obj: Record<string, unknown>): z.ZodObject<Record<string, z.ZodTypeAny>> {
   const shape: Record<string, z.ZodTypeAny> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v instanceof z.ZodType) {
       shape[k] = v;
-    } else if (
-      typeof v === "object" &&
-      v !== null &&
-      !Array.isArray(v) &&
-      !(v instanceof Date)
-    ) {
+    } else if (typeof v === 'object' && v !== null && !Array.isArray(v) && !(v instanceof Date)) {
       shape[k] = toZodObject(v as Record<string, unknown>);
     }
   }
@@ -112,13 +103,13 @@ export function getErrorByPath(
   path: string
 ): { message?: string } | undefined {
   if (!errors) return undefined;
-  const parts = path.split(".");
+  const parts = path.split('.');
   let current: unknown = errors;
   for (const part of parts) {
-    if (current == null || typeof current !== "object") return undefined;
+    if (current == null || typeof current !== 'object') return undefined;
     current = (current as Record<string, unknown>)[part];
   }
-  if (current && typeof current === "object" && "message" in current) {
+  if (current && typeof current === 'object' && 'message' in current) {
     return current as { message?: string };
   }
   return undefined;
@@ -131,16 +122,12 @@ export function getErrorByPath(
  * @example
  * setNested({}, "profile.newsletter", false) // { profile: { newsletter: false } }
  */
-export function setNested(
-  obj: Record<string, unknown>,
-  path: string,
-  value: unknown
-): void {
-  const parts = path.split(".");
+export function setNested(obj: Record<string, unknown>, path: string, value: unknown): void {
+  const parts = path.split('.');
   const leafKey = parts.pop()!;
   let current: Record<string, unknown> = obj;
   for (const part of parts) {
-    if (!(part in current) || typeof current[part] !== "object") {
+    if (!(part in current) || typeof current[part] !== 'object') {
       current[part] = {};
     }
     current = current[part] as Record<string, unknown>;
@@ -156,22 +143,15 @@ export function buildNestedDefaults(spec: UISpec): Record<string, unknown> {
   const defaults: Record<string, unknown> = {};
   for (const fieldName of spec.form.fields) {
     const field = spec.fields.find((f) => f.name === fieldName);
-    if (field && field.type === "boolean" && !field.required) {
+    if (field && field.type === 'boolean' && !field.required) {
       setNested(defaults, fieldName, false);
     }
   }
   return defaults;
 }
 
-function isPlainObject(
-  v: unknown
-): v is Record<string, unknown> {
-  return (
-    v !== null &&
-    typeof v === "object" &&
-    !Array.isArray(v) &&
-    !(v instanceof Date)
-  );
+function isPlainObject(v: unknown): v is Record<string, unknown> {
+  return v !== null && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date);
 }
 
 /**

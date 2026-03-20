@@ -1,23 +1,25 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import Link from "next/link";
-import { CheckCircle2, XCircle, Loader2, AlertCircle, Zap } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { CompilerError } from "@/lib/compiler/errors";
+import * as React from 'react';
+import Link from 'next/link';
+import { CheckCircle2, XCircle, Loader2, AlertCircle, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import type { CompilerError } from '@/lib/compiler/errors';
 
-const HTTP_METHODS = ["get", "post", "put", "patch", "delete"];
+const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete'];
 
 /** Decode JSON Pointer for display: ~1 → /, ~0 → ~, collapse double slashes */
 function decodeJsonPointer(ptr: string): string {
-  return ptr.replace(/~1/g, "/").replace(/~0/g, "~").replace(/\/+/g, "/");
+  return ptr.replace(/~1/g, '/').replace(/~0/g, '~').replace(/\/+/g, '/');
 }
 
 /** Parse jsonPointer into method + path for display (aligned with ApiIR: method, path as separate fields) */
-function parseLocationForDisplay(ptr: string): { method?: string; path?: string; subPath?: string } | null {
+function parseLocationForDisplay(
+  ptr: string
+): { method?: string; path?: string; subPath?: string } | null {
   const decoded = decodeJsonPointer(ptr);
-  if (!decoded.startsWith("/paths/")) return null;
-  const segments = decoded.slice(7).split("/").filter(Boolean); // after "/paths/"
+  if (!decoded.startsWith('/paths/')) return null;
+  const segments = decoded.slice(7).split('/').filter(Boolean); // after "/paths/"
   if (segments.length === 0) return null;
 
   const methodIdx = segments.findIndex((s) => HTTP_METHODS.includes(s.toLowerCase()));
@@ -25,17 +27,18 @@ function parseLocationForDisplay(ptr: string): { method?: string; path?: string;
   if (methodIdx >= 0) {
     const method = segments[methodIdx].toUpperCase();
     const pathSegments = segments.slice(0, methodIdx);
-    const path = pathSegments.length > 0 ? "/" + pathSegments.join("/") : undefined;
-    const subPath = segments.length > methodIdx + 1 ? segments.slice(methodIdx + 1).join("/") : undefined;
+    const path = pathSegments.length > 0 ? '/' + pathSegments.join('/') : undefined;
+    const subPath =
+      segments.length > methodIdx + 1 ? segments.slice(methodIdx + 1).join('/') : undefined;
     return { method, path, subPath };
   }
 
   // Path-level only (e.g. OAS_MULTIPLE_PATH_PARAMS)
-  const path = "/" + segments.join("/");
+  const path = '/' + segments.join('/');
   return { path };
 }
 
-export type StepStatus = "pending" | "running" | "success" | "error";
+export type StepStatus = 'pending' | 'running' | 'success' | 'error';
 
 export interface Step {
   id: string;
@@ -63,16 +66,14 @@ export interface ProgressPanelProps {
 
 function StepIcon({ status }: { status: StepStatus }) {
   switch (status) {
-    case "success":
+    case 'success':
       return <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-500" />;
-    case "error":
+    case 'error':
       return <XCircle className="h-4 w-4 text-destructive" />;
-    case "running":
+    case 'running':
       return <Loader2 className="h-4 w-4 animate-spin text-primary" />;
     default:
-      return (
-        <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />
-      );
+      return <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30" />;
   }
 }
 
@@ -85,17 +86,10 @@ export function ProgressPanel({
   className,
 }: ProgressPanelProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-6 rounded-lg border bg-card p-4 shadow-sm",
-        className
-      )}
-    >
+    <div className={cn('flex flex-col gap-6 rounded-lg border bg-card p-4 shadow-sm', className)}>
       <div>
         <h3 className="text-sm font-semibold">Compilation Progress</h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Validation steps and errors
-        </p>
+        <p className="mt-1 text-xs text-muted-foreground">Validation steps and errors</p>
       </div>
 
       <div className="space-y-2">
@@ -103,17 +97,17 @@ export function ProgressPanel({
           <div
             key={step.id}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2",
-              step.status === "error" && "bg-destructive/5"
+              'flex items-center gap-3 rounded-md px-3 py-2',
+              step.status === 'error' && 'bg-destructive/5'
             )}
           >
             <StepIcon status={step.status} />
             <span
               className={cn(
-                "text-sm",
-                step.status === "pending" && "text-muted-foreground",
-                step.status === "success" && "text-foreground",
-                step.status === "error" && "text-destructive font-medium"
+                'text-sm',
+                step.status === 'pending' && 'text-muted-foreground',
+                step.status === 'success' && 'text-foreground',
+                step.status === 'error' && 'text-destructive font-medium'
               )}
             >
               {step.label}
@@ -137,32 +131,37 @@ export function ProgressPanel({
                 <div className="font-mono text-[11px] font-semibold uppercase tracking-wide text-destructive/90">
                   {err.code}
                 </div>
-                <div className="mt-1.5 wrap-break-word text-muted-foreground">
-                  {err.message}
-                </div>
-                {err.jsonPointer && (() => {
-                  const loc = parseLocationForDisplay(err.jsonPointer);
-                  if (loc && (loc.method || loc.path)) {
+                <div className="mt-1.5 wrap-break-word text-muted-foreground">{err.message}</div>
+                {err.jsonPointer &&
+                  (() => {
+                    const loc = parseLocationForDisplay(err.jsonPointer);
+                    if (loc && (loc.method || loc.path)) {
+                      return (
+                        <div
+                          className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground/80"
+                          title={decodeJsonPointer(err.jsonPointer)}
+                        >
+                          {loc.method && (
+                            <span className="rounded bg-muted px-1.5 py-0.5 font-semibold uppercase">
+                              {loc.method}
+                            </span>
+                          )}
+                          {loc.path && <span className="break-all">{loc.path}</span>}
+                          {loc.subPath && (
+                            <span className="text-muted-foreground/60">→ {loc.subPath}</span>
+                          )}
+                        </div>
+                      );
+                    }
                     return (
-                      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2 gap-y-1 font-mono text-[11px] text-muted-foreground/80" title={decodeJsonPointer(err.jsonPointer)}>
-                        {loc.method && (
-                          <span className="rounded bg-muted px-1.5 py-0.5 font-semibold uppercase">
-                            {loc.method}
-                          </span>
-                        )}
-                        {loc.path && <span className="break-all">{loc.path}</span>}
-                        {loc.subPath && (
-                          <span className="text-muted-foreground/60">→ {loc.subPath}</span>
-                        )}
+                      <div
+                        className="mt-1.5 break-all font-mono text-[11px] text-muted-foreground/80"
+                        title={decodeJsonPointer(err.jsonPointer)}
+                      >
+                        {decodeJsonPointer(err.jsonPointer)}
                       </div>
                     );
-                  }
-                  return (
-                    <div className="mt-1.5 break-all font-mono text-[11px] text-muted-foreground/80" title={decodeJsonPointer(err.jsonPointer)}>
-                      {decodeJsonPointer(err.jsonPointer)}
-                    </div>
-                  );
-                })()}
+                  })()}
               </li>
             ))}
           </ul>
@@ -171,19 +170,19 @@ export function ProgressPanel({
 
       {successUrl && (
         <div className="space-y-2">
-          <h4 className="text-sm font-medium text-green-700 dark:text-green-500">
-            Generated UI
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            Open in a new tab to view.
-          </p>
+          <h4 className="text-sm font-medium text-green-700 dark:text-green-500">Generated UI</h4>
+          <p className="text-xs text-muted-foreground">Open in a new tab to view.</p>
           <Link
             href={successUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="block break-all text-sm text-green-700 dark:text-green-500 underline-offset-4 hover:underline"
           >
-            {successUrl.startsWith("http") ? successUrl : origin ? `${origin}${successUrl}` : successUrl}
+            {successUrl.startsWith('http')
+              ? successUrl
+              : origin
+                ? `${origin}${successUrl}`
+                : successUrl}
           </Link>
         </div>
       )}

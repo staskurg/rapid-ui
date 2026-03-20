@@ -7,9 +7,9 @@
  * Usage: npm run extract:archetypes [-- --limit N] [--repo github|api-guru] [--output-dir PATH] [--write-json] [--write-report] [--verbose] [--show-archetype NAME]
  */
 
-import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from "fs";
-import { join } from "path";
-import type { ApiIR } from "@/lib/compiler/apiir";
+import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join } from 'path';
+import type { ApiIR } from '@/lib/compiler/apiir';
 import {
   extractResourceMetrics,
   aggregateSpecMetrics,
@@ -19,14 +19,14 @@ import {
   ARCHETYPE_ORDER,
   type ResourceArchetypeMetrics,
   type SpecArchetypeMetrics,
-} from "./corpus-data/archetype-extractor";
+} from './corpus-data/archetype-extractor';
 
-const FIXTURES_APIIR = join(process.cwd(), "tests/compiler/fixtures/apiir");
-const DEFAULT_OUTPUT_DIR = join(process.cwd(), "scripts/corpus-data");
+const FIXTURES_APIIR = join(process.cwd(), 'tests/compiler/fixtures/apiir');
+const DEFAULT_OUTPUT_DIR = join(process.cwd(), 'scripts/corpus-data');
 
 interface LoadedSpec {
   specId: string;
-  corpus: "github" | "api-guru";
+  corpus: 'github' | 'api-guru';
   apiIr: ApiIR;
 }
 
@@ -42,7 +42,7 @@ type Candidate = Readonly<{
 
 function parseArgs(): {
   limit: number | null;
-  repo: "github" | "api-guru" | null;
+  repo: 'github' | 'api-guru' | null;
   outputDir: string;
   writeJson: boolean;
   writeReport: boolean;
@@ -51,7 +51,7 @@ function parseArgs(): {
 } {
   const args = process.argv.slice(2);
   let limit: number | null = null;
-  let repo: "github" | "api-guru" | null = null;
+  let repo: 'github' | 'api-guru' | null = null;
   let outputDir = DEFAULT_OUTPUT_DIR;
   let writeJson = true;
   let writeReport = true;
@@ -59,33 +59,33 @@ function parseArgs(): {
   let showArchetype: string | null = null;
 
   for (let i = 0; i < args.length; i++) {
-    if (args[i] === "--limit" && args[i + 1]) {
+    if (args[i] === '--limit' && args[i + 1]) {
       limit = parseInt(args[++i]!, 10);
-    } else if (args[i] === "--repo" && args[i + 1]) {
+    } else if (args[i] === '--repo' && args[i + 1]) {
       const r = args[++i]!;
-      if (r === "github" || r === "api-guru") repo = r;
-    } else if (args[i] === "--output-dir" && args[i + 1]) {
+      if (r === 'github' || r === 'api-guru') repo = r;
+    } else if (args[i] === '--output-dir' && args[i + 1]) {
       outputDir = args[++i]!;
-    } else if (args[i] === "--write-json" && args[i + 1] === "false") {
+    } else if (args[i] === '--write-json' && args[i + 1] === 'false') {
       writeJson = false;
       i++;
-    } else if (args[i] === "--write-report" && args[i + 1] === "false") {
+    } else if (args[i] === '--write-report' && args[i + 1] === 'false') {
       writeReport = false;
       i++;
-    } else if (args[i] === "--verbose") {
+    } else if (args[i] === '--verbose') {
       verbose = true;
-    } else if (args[i] === "--show-archetype" && args[i + 1]) {
+    } else if (args[i] === '--show-archetype' && args[i + 1]) {
       showArchetype = args[++i]!;
     }
   }
   return { limit, repo, outputDir, writeJson, writeReport, verbose, showArchetype };
 }
 
-function loadSpecs(limit: number | null, repo: "github" | "api-guru" | null): LoadedSpec[] {
-  const corpora: Array<{ corpus: "github" | "api-guru"; dir: string }> = [];
+function loadSpecs(limit: number | null, repo: 'github' | 'api-guru' | null): LoadedSpec[] {
+  const corpora: Array<{ corpus: 'github' | 'api-guru'; dir: string }> = [];
   if (repo === null) {
-    corpora.push({ corpus: "github", dir: join(FIXTURES_APIIR, "valid-specs-github") });
-    corpora.push({ corpus: "api-guru", dir: join(FIXTURES_APIIR, "valid-specs-api-guru") });
+    corpora.push({ corpus: 'github', dir: join(FIXTURES_APIIR, 'valid-specs-github') });
+    corpora.push({ corpus: 'api-guru', dir: join(FIXTURES_APIIR, 'valid-specs-api-guru') });
   } else {
     corpora.push({ corpus: repo, dir: join(FIXTURES_APIIR, `valid-specs-${repo}`) });
   }
@@ -94,13 +94,13 @@ function loadSpecs(limit: number | null, repo: "github" | "api-guru" | null): Lo
   for (const { corpus, dir } of corpora) {
     if (!existsSync(dir)) continue;
     const files = readdirSync(dir)
-      .filter((f) => f.endsWith(".json"))
+      .filter((f) => f.endsWith('.json'))
       .sort();
     for (const file of files) {
-      const baseName = file.replace(/\.json$/i, "");
+      const baseName = file.replace(/\.json$/i, '');
       const specId = `${corpus}/${baseName}`;
       try {
-        const content = readFileSync(join(dir, file), "utf-8");
+        const content = readFileSync(join(dir, file), 'utf-8');
         const apiIr = JSON.parse(content) as ApiIR;
         all.push({ specId, corpus, apiIr });
       } catch {
@@ -115,29 +115,29 @@ function loadSpecs(limit: number | null, repo: "github" | "api-guru" | null): Lo
 
 function main(): number {
   const { limit, repo, outputDir, writeJson, writeReport, verbose, showArchetype } = parseArgs();
-  const outputJsonPath = join(outputDir, "archetypes.json");
-  const reportsDir = join(outputDir, "reports");
-  const goldenCandidatesPath = join(reportsDir, "golden-candidates.md");
+  const outputJsonPath = join(outputDir, 'archetypes.json');
+  const reportsDir = join(outputDir, 'reports');
+  const goldenCandidatesPath = join(reportsDir, 'golden-candidates.md');
   const specs = loadSpecs(limit, repo);
 
-  const githubCount = specs.filter((s) => s.corpus === "github").length;
-  const apiGuruCount = specs.filter((s) => s.corpus === "api-guru").length;
+  const githubCount = specs.filter((s) => s.corpus === 'github').length;
+  const apiGuruCount = specs.filter((s) => s.corpus === 'api-guru').length;
   console.log(`Loaded ${specs.length} specs (github: ${githubCount}, api-guru: ${apiGuruCount})`);
 
-  const resourceCount = specs.reduce(
-    (sum, s) => sum + (s.apiIr.resources ?? []).length,
-    0
-  );
+  const resourceCount = specs.reduce((sum, s) => sum + (s.apiIr.resources ?? []).length, 0);
   if (specs.length === 0 || resourceCount === 0) {
-    throw new Error("No ApiIR fixtures found. Run fixtures:generate-apiir.");
+    throw new Error('No ApiIR fixtures found. Run fixtures:generate-apiir.');
   }
 
   // Pass 1: extract metrics
   type SpecData = {
     specId: string;
-    corpus: "github" | "api-guru";
+    corpus: 'github' | 'api-guru';
     specMetrics: SpecArchetypeMetrics;
-    resourceMetrics: Array<{ resource: { name: string; key: string }; metrics: ResourceArchetypeMetrics }>;
+    resourceMetrics: Array<{
+      resource: { name: string; key: string };
+      metrics: ResourceArchetypeMetrics;
+    }>;
   };
 
   const pass1: SpecData[] = [];
@@ -269,7 +269,7 @@ function main(): number {
 
   const data = {
     meta: {
-      toolVersion: "1.0",
+      toolVersion: '1.0',
       timestamp: new Date().toISOString(),
       specCount: specs.length,
       resourceCount,
@@ -280,16 +280,13 @@ function main(): number {
 
   if (writeJson) {
     mkdirSync(outputDir, { recursive: true });
-    writeFileSync(outputJsonPath, JSON.stringify(data, null, 2) + "\n", "utf-8");
+    writeFileSync(outputJsonPath, JSON.stringify(data, null, 2) + '\n', 'utf-8');
     console.log(`Wrote ${outputJsonPath}`);
   }
 
   if (writeReport) {
     mkdirSync(reportsDir, { recursive: true });
-    const { selected, zeroArchetypes } = selectGoldenCandidates(
-      sortedSpecs,
-      sortedArchetypes
-    );
+    const { selected, zeroArchetypes } = selectGoldenCandidates(sortedSpecs, sortedArchetypes);
     writeGoldenCandidatesReport(selected, goldenCandidatesPath);
     for (const arch of zeroArchetypes) {
       console.error(`⚠ Archetype '${arch}' has no matching specs.`);
@@ -305,11 +302,7 @@ function main(): number {
   return 0;
 }
 
-const SPEC_LEVEL_ARCHETYPES = new Set([
-  "multi_resource",
-  "mixed_operations",
-  "large_api",
-]);
+const SPEC_LEVEL_ARCHETYPES = new Set(['multi_resource', 'mixed_operations', 'large_api']);
 
 /** Select 1–3 candidates per archetype with cross-archetype deduplication. */
 function selectGoldenCandidates(
@@ -343,7 +336,7 @@ function selectGoldenCandidates(
       for (const specId of specIds) {
         const spec = specMap.get(specId);
         if (!spec) continue;
-        const resourceKey = spec.resources[0]?.resourceKey ?? "spec";
+        const resourceKey = spec.resources[0]?.resourceKey ?? 'spec';
         const fieldCount = spec.resources[0]?.fieldCount ?? 0;
         const arrayOfObjects = spec.resources[0]?.arrayOfObjects ?? 0;
         bySpec.set(specId, {
@@ -405,28 +398,25 @@ function selectGoldenCandidates(
   return { selected, zeroArchetypes };
 }
 
-function writeGoldenCandidatesReport(
-  selected: Map<string, Candidate[]>,
-  path: string
-): void {
-  const lines: string[] = ["# Golden Spec Candidates by Archetype", ""];
+function writeGoldenCandidatesReport(selected: Map<string, Candidate[]>, path: string): void {
+  const lines: string[] = ['# Golden Spec Candidates by Archetype', ''];
 
   ARCHETYPE_ORDER.forEach((archetype, i) => {
     const idx = i + 1;
     const candidates = selected.get(archetype) ?? [];
     lines.push(`## ${idx}. ${archetype}`);
     if (candidates.length === 0) {
-      lines.push("- *(no matching specs)*");
+      lines.push('- *(no matching specs)*');
     } else {
       for (const c of candidates) {
         const metrics = `score=${c.score}, fields=${c.fieldCount}, arrayOfObjects=${c.arrayOfObjectsCount}, resources=${c.resourceCount}`;
         lines.push(`- ${c.specId} (${c.resourceKey}) (${metrics})`);
       }
     }
-    lines.push("");
+    lines.push('');
   });
 
-  writeFileSync(path, lines.join("\n"), "utf-8");
+  writeFileSync(path, lines.join('\n'), 'utf-8');
   console.log(`Wrote ${path}`);
 }
 
