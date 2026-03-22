@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "IncentEdge API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/calculate",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -191,6 +193,22 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "quick",
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            {
+              "in": "query",
+              "name": "verbose",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -257,6 +275,148 @@
           "method": "GET",
           "kind": "list",
           "path": "/programs",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "federal",
+                  "state",
+                  "local",
+                  "utility"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "county",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "direct_pay_eligible",
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "program_type",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "tax_credit",
+                  "grant",
+                  "rebate",
+                  "loan",
+                  "tax_deduction",
+                  "tax_exemption"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "search",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sector",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort_by",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "name",
+                  "created_at",
+                  "updated_at",
+                  "amount_max",
+                  "application_deadline",
+                  "popularity_score"
+                ],
+                "default": "popularity_score"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort_order",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "asc",
+                  "desc"
+                ],
+                "default": "desc"
+              }
+            },
+            {
+              "in": "query",
+              "name": "state",
+              "schema": {
+                "type": "string",
+                "pattern": "^[A-Z]{2}$",
+                "example": "NY"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "inactive",
+                  "expired",
+                  "pending"
+                ],
+                "default": "active"
+              }
+            },
+            {
+              "in": "query",
+              "name": "technology",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "transferable",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
           "queryParamCount": 14,
           "responseSchema": {
             "type": "object",
@@ -400,6 +560,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/programs/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -520,6 +691,61 @@
           "method": "GET",
           "kind": "list",
           "path": "/projects",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "id",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "search",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sector",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "planning",
+                  "in_development",
+                  "completed"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 6,
           "responseSchema": {
             "type": "object",
@@ -579,6 +805,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/projects/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -626,6 +863,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/projects",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -754,6 +992,15 @@
           "method": "GET",
           "kind": "list",
           "path": "/stats",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "quick",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",

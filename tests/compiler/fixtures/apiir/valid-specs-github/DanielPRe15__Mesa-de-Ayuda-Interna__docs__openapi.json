@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Mesa de Ayuda API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/login",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -58,6 +60,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/register",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -114,6 +117,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/solicitudes",
+          "parameters": [],
           "responseSchema": {
             "type": "array",
             "items": {
@@ -177,6 +181,75 @@
           "method": "GET",
           "kind": "list",
           "path": "/solicitudes/filtrar",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "estado",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "PENDIENTE",
+                  "EN_PROCESO",
+                  "RESUELTO",
+                  "CERRADO"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "fechaFin",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "format": "date"
+            },
+            {
+              "in": "query",
+              "name": "fechaInicio",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "format": "date"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "prioridad",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "BAJA",
+                  "MEDIA",
+                  "ALTA",
+                  "CRITICA"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "size",
+              "schema": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "titulo",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 7,
           "responseSchema": {
             "type": "object",
@@ -262,6 +335,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/solicitudes/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -323,6 +405,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/solicitudes",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -410,6 +493,15 @@
           "method": "PUT",
           "kind": "update",
           "path": "/solicitudes/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -498,6 +590,15 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/solicitudes/{id}/cambiar-estado",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",

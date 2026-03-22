@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "QL-RF FinOps API",
     "version": "1.0.0"
@@ -13,6 +14,16 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/budgets",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "active_only",
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -147,6 +158,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/finops/budgets",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -343,6 +355,39 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/breakdown",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "dimension",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "cloud",
+                  "service",
+                  "region",
+                  "site",
+                  "resource_type"
+                ],
+                "default": "cloud"
+              }
+            },
+            {
+              "in": "query",
+              "name": "period",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "7d",
+                  "30d",
+                  "90d",
+                  "365d",
+                  "this_month",
+                  "last_month"
+                ],
+                "default": "30d"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -426,6 +471,30 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/resources",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "period",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "7d",
+                  "30d",
+                  "90d",
+                  "365d"
+                ],
+                "default": "30d"
+              }
+            },
+            {
+              "in": "query",
+              "name": "resource_type",
+              "schema": {
+                "type": "string",
+                "example": "ec2_instance"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -516,6 +585,28 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/summary",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "period",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "7d",
+                  "30d",
+                  "90d",
+                  "365d",
+                  "week",
+                  "month",
+                  "quarter",
+                  "year",
+                  "this_month",
+                  "last_month"
+                ],
+                "default": "30d"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -691,6 +782,18 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/trend",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "days",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 365,
+                "default": 30
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -752,6 +855,26 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/finops/recommendations",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "type",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "all",
+                  "rightsizing",
+                  "reserved_instances",
+                  "spot_instances",
+                  "idle_resources",
+                  "storage_optimization",
+                  "unused_volumes",
+                  "old_snapshots"
+                ],
+                "default": "all"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",

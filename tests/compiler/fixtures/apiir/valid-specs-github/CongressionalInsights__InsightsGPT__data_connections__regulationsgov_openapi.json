@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Regulations.gov API (v4) - Inline X-Api-Key",
     "version": "3.0.1"
@@ -13,6 +14,15 @@
           "method": "GET",
           "kind": "list",
           "path": "/agency-categories",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "filter[acronym]",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -56,6 +66,32 @@
           "method": "GET",
           "kind": "list",
           "path": "/comments",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "filter[searchTerm]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[after]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[size]",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -140,6 +176,25 @@
           "method": "GET",
           "kind": "detail",
           "path": "/comments/{commentId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "commentId",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "include",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "attachments"
+                ]
+              }
+            }
+          ],
           "identifierParam": "commentId",
           "queryParamCount": 1,
           "responseSchema": {
@@ -243,6 +298,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/comments",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -358,6 +414,32 @@
           "method": "GET",
           "kind": "list",
           "path": "/dockets",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "filter[searchTerm]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[number]",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[size]",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 250
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -442,6 +524,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/dockets/{docketId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "docketId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "docketId",
           "responseSchema": {
             "type": "object",
@@ -529,6 +620,46 @@
           "method": "GET",
           "kind": "list",
           "path": "/documents",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "filter[docketId]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "filter[searchTerm]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "filter[title]",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[number]",
+              "schema": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "page[size]",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -602,6 +733,25 @@
           "method": "GET",
           "kind": "detail",
           "path": "/documents/{documentId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "documentId",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "include",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "attachments"
+                ]
+              }
+            }
+          ],
           "identifierParam": "documentId",
           "queryParamCount": 1,
           "responseSchema": {
@@ -700,6 +850,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/file-upload-urls",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -775,6 +926,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/submission-keys",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "CAP.BSP.DSP - Déclaration du Sinistre API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/declarations",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -72,6 +74,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health/liveness",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -87,6 +90,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health/readiness",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -125,6 +129,47 @@
           "method": "GET",
           "kind": "list",
           "path": "/declarations",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "identifiantContrat",
+              "schema": {
+                "type": "string",
+                "example": "CONTRAT-2026-001"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "statut",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "DECLARE",
+                  "VALIDE",
+                  "ANNULE"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -200,6 +245,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/declarations/{identifiantSinistre}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "identifiantSinistre",
+              "schema": {
+                "type": "string",
+                "pattern": "^SIN-\\d{4}-\\d{6}$",
+                "example": "SIN-2026-000001"
+              }
+            }
+          ],
           "identifierParam": "identifiantSinistre",
           "responseSchema": {
             "type": "object",

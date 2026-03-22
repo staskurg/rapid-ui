@@ -4,9 +4,12 @@ overview: Unify ApiIR as the contract source of truth, introduce `listScoped` wi
 todos:
   - id: pre-implementation-gate
     content: Complete Pre-implementation gate (resolved questions, risk mitigations, ARCHITECTURE stubs) before Phase 1 code
-    status: pending
+    status: completed
+  - id: phase-1-apiir-contract
+    content: "Phase 1: ApiIR contract (apiIrVersion, ParameterIR, OPERATION_KIND consts, listScoped in union, fixtures regen, tests)"
+    status: completed
   - id: phase-1-4-contract-classifier
-    content: "Phases 1–4: ApiIR contract (apiIrVersion, ParameterIR, listScoped rules), shared list-shape module + operations merge, KIND_ORDER/opOrder sync, optional grouping smoke / listLikeOps shape"
+    content: "Phases 2–4 (remaining): shared list-shape classifier + listScoped inference, grouping smoke / listLikeOps shape"
     status: pending
   - id: phase-5-fixtures-verify
     content: "Phase 5: Regen fixtures, add/run verify:apiir-fixtures, reconcile corpus vs fixture counts, grep-driven kind updates + compiler tests"

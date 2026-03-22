@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Islamic Open Finance (IOF) Platform API",
     "version": "1.0.0"
@@ -13,6 +14,40 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/aml/alerts",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "severity",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "LOW",
+                  "MEDIUM",
+                  "HIGH",
+                  "CRITICAL"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -85,6 +120,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/aml/screening",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -171,6 +207,40 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/cards",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "BLOCKED",
+                  "EXPIRED",
+                  "CANCELLED"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -242,6 +312,35 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/v1/cards/{id}/authorizations",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "pattern": "^CRD-[A-Z0-9]+$"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            }
+          ],
           "identifierParam": "id",
           "queryParamCount": 2,
           "responseSchema": {
@@ -309,6 +408,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/cards",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -396,6 +496,42 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/contracts/murabaha",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "DRAFT",
+                  "PENDING_ASSET_PURCHASE",
+                  "ASSET_PURCHASED",
+                  "ACTIVE",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -483,6 +619,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/v1/contracts/murabaha/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "pattern": "^CNT-[A-Z0-9]+$"
+              }
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -541,6 +687,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/contracts/murabaha",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -650,6 +797,41 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/metadata/entities",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "entity_type",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "rail",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -716,6 +898,32 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/metadata/lineage",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "depth",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 10,
+                "default": 3
+              }
+            },
+            {
+              "in": "query",
+              "name": "entity_id",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "rail",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -758,6 +966,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/metadata/entities",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -892,6 +1101,40 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/shariah/rules",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "CONTRACTS",
+                  "PAYMENTS",
+                  "INVESTMENTS",
+                  "FEES"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -952,6 +1195,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/shariah/evaluations",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -1047,6 +1291,22 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/taxonomy/terms",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "taxonomy_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -1114,6 +1374,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/taxonomy/taxonomies",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -1163,6 +1424,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/taxonomy/terms",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

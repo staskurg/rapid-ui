@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import type { ApiIR, OperationIR, ResourceIR } from '@/lib/compiler/apiir';
+import {
+  HTTP_METHOD,
+  OPERATION_KIND,
+  type ApiIR,
+  type OperationIR,
+  type ResourceIR,
+} from '@/lib/compiler/apiir';
 import {
   extractResourceSignature,
   normalizePattern,
@@ -27,8 +33,8 @@ describe('extractResourceSignature', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           responseSchema: {
             type: 'object',
@@ -45,7 +51,7 @@ describe('extractResourceSignature', () => {
     expect(sig).not.toBeNull();
     expect(sig!.fields).toBe(3);
     expect(sig!.depth).toBe(0);
-    expect(sig!.operations).toEqual(['list']);
+    expect(sig!.operations).toEqual([OPERATION_KIND.list]);
     expect(sig!.has_id).toBe(true);
   });
 
@@ -54,8 +60,8 @@ describe('extractResourceSignature', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           responseSchema: {
             type: 'object',
@@ -64,8 +70,8 @@ describe('extractResourceSignature', () => {
         },
         {
           id: 'GET:/items/{id}',
-          method: 'GET',
-          kind: 'detail',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.detail,
           path: '/items/{id}',
           responseSchema: {
             type: 'object',
@@ -80,7 +86,7 @@ describe('extractResourceSignature', () => {
     });
     const sig = extractResourceSignature(res);
     expect(sig!.fields).toBe(3);
-    expect(sig!.operations).toEqual(['list', 'detail']);
+    expect(sig!.operations).toEqual([OPERATION_KIND.list, OPERATION_KIND.detail]);
   });
 
   it('uses queryParamCount from operations', () => {
@@ -88,8 +94,8 @@ describe('extractResourceSignature', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           queryParamCount: 5,
           responseSchema: { type: 'object', properties: {} },
@@ -105,8 +111,8 @@ describe('extractResourceSignature', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           responseSchema: { type: 'object', properties: {} },
         },
@@ -127,7 +133,7 @@ describe('normalizePattern', () => {
       nested_objects: 0,
       depth: 0,
       query_params: 0,
-      operations: ['list', 'detail'] as OperationIR['kind'][],
+      operations: [OPERATION_KIND.list, OPERATION_KIND.detail] as OperationIR['kind'][],
     };
     expect(normalizePattern(sig)).toBe('fields≤6 depth0 ops:list+detail');
   });
@@ -154,7 +160,7 @@ describe('normalizePattern', () => {
       nested_objects: 0,
       depth: 0,
       query_params: 0,
-      operations: ['list'] as OperationIR['kind'][],
+      operations: [OPERATION_KIND.list] as OperationIR['kind'][],
     };
   }
 });
@@ -169,8 +175,8 @@ describe('mineStructuralPatterns', () => {
           operations: [
             {
               id: 'GET:/users',
-              method: 'GET',
-              kind: 'list',
+              method: HTTP_METHOD.GET,
+              kind: OPERATION_KIND.list,
               path: '/users',
               responseSchema: {
                 type: 'object',
@@ -189,8 +195,8 @@ describe('mineStructuralPatterns', () => {
           operations: [
             {
               id: 'GET:/items',
-              method: 'GET',
-              kind: 'list',
+              method: HTTP_METHOD.GET,
+              kind: OPERATION_KIND.list,
               path: '/items',
               responseSchema: {
                 type: 'object',

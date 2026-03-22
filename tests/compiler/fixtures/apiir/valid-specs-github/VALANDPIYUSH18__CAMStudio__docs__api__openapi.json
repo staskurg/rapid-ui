@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Photo CRM SaaS API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/login",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -121,6 +123,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/refresh",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -223,6 +226,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/gallery/{orderId}/public",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "orderId",
           "responseSchema": {
             "type": "object",
@@ -326,6 +340,48 @@
           "method": "GET",
           "kind": "list",
           "path": "/orders",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "search",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "size",
+              "schema": {
+                "type": "integer",
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "CREATED",
+                  "IN_PROGRESS",
+                  "PHOTOS_UPLOADED",
+                  "CLIENT_REVIEW",
+                  "PAYMENT_PENDING",
+                  "PAID",
+                  "COMPLETED",
+                  "CANCELLED"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -436,6 +492,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/orders/{orderId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "orderId",
           "responseSchema": {
             "type": "object",
@@ -514,6 +581,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/orders",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -623,6 +691,17 @@
           "method": "PUT",
           "kind": "update",
           "path": "/orders/{orderId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "orderId",
           "requestSchema": {
             "type": "object",
@@ -730,6 +809,33 @@
           "method": "GET",
           "kind": "detail",
           "path": "/photos/order/{orderId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "size",
+              "schema": {
+                "type": "integer",
+                "default": 20
+              }
+            }
+          ],
           "identifierParam": "orderId",
           "queryParamCount": 2,
           "responseSchema": {

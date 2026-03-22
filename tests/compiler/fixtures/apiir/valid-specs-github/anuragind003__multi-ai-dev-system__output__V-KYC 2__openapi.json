@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "FastAPI Monolith API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -34,6 +36,24 @@
           "method": "GET",
           "kind": "list",
           "path": "/items/",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "skip",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "array",
@@ -72,6 +92,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/items/{item_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "item_id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "item_id",
           "responseSchema": {
             "type": "object",
@@ -107,6 +136,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/items/",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {

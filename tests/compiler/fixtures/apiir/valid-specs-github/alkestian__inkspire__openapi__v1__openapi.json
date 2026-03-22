@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Inkspire",
     "version": "0.0.1"
@@ -13,6 +14,74 @@
           "method": "GET",
           "kind": "list",
           "path": "/books",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "author",
+              "schema": {
+                "type": "string",
+                "example": "Brandon Sanderson"
+              }
+            },
+            {
+              "in": "query",
+              "name": "genre",
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "Fantasy",
+                  "Epic"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "example": 10,
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "example": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "title",
+                  "author",
+                  "genre",
+                  "status"
+                ],
+                "example": "title"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "read",
+                  "to-be-read"
+                ],
+                "example": "read"
+              }
+            }
+          ],
           "queryParamCount": 6,
           "responseSchema": {
             "type": "object",
@@ -103,6 +172,18 @@
           "method": "GET",
           "kind": "detail",
           "path": "/books/{bookId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "bookId",
+              "schema": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "bookId",
           "responseSchema": {
             "type": "object",
@@ -193,6 +274,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/books",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -258,6 +340,18 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/books/{bookId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "bookId",
+              "schema": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "bookId",
           "requestSchema": {
             "type": "object",
@@ -406,6 +500,18 @@
           "method": "PUT",
           "kind": "update",
           "path": "/books/{bookId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "bookId",
+              "schema": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "bookId",
           "requestSchema": {
             "type": "object",
@@ -554,6 +660,18 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/books/{bookId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "bookId",
+              "schema": {
+                "type": "string",
+                "format": "uuid",
+                "example": "550e8400-e29b-41d4-a716-446655440000"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "bookId",
           "responseSchema": {
             "type": "object",

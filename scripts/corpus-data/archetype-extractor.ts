@@ -3,7 +3,13 @@
  * Standalone module; no imports from analyze-apiir.ts.
  */
 
-import type { JsonSchema, OperationKind, OperationIR, ResourceIR } from "@/lib/compiler/apiir";
+import {
+  OPERATION_KIND,
+  type JsonSchema,
+  type OperationKind,
+  type OperationIR,
+  type ResourceIR,
+} from "@/lib/compiler/apiir";
 
 // --- Archetype constants ---
 
@@ -63,15 +69,19 @@ Object.freeze(ARCHETYPE_ORDER);
 
 // --- Types ---
 
-export type OperationPattern =
-  | "create_only"
-  | "list_only"
-  | "detail_only"
-  | "list_create"
-  | "list_detail"
-  | "list_detail_create"
-  | "crud"
-  | "other";
+/** High-level CRUD shape derived from operation kinds (corpus / archetype tooling). */
+export const OPERATION_PATTERN = {
+  CREATE_ONLY: "create_only",
+  LIST_ONLY: "list_only",
+  DETAIL_ONLY: "detail_only",
+  LIST_CREATE: "list_create",
+  LIST_DETAIL: "list_detail",
+  LIST_DETAIL_CREATE: "list_detail_create",
+  CRUD: "crud",
+  OTHER: "other",
+} as const;
+
+export type OperationPattern = (typeof OPERATION_PATTERN)[keyof typeof OPERATION_PATTERN];
 
 export interface ResourceArchetypeMetrics {
   fieldCount: number;
@@ -128,20 +138,26 @@ export function getObjectSchema(schema: JsonSchema): JsonSchema | null {
  */
 export function deriveOperationPattern(operations: OperationIR[]): OperationPattern {
   const kinds = new Set(operations.map((o) => o.kind));
-  const hasList = kinds.has("list");
-  const hasDetail = kinds.has("detail");
-  const hasCreate = kinds.has("create");
-  const hasUpdate = kinds.has("update");
-  const hasDelete = kinds.has("delete");
+  const hasList = kinds.has(OPERATION_KIND.list) || kinds.has(OPERATION_KIND.listScoped);
+  const hasDetail = kinds.has(OPERATION_KIND.detail);
+  const hasCreate = kinds.has(OPERATION_KIND.create);
+  const hasUpdate = kinds.has(OPERATION_KIND.update);
+  const hasDelete = kinds.has(OPERATION_KIND.delete);
 
-  if (hasCreate && !hasList && !hasDetail && !hasUpdate && !hasDelete) return "create_only";
-  if (hasList && !hasCreate && !hasDetail && !hasUpdate && !hasDelete) return "list_only";
-  if (hasDetail && !hasList && !hasCreate && !hasUpdate && !hasDelete) return "detail_only";
-  if (hasList && hasCreate && !hasDetail && !hasUpdate && !hasDelete) return "list_create";
-  if (hasList && hasDetail && !hasCreate && !hasUpdate && !hasDelete) return "list_detail";
-  if (hasList && hasDetail && hasCreate && !hasUpdate && !hasDelete) return "list_detail_create";
-  if (hasList && hasDetail && hasCreate && hasUpdate && hasDelete) return "crud";
-  return "other";
+  if (hasCreate && !hasList && !hasDetail && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.CREATE_ONLY;
+  if (hasList && !hasCreate && !hasDetail && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.LIST_ONLY;
+  if (hasDetail && !hasList && !hasCreate && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.DETAIL_ONLY;
+  if (hasList && hasCreate && !hasDetail && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.LIST_CREATE;
+  if (hasList && hasDetail && !hasCreate && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.LIST_DETAIL;
+  if (hasList && hasDetail && hasCreate && !hasUpdate && !hasDelete)
+    return OPERATION_PATTERN.LIST_DETAIL_CREATE;
+  if (hasList && hasDetail && hasCreate && hasUpdate && hasDelete) return OPERATION_PATTERN.CRUD;
+  return OPERATION_PATTERN.OTHER;
 }
 
 // --- Schema metrics (internal) ---
@@ -501,23 +517,23 @@ export function classifyResourceArchetypes(
   const r = resourceMetrics;
 
   // 1. simple_create: fields ≤ 4, depth = 0, create_only
-  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === "create_only") {
+  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === OPERATION_PATTERN.CREATE_ONLY) {
     out.push(ARCHETYPES.SIMPLE_CREATE);
   }
   // 2. simple_list: fields ≤ 4, depth = 0, list_only
-  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === "list_only") {
+  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === OPERATION_PATTERN.LIST_ONLY) {
     out.push(ARCHETYPES.SIMPLE_LIST);
   }
   // 3. list_detail: fields ≤ 4, depth = 0, list_detail
-  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === "list_detail") {
+  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === OPERATION_PATTERN.LIST_DETAIL) {
     out.push(ARCHETYPES.LIST_DETAIL);
   }
   // 4. list_create: fields ≤ 4, depth = 0, list_create
-  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === "list_create") {
+  if (r.fieldCount <= 4 && r.maxDepth === 0 && r.operationPattern === OPERATION_PATTERN.LIST_CREATE) {
     out.push(ARCHETYPES.LIST_CREATE);
   }
   // 5. full_crud: fields ≤ 6, depth = 0, crud
-  if (r.fieldCount <= 6 && r.maxDepth === 0 && r.operationPattern === "crud") {
+  if (r.fieldCount <= 6 && r.maxDepth === 0 && r.operationPattern === OPERATION_PATTERN.CRUD) {
     out.push(ARCHETYPES.FULL_CRUD);
   }
   // 6. enum_heavy: enumCount ≥ 2
@@ -603,9 +619,9 @@ export function classifySpecArchetypes(
     out.push(ARCHETYPES.MULTI_RESOURCE);
   }
   // 15. mixed_operations: spec has ≥1 create_only AND ≥1 list_only AND ≥1 detail_only
-  const hasCreateOnly = resourceMetrics.some((r) => r.operationPattern === "create_only");
-  const hasListOnly = resourceMetrics.some((r) => r.operationPattern === "list_only");
-  const hasDetailOnly = resourceMetrics.some((r) => r.operationPattern === "detail_only");
+  const hasCreateOnly = resourceMetrics.some((r) => r.operationPattern === OPERATION_PATTERN.CREATE_ONLY);
+  const hasListOnly = resourceMetrics.some((r) => r.operationPattern === OPERATION_PATTERN.LIST_ONLY);
+  const hasDetailOnly = resourceMetrics.some((r) => r.operationPattern === OPERATION_PATTERN.DETAIL_ONLY);
   if (hasCreateOnly && hasListOnly && hasDetailOnly) {
     out.push(ARCHETYPES.MIXED_OPERATIONS);
   }

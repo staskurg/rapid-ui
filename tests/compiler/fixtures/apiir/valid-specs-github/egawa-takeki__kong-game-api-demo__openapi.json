@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Game Backend API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/auth/guest",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -84,6 +86,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/auth/refresh",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -132,6 +135,25 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/gacha/history",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 50
+              }
+            },
+            {
+              "in": "query",
+              "name": "pool_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -205,6 +227,16 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/gacha/pools",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "active_only",
+              "schema": {
+                "type": "boolean",
+                "default": true
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -298,6 +330,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/gacha/pity/{pool_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "pool_id",
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ],
           "identifierParam": "pool_id",
           "responseSchema": {
             "type": "object",
@@ -327,6 +369,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/gacha/pools/{pool_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "pool_id",
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ],
           "identifierParam": "pool_id",
           "responseSchema": {
             "type": "object",
@@ -412,6 +464,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/gacha/draw",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -536,6 +589,22 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/inventory/items",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "item_type",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "character",
+                  "weapon",
+                  "material",
+                  "consumable"
+                ],
+                "example": "character"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -607,6 +676,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/inventory/items/{item_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "item_id",
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ],
           "identifierParam": "item_id",
           "responseSchema": {
             "type": "object",
@@ -676,6 +755,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/me",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -717,6 +797,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/me/currency",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {

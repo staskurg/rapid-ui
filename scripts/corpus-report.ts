@@ -586,6 +586,7 @@ function main(): number {
     nestedDepth: [] as number[],
   };
   let crudList = 0;
+  let crudListScoped = 0;
   let crudDetail = 0;
   let crudCreate = 0;
   let crudUpdate = 0;
@@ -608,6 +609,7 @@ function main(): number {
 
     const crud = analyzeCrudPattern(apiIr);
     crudList += crud.list;
+    crudListScoped += crud.listScoped;
     crudDetail += crud.detail;
     crudCreate += crud.create;
     crudUpdate += crud.update;
@@ -852,6 +854,7 @@ function main(): number {
     lines.push('');
     for (const line of formatCrudPatternReport({
       list: crudList,
+      listScoped: crudListScoped,
       detail: crudDetail,
       create: crudCreate,
       update: crudUpdate,

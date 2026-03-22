@@ -5,7 +5,7 @@
 
 import { UISpecSchema } from '@/lib/spec/schema';
 import type { UISpec, Field } from '@/lib/spec/types';
-import type { ApiIR, ResourceIR } from '../apiir/types';
+import { isListLikeKind, type ApiIR, type ResourceIR } from '../apiir/types';
 import type { UiPlanIR, ResourcePlan, FieldPlan } from '../uiplan/uiplan.schema';
 import { slugify } from '@/lib/utils/slugify';
 import {
@@ -156,7 +156,7 @@ function lowerResource(
 }
 
 function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
-  const listOp = resource.operations.find((o) => o.kind === 'list');
+  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
   const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const schemas: Record<string, unknown>[] = [];
   if (listOp?.responseSchema) schemas.push(listOp.responseSchema as Record<string, unknown>);
@@ -174,7 +174,7 @@ function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
 function mergeSchemaFields(resource: ResourceIR): Map<string, FieldInfo> {
   const merged = new Map<string, FieldInfo>();
 
-  const listOp = resource.operations.find((o) => o.kind === 'list');
+  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
   const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const createOp = resource.operations.find((o) => o.kind === 'create');
   const updateOp = resource.operations.find((o) => o.kind === 'update');
@@ -244,7 +244,7 @@ function inferIdField(resource: ResourceIR): string | undefined {
 
   if (!param) return undefined;
 
-  const listOp = resource.operations.find((o) => o.kind === 'list');
+  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
   const schema = listOp?.responseSchema;
   if (!schema) return param;
 

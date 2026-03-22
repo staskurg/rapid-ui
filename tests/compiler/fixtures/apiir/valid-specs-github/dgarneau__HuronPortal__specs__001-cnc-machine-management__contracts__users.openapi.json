@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Users API - Huron Portal",
     "version": "1.0.0"
@@ -13,6 +14,46 @@
           "method": "GET",
           "kind": "list",
           "path": "/users",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "isActive",
+              "schema": {
+                "type": "boolean"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 50,
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 1,
+                "minimum": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "role",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "Admin",
+                  "Contrôleur",
+                  "Utilisateur"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -122,6 +163,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -193,6 +245,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/users",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -310,6 +363,17 @@
           "method": "PUT",
           "kind": "update",
           "path": "/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -410,6 +474,17 @@
           "method": "PUT",
           "kind": "update",
           "path": "/users/{id}/password",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -442,6 +517,17 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",

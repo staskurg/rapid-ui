@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "GoAuth Admin Module API",
     "version": "1.0.0"
@@ -13,6 +14,59 @@
           "method": "GET",
           "kind": "list",
           "path": "/admin/users",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 20,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "default": 0,
+                "minimum": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "query",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort_dir",
+              "schema": {
+                "type": "string",
+                "default": "desc",
+                "enum": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort_field",
+              "schema": {
+                "type": "string",
+                "default": "created_at",
+                "enum": [
+                  "created_at",
+                  "email",
+                  "username",
+                  "name"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -109,6 +163,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/admin/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -173,6 +238,17 @@
           "method": "PUT",
           "kind": "update",
           "path": "/admin/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -278,6 +354,17 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/admin/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",

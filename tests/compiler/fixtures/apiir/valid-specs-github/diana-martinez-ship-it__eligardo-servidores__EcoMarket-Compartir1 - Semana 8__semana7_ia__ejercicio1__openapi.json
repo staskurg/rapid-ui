@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "EcoMarket Products API",
     "version": "1.0.0"
@@ -13,6 +14,55 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/products",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "currency",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "MXN",
+                  "USD",
+                  "EUR"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "max_price",
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "min_price",
+              "schema": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -113,6 +163,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/v1/products/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -136,6 +197,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/products",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -193,6 +255,17 @@
           "method": "PUT",
           "kind": "update",
           "path": "/api/v1/products/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -245,6 +318,17 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/api/v1/products/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",

@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "SmartAccess Lift API",
     "version": "1.0.0"
@@ -13,6 +14,73 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/AccessLog/Data",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "accessMethod",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "NFC",
+                  "Fingerprint",
+                  "QR",
+                  "AdminOverride"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "endDate",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "format": "date-time"
+            },
+            {
+              "in": "query",
+              "name": "floorId",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "query",
+              "name": "outcome",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "Successful",
+                  "Denied"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "pageSize",
+              "schema": {
+                "type": "integer",
+                "default": 50
+              }
+            },
+            {
+              "in": "query",
+              "name": "startDate",
+              "schema": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "format": "date-time"
+            }
+          ],
           "queryParamCount": 7,
           "responseSchema": {
             "type": "object",
@@ -90,6 +158,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/FloorPermission/Update",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -142,6 +211,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/LiveView/Occupants",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -194,6 +264,37 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/VisitorAccess/List",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "pageSize",
+              "schema": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "Pending",
+                  "Active",
+                  "Expired",
+                  "All"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -257,6 +358,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/VisitorAccess/Create",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

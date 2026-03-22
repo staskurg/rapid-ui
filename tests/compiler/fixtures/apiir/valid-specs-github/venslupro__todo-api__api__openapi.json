@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Todo API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/auth/login",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -55,6 +57,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/auth/register",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -110,6 +113,39 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/todos",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "page_size",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -173,6 +209,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/todos",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

@@ -7,7 +7,13 @@
 
 import type { CompilerError } from '../errors';
 import { createError } from '../errors';
-import type { OperationIR, JsonSchema } from './types';
+import {
+  OPERATION_KIND,
+  PARAMETER_IN,
+  type OperationIR,
+  type JsonSchema,
+  type ParameterIR,
+} from './types';
 import type { RawOperation } from './grouping';
 import { selectJsonContent } from '../openapi/content';
 
@@ -54,20 +60,23 @@ function inferKind(
 ): { kind: OperationIR['kind']; identifierParam?: string } | null {
   const m = method.toLowerCase();
   if (m === 'get') {
-    if (pathParams.length === 0) return { kind: 'list' };
-    if (pathParams.length === 1) return { kind: 'detail', identifierParam: pathParams[0] };
+    if (pathParams.length === 0) return { kind: OPERATION_KIND.list };
+    if (pathParams.length === 1)
+      return { kind: OPERATION_KIND.detail, identifierParam: pathParams[0] };
     return null;
   }
   if (m === 'post') {
-    if (pathParams.length === 0) return { kind: 'create' };
+    if (pathParams.length === 0) return { kind: OPERATION_KIND.create };
     return null;
   }
   if (m === 'put' || m === 'patch') {
-    if (pathParams.length === 1) return { kind: 'update', identifierParam: pathParams[0] };
+    if (pathParams.length === 1)
+      return { kind: OPERATION_KIND.update, identifierParam: pathParams[0] };
     return null;
   }
   if (m === 'delete') {
-    if (pathParams.length === 1) return { kind: 'delete', identifierParam: pathParams[0] };
+    if (pathParams.length === 1)
+      return { kind: OPERATION_KIND.delete, identifierParam: pathParams[0] };
     return null;
   }
   return null;
@@ -80,9 +89,31 @@ function stableOperationId(method: string, path: string, operationId?: string): 
   return `${method.toUpperCase()}:${path}`;
 }
 
-/** Merge path-level and op-level parameters; op overrides by (name, in). Count query params. */
-function countQueryParams(pathItem: Record<string, unknown>, op: Record<string, unknown>): number {
-  const paramKey = (p: Record<string, unknown>) => `${String(p.in ?? '')}:${String(p.name ?? '')}`;
+const paramKey = (p: Record<string, unknown>) => `${String(p.in ?? '')}:${String(p.name ?? '')}`;
+
+function toParameterIR(raw: Record<string, unknown>): ParameterIR | null {
+  const loc = raw.in;
+  if (loc !== PARAMETER_IN.path && loc !== PARAMETER_IN.query) return null;
+  const name = String(raw.name ?? '');
+  const schema = raw.schema;
+  if (!schema || typeof schema !== 'object') return null;
+  const sch = schema as Record<string, unknown>;
+  const format = typeof sch.format === 'string' ? sch.format : undefined;
+  return {
+    in: loc,
+    name,
+    schema: schema as JsonSchema,
+    ...(format !== undefined ? { format } : {}),
+  };
+}
+
+/**
+ * Merge path-level and op-level parameters (op wins by `in:name`), then sort path before query, then name.
+ */
+function mergeParameters(
+  pathItem: Record<string, unknown>,
+  op: Record<string, unknown>
+): ParameterIR[] {
   const merged = new Map<string, Record<string, unknown>>();
   const pathLevelParams = pathItem.parameters as Record<string, unknown>[] | undefined;
   const opParams = op.parameters as Record<string, unknown>[] | undefined;
@@ -98,11 +129,18 @@ function countQueryParams(pathItem: Record<string, unknown>, op: Record<string, 
         merged.set(paramKey(p as Record<string, unknown>), p as Record<string, unknown>);
     }
   }
-  let count = 0;
-  for (const param of merged.values()) {
-    if (param.in === 'query') count++;
+  const list: ParameterIR[] = [];
+  for (const raw of merged.values()) {
+    const ir = toParameterIR(raw);
+    if (ir) list.push(ir);
   }
-  return count;
+  list.sort((a, b) => {
+    const ai = a.in === PARAMETER_IN.path ? 0 : 1;
+    const bi = b.in === PARAMETER_IN.path ? 0 : 1;
+    if (ai !== bi) return ai - bi;
+    return a.name.localeCompare(b.name);
+  });
+  return list;
 }
 
 export interface MapOperationResult {
@@ -176,7 +214,7 @@ export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): M
   }
 
   let requestSchema: JsonSchema | undefined;
-  if (kindResult.kind === 'create' || kindResult.kind === 'update') {
+  if (kindResult.kind === OPERATION_KIND.create || kindResult.kind === OPERATION_KIND.update) {
     const req = getRequestSchema(op, doc);
     if (!req) {
       return {
@@ -194,7 +232,8 @@ export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): M
 
   const id = stableOperationId(raw.method, raw.path, raw.operationId);
   const method = raw.method.toUpperCase() as OperationIR['method'];
-  const queryParamCount = countQueryParams(pathItem as Record<string, unknown>, op);
+  const parameters = mergeParameters(pathItem as Record<string, unknown>, op);
+  const queryParamCount = parameters.filter((p) => p.in === PARAMETER_IN.query).length;
 
   return {
     success: true,
@@ -203,6 +242,7 @@ export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): M
       method,
       kind: kindResult.kind,
       path: raw.path,
+      parameters,
       ...(kindResult.identifierParam && { identifierParam: kindResult.identifierParam }),
       ...(queryParamCount > 0 && { queryParamCount }),
       ...(requestSchema && { requestSchema }),

@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Restaurant Ordering API",
     "version": "1.0.0"
@@ -13,6 +14,34 @@
           "method": "GET",
           "kind": "list",
           "path": "/orders",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "customerId",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "minimum": 1,
+                "type": "integer",
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "pageSize",
+              "schema": {
+                "maximum": 100,
+                "minimum": 1,
+                "type": "integer",
+                "default": 20
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "required": [
@@ -77,6 +106,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/orders/{orderId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "orderId",
           "responseSchema": {
             "required": [
@@ -145,6 +183,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/orders",
+          "parameters": [],
           "requestSchema": {
             "required": [
               "channel",

@@ -7,6 +7,7 @@ import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { canonicalize } from '@/lib/compiler/openapi/canonicalize';
 import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir/build';
+import { CURRENT_API_IR_VERSION, PARAMETER_IN } from '@/lib/compiler/apiir';
 import { sha256Hash } from '@/lib/compiler/hash';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,26 @@ function loadAndProcess(specPath: string) {
 }
 
 describe('ApiIR build', () => {
+  it('sets apiIrVersion to CURRENT_API_IR_VERSION', () => {
+    const doc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
+    const result = buildApiIR(doc);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.apiIr.apiIrVersion).toBe(CURRENT_API_IR_VERSION);
+  });
+
+  it('derives queryParamCount from parameters (query) for list op', () => {
+    const doc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
+    const result = buildApiIR(doc);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const listOp = result.apiIr.resources[0]?.operations.find((o) => o.id === 'listUsers');
+    expect(listOp).toBeDefined();
+    const qFromParams = listOp!.parameters?.filter((p) => p.in === PARAMETER_IN.query).length ?? 0;
+    expect(listOp!.queryParamCount).toBe(qFromParams);
+    expect(qFromParams).toBe(2);
+  });
+
   it('golden_openapi_users_tagged_3_0.yaml produces expected ApiIR', () => {
     const doc = loadAndProcess('demo/golden_openapi_users_tagged_3_0.yaml');
     const result = buildApiIR(doc);

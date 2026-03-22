@@ -5,19 +5,23 @@
  */
 
 import stringify from 'fast-json-stable-stringify';
-import type { ApiIR, ResourceIR, OperationIR } from './types';
+import {
+  CURRENT_API_IR_VERSION,
+  OPERATION_KIND_ORDER,
+  type ApiIR,
+  type OperationIR,
+  type ResourceIR,
+} from './types';
 import type { CompilerError } from '../errors';
 import { groupOperations } from './grouping';
 import { mapOperation } from './operations';
 import { slugify } from '@/lib/utils/slugify';
 import { sha256Hash } from '../hash';
 
-const KIND_ORDER: OperationIR['kind'][] = ['list', 'detail', 'create', 'update', 'delete'];
-
 function sortOperations(ops: OperationIR[]): OperationIR[] {
   return [...ops].sort((a, b) => {
-    const aIdx = KIND_ORDER.indexOf(a.kind);
-    const bIdx = KIND_ORDER.indexOf(b.kind);
+    const aIdx = OPERATION_KIND_ORDER.indexOf(a.kind);
+    const bIdx = OPERATION_KIND_ORDER.indexOf(b.kind);
     if (aIdx !== bIdx) return aIdx - bIdx;
     return a.path.localeCompare(b.path) || a.method.localeCompare(b.method);
   });
@@ -86,6 +90,7 @@ export function buildApiIR(doc: Record<string, unknown>): BuildApiIROutput {
   }
 
   const apiIr: ApiIR = {
+    apiIrVersion: CURRENT_API_IR_VERSION,
     api: { title, version },
     resources,
   };

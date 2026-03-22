@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "User Service API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/healthz",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -33,6 +35,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/internal/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -104,6 +117,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/internal/users/by-email/{email}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "email",
+              "schema": {
+                "type": "string",
+                "format": "email"
+              },
+              "format": "email"
+            }
+          ],
           "identifierParam": "email",
           "responseSchema": {
             "type": "object",
@@ -181,6 +205,57 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "cursor",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "email",
+              "schema": {
+                "type": "string",
+                "format": "email"
+              },
+              "format": "email"
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "role",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "customer",
+                  "driver"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "ACTIVE",
+                  "SUSPENDED",
+                  "DELETED"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -261,6 +336,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -332,6 +418,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/users",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -441,6 +528,17 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/v1/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -546,6 +644,17 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/v1/users/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",

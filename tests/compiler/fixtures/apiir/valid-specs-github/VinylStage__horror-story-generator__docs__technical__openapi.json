@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Horror Story Research API",
     "version": "1.7.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/dedup/evaluate",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -139,6 +141,39 @@
           "method": "GET",
           "kind": "list",
           "path": "/research/list",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "quality",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "good",
+                  "partial",
+                  "incomplete"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -213,6 +248,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/research/dedup",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -308,6 +344,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/research/matching-templates",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -413,6 +450,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/research/run",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -491,6 +529,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/research/validate",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -552,6 +591,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/scheduler/status",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -618,6 +658,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/scheduler/start",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -657,6 +698,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/scheduler/stop",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -699,6 +741,35 @@
           "method": "GET",
           "kind": "list",
           "path": "/story/list",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "accepted_only",
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 500,
+                "default": 50
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -785,6 +856,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/story/{story_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "story_id",
+              "schema": {
+                "type": "string",
+                "example": "20260113_120000"
+              }
+            }
+          ],
           "identifierParam": "story_id",
           "responseSchema": {
             "type": "object",
@@ -860,6 +941,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/story/generate",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -1003,6 +1085,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -1028,6 +1111,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/resource/status",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -1075,6 +1159,18 @@
           "method": "GET",
           "kind": "list",
           "path": "/tasks",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200,
+                "default": 50
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -1193,6 +1289,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/tasks/{task_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string",
+                "example": "task-550e8400-e29b-41d4-a716-446655440000"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "responseSchema": {
             "type": "object",
@@ -1282,6 +1388,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/tasks/{task_id}/runs",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "responseSchema": {
             "type": "object",
@@ -1379,6 +1494,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/tasks",
+          "parameters": [],
           "requestSchema": {
             "type": "array",
             "items": {
@@ -1504,6 +1620,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/tasks/group",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -1587,6 +1704,15 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/tasks/{task_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "requestSchema": {
             "type": "object",
@@ -1688,6 +1814,15 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/tasks/{task_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "responseSchema": {
             "type": "object",

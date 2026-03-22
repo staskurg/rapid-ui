@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "ICTServe API",
     "version": "3.6.0"
@@ -13,6 +14,47 @@
           "method": "GET",
           "kind": "list",
           "path": "/assets",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "category_id",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "per_page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 15
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "available",
+                  "on_loan",
+                  "maintenance",
+                  "disposed"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -147,6 +189,33 @@
           "method": "GET",
           "kind": "detail",
           "path": "/assets/{assetId}/availability",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "assetId",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "query",
+              "name": "end_date",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "format": "date"
+            },
+            {
+              "in": "query",
+              "name": "start_date",
+              "schema": {
+                "type": "string",
+                "format": "date"
+              },
+              "format": "date"
+            }
+          ],
           "identifierParam": "assetId",
           "queryParamCount": 2,
           "responseSchema": {
@@ -193,6 +262,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/user",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -258,6 +328,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -292,6 +363,44 @@
           "method": "GET",
           "kind": "list",
           "path": "/loans",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "per_page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 15
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "pending_support",
+                  "pending_approval",
+                  "approved",
+                  "rejected",
+                  "active",
+                  "returned",
+                  "overdue"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -423,6 +532,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/loans/{loanId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "loanId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "loanId",
           "responseSchema": {
             "type": "object",
@@ -494,6 +612,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/loans",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -613,6 +732,54 @@
           "method": "GET",
           "kind": "list",
           "path": "/tickets",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "default": 1
+              }
+            },
+            {
+              "in": "query",
+              "name": "per_page",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 15
+              }
+            },
+            {
+              "in": "query",
+              "name": "priority",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "in_progress",
+                  "pending",
+                  "resolved",
+                  "closed"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -754,6 +921,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/tickets/{ticketId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "ticketId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "ticketId",
           "responseSchema": {
             "type": "object",
@@ -835,6 +1011,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/tickets",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -951,6 +1128,15 @@
           "method": "PUT",
           "kind": "update",
           "path": "/tickets/{ticketId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "ticketId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "ticketId",
           "requestSchema": {
             "type": "object",

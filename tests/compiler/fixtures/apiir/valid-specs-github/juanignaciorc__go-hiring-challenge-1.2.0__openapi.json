@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Mytheresa Catalog API",
     "version": "1.0.0"
@@ -13,6 +14,42 @@
           "method": "GET",
           "kind": "list",
           "path": "/catalog",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "category",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "price_lt",
+              "schema": {
+                "type": "number",
+                "format": "float",
+                "exclusiveMaximum": true
+              },
+              "format": "float"
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -93,6 +130,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/catalog/{code}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "code",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "code",
           "responseSchema": {
             "type": "object",
@@ -163,6 +209,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/categories",
+          "parameters": [],
           "responseSchema": {
             "type": "array",
             "items": {
@@ -187,6 +234,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/categories",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {

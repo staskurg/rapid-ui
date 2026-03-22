@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Persona API",
     "version": "1.0.0"
@@ -13,6 +14,34 @@
           "method": "GET",
           "kind": "list",
           "path": "/persona/entries",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 100,
+                "example": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "sentiment",
+              "schema": {
+                "type": "string",
+                "example": "confident",
+                "enum": [
+                  "confident",
+                  "cautious",
+                  "curious",
+                  "neutral",
+                  "concerned"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "array",
@@ -66,6 +95,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/persona/sentiment/summary",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -91,6 +121,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/persona/entries/process/{process_uuid}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "process_uuid",
+              "schema": {
+                "type": "string",
+                "example": "process-uuid-123"
+              }
+            }
+          ],
           "identifierParam": "process_uuid",
           "responseSchema": {
             "type": "array",
@@ -144,6 +184,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/persona/entries",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {

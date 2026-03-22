@@ -207,7 +207,35 @@ RapidUI validates the RUS-v1 subset against real OpenAPI specs from two sources:
 - **APIs.guru** — Specs from openapi-directory (pre-copied to `scripts/corpus-data/specs/api_guru/`)
 - **GitHub** — Crawled via `corpus:github-crawl` (requires GITHUB_TOKEN); stored in `scripts/corpus-data/specs/github/`
 
-### Corpus Pipeline
+### Corpus pipelines (do not confuse)
+
+Two pipelines share **analyze-apiir** and must stay aligned; operators should know which one they are running.
+
+| Pipeline           | Flow                                                                                                               | Purpose                                                                                                                              |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **A — Raw corpus** | `corpus:run` → `corpus:report`                                                                                     | Rebuild / analyze ApiIR from paths recorded in **raw** corpus data                                                                   |
+| **B — Fixtures**   | `fixtures:generate-apiir` → `verify:apiir-fixtures` → `corpus:pattern-mining` → `corpus:ui-readiness` (when added) | **Committed** fixture ApiIR under `tests/compiler/fixtures/apiir/` as the contract source of truth for mining and UI-readiness JSONL |
+
+```mermaid
+flowchart LR
+  subgraph pipelineA [Pipeline A raw corpus]
+    run[corpus run]
+    report[corpus report]
+    run --> report
+  end
+  subgraph pipelineB [Pipeline B fixtures]
+    gen[generate apiir fixtures]
+    ver[verify apiir fixtures]
+    mine[pattern mining]
+    ready[ui readiness]
+    gen --> ver --> mine --> ready
+  end
+  shared[analyze-apiir.ts]
+  mine --> shared
+  report --> shared
+```
+
+### Corpus Pipeline (typical local workflow)
 
 ```
 Crawl (GitHub) or copy (API-Guru)
@@ -234,6 +262,62 @@ corpus:pattern-mining --repo {api-guru|github}  → pattern-mining-{repo}-{times
 Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures/valid-specs-{api-guru|github}/`.
 
 See [docs/corpus-github.md](docs/corpus-github.md) for the GitHub crawler workflow.
+
+### ApiIR vNext — pre-implementation gate (stubs)
+
+This subsection records **reviewer-approved** contract and operational choices before Phase 1+ code lands. It is the written gate from the ApiIR corpus reports plan; implementation details live in `lib/compiler/apiir/` and related modules.
+
+#### Versioning (`apiIrVersion`)
+
+- **Placement:** integer on the **root** `ApiIR` object only; after implementation it participates in **`apiIrHash`** (a version bump changes the hash as expected).
+- **Legacy rows:** persisted JSON **missing** `apiIrVersion` is treated as **`0`** (legacy / unknown) everywhere the same way (**API, DB layer, UI**). Optional UX: warn when `0` (or any stored version) is **below** the compiler’s current version.
+- **Stale IR (MVP):** when persisted `apiIrVersion` is less than the compiler version, compilation or read paths should surface **stale IR** (exact surface: API and/or UI copy — **TBD** in `lib/db/compilations.ts` and related routes).
+- **Bump policy:** bump when serialized ApiIR **JSON meaning** or **field set** changes such that old rows would be **misinterpreted**; document each bump under _Changelog_ below. Purely internal refactors with **identical** emitted JSON shape → **no** bump.
+
+#### Changelog (`apiIrVersion`)
+
+| Version | Summary                                                                                                                                  |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **1**   | Root `apiIrVersion`; `ParameterIR` + merged `parameters[]`; `OperationKind` includes **`listScoped`** (inference/classifier in Phase 2). |
+
+#### Parameters (`ParameterIR`)
+
+- **`parameters[]`** is the **single source of truth** for path and query inputs. **`queryParamCount`** is **derived** at build time (count of `in: "query"` entries) and **must** stay equal; no independent authoring.
+- **Sort:** `(in, name)` with **path** before **query**.
+- **`format` (and primitive metadata):** enumerate only what the OpenAPI subset validator allows for path/query primitives (`lib/compiler/openapi/subset-validator.ts`); extend **ParameterIR** only **in lockstep** with that subset.
+
+#### Operation kinds: `listScoped` vs `detail`
+
+- **`listScoped`:** `GET` with **one** path parameter and a **list-shaped** success body (shared classifier everywhere). **Scope = route context** for MVP (no compiler-mandated breadcrumb or marketing copy).
+- **`detail`:** e.g. `GET` + one path param + **non-list** success body stays **`detail`**.
+- **`identifierParam`:** for **`listScoped`**, this is the **scope id** (parent context), **not** row id. Prompts and metadata must **not** treat it like **`detail`** row identity.
+
+#### Row identity and `idField`
+
+- **`idField`** is inferred from **list** / **`listScoped` response** item shape (envelope + array item properties), using the **same heuristics** as today’s list path — **never** from `listScoped.identifierParam`.
+- If no id is inferable, **`idField`** is absent; the mock **item** route (`/[paramId]`) returns **404**; tests should lock one agreed fallback (synthetic ids not in MVP unless already in mock).
+
+#### UiPlan
+
+- **`listScoped`** behaves like **`list`** for planning; **no new UiPlan view key** unless the schema is deliberately extended (`lib/compiler/uiplan/normalize.ts` keeps **`list`** as the view key).
+
+#### Pattern tokens and mining
+
+- **`normalizePattern`:** **`listScoped`** stays **distinct** in operation strings where tokens must distinguish kinds. Archetypes / table-surface patterns: either distinct `listScoped_*` **or** a documented fold with **`list`** — not both conventions.
+
+#### JSONL / UI readiness (grain)
+
+- One row per **`(specId, resourceKey)`**; **`resourceKey`** = `ResourceIR.key`.
+- **`specId`:** path **relative to** `tests/compiler/fixtures/apiir/` (include corpus directory segment, e.g. `valid-specs-foo/bar`) so rows are collision-free. Optional display column **`specBasename`**.
+
+#### Operational risks (merge hygiene)
+
+- **Mock vs corpus report vs mining:** one **analyze-apiir** path; **merge policy:** land analytics updates (plan Phase 7) before trusting mining baselines; on **`main`**, do not ship **`listScoped`-only** fixtures without runtime (lowering + mock + UiPlan — plan Phase 6). Prefer stacked PRs or one train with explicit order.
+- **Half-updated branches:** do not merge fixture regen alone on `main` if it introduces **`listScoped`-only** resources before Phase 6.
+
+#### Eval after prompt changes (Phase 6)
+
+- **MVP:** run `npm run eval:llm` (or agreed spot-check) **once** after Phase 6 lands; no mandatory threshold edits unless results regress — note outcome in the PR.
 
 ## File Structure
 

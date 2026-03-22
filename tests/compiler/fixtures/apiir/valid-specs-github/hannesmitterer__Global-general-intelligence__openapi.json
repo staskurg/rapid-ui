@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Nexus API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/agents",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -69,6 +71,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/agents/register",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -159,6 +162,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/oauth/google",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -231,6 +235,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/commands/{command_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "command_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "command_id",
           "responseSchema": {
             "type": "object",
@@ -271,6 +284,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/commands",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -344,6 +358,47 @@
           "method": "GET",
           "kind": "list",
           "path": "/tasks",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "assigned_to",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200,
+                "default": 50
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "in_progress",
+                  "completed",
+                  "failed"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -443,6 +498,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/tasks/{task_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "responseSchema": {
             "type": "object",
@@ -522,6 +586,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/tasks",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -648,6 +713,15 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/tasks/{task_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "task_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "task_id",
           "requestSchema": {
             "type": "object",
@@ -756,6 +830,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/telemetry/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -814,6 +889,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/telemetry/metrics",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "任務管理系統 API",
     "version": "1.0.0"
@@ -13,6 +14,29 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/projects",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "ownerId",
+              "schema": {
+                "type": "string",
+                "example": "user123"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "active",
+                  "completed",
+                  "cancelled"
+                ],
+                "example": "active"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -101,6 +125,16 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/tasks",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "userId",
+              "schema": {
+                "type": "string",
+                "example": "user123"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -202,6 +236,40 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/tasks/query",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "priority",
+              "schema": {
+                "type": "string",
+                "example": "high"
+              }
+            },
+            {
+              "in": "query",
+              "name": "projectId",
+              "schema": {
+                "type": "string",
+                "example": "project123"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "example": "pending"
+              }
+            },
+            {
+              "in": "query",
+              "name": "userId",
+              "schema": {
+                "type": "string",
+                "example": "user123"
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -308,6 +376,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -328,6 +397,16 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/projects/{projectId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "projectId",
+              "schema": {
+                "type": "string",
+                "example": "project123"
+              }
+            }
+          ],
           "identifierParam": "projectId",
           "responseSchema": {
             "type": "object",
@@ -404,6 +483,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/projects",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -508,6 +588,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/tasks",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -627,6 +708,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/tasks/batch",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -698,6 +780,16 @@
           "method": "PUT",
           "kind": "update",
           "path": "/api/projects/{projectId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "projectId",
+              "schema": {
+                "type": "string",
+                "example": "project123"
+              }
+            }
+          ],
           "identifierParam": "projectId",
           "requestSchema": {
             "type": "object",
@@ -811,6 +903,16 @@
           "method": "PUT",
           "kind": "update",
           "path": "/api/tasks/{taskId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "taskId",
+              "schema": {
+                "type": "string",
+                "example": "task123"
+              }
+            }
+          ],
           "identifierParam": "taskId",
           "requestSchema": {
             "type": "object",
@@ -923,6 +1025,24 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/api/projects/{projectId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "projectId",
+              "schema": {
+                "type": "string",
+                "example": "project123"
+              }
+            },
+            {
+              "in": "query",
+              "name": "deletedBy",
+              "schema": {
+                "type": "string",
+                "example": "user123"
+              }
+            }
+          ],
           "identifierParam": "projectId",
           "queryParamCount": 1,
           "responseSchema": {
@@ -957,6 +1077,24 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/api/tasks/{taskId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "taskId",
+              "schema": {
+                "type": "string",
+                "example": "task123"
+              }
+            },
+            {
+              "in": "query",
+              "name": "deletedBy",
+              "schema": {
+                "type": "string",
+                "example": "user123"
+              }
+            }
+          ],
           "identifierParam": "taskId",
           "queryParamCount": 1,
           "responseSchema": {

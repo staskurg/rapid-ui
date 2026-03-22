@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Inbox Zen Email Parsing MCP Server API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/analytics",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -104,6 +106,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/stats",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -151,6 +154,58 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/emails",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "search",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sentiment",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "positive",
+                  "negative",
+                  "neutral"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "skip",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "urgency_level",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -283,6 +338,18 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/emails/recent",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50,
+                "default": 10
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -401,6 +468,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/emails/{email_id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "email_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "email_id",
           "responseSchema": {
             "type": "object",
@@ -514,6 +590,25 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/search",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 50,
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "q",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -650,6 +745,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -679,6 +775,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/webhooks/postmark",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {

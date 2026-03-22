@@ -8,8 +8,14 @@ import {
   classifyResourceArchetypes,
   classifySpecArchetypes,
   ARCHETYPES,
+  OPERATION_PATTERN,
 } from '@/scripts/corpus-data/archetype-extractor';
-import type { ResourceIR } from '@/lib/compiler/apiir';
+import {
+  HTTP_METHOD,
+  OPERATION_KIND,
+  type OperationKind,
+  type ResourceIR,
+} from '@/lib/compiler/apiir';
 
 describe('getObjectSchema', () => {
   it('returns object schema for type: object', () => {
@@ -41,48 +47,70 @@ describe('getObjectSchema', () => {
 });
 
 describe('deriveOperationPattern', () => {
-  const op = (kind: 'list' | 'detail' | 'create' | 'update' | 'delete') => ({
+  const op = (kind: OperationKind) => ({
     id: kind,
-    method: 'GET' as const,
+    method: HTTP_METHOD.GET,
     kind,
     path: '/',
     responseSchema: { type: 'object' },
   });
 
   it('returns create_only when only create', () => {
-    expect(deriveOperationPattern([op('create')])).toBe('create_only');
+    expect(deriveOperationPattern([op(OPERATION_KIND.create)])).toBe(OPERATION_PATTERN.CREATE_ONLY);
   });
 
   it('returns list_only when only list', () => {
-    expect(deriveOperationPattern([op('list')])).toBe('list_only');
+    expect(deriveOperationPattern([op(OPERATION_KIND.list)])).toBe(OPERATION_PATTERN.LIST_ONLY);
+  });
+
+  it('returns list_only when only listScoped', () => {
+    expect(deriveOperationPattern([op(OPERATION_KIND.listScoped)])).toBe(
+      OPERATION_PATTERN.LIST_ONLY
+    );
   });
 
   it('returns detail_only when only detail', () => {
-    expect(deriveOperationPattern([op('detail')])).toBe('detail_only');
+    expect(deriveOperationPattern([op(OPERATION_KIND.detail)])).toBe(OPERATION_PATTERN.DETAIL_ONLY);
   });
 
   it('returns list_create when list and create', () => {
-    expect(deriveOperationPattern([op('list'), op('create')])).toBe('list_create');
+    expect(deriveOperationPattern([op(OPERATION_KIND.list), op(OPERATION_KIND.create)])).toBe(
+      OPERATION_PATTERN.LIST_CREATE
+    );
   });
 
   it('returns list_detail when list and detail', () => {
-    expect(deriveOperationPattern([op('list'), op('detail')])).toBe('list_detail');
+    expect(deriveOperationPattern([op(OPERATION_KIND.list), op(OPERATION_KIND.detail)])).toBe(
+      OPERATION_PATTERN.LIST_DETAIL
+    );
   });
 
   it('returns list_detail_create when list, detail, and create', () => {
-    expect(deriveOperationPattern([op('list'), op('detail'), op('create')])).toBe(
-      'list_detail_create'
-    );
+    expect(
+      deriveOperationPattern([
+        op(OPERATION_KIND.list),
+        op(OPERATION_KIND.detail),
+        op(OPERATION_KIND.create),
+      ])
+    ).toBe(OPERATION_PATTERN.LIST_DETAIL_CREATE);
   });
 
   it('returns crud when all five operations', () => {
     expect(
-      deriveOperationPattern([op('list'), op('detail'), op('create'), op('update'), op('delete')])
-    ).toBe('crud');
+      deriveOperationPattern([
+        op(OPERATION_KIND.list),
+        op(OPERATION_KIND.detail),
+        op(OPERATION_KIND.create),
+        op(OPERATION_KIND.update),
+        op(OPERATION_KIND.delete),
+      ])
+    ).toBe(OPERATION_PATTERN.CRUD);
   });
 
   it('returns other when mixed non-standard combo', () => {
-    expect(deriveOperationPattern([op('list'), op('update')])).toBe('other');
+    expect(deriveOperationPattern([op(OPERATION_KIND.list), op(OPERATION_KIND.update)])).toBe(
+      OPERATION_PATTERN.OTHER
+    );
   });
 });
 
@@ -94,8 +122,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'POST:/tasks',
-          method: 'POST',
-          kind: 'create',
+          method: HTTP_METHOD.POST,
+          kind: OPERATION_KIND.create,
           path: '/tasks',
           requestSchema: {
             type: 'object',
@@ -113,7 +141,7 @@ describe('extractResourceMetrics', () => {
     expect(m.fieldCount).toBe(2);
     expect(m.requiredCount).toBe(1);
     expect(m.optionalCount).toBe(1);
-    expect(m.operationPattern).toBe('create_only');
+    expect(m.operationPattern).toBe(OPERATION_PATTERN.CREATE_ONLY);
     expect(m.operationCount).toBe(1);
     expect(m.listResponseShape).toBe('unknown');
   });
@@ -125,8 +153,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'GET:/users',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/users',
           responseSchema: {
             type: 'array',
@@ -157,8 +185,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'GET:/users',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/users',
           responseSchema: {
             type: 'array',
@@ -191,8 +219,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           responseSchema: {
             type: 'array',
@@ -212,8 +240,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'GET:/items',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/items',
           responseSchema: {
             type: 'object',
@@ -238,8 +266,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'POST:/tasks',
-          method: 'POST',
-          kind: 'create',
+          method: HTTP_METHOD.POST,
+          kind: OPERATION_KIND.create,
           path: '/tasks',
           requestSchema: { type: 'object', properties: {} },
           responseSchema: { type: 'object' },
@@ -254,8 +282,8 @@ describe('extractResourceMetrics', () => {
       operations: [
         {
           id: 'GET:/ids',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/ids',
           responseSchema: {
             type: 'object',
@@ -278,8 +306,8 @@ describe('aggregateSpecMetrics', () => {
       operations: [
         {
           id: '1',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/',
           responseSchema: {
             type: 'array',
@@ -294,8 +322,8 @@ describe('aggregateSpecMetrics', () => {
       operations: [
         {
           id: '2',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/',
           responseSchema: {
             type: 'array',
@@ -356,8 +384,8 @@ describe('classifyResourceArchetypes', () => {
       operations: [
         {
           id: 'POST:/tasks',
-          method: 'POST',
-          kind: 'create',
+          method: HTTP_METHOD.POST,
+          kind: OPERATION_KIND.create,
           path: '/tasks',
           requestSchema: {
             type: 'object',
@@ -380,8 +408,8 @@ describe('classifyResourceArchetypes', () => {
       operations: [
         {
           id: 'POST:/items',
-          method: 'POST',
-          kind: 'create',
+          method: HTTP_METHOD.POST,
+          kind: OPERATION_KIND.create,
           path: '/items',
           requestSchema: {
             type: 'object',
@@ -405,10 +433,10 @@ describe('classifyResourceArchetypes', () => {
   });
 
   it.each([
-    ['simple_list', { fields: 2, pattern: 'list_only' as const }],
-    ['list_detail', { fields: 3, pattern: 'list_detail' as const }],
-    ['list_create', { fields: 3, pattern: 'list_create' as const }],
-    ['full_crud', { fields: 4, pattern: 'crud' as const }],
+    ['simple_list', { fields: 2, pattern: OPERATION_PATTERN.LIST_ONLY }],
+    ['list_detail', { fields: 3, pattern: OPERATION_PATTERN.LIST_DETAIL }],
+    ['list_create', { fields: 3, pattern: OPERATION_PATTERN.LIST_CREATE }],
+    ['full_crud', { fields: 4, pattern: OPERATION_PATTERN.CRUD }],
     ['enum_heavy', { enums: 2 }],
     ['array_of_objects', { arrayOfObjects: 1 }],
     ['nested_depth_1', { depth: 1 }],
@@ -423,9 +451,9 @@ describe('classifyResourceArchetypes', () => {
     ['array_root_list', { listShape: 'array_root' as const }],
     ['wrapped_list_response', { listShape: 'object_wrapped' as const }],
   ])('classifies %s', (archetype, config) => {
-    const op = (kind: 'list' | 'detail' | 'create' | 'update' | 'delete') => ({
+    const op = (kind: OperationKind) => ({
       id: kind,
-      method: 'GET' as const,
+      method: HTTP_METHOD.GET,
       kind,
       path: '/',
       responseSchema: { type: 'object' },
@@ -433,21 +461,27 @@ describe('classifyResourceArchetypes', () => {
 
     let resource: ResourceIR;
     if ('pattern' in config) {
-      const kinds =
-        config.pattern === 'list_only'
-          ? ['list']
-          : config.pattern === 'list_detail'
-            ? ['list', 'detail']
-            : config.pattern === 'list_create'
-              ? ['list', 'create']
-              : ['list', 'detail', 'create', 'update', 'delete'];
+      const kinds: OperationKind[] =
+        config.pattern === OPERATION_PATTERN.LIST_ONLY
+          ? [OPERATION_KIND.list]
+          : config.pattern === OPERATION_PATTERN.LIST_DETAIL
+            ? [OPERATION_KIND.list, OPERATION_KIND.detail]
+            : config.pattern === OPERATION_PATTERN.LIST_CREATE
+              ? [OPERATION_KIND.list, OPERATION_KIND.create]
+              : [
+                  OPERATION_KIND.list,
+                  OPERATION_KIND.detail,
+                  OPERATION_KIND.create,
+                  OPERATION_KIND.update,
+                  OPERATION_KIND.delete,
+                ];
       resource = {
         name: 'R',
         key: 'r',
-        operations: kinds.map((k) => op(k as 'list' | 'detail' | 'create' | 'update' | 'delete')),
+        operations: kinds.map((k) => op(k)),
       };
     } else {
-      resource = { name: 'R', key: 'r', operations: [op('list')] };
+      resource = { name: 'R', key: 'r', operations: [op(OPERATION_KIND.list)] };
     }
 
     const props: Record<string, unknown> = {};
@@ -495,7 +529,7 @@ describe('classifyResourceArchetypes', () => {
     if ('listShape' in config) {
       resource.operations[0] = {
         ...resource.operations[0],
-        kind: 'list',
+        kind: OPERATION_KIND.list,
         responseSchema:
           config.listShape === 'array_root'
             ? { type: 'array', items: { type: 'object', properties: props } }
@@ -527,8 +561,8 @@ describe('classifySpecArchetypes', () => {
       operations: [
         {
           id: '1',
-          method: 'POST',
-          kind: 'create',
+          method: HTTP_METHOD.POST,
+          kind: OPERATION_KIND.create,
           path: '/',
           requestSchema: { type: 'object' },
           responseSchema: { type: 'object' },
@@ -541,8 +575,8 @@ describe('classifySpecArchetypes', () => {
       operations: [
         {
           id: '2',
-          method: 'GET',
-          kind: 'list',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.list,
           path: '/',
           responseSchema: { type: 'array', items: { type: 'object' } },
         },
@@ -554,8 +588,8 @@ describe('classifySpecArchetypes', () => {
       operations: [
         {
           id: '3',
-          method: 'GET',
-          kind: 'detail',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.detail,
           path: '/:id',
           identifierParam: 'id',
           responseSchema: { type: 'object' },
@@ -573,21 +607,39 @@ describe('classifySpecArchetypes', () => {
         name: 'A',
         key: 'a',
         operations: [
-          { id: '1', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+          {
+            id: '1',
+            method: HTTP_METHOD.GET,
+            kind: OPERATION_KIND.list,
+            path: '/',
+            responseSchema: { type: 'object' },
+          },
         ],
       }),
       extractResourceMetrics({
         name: 'B',
         key: 'b',
         operations: [
-          { id: '2', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+          {
+            id: '2',
+            method: HTTP_METHOD.GET,
+            kind: OPERATION_KIND.list,
+            path: '/',
+            responseSchema: { type: 'object' },
+          },
         ],
       }),
       extractResourceMetrics({
         name: 'C',
         key: 'c',
         operations: [
-          { id: '3', method: 'GET', kind: 'list', path: '/', responseSchema: { type: 'object' } },
+          {
+            id: '3',
+            method: HTTP_METHOD.GET,
+            kind: OPERATION_KIND.list,
+            path: '/',
+            responseSchema: { type: 'object' },
+          },
         ],
       }),
     ];
@@ -604,8 +656,8 @@ describe('classifySpecArchetypes', () => {
         operations: [
           {
             id: String(i),
-            method: 'GET',
-            kind: 'list',
+            method: HTTP_METHOD.GET,
+            kind: OPERATION_KIND.list,
             path: '/',
             responseSchema: { type: 'object' },
           },

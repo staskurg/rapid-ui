@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Email Validator",
     "version": "0.0.1"
@@ -13,6 +14,34 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/validation/single/{email}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "email",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "result_type",
+              "schema": {
+                "default": "CHECK_IF_EMAIL_EXIST",
+                "description": "* CHECK_IF_EMAIL_EXIST, CIEE - [check-if-email-exists format](https://github.com/amaurymartiny/check-if-email-exists#%EF%B8%8F-json-output).\n* MAILBOXVALIDATOR, MAIL_BOX_VALIDATOR, MBV - [mailboxvalidator.com format](https://www.mailboxvalidator.com/api-single-validation).\n* PROMPT_EMAIL_VERIFICATION_API, PEVA - [Email Verification api format](https://promptapi.com/marketplace/description/email_verification-api) from [promptapi](https://promptapi.com).\n",
+                "enum": [
+                  "CHECK_IF_EMAIL_EXIST",
+                  "CIEE",
+                  "MAILBOXVALIDATOR",
+                  "MAIL_BOX_VALIDATOR",
+                  "MBV",
+                  "PROMPT_EMAIL_VERIFICATION_API",
+                  "PEVA"
+                ],
+                "title": "ResultType",
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "email",
           "queryParamCount": 1,
           "responseSchema": {
@@ -391,6 +420,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/validation/single",
+          "parameters": [],
           "requestSchema": {
             "example": {
               "smtp": {

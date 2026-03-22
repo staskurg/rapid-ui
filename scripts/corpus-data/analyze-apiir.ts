@@ -3,10 +3,57 @@
  * Used only on passing specs to answer: What is the real language of APIs?
  */
 
-import type { ApiIR, OperationIR, JsonSchema, ResourceIR } from "@/lib/compiler/apiir";
+import {
+  isListLikeKind,
+  OPERATION_KIND,
+  OPERATION_KIND_ORDER,
+  OPERATION_KIND_REPORT_ORDER,
+  PARAMETER_IN,
+  type ApiIR,
+  type OperationIR,
+  type JsonSchema,
+  type ResourceIR,
+} from "@/lib/compiler/apiir";
 import type { GroupingStrategy } from "@/lib/compiler/apiir/grouping";
 
-const KIND_ORDER: OperationIR["kind"][] = ["list", "detail", "create", "update", "delete"];
+/** Resource-level UI archetype labels (corpus pattern mining reports). */
+export const UI_ARCHETYPE = {
+  CREATE_ONLY: "create-only",
+  LIST_ONLY: "list-only",
+  DETAIL_ONLY: "detail-only",
+  LIST_CREATE: "list+create",
+  LIST_DETAIL: "list+detail",
+  LIST_DETAIL_CREATE: "list+detail+create",
+  FULL_CRUD: "full CRUD",
+  OTHER: "other",
+} as const;
+
+export type UIArchetype = (typeof UI_ARCHETYPE)[keyof typeof UI_ARCHETYPE];
+
+export const UI_ARCHETYPE_REPORT_ORDER: readonly UIArchetype[] = [
+  UI_ARCHETYPE.CREATE_ONLY,
+  UI_ARCHETYPE.LIST_ONLY,
+  UI_ARCHETYPE.DETAIL_ONLY,
+  UI_ARCHETYPE.LIST_CREATE,
+  UI_ARCHETYPE.LIST_DETAIL,
+  UI_ARCHETYPE.LIST_DETAIL_CREATE,
+  UI_ARCHETYPE.FULL_CRUD,
+  UI_ARCHETYPE.OTHER,
+];
+
+/** Keys into {@link MiningAggregates.uiPrimitiveCounts} for generated UI page stats. */
+export const UI_PRIMITIVE_LABEL = {
+  TABLE_LIST: "table (list)",
+  FORM_CREATE: "form (create)",
+  DETAIL_VIEW: "detail view",
+  UPDATE_FORM: "update form",
+  DELETE_ACTION: "delete action",
+} as const;
+
+export const LIST_RESPONSE_SHAPE_LABEL = {
+  ARRAY_ROOT: "array root",
+  OTHER: "other",
+} as const;
 
 export interface ResourceShapeStats {
   fieldsPerResource: number[];
@@ -18,6 +65,7 @@ export interface ResourceShapeStats {
 
 export interface CrudPatternStats {
   list: number;
+  listScoped: number;
   detail: number;
   create: number;
   update: number;
@@ -183,20 +231,23 @@ export function analyzeCrudPattern(apiIr: ApiIR): CrudPatternStats {
     }
   }
   let list = 0;
+  let listScoped = 0;
   let detail = 0;
   let create = 0;
   let update = 0;
   let del = 0;
   for (const res of apiIr.resources) {
     const opKinds = new Set(res.operations.map((o) => o.kind));
-    if (opKinds.has("list")) list++;
-    if (opKinds.has("detail")) detail++;
-    if (opKinds.has("create")) create++;
-    if (opKinds.has("update")) update++;
-    if (opKinds.has("delete")) del++;
+    if (opKinds.has(OPERATION_KIND.list)) list++;
+    if (opKinds.has(OPERATION_KIND.listScoped)) listScoped++;
+    if (opKinds.has(OPERATION_KIND.detail)) detail++;
+    if (opKinds.has(OPERATION_KIND.create)) create++;
+    if (opKinds.has(OPERATION_KIND.update)) update++;
+    if (opKinds.has(OPERATION_KIND.delete)) del++;
   }
   return {
     list,
+    listScoped,
     detail,
     create,
     update,
@@ -335,7 +386,8 @@ export function formatCrudPatternReport(stats: CrudPatternStats): string[] {
   const pct = (x: number) => ((x / n) * 100).toFixed(0);
   lines.push("CRUD Pattern Coverage");
   lines.push("");
-  lines.push(`list:     ${pct(stats.list)}%`);
+  lines.push(`list:        ${pct(stats.list)}%`);
+  lines.push(`listScoped:  ${pct(stats.listScoped)}%`);
   lines.push(`detail:   ${pct(stats.detail)}%`);
   lines.push(`create:   ${pct(stats.create)}%`);
   lines.push(`update:   ${pct(stats.update)}%`);
@@ -387,19 +439,22 @@ export function extractResourceSignature(res: ResourceIR): ResourceSignature | n
       const d = schemaDepth(op.responseSchema);
       if (d > depth) depth = d;
     }
-    if ((op.kind === "create" || op.kind === "update") && op.requestSchema) {
+    if ((op.kind === OPERATION_KIND.create || op.kind === OPERATION_KIND.update) && op.requestSchema) {
       const reqObj = getObjectSchema(op.requestSchema);
       if (reqObj) {
         const keys = Object.keys(reqObj);
         if (keys.length > fields) fields = keys.length;
       }
     }
-    const q = op.queryParamCount ?? 0;
+    const q =
+      op.parameters && op.parameters.length > 0
+        ? op.parameters.filter((p) => p.in === PARAMETER_IN.query).length
+        : (op.queryParamCount ?? 0);
     if (q > query_params) query_params = q;
   }
 
   const opKinds = [...new Set(res.operations.map((o) => o.kind))].sort(
-    (a, b) => KIND_ORDER.indexOf(a) - KIND_ORDER.indexOf(b)
+    (a, b) => OPERATION_KIND_ORDER.indexOf(a) - OPERATION_KIND_ORDER.indexOf(b)
   );
 
   return {
@@ -649,27 +704,28 @@ export function formatSpecComplexityReport(stats: SpecComplexityStats[]): string
 
 // --- Comprehensive pattern mining (Phases 2–5) ---
 
-export type UIArchetype =
-  | "create-only"
-  | "list-only"
-  | "detail-only"
-  | "list+create"
-  | "list+detail"
-  | "list+detail+create"
-  | "full CRUD"
-  | "other";
-
 function classifyUIArchetype(ops: OperationIR["kind"][]): UIArchetype {
   const set = new Set(ops);
   const has = (k: OperationIR["kind"]) => set.has(k);
-  if (has("list") && has("detail") && has("create") && has("update") && has("delete")) return "full CRUD";
-  if (has("list") && has("detail") && has("create")) return "list+detail+create";
-  if (has("list") && has("detail")) return "list+detail";
-  if (has("list") && has("create")) return "list+create";
-  if (has("create") && ops.length === 1) return "create-only";
-  if (has("list") && ops.length === 1) return "list-only";
-  if (has("detail") && ops.length === 1) return "detail-only";
-  return "other";
+  const hasListLike = has(OPERATION_KIND.list) || has(OPERATION_KIND.listScoped);
+  if (
+    hasListLike &&
+    has(OPERATION_KIND.detail) &&
+    has(OPERATION_KIND.create) &&
+    has(OPERATION_KIND.update) &&
+    has(OPERATION_KIND.delete)
+  ) {
+    return UI_ARCHETYPE.FULL_CRUD;
+  }
+  if (hasListLike && has(OPERATION_KIND.detail) && has(OPERATION_KIND.create)) {
+    return UI_ARCHETYPE.LIST_DETAIL_CREATE;
+  }
+  if (hasListLike && has(OPERATION_KIND.detail)) return UI_ARCHETYPE.LIST_DETAIL;
+  if (hasListLike && has(OPERATION_KIND.create)) return UI_ARCHETYPE.LIST_CREATE;
+  if (has(OPERATION_KIND.create) && ops.length === 1) return UI_ARCHETYPE.CREATE_ONLY;
+  if (hasListLike && ops.length === 1) return UI_ARCHETYPE.LIST_ONLY;
+  if (has(OPERATION_KIND.detail) && ops.length === 1) return UI_ARCHETYPE.DETAIL_ONLY;
+  return UI_ARCHETYPE.OTHER;
 }
 
 export interface MiningAggregates {
@@ -737,33 +793,55 @@ export function mineComprehensive(
         operationCounts.set(op.kind, (operationCounts.get(op.kind) ?? 0) + 1);
         operationTotal++;
       }
-      if (resOpKinds.has("list")) uiPrimitiveCounts.set("table (list)", (uiPrimitiveCounts.get("table (list)") ?? 0) + 1);
-      if (resOpKinds.has("create")) uiPrimitiveCounts.set("form (create)", (uiPrimitiveCounts.get("form (create)") ?? 0) + 1);
-      if (resOpKinds.has("detail")) uiPrimitiveCounts.set("detail view", (uiPrimitiveCounts.get("detail view") ?? 0) + 1);
-      if (resOpKinds.has("update")) uiPrimitiveCounts.set("update form", (uiPrimitiveCounts.get("update form") ?? 0) + 1);
-      if (resOpKinds.has("delete")) uiPrimitiveCounts.set("delete action", (uiPrimitiveCounts.get("delete action") ?? 0) + 1);
+      if (resOpKinds.has(OPERATION_KIND.list) || resOpKinds.has(OPERATION_KIND.listScoped)) {
+        uiPrimitiveCounts.set(UI_PRIMITIVE_LABEL.TABLE_LIST, (uiPrimitiveCounts.get(UI_PRIMITIVE_LABEL.TABLE_LIST) ?? 0) + 1);
+      }
+      if (resOpKinds.has(OPERATION_KIND.create)) {
+        uiPrimitiveCounts.set(UI_PRIMITIVE_LABEL.FORM_CREATE, (uiPrimitiveCounts.get(UI_PRIMITIVE_LABEL.FORM_CREATE) ?? 0) + 1);
+      }
+      if (resOpKinds.has(OPERATION_KIND.detail)) {
+        uiPrimitiveCounts.set(UI_PRIMITIVE_LABEL.DETAIL_VIEW, (uiPrimitiveCounts.get(UI_PRIMITIVE_LABEL.DETAIL_VIEW) ?? 0) + 1);
+      }
+      if (resOpKinds.has(OPERATION_KIND.update)) {
+        uiPrimitiveCounts.set(UI_PRIMITIVE_LABEL.UPDATE_FORM, (uiPrimitiveCounts.get(UI_PRIMITIVE_LABEL.UPDATE_FORM) ?? 0) + 1);
+      }
+      if (resOpKinds.has(OPERATION_KIND.delete)) {
+        uiPrimitiveCounts.set(UI_PRIMITIVE_LABEL.DELETE_ACTION, (uiPrimitiveCounts.get(UI_PRIMITIVE_LABEL.DELETE_ACTION) ?? 0) + 1);
+      }
 
       if (sig.operations.length >= 1) resourcesWithUsableUI++;
       fieldsPerResource.push(sig.fields);
       operationsPerResource.push(res.operations.length);
 
       for (const op of res.operations) {
-        const schema = op.kind === "create" || op.kind === "update" ? op.requestSchema : op.responseSchema;
+        const schema =
+          op.kind === OPERATION_KIND.create || op.kind === OPERATION_KIND.update
+            ? op.requestSchema
+            : op.responseSchema;
         if (!schema) continue;
         const obj = getObjectSchema(schema);
-        if (op.kind === "list") {
+        if (isListLikeKind(op.kind)) {
           const s = schema as Record<string, unknown>;
           if (s.type === "array") {
-            listResponseShapes.set("array root", (listResponseShapes.get("array root") ?? 0) + 1);
+            listResponseShapes.set(
+              LIST_RESPONSE_SHAPE_LABEL.ARRAY_ROOT,
+              (listResponseShapes.get(LIST_RESPONSE_SHAPE_LABEL.ARRAY_ROOT) ?? 0) + 1
+            );
           } else if (s.type === "object") {
             const shape = classifyListResponseShape(s);
             listResponseShapes.set(shape, (listResponseShapes.get(shape) ?? 0) + 1);
           } else {
-            listResponseShapes.set("other", (listResponseShapes.get("other") ?? 0) + 1);
+            listResponseShapes.set(
+              LIST_RESPONSE_SHAPE_LABEL.OTHER,
+              (listResponseShapes.get(LIST_RESPONSE_SHAPE_LABEL.OTHER) ?? 0) + 1
+            );
           }
         }
         if (!obj) continue;
-        if ((op.kind === "create" || op.kind === "update") && Object.keys(obj).length > 0) {
+        if (
+          (op.kind === OPERATION_KIND.create || op.kind === OPERATION_KIND.update) &&
+          Object.keys(obj).length > 0
+        ) {
           const req = schema.required as string[] | undefined;
           requiredFieldsPerResource.push(Array.isArray(req) ? req.length : 0);
         }
@@ -790,7 +868,7 @@ export function mineComprehensive(
       .map((r) => extractResourceSignature(r))
       .filter((s): s is ResourceSignature => s !== null && !(s.fields === 0 && s.operations.length === 0))
       .map((s) => classifyUIArchetype(s.operations));
-    const hasFullCrud = resArchetypes.includes("full CRUD");
+    const hasFullCrud = resArchetypes.includes(UI_ARCHETYPE.FULL_CRUD);
     const resCount = apiIr.resources.length;
     let specArch: string;
     if (resCount === 1) {
@@ -886,7 +964,7 @@ export function formatComprehensiveReport(agg: MiningAggregates, options?: Forma
 
   lines.push("## 3. Operation Frequency");
   lines.push("");
-  const opOrder: OperationIR["kind"][] = ["create", "list", "detail", "update", "delete"];
+  const opOrder = [...OPERATION_KIND_REPORT_ORDER];
   for (const op of opOrder) {
     const c = agg.operationCounts.get(op) ?? 0;
     lines.push(`${op.padEnd(8)} ${pct(c, agg.operationTotal)}%`);
@@ -895,16 +973,7 @@ export function formatComprehensiveReport(agg: MiningAggregates, options?: Forma
 
   lines.push("## 4. Resource UI Archetypes");
   lines.push("");
-  const archetypeOrder: UIArchetype[] = [
-    "create-only",
-    "list-only",
-    "detail-only",
-    "list+create",
-    "list+detail",
-    "list+detail+create",
-    "full CRUD",
-    "other",
-  ];
+  const archetypeOrder = [...UI_ARCHETYPE_REPORT_ORDER];
   for (const a of archetypeOrder) {
     const c = agg.uiArchetypeCounts.get(a) ?? 0;
     lines.push(`${a.padEnd(22)} ${pct(c, agg.totalResources)}%`);
@@ -914,11 +983,11 @@ export function formatComprehensiveReport(agg: MiningAggregates, options?: Forma
   lines.push("## 5. Generated UI Pages");
   lines.push("");
   const primLabels: Array<[string, string]> = [
-    ["table (list)", "table pages"],
-    ["form (create)", "form pages"],
-    ["detail view", "detail pages"],
-    ["update form", "edit pages"],
-    ["delete action", "delete action"],
+    [UI_PRIMITIVE_LABEL.TABLE_LIST, "table pages"],
+    [UI_PRIMITIVE_LABEL.FORM_CREATE, "form pages"],
+    [UI_PRIMITIVE_LABEL.DETAIL_VIEW, "detail pages"],
+    [UI_PRIMITIVE_LABEL.UPDATE_FORM, "edit pages"],
+    [UI_PRIMITIVE_LABEL.DELETE_ACTION, "delete action"],
   ];
   for (const [key, label] of primLabels) {
     const c = agg.uiPrimitiveCounts.get(key) ?? 0;

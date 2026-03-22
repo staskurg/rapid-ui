@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Users Api v1",
     "version": "v1"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/birthdate",
+          "parameters": [],
           "responseSchema": {
             "description": "The birthdate response",
             "example": {
@@ -45,6 +47,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/description",
+          "parameters": [],
           "responseSchema": {
             "description": "The description response",
             "example": {
@@ -64,6 +67,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/gender",
+          "parameters": [],
           "responseSchema": {
             "description": "The gender response",
             "example": {
@@ -84,6 +88,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/birthdate",
+          "parameters": [],
           "requestSchema": {
             "description": "The birthdate request",
             "properties": {
@@ -118,6 +123,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/description",
+          "parameters": [],
           "requestSchema": {
             "description": "The description request",
             "properties": {
@@ -147,6 +153,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/gender",
+          "parameters": [],
           "requestSchema": {
             "description": "The gender request",
             "properties": {
@@ -172,6 +179,24 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/display-names/validate",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "birthdate",
+              "schema": {
+                "format": "date-time",
+                "type": "string"
+              },
+              "format": "date-time"
+            },
+            {
+              "in": "query",
+              "name": "displayName",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object"
@@ -182,6 +207,24 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/users/{userId}/display-names/validate",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "format": "int64"
+            },
+            {
+              "in": "query",
+              "name": "displayName",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "userId",
           "queryParamCount": 1,
           "responseSchema": {
@@ -193,6 +236,17 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/v1/users/{userId}/display-names",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "format": "int64"
+            }
+          ],
           "identifierParam": "userId",
           "requestSchema": {
             "description": "Request model for changing a display name.",
@@ -219,6 +273,52 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/users/{userId}/username-history",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "format": "int64"
+            },
+            {
+              "in": "query",
+              "name": "cursor",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "default": 10,
+                "enum": [
+                  10,
+                  25,
+                  50,
+                  100
+                ],
+                "format": "int32",
+                "type": "integer"
+              },
+              "format": "int32"
+            },
+            {
+              "in": "query",
+              "name": "sortOrder",
+              "schema": {
+                "default": "Asc",
+                "enum": [
+                  "Asc",
+                  "Desc"
+                ],
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "userId",
           "queryParamCount": 3,
           "responseSchema": {
@@ -271,6 +371,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/authenticated",
+          "parameters": [],
           "responseSchema": {
             "description": "A response model representing absolute minimal authenticating user information.\r\nNo new attributes should be added to this response since it is in the critical path of app launch and we want to minimize dependencies.",
             "example": {
@@ -301,6 +402,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/authenticated/age-bracket",
+          "parameters": [],
           "responseSchema": {
             "description": "A user age bracket response model.",
             "example": {
@@ -321,6 +423,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/authenticated/country-code",
+          "parameters": [],
           "responseSchema": {
             "description": "A user country code response model.",
             "example": {
@@ -340,6 +443,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/authenticated/roles",
+          "parameters": [],
           "responseSchema": {
             "description": "A user roles response model.",
             "example": {
@@ -365,6 +469,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/v1/users/{userId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "format": "int64"
+            }
+          ],
           "identifierParam": "userId",
           "responseSchema": {
             "description": "A response model representing user information.",
@@ -422,6 +537,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/usernames/users",
+          "parameters": [],
           "requestSchema": {
             "description": "Request model for getting users by usernames.",
             "properties": {
@@ -505,6 +621,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/v1/users",
+          "parameters": [],
           "requestSchema": {
             "description": "Request model for getting users by ids.",
             "properties": {
@@ -588,6 +705,45 @@
           "method": "GET",
           "kind": "list",
           "path": "/v1/users/search",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "cursor",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "keyword",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "default": 10,
+                "enum": [
+                  10,
+                  25,
+                  50,
+                  100
+                ],
+                "format": "int32",
+                "type": "integer"
+              },
+              "format": "int32"
+            },
+            {
+              "in": "query",
+              "name": "sessionId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "example": {

@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "ClientFlow AI Suite API",
     "version": "1.0.0"
@@ -13,6 +14,45 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/appointments",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "scheduled",
+                  "completed",
+                  "cancelled"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "window",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "next_24h"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "within",
+              "schema": {
+                "type": "string",
+                "pattern": "^\\d+d$"
+              }
+            }
+          ],
           "queryParamCount": 4,
           "responseSchema": {
             "type": "object",
@@ -70,6 +110,15 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/automations/email_inbound",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "requestSchema": {
             "type": "object",
@@ -133,6 +182,15 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/automations/run",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "requestSchema": {
             "type": "object",
@@ -192,6 +250,15 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/automations/sms_inbound",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "requestSchema": {
             "type": "object",
@@ -258,6 +325,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/businesses",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -316,6 +384,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/customers",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -371,6 +440,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/customers",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -455,6 +525,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -494,6 +565,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -584,6 +656,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/test",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -623,6 +696,15 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/messages/outbound",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "requestSchema": {
             "type": "object",
@@ -700,6 +782,25 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/sla/unanswered",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "minutes",
+              "schema": {
+                "type": "integer",
+                "default": 5,
+                "minimum": 1,
+                "maximum": 60
+              }
+            },
+            {
+              "in": "query",
+              "name": "orgId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",

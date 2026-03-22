@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "EvalForge Deduplication Service",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/dedup/run-once",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "properties": {
@@ -143,6 +145,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -182,6 +185,62 @@
           "method": "GET",
           "kind": "list",
           "path": "/suggestions",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "cursor",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 50,
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "severity",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "approved",
+                  "rejected"
+                ]
+              }
+            },
+            {
+              "in": "query",
+              "name": "type",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "eval",
+                  "guardrail",
+                  "runbook"
+                ]
+              }
+            }
+          ],
           "queryParamCount": 5,
           "responseSchema": {
             "type": "object",
@@ -405,6 +464,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/suggestions/{suggestionId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "suggestionId",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "suggestionId",
           "responseSchema": {
             "type": "object",

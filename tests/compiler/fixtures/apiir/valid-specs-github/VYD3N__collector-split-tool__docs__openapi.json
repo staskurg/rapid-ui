@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Collector Split Tool API",
     "version": "1.0.0"
@@ -13,6 +14,30 @@
           "method": "GET",
           "kind": "detail",
           "path": "/collectors/{address}/stats",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "collection_address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "time_range",
+              "schema": {
+                "type": "integer",
+                "default": 30
+              }
+            }
+          ],
           "identifierParam": "address",
           "queryParamCount": 2,
           "responseSchema": {
@@ -77,6 +102,39 @@
           "method": "GET",
           "kind": "detail",
           "path": "/collectors/{collection_address}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "collection_address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "include_stats",
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            {
+              "in": "query",
+              "name": "max_collectors",
+              "schema": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "min_nfts",
+              "schema": {
+                "type": "integer",
+                "default": 1
+              }
+            }
+          ],
           "identifierParam": "collection_address",
           "queryParamCount": 3,
           "responseSchema": {
@@ -142,6 +200,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -171,6 +230,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/splits/calculate",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -252,6 +312,23 @@
           "method": "GET",
           "kind": "detail",
           "path": "/transactions/{operation_hash}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "operation_hash",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "wait_for_confirmation",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            }
+          ],
           "identifierParam": "operation_hash",
           "queryParamCount": 1,
           "responseSchema": {

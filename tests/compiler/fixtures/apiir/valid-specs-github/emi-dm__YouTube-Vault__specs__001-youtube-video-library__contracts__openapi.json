@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "YouTube Video Library API",
     "version": "1.0.0"
@@ -13,6 +14,26 @@
           "method": "GET",
           "kind": "list",
           "path": "/videos/search",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 20
+              }
+            },
+            {
+              "in": "query",
+              "name": "q",
+              "schema": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "object",
@@ -53,6 +74,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/videos/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -87,6 +117,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/videos",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

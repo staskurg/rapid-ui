@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Orders Service API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/openapi.json",
+          "parameters": [],
           "responseSchema": {
             "type": "object"
           }
@@ -28,6 +30,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/healthz",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -46,6 +49,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/readyz",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [
@@ -70,6 +74,27 @@
           "method": "GET",
           "kind": "list",
           "path": "/orders",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 100,
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            }
+          ],
           "queryParamCount": 2,
           "responseSchema": {
             "type": "array",
@@ -156,6 +181,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/orders/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -239,6 +275,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/orders",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -370,6 +407,17 @@
           "method": "PATCH",
           "kind": "update",
           "path": "/orders/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "requestSchema": {
             "type": "object",
@@ -477,6 +525,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "required": [

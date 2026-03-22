@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "CodeHawk API",
     "version": "1.0.0"
@@ -13,6 +14,34 @@
           "method": "GET",
           "kind": "list",
           "path": "/analyses",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 100
+              }
+            },
+            {
+              "in": "query",
+              "name": "offset",
+              "schema": {
+                "type": "integer",
+                "default": 0,
+                "minimum": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "organization_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -61,6 +90,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/analysis/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -188,6 +226,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/analyze",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -346,6 +385,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/auth/login",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -387,6 +427,35 @@
           "method": "GET",
           "kind": "detail",
           "path": "/analysis/{id}/issues",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "rule_id",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "severity",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "error",
+                  "warning",
+                  "suggestion",
+                  "info"
+                ]
+              }
+            }
+          ],
           "identifierParam": "id",
           "queryParamCount": 2,
           "responseSchema": {
@@ -454,6 +523,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/languages",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -471,6 +541,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/rules/{language}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "language",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "language",
           "responseSchema": {
             "type": "object",
@@ -518,6 +597,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/organizations",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -557,6 +637,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/organizations",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -606,6 +687,15 @@
           "method": "GET",
           "kind": "detail",
           "path": "/analysis/{id}/suggestions",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -667,6 +757,15 @@
           "method": "GET",
           "kind": "list",
           "path": "/users",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "organization_id",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -720,6 +819,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/webhook/notify",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [

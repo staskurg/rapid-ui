@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "ComfyUI Serverless API",
     "version": "1.0.0"
@@ -13,6 +14,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/health",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -32,6 +34,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/ready",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -57,6 +60,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/queue/metrics",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -94,6 +98,23 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/tasks",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "status",
+              "schema": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "running",
+                  "completed",
+                  "failed",
+                  "cancelled"
+                ],
+                "description": "Task status"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "responseSchema": {
             "type": "object",
@@ -189,6 +210,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/v1/tasks/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -272,6 +304,7 @@
           "method": "POST",
           "kind": "create",
           "path": "/api/v1/tasks",
+          "parameters": [],
           "requestSchema": {
             "type": "object",
             "required": [
@@ -385,6 +418,17 @@
           "method": "DELETE",
           "kind": "delete",
           "path": "/api/v1/tasks/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",
@@ -407,6 +451,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/workers",
+          "parameters": [],
           "responseSchema": {
             "type": "array",
             "items": {
@@ -502,6 +547,7 @@
           "method": "GET",
           "kind": "list",
           "path": "/api/v1/workers/metrics",
+          "parameters": [],
           "responseSchema": {
             "type": "object",
             "properties": {
@@ -541,6 +587,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/api/v1/workers/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "id",
           "responseSchema": {
             "type": "object",

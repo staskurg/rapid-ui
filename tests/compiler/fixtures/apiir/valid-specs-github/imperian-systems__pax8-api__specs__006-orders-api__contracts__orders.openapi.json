@@ -1,4 +1,5 @@
 {
+  "apiIrVersion": 1,
   "api": {
     "title": "Pax8 Orders API - Client Contract",
     "version": "1.0.0"
@@ -13,6 +14,36 @@
           "method": "GET",
           "kind": "list",
           "path": "/orders",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "companyId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            },
+            {
+              "in": "query",
+              "name": "page",
+              "schema": {
+                "type": "integer",
+                "minimum": 0,
+                "default": 0
+              }
+            },
+            {
+              "in": "query",
+              "name": "size",
+              "schema": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 200,
+                "default": 10
+              }
+            }
+          ],
           "queryParamCount": 3,
           "responseSchema": {
             "type": "object",
@@ -195,6 +226,17 @@
           "method": "GET",
           "kind": "detail",
           "path": "/orders/{orderId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "orderId",
+              "schema": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "format": "uuid"
+            }
+          ],
           "identifierParam": "orderId",
           "responseSchema": {
             "type": "object",
@@ -342,6 +384,15 @@
           "method": "POST",
           "kind": "create",
           "path": "/orders",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "isMock",
+              "schema": {
+                "type": "boolean"
+              }
+            }
+          ],
           "queryParamCount": 1,
           "requestSchema": {
             "type": "object",
