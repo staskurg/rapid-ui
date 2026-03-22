@@ -7,7 +7,11 @@ import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { canonicalize } from '@/lib/compiler/openapi/canonicalize';
 import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir/build';
-import { CURRENT_API_IR_VERSION, PARAMETER_IN } from '@/lib/compiler/apiir';
+import {
+  CURRENT_API_IR_VERSION,
+  PARAMETER_IN,
+  isListShapedResponseSchema,
+} from '@/lib/compiler/apiir';
 import { sha256Hash } from '@/lib/compiler/hash';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -127,5 +131,76 @@ describe('ApiIR build', () => {
     expect(result.success).toBe(false);
     if (result.success) return;
     expect(result.error.code).toBe('IR_INVALID');
+  });
+
+  it('classifies list-shaped success bodies (shared list-shape module)', () => {
+    expect(isListShapedResponseSchema({ type: 'array', items: { type: 'object' } })).toBe(true);
+    expect(
+      isListShapedResponseSchema({
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'string' } } },
+          },
+        },
+      })
+    ).toBe(true);
+    expect(
+      isListShapedResponseSchema({
+        type: 'object',
+        properties: {
+          sku: { type: 'string' },
+          tags: { type: 'array', items: { type: 'string' } },
+        },
+      })
+    ).toBe(false);
+  });
+
+  it('GET with one path param and envelope list body is listScoped', () => {
+    const yaml = `
+openapi: 3.0.3
+info:
+  title: Scoped list
+  version: '1'
+paths:
+  /orgs/{orgId}/widgets:
+    get:
+      operationId: listWidgetsForOrg
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+`;
+    const parseResult = parseOpenAPI(yaml);
+    if (!parseResult.success) throw new Error(parseResult.error.message);
+    const validateResult = validateSubset(parseResult.doc);
+    if (!validateResult.success) throw new Error('validate');
+    const resolveResult = resolveRefs(parseResult.doc);
+    if (!resolveResult.success) throw new Error(resolveResult.error.message);
+    const doc = canonicalize(resolveResult.doc) as Record<string, unknown>;
+    const result = buildApiIR(doc);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const op = result.apiIr.resources[0]?.operations[0];
+    expect(op?.kind).toBe('listScoped');
+    expect(op?.identifierParam).toBe('orgId');
   });
 });

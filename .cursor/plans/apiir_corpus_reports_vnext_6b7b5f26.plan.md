@@ -8,8 +8,14 @@ todos:
   - id: phase-1-apiir-contract
     content: "Phase 1: ApiIR contract (apiIrVersion, ParameterIR, OPERATION_KIND consts, listScoped in union, fixtures regen, tests)"
     status: completed
-  - id: phase-1-4-contract-classifier
-    content: "Phases 2–4 (remaining): shared list-shape classifier + listScoped inference, grouping smoke / listLikeOps shape"
+  - id: phase-2-list-shape-classifier
+    content: "Phase 2: Shared list-shape module, listScoped inference in build, ParameterIR + mining wired"
+    status: completed
+  - id: phase-3-kind-ordering
+    content: "Phase 3: compareOperationKind / operationKindRank; signature sort; mining + archetype listLike op"
+    status: completed
+  - id: phase-4-grouping-multilist
+    content: "Phase 4 (optional): grouping smoke / listLikeOps — defer or implement"
     status: pending
   - id: phase-5-fixtures-verify
     content: "Phase 5: Regen fixtures, add/run verify:apiir-fixtures, reconcile corpus vs fixture counts, grep-driven kind updates + compiler tests"

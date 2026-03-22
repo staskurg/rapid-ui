@@ -4,9 +4,11 @@
  */
 
 import {
+  classifyListResponseEnvelope,
+  compareOperationKind,
+  isArrayRootSchema,
   isListLikeKind,
   OPERATION_KIND,
-  OPERATION_KIND_ORDER,
   OPERATION_KIND_REPORT_ORDER,
   PARAMETER_IN,
   type ApiIR,
@@ -272,63 +274,6 @@ function percentile(sorted: number[], p: number): number {
   return sorted[Math.max(0, idx)] ?? 0;
 }
 
-/** Preferred keys (reported as-is). Order matters for consistent classification. */
-const LIST_PREFERRED_KEYS = [
-  "data",
-  "items",
-  "results",
-  "records",
-  "response",
-  "payload",
-  "body",
-  "entries",
-  "list",
-  "values",
-  "content",
-  "elements",
-] as const;
-/** Inner keys for nested shapes (e.g. object.response.data). */
-const LIST_INNER_KEYS = ["data", "items", "results", "records", "values", "elements"] as const;
-
-function isArraySchema(obj: Record<string, unknown>): boolean {
-  const t = obj.type;
-  return t === "array" || (Array.isArray(t) && (t as unknown[]).includes("array"));
-}
-
-function findArrayPropertyKey(props: Record<string, unknown>): string | null {
-  for (const [key, val] of Object.entries(props)) {
-    if (val && typeof val === "object" && isArraySchema(val as Record<string, unknown>)) {
-      return key;
-    }
-  }
-  return null;
-}
-
-function classifyListResponseShape(schema: Record<string, unknown>): string {
-  const props = schema.properties as Record<string, unknown> | undefined;
-  if (!props || typeof props !== "object") return "other";
-
-  for (const outer of LIST_PREFERRED_KEYS) {
-    const val = props[outer];
-    if (!val || typeof val !== "object") continue;
-    const obj = val as Record<string, unknown>;
-    if (isArraySchema(obj)) return `object.${outer}`;
-    const innerProps = obj.properties as Record<string, unknown> | undefined;
-    if (innerProps && typeof innerProps === "object") {
-      for (const inner of LIST_INNER_KEYS) {
-        const innerVal = innerProps[inner];
-        if (innerVal && typeof innerVal === "object" && isArraySchema(innerVal as Record<string, unknown>)) {
-          return `object.${outer}.${inner}`;
-        }
-      }
-    }
-  }
-
-  const catchAll = findArrayPropertyKey(props);
-  if (catchAll) return `object.${catchAll}`;
-  return "other";
-}
-
 function median(sorted: number[]): number {
   if (sorted.length === 0) return 0;
   const mid = Math.floor(sorted.length / 2);
@@ -453,9 +398,7 @@ export function extractResourceSignature(res: ResourceIR): ResourceSignature | n
     if (q > query_params) query_params = q;
   }
 
-  const opKinds = [...new Set(res.operations.map((o) => o.kind))].sort(
-    (a, b) => OPERATION_KIND_ORDER.indexOf(a) - OPERATION_KIND_ORDER.indexOf(b)
-  );
+  const opKinds = [...new Set(res.operations.map((o) => o.kind))].sort(compareOperationKind);
 
   return {
     fields,
@@ -821,19 +764,16 @@ export function mineComprehensive(
         if (!schema) continue;
         const obj = getObjectSchema(schema);
         if (isListLikeKind(op.kind)) {
-          const s = schema as Record<string, unknown>;
-          if (s.type === "array") {
+          if (isArrayRootSchema(schema)) {
             listResponseShapes.set(
               LIST_RESPONSE_SHAPE_LABEL.ARRAY_ROOT,
               (listResponseShapes.get(LIST_RESPONSE_SHAPE_LABEL.ARRAY_ROOT) ?? 0) + 1
             );
-          } else if (s.type === "object") {
-            const shape = classifyListResponseShape(s);
-            listResponseShapes.set(shape, (listResponseShapes.get(shape) ?? 0) + 1);
           } else {
+            const shape = classifyListResponseEnvelope(schema);
             listResponseShapes.set(
-              LIST_RESPONSE_SHAPE_LABEL.OTHER,
-              (listResponseShapes.get(LIST_RESPONSE_SHAPE_LABEL.OTHER) ?? 0) + 1
+              shape,
+              (listResponseShapes.get(shape) ?? 0) + 1
             );
           }
         }

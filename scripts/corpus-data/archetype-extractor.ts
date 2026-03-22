@@ -4,6 +4,7 @@
  */
 
 import {
+  isListLikeKind,
   OPERATION_KIND,
   type JsonSchema,
   type OperationKind,
@@ -441,7 +442,7 @@ export function extractResourceMetrics(resource: ResourceIR): ResourceArchetypeM
     }
   }
 
-  const listOp = operations.find((o) => o.kind === "list");
+  const listOp = operations.find((o) => isListLikeKind(o.kind));
   const listResponseShape = getListResponseShape(listOp?.responseSchema);
 
   const primitiveOnly =

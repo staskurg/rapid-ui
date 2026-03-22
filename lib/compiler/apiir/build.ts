@@ -6,8 +6,8 @@
 
 import stringify from 'fast-json-stable-stringify';
 import {
+  compareOperationKind,
   CURRENT_API_IR_VERSION,
-  OPERATION_KIND_ORDER,
   type ApiIR,
   type OperationIR,
   type ResourceIR,
@@ -20,9 +20,8 @@ import { sha256Hash } from '../hash';
 
 function sortOperations(ops: OperationIR[]): OperationIR[] {
   return [...ops].sort((a, b) => {
-    const aIdx = OPERATION_KIND_ORDER.indexOf(a.kind);
-    const bIdx = OPERATION_KIND_ORDER.indexOf(b.kind);
-    if (aIdx !== bIdx) return aIdx - bIdx;
+    const byKind = compareOperationKind(a.kind, b.kind);
+    if (byKind !== 0) return byKind;
     return a.path.localeCompare(b.path) || a.method.localeCompare(b.method);
   });
 }

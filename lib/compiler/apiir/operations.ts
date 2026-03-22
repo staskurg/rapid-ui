@@ -16,6 +16,7 @@ import {
 } from './types';
 import type { RawOperation } from './grouping';
 import { selectJsonContent } from '../openapi/content';
+import { isListShapedResponseSchema } from './list-shape';
 
 const SUCCESS_CODES = ['200', '201'];
 
@@ -53,16 +54,20 @@ function getRequestSchema(
   return selected ? (selected.schema as JsonSchema) : null;
 }
 
-function inferKind(
+function inferCrudKind(
   method: string,
-  path: string,
-  pathParams: string[]
+  pathParams: string[],
+  responseSchema: JsonSchema
 ): { kind: OperationIR['kind']; identifierParam?: string } | null {
   const m = method.toLowerCase();
   if (m === 'get') {
     if (pathParams.length === 0) return { kind: OPERATION_KIND.list };
-    if (pathParams.length === 1)
+    if (pathParams.length === 1) {
+      if (isListShapedResponseSchema(responseSchema)) {
+        return { kind: OPERATION_KIND.listScoped, identifierParam: pathParams[0] };
+      }
       return { kind: OPERATION_KIND.detail, identifierParam: pathParams[0] };
+    }
     return null;
   }
   if (m === 'post') {
@@ -161,18 +166,6 @@ export type MapOperationOutput = MapOperationResult | MapOperationFailure;
  */
 export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): MapOperationOutput {
   const pathParams = extractPathParams(raw.path);
-  const kindResult = inferKind(raw.method, raw.path, pathParams);
-  if (!kindResult) {
-    return {
-      success: false,
-      error: createError(
-        'IR_INVALID',
-        'ApiIR',
-        `Non-CRUD operation: ${raw.method.toUpperCase()} ${raw.path} (path params: ${pathParams.join(', ') || 'none'})`,
-        `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
-      ),
-    };
-  }
 
   const pathItem = (doc.paths as Record<string, unknown>)?.[raw.path];
   if (!pathItem || typeof pathItem !== 'object') {
@@ -208,6 +201,19 @@ export function mapOperation(raw: RawOperation, doc: Record<string, unknown>): M
         'IR_INVALID',
         'ApiIR',
         `No 200/201 application/json response: ${raw.method.toUpperCase()} ${raw.path}`,
+        `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
+      ),
+    };
+  }
+
+  const kindResult = inferCrudKind(raw.method, pathParams, responseSchema);
+  if (!kindResult) {
+    return {
+      success: false,
+      error: createError(
+        'IR_INVALID',
+        'ApiIR',
+        `Non-CRUD operation: ${raw.method.toUpperCase()} ${raw.path} (path params: ${pathParams.join(', ') || 'none'})`,
         `/paths/${raw.path.replace(/\//g, '~1')}/${raw.method}`
       ),
     };

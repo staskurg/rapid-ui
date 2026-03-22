@@ -35,6 +35,23 @@ export const OPERATION_KIND_ORDER = [
 ] as const satisfies readonly OperationKind[];
 
 /**
+ * Monotonic rank for {@link OperationKind} (0 … n-1), aligned with {@link OPERATION_KIND_ORDER}.
+ * Unknown kinds (e.g. legacy JSON) sort after all known kinds.
+ */
+export function operationKindRank(kind: OperationKind): number {
+  const i = OPERATION_KIND_ORDER.indexOf(kind);
+  if (i !== -1) return i;
+  return OPERATION_KIND_ORDER.length;
+}
+
+/**
+ * Stable ordering for operations / signature kind lists (build + mining).
+ */
+export function compareOperationKind(a: OperationKind, b: OperationKind): number {
+  return operationKindRank(a) - operationKindRank(b);
+}
+
+/**
  * Report table order for “operation frequency” sections (differs from {@link OPERATION_KIND_ORDER}).
  */
 export const OPERATION_KIND_REPORT_ORDER = [
