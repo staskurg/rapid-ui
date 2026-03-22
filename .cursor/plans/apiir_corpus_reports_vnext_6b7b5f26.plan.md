@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: phase-5-fixtures-verify
     content: "Phase 5: Regen fixtures, add/run verify:apiir-fixtures, reconcile corpus vs fixture counts, grep-driven kind updates + compiler tests"
-    status: pending
+    status: completed
   - id: phase-7-analyze-apiir
     content: "Phase 7: Update analyze-apiir + archetype-extractor for list ∪ listScoped and locked pattern tokens; verify corpus-report and corpus-pattern-mining"
     status: pending
@@ -180,7 +180,7 @@ Treat as **list** ∪ **listScoped** unless **pattern tokens** must distinguish 
 
 - **Parameter merge:** [lib/compiler/apiir/operations.ts](lib/compiler/apiir/operations.ts) already merges like subset (`paramKey` = `in:name`). Emitting **ParameterIR[]** refactors that loop.
 - **Fixtures:** ~**144** / **379** YAML in `valid-specs-`* with parallel **apiir** JSON; plus [tests/compiler/fixtures/demo/](tests/compiler/fixtures/demo/) (**5** YAML ↔ `apiir/demo/`). **Generator and verifier must include demo.**
-- **Verifier** today: `*.yaml` / `*.yml` only — OpenAPI `*.json` beside YAML needs **verifier extended**; **JSON-only** specs may generate but not verify until supported.
+- **Verifier:** [scripts/verify-apiir-fixtures.ts](scripts/verify-apiir-fixtures.ts) matches the generator — `*.yaml` / `*.yml` / `*.json` OpenAPI under demo + `valid-specs-`*.
 - **Committed fixture JSON** = raw **apiIr** only (no embedded `apiIrHash`; hash is build-time). After **apiIrVersion** on root, it is part of hashed object → bumps change **apiIrHash** (expected).
 - **CI:** no `.github/workflows` at time of planning — **local/regen discipline** until `verify:apiir-fixtures` runs in CI.
 
@@ -248,9 +248,22 @@ Full gate criteria and optional notes are under each phase below.
 
 ### Phase 5 — Fixtures, verification, repo hygiene
 
-- Regen: `npm run fixtures:generate-apiir`; add `verify:apiir-fixtures` script in [package.json](package.json) if not present; reconcile **corpus vs fixture counts** (~145 vs 144) as a **copy/process** issue, not “missing JSON.”
+- Regen: `npm run fixtures:generate-apiir`; `verify:apiir-fixtures` in [package.json](package.json); reconcile **corpus vs fixture counts** using Pipeline A outputs — see **Phase 5 findings** below (not a hole in `fixtures:generate-apiir`).
 - Include **demo** in regen/verify ([tests/compiler/fixtures/demo/](tests/compiler/fixtures/demo/)).
 - Grep **OperationKind**, `kind === "list"`, **listScoped**, `case "list"`; update tests: [tests/compiler/apiir.test.ts](tests/compiler/apiir.test.ts), [tests/compiler/lowering.test.ts](tests/compiler/lowering.test.ts), [tests/compiler/uiplan.test.ts](tests/compiler/uiplan.test.ts), [tests/compiler/analyze-apiir.test.ts](tests/compiler/analyze-apiir.test.ts).
+
+#### Phase 5 findings — corpus vs committed fixtures (recorded)
+
+Full Pipeline A on local trees under [scripts/corpus-data/specs/](scripts/corpus-data/specs/): `npm run corpus:run -- --repo <api-guru|github>` → `npm run corpus:extract-valid -- --repo <same>`. Raw batch JSON and `rapidui-corpus-valid-v1-*.{json,txt}` are **gitignored** (see [.gitignore](.gitignore)); re-run locally to refresh numbers.
+
+
+| Repo         | Specs scanned (`corpus:run`) | Valid in batch                 | `meta.totalSpecs` (`extract-valid`) | Committed OpenAPI files `tests/compiler/fixtures/valid-specs-`* | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------------ | ---------------------------- | ------------------------------ | ----------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **api-guru** | 1970                         | 144 (7.3%)                     | **144**                             | **144**                                                         | **Exact match.** The old “~145 vs 144” guess does **not** reproduce here; manifest lines = fixture files.                                                                                                                                                                                                                                                                                                                             |
+| **github**   | 6768                         | 406 (6.0%); 250 parse failures | **406**                             | **379**                                                         | **406 − 379 = 27** is fully explained by **basename collisions**: the manifest lists **406 distinct full paths**, but only **379 unique filenames** (last path segment). `corpus:extract-valid -- --copy-to-fixtures` copies into a **flat** `valid-specs-github/` directory, so two different paths with the same basename **overwrite** — committed fixtures correspond to **one file per unique basename**, not to raw path count. |
+
+
+**Pipeline B (fixtures):** `demo` + `valid-specs-`* OpenAPI file count = **528**; matching ApiIR JSON under `tests/compiler/fixtures/apiir/` after `fixtures:generate-apiir`; `verify:apiir-fixtures` checks pipeline output vs committed JSON.
 
 **Checkpoint**
 

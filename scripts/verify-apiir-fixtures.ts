@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
 /**
  * Verify that ApiIR JSON fixtures match what the pipeline produces.
- * Run: npx tsx scripts/verify-apiir-fixtures.ts
+ * Run: npm run verify:apiir-fixtures
  *
+ * Sources mirror {@link scripts/generate-apiir-fixtures.ts}: demo + valid-specs-* YAML **and** JSON OpenAPI.
  * If they differ, the fixtures are stale or there's a JSON round-trip bug.
  */
 
@@ -30,10 +31,12 @@ function main() {
   for (const { yamlDir, apiirSubdir } of sources) {
     if (!existsSync(yamlDir)) continue;
 
-    const files = readdirSync(yamlDir).filter((f) => f.endsWith('.yaml') || f.endsWith('.yml'));
+    const files = readdirSync(yamlDir).filter(
+      (f) => f.endsWith('.yaml') || f.endsWith('.yml') || f.endsWith('.json')
+    );
 
     for (const file of files) {
-      const baseName = file.replace(/\.(yaml|yml)$/, '');
+      const baseName = file.replace(/\.(yaml|yml|json)$/i, '');
       const yamlPath = join(yamlDir, file);
       const apiIrPath = join(APIIR_DIR, apiirSubdir, `${baseName}.json`);
 

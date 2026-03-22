@@ -34,39 +34,9 @@
           }
         },
         {
-          "id": "getAlbum",
-          "method": "GET",
-          "kind": "detail",
-          "path": "/albums/{albumId}",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "albumId",
-              "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "identifierParam": "albumId",
-          "responseSchema": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "title": {
-                "type": "string"
-              },
-              "userId": {
-                "type": "integer"
-              }
-            }
-          }
-        },
-        {
           "id": "listAlbumPhotos",
           "method": "GET",
-          "kind": "detail",
+          "kind": "listScoped",
           "path": "/albums/{albumId}/photos",
           "parameters": [
             {
@@ -98,6 +68,36 @@
                 "thumbnailUrl": {
                   "type": "string"
                 }
+              }
+            }
+          }
+        },
+        {
+          "id": "getAlbum",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/albums/{albumId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "albumId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "albumId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "integer"
               }
             }
           }
@@ -280,42 +280,9 @@
           }
         },
         {
-          "id": "getPost",
-          "method": "GET",
-          "kind": "detail",
-          "path": "/posts/{postId}",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "postId",
-              "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "identifierParam": "postId",
-          "responseSchema": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "integer"
-              },
-              "title": {
-                "type": "string"
-              },
-              "body": {
-                "type": "string"
-              },
-              "userId": {
-                "type": "integer"
-              }
-            }
-          }
-        },
-        {
           "id": "listPostComments",
           "method": "GET",
-          "kind": "detail",
+          "kind": "listScoped",
           "path": "/posts/{postId}/comments",
           "parameters": [
             {
@@ -347,6 +314,39 @@
                 "body": {
                   "type": "string"
                 }
+              }
+            }
+          }
+        },
+        {
+          "id": "getPost",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/posts/{postId}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "postId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "postId",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "title": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string"
+              },
+              "userId": {
+                "type": "integer"
               }
             }
           }
@@ -499,6 +499,111 @@
           }
         },
         {
+          "id": "listUserAlbums",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/users/{userId}/albums",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "listUserPosts",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/users/{userId}/posts",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "body": {
+                  "type": "string"
+                },
+                "userId": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "listUserTodos",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/users/{userId}/todos",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "userId",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "userId",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "integer"
+                },
+                "userId": {
+                  "type": "integer"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "completed": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        },
+        {
           "id": "getUser",
           "method": "GET",
           "kind": "detail",
@@ -574,111 +679,6 @@
                   "bs": {
                     "type": "string"
                   }
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "listUserAlbums",
-          "method": "GET",
-          "kind": "detail",
-          "path": "/users/{userId}/albums",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "userId",
-              "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "identifierParam": "userId",
-          "responseSchema": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "userId": {
-                  "type": "integer"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "listUserPosts",
-          "method": "GET",
-          "kind": "detail",
-          "path": "/users/{userId}/posts",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "userId",
-              "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "identifierParam": "userId",
-          "responseSchema": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "body": {
-                  "type": "string"
-                },
-                "userId": {
-                  "type": "integer"
-                }
-              }
-            }
-          }
-        },
-        {
-          "id": "listUserTodos",
-          "method": "GET",
-          "kind": "detail",
-          "path": "/users/{userId}/todos",
-          "parameters": [
-            {
-              "in": "path",
-              "name": "userId",
-              "schema": {
-                "type": "integer"
-              }
-            }
-          ],
-          "identifierParam": "userId",
-          "responseSchema": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "id": {
-                  "type": "integer"
-                },
-                "userId": {
-                  "type": "integer"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "completed": {
-                  "type": "boolean"
                 }
               }
             }
