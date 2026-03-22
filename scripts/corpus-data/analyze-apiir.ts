@@ -1,6 +1,12 @@
 /**
  * ApiIR language analysis — compute stats from ApiIR for corpus reports.
  * Used only on passing specs to answer: What is the real language of APIs?
+ *
+ * **list ∪ listScoped:** Aggregates that mean “tabular / collection UI” include both
+ * {@link OPERATION_KIND.list} and {@link OPERATION_KIND.listScoped}. Pattern strings
+ * (`normalizePattern`) keep kinds distinct (`ops:list+listScoped+detail`). Archetypes
+ * and UI-primitive counts treat them as list-like where the metric is “has a table,”
+ * per ARCHITECTURE / ApiIR vNext plan.
  */
 
 import {
@@ -1045,7 +1051,7 @@ export function formatComprehensiveReport(agg: MiningAggregates, options?: Forma
   lines.push("");
   lines.push("- minimal UI primitives cover 100% of resources");
   lines.push("- most schemas contain ≤4 fields");
-  lines.push("- most APIs expose list or create operations");
+  lines.push("- most APIs expose list-like (list or listScoped) or create operations");
   lines.push("- most resources expose ≤2 operations");
   lines.push("- resource count per spec is small");
   lines.push("");

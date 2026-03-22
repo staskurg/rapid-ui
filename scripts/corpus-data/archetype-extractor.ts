@@ -136,6 +136,8 @@ export function getObjectSchema(schema: JsonSchema): JsonSchema | null {
 /**
  * Derive operation pattern from operation kinds using boolean checks only.
  * Order of checks matters; each pattern is mutually exclusive.
+ * {@link OPERATION_KIND.list} and {@link OPERATION_KIND.listScoped} both count as list-like
+ * (e.g. LIST_ONLY, LIST_DETAIL, CRUD).
  */
 export function deriveOperationPattern(operations: OperationIR[]): OperationPattern {
   const kinds = new Set(operations.map((o) => o.kind));

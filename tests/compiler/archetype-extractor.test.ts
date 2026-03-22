@@ -85,6 +85,12 @@ describe('deriveOperationPattern', () => {
     );
   });
 
+  it('returns list_detail when listScoped and detail (list-like ∪ detail)', () => {
+    expect(deriveOperationPattern([op(OPERATION_KIND.listScoped), op(OPERATION_KIND.detail)])).toBe(
+      OPERATION_PATTERN.LIST_DETAIL
+    );
+  });
+
   it('returns list_detail_create when list, detail, and create', () => {
     expect(
       deriveOperationPattern([
@@ -99,6 +105,18 @@ describe('deriveOperationPattern', () => {
     expect(
       deriveOperationPattern([
         op(OPERATION_KIND.list),
+        op(OPERATION_KIND.detail),
+        op(OPERATION_KIND.create),
+        op(OPERATION_KIND.update),
+        op(OPERATION_KIND.delete),
+      ])
+    ).toBe(OPERATION_PATTERN.CRUD);
+  });
+
+  it('returns crud when listScoped replaces list in the full quintet', () => {
+    expect(
+      deriveOperationPattern([
+        op(OPERATION_KIND.listScoped),
         op(OPERATION_KIND.detail),
         op(OPERATION_KIND.create),
         op(OPERATION_KIND.update),

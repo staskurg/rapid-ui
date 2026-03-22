@@ -195,6 +195,22 @@ describe('normalizePattern', () => {
     expect(normalizePattern({ ...makeSig(), depth: 3 })).toContain('depth3+');
   });
 
+  it('includes distinct listScoped in normalized ops string', () => {
+    const sig = {
+      fields: 3,
+      has_id: true,
+      enums: 0,
+      arrays: 0,
+      nested_objects: 0,
+      depth: 0,
+      query_params: 0,
+      operations: [OPERATION_KIND.listScoped, OPERATION_KIND.detail] as OperationIR['kind'][],
+      listLikeOperationCount: 1,
+      listLikeOpKinds: [OPERATION_KIND.listScoped] as OperationIR['kind'][],
+    };
+    expect(normalizePattern(sig)).toBe('fields≤4 depth0 ops:listScoped+detail');
+  });
+
   function makeSig() {
     return {
       fields: 1,

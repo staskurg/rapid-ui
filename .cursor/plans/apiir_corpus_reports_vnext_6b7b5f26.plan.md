@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: phase-7-analyze-apiir
     content: "Phase 7: Update analyze-apiir + archetype-extractor for list ∪ listScoped and locked pattern tokens; verify corpus-report and corpus-pattern-mining"
-    status: pending
+    status: completed
   - id: phase-8-ui-readiness
     content: "Phase 8: Add corpus-ui-readiness script + npm task; JSONL schema with stable specId/resourceKey and listLikeOps / required-query fields"
     status: pending
@@ -300,6 +300,13 @@ Full Pipeline A on local trees under [scripts/corpus-data/specs/](scripts/corpus
 - **Verify:** `npm test -- tests/compiler/analyze-apiir.test.ts tests/compiler/archetype-extractor.test.ts`; `npm run corpus:pattern-mining`; spot-check `npm run corpus:report` (no throws; language/archetype sections sane).
 - **Blocked until:** Fixture ApiIR may include `listScoped` (Phase 5) — do not trust pre–Phase-7 baselines for comparisons (per execution invariant in this plan).
 - **Note:** The **recommended merge sequence** runs Phase **7** before Phase **6**; feature branches may reorder. If Phase 7 lands first, mock/runtime may trail until Phase 6; on `main`, keep merge policy consistent.
+
+#### Phase 7 — Implementation notes (completed)
+
+- [analyze-apiir.ts](scripts/corpus-data/analyze-apiir.ts): `mineComprehensive`, `classifyUIArchetype`, `listResponseShapes`, CRUD reports, and `normalizePattern` / `extractResourceSignature` already treat **list ∪ listScoped**; operation frequency uses `OPERATION_KIND_REPORT_ORDER` (includes `listScoped`). Module header + compiler-validation summary line document the policy.
+- [archetype-extractor.ts](scripts/corpus-data/archetype-extractor.ts): `deriveOperationPattern` uses `hasList = list ∪ listScoped`; `extractResourceMetrics` uses `primaryListLikeOperation` for list response shape.
+- [corpus-report.ts](scripts/corpus-report.ts) / [corpus-pattern-mining.ts](scripts/corpus-pattern-mining.ts): consume the same analyze-apiir APIs; no separate fork.
+- **Verify:** `npm test -- tests/compiler/analyze-apiir.test.ts tests/compiler/archetype-extractor.test.ts`; `npm run corpus:pattern-mining -- --repo api-guru` (or `github`); optional `npm run corpus:report -- <raw-json>` when batch reports exist.
 
 ### Phase 8 — UI readiness report (new)
 
