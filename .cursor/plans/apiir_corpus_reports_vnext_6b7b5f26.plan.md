@@ -25,7 +25,7 @@ todos:
     status: completed
   - id: phase-8-ui-readiness
     content: "Phase 8: Add corpus-ui-readiness script + npm task; JSONL schema with stable specId/resourceKey and listLikeOps / required-query fields"
-    status: pending
+    status: completed
   - id: phase-6-runtime
     content: "Phase 6: Lowering + mock (list ?? listScoped, scope vs row) + UiPlan prompts; respect main merge gate with listScoped-only fixtures"
     status: pending

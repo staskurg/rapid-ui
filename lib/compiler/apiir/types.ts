@@ -91,6 +91,11 @@ export interface ParameterIR {
   schema: JsonSchema;
   /** OpenAPI `format` when present on the parameter schema (subset allowlist). */
   format?: string;
+  /**
+   * OpenAPI `required` for **query** parameters. Omitted when false. Path parameters are
+   * always required in OpenAPI but are not emitted (UI readiness treats only query).
+   */
+  required?: boolean;
 }
 
 export interface ApiIR {

@@ -104,11 +104,14 @@ function toParameterIR(raw: Record<string, unknown>): ParameterIR | null {
   if (!schema || typeof schema !== 'object') return null;
   const sch = schema as Record<string, unknown>;
   const format = typeof sch.format === 'string' ? sch.format : undefined;
+  const isQuery = loc === PARAMETER_IN.query;
+  const queryRequired = isQuery && raw.required === true;
   return {
     in: loc,
     name,
     schema: schema as JsonSchema,
     ...(format !== undefined ? { format } : {}),
+    ...(queryRequired ? { required: true as const } : {}),
   };
 }
 

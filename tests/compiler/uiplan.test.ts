@@ -11,7 +11,13 @@ import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
 import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { canonicalize } from '@/lib/compiler/openapi/canonicalize';
-import { buildApiIR, HTTP_METHOD, isListLikeKind, OPERATION_KIND } from '@/lib/compiler/apiir';
+import {
+  buildApiIR,
+  CURRENT_API_IR_VERSION,
+  HTTP_METHOD,
+  isListLikeKind,
+  OPERATION_KIND,
+} from '@/lib/compiler/apiir';
 import { llmPlan, normalizeUiPlanIR } from '@/lib/compiler/uiplan';
 import type { ApiIR, ResourceIR } from '@/lib/compiler/apiir';
 import type { UiPlanIR, ResourcePlan } from '@/lib/compiler/uiplan';
@@ -117,7 +123,7 @@ describe('UiPlanIR schema and normalizer', () => {
 describe('llmPlan with mock', () => {
   it('mock maps listScoped-only resource to list view', async () => {
     const apiIr: ApiIR = {
-      apiIrVersion: 1,
+      apiIrVersion: CURRENT_API_IR_VERSION,
       api: { title: 'T', version: '1' },
       resources: [
         {

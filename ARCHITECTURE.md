@@ -258,6 +258,7 @@ corpus:pattern-mining --repo {api-guru|github}  → pattern-mining-{repo}-{times
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
 | `corpus:report`         | Spec-level compatibility, rejection density, corpus shape, language analysis (resource shape, CRUD patterns, grouping strategy) |
 | `corpus:pattern-mining` | Structural patterns, UI archetypes, operation frequency from ApiIR fixtures                                                     |
+| `corpus:ui-readiness`   | JSONL UI-readiness rows (one per spec resource) from ApiIR fixtures under `tests/compiler/fixtures/apiir/`                      |
 
 Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures/valid-specs-{api-guru|github}/`.
 
@@ -278,12 +279,13 @@ This subsection records **reviewer-approved** contract and operational choices b
 
 | Version | Summary                                                                                                                                  |
 | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| **1**   | Root `apiIrVersion`; `ParameterIR` + merged `parameters[]`; `OperationKind` includes **`listScoped`** (inference/classifier in Phase 2). |
+| **1**   | Root `apiIrVersion`; `ParameterIR` + merged `parameters[]` (optional `required` on query params when OpenAPI requires them); `OperationKind` includes **`listScoped`** (inference/classifier in Phase 2). |
 
 #### Parameters (`ParameterIR`)
 
 - **`parameters[]`** is the **single source of truth** for path and query inputs. **`queryParamCount`** is **derived** at build time (count of `in: "query"` entries) and **must** stay equal; no independent authoring.
 - **Sort:** `(in, name)` with **path** before **query**.
+- **`required`:** for **query** parameters, emitted when OpenAPI marks the parameter required; omitted when optional. Path parameters are always required in OpenAPI but **`required` is not emitted** for path (UI readiness and filters use query only).
 - **`format` (and primitive metadata):** enumerate only what the OpenAPI subset validator allows for path/query primitives (`lib/compiler/openapi/subset-validator.ts`); extend **ParameterIR** only **in lockstep** with that subset.
 
 #### Operation kinds: `listScoped` vs `detail`
