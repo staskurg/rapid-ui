@@ -6,8 +6,10 @@
 import {
   classifyListResponseEnvelope,
   compareOperationKind,
+  filterListLikeOperations,
   isArrayRootSchema,
   isListLikeKind,
+  listLikeOperationKinds,
   OPERATION_KIND,
   OPERATION_KIND_REPORT_ORDER,
   PARAMETER_IN,
@@ -175,6 +177,10 @@ export interface ResourceSignature {
   depth: number;
   query_params: number;
   operations: OperationIR["kind"][];
+  /** Number of list ∪ listScoped operations on this resource. */
+  listLikeOperationCount: number;
+  /** Distinct list-like kinds present, in {@link compareOperationKind} order. */
+  listLikeOpKinds: OperationIR["kind"][];
 }
 
 export function analyzeResourceShape(apiIr: ApiIR): ResourceShapeStats {
@@ -399,6 +405,7 @@ export function extractResourceSignature(res: ResourceIR): ResourceSignature | n
   }
 
   const opKinds = [...new Set(res.operations.map((o) => o.kind))].sort(compareOperationKind);
+  const listLikeOps = filterListLikeOperations(res.operations);
 
   return {
     fields,
@@ -409,6 +416,8 @@ export function extractResourceSignature(res: ResourceIR): ResourceSignature | n
     depth,
     query_params,
     operations: opKinds,
+    listLikeOperationCount: listLikeOps.length,
+    listLikeOpKinds: listLikeOperationKinds(res.operations),
   };
 }
 
@@ -686,6 +695,10 @@ export interface MiningAggregates {
   fieldsPerResource: number[];
   operationsPerResource: number[];
   listResponseShapes: Map<string, number>;
+  /** One entry per analyzed resource: how many list ∪ listScoped ops it has. */
+  listLikeOpCountsPerResource: number[];
+  /** Resources with two or more list-like operations (e.g. list + listScoped). */
+  resourcesWithMultipleListLikes: number;
   resourcesPerSpec: number[];
   pagesPerSpec: number[];
   specArchetypeCounts: Map<string, number>;
@@ -712,6 +725,8 @@ export function mineComprehensive(
   const fieldsPerResource: number[] = [];
   const operationsPerResource: number[] = [];
   const listResponseShapes = new Map<string, number>();
+  const listLikeOpCountsPerResource: number[] = [];
+  let resourcesWithMultipleListLikes = 0;
   const resourcesPerSpec: number[] = [];
   const pagesPerSpec: number[] = [];
   const specArchetypeCounts = new Map<string, number>();
@@ -755,6 +770,8 @@ export function mineComprehensive(
       if (sig.operations.length >= 1) resourcesWithUsableUI++;
       fieldsPerResource.push(sig.fields);
       operationsPerResource.push(res.operations.length);
+      listLikeOpCountsPerResource.push(sig.listLikeOperationCount);
+      if (sig.listLikeOperationCount >= 2) resourcesWithMultipleListLikes++;
 
       for (const op of res.operations) {
         const schema =
@@ -838,6 +855,8 @@ export function mineComprehensive(
     fieldsPerResource,
     operationsPerResource,
     listResponseShapes,
+    listLikeOpCountsPerResource,
+    resourcesWithMultipleListLikes,
     resourcesPerSpec,
     pagesPerSpec,
     specArchetypeCounts,
@@ -900,6 +919,16 @@ export function formatComprehensiveReport(agg: MiningAggregates, options?: Forma
   const ppsSorted = [...pps].sort((a, b) => a - b);
   const meanPps = pps.length > 0 ? (pps.reduce((a, b) => a + b, 0) / pps.length).toFixed(1) : "0";
   lines.push(`Pages per spec: median ${median(ppsSorted)}, mean ${meanPps}, p90 ${percentile(ppsSorted, 90)}`);
+  lines.push("");
+  const llc = agg.listLikeOpCountsPerResource;
+  const llcSorted = [...llc].sort((a, b) => a - b);
+  const multiLL = agg.resourcesWithMultipleListLikes;
+  lines.push(
+    `List-like ops per resource: median ${median(llcSorted)}, p90 ${percentile(llcSorted, 90)} (list ∪ listScoped)`
+  );
+  lines.push(
+    `Resources with 2+ list-like ops: ${multiLL} (${pct(multiLL, agg.totalResources)}%) — primary for seeds/UI is first in build order (list before listScoped)`
+  );
   lines.push("");
 
   lines.push("## 3. Operation Frequency");

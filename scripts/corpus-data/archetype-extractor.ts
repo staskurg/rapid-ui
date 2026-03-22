@@ -4,8 +4,8 @@
  */
 
 import {
-  isListLikeKind,
   OPERATION_KIND,
+  primaryListLikeOperation,
   type JsonSchema,
   type OperationKind,
   type OperationIR,
@@ -442,7 +442,7 @@ export function extractResourceMetrics(resource: ResourceIR): ResourceArchetypeM
     }
   }
 
-  const listOp = operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(operations);
   const listResponseShape = getListResponseShape(listOp?.responseSchema);
 
   const primitiveOnly =

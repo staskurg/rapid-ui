@@ -8,6 +8,7 @@ import {
 } from '@/lib/compiler/apiir';
 import {
   extractResourceSignature,
+  mineComprehensive,
   normalizePattern,
   mineStructuralPatterns,
   formatPatternMiningReportTop10,
@@ -52,6 +53,8 @@ describe('extractResourceSignature', () => {
     expect(sig!.fields).toBe(3);
     expect(sig!.depth).toBe(0);
     expect(sig!.operations).toEqual([OPERATION_KIND.list]);
+    expect(sig!.listLikeOperationCount).toBe(1);
+    expect(sig!.listLikeOpKinds).toEqual([OPERATION_KIND.list]);
     expect(sig!.has_id).toBe(true);
   });
 
@@ -87,6 +90,45 @@ describe('extractResourceSignature', () => {
     const sig = extractResourceSignature(res);
     expect(sig!.fields).toBe(3);
     expect(sig!.operations).toEqual([OPERATION_KIND.list, OPERATION_KIND.detail]);
+    expect(sig!.listLikeOperationCount).toBe(1);
+    expect(sig!.listLikeOpKinds).toEqual([OPERATION_KIND.list]);
+  });
+
+  it('counts list and listScoped as list-like ops with ordered kinds', () => {
+    const base = {
+      method: HTTP_METHOD.GET,
+      responseSchema: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+      },
+    };
+    const res = makeResource({
+      operations: [
+        {
+          id: 'GET:/orgs',
+          ...base,
+          kind: OPERATION_KIND.list,
+          path: '/orgs',
+        },
+        {
+          id: 'GET:/orgs/{id}/widgets',
+          ...base,
+          kind: OPERATION_KIND.listScoped,
+          path: '/orgs/{id}/widgets',
+          identifierParam: 'id',
+        },
+        {
+          id: 'GET:/orgs/{id}',
+          ...base,
+          kind: OPERATION_KIND.detail,
+          path: '/orgs/{id}',
+          identifierParam: 'id',
+        },
+      ],
+    });
+    const sig = extractResourceSignature(res);
+    expect(sig!.listLikeOperationCount).toBe(2);
+    expect(sig!.listLikeOpKinds).toEqual([OPERATION_KIND.list, OPERATION_KIND.listScoped]);
   });
 
   it('uses queryParamCount from operations', () => {
@@ -134,6 +176,8 @@ describe('normalizePattern', () => {
       depth: 0,
       query_params: 0,
       operations: [OPERATION_KIND.list, OPERATION_KIND.detail] as OperationIR['kind'][],
+      listLikeOperationCount: 1,
+      listLikeOpKinds: [OPERATION_KIND.list] as OperationIR['kind'][],
     };
     expect(normalizePattern(sig)).toBe('fields≤6 depth0 ops:list+detail');
   });
@@ -161,6 +205,8 @@ describe('normalizePattern', () => {
       depth: 0,
       query_params: 0,
       operations: [OPERATION_KIND.list] as OperationIR['kind'][],
+      listLikeOperationCount: 1,
+      listLikeOpKinds: [OPERATION_KIND.list] as OperationIR['kind'][],
     };
   }
 });
@@ -222,6 +268,51 @@ describe('mineStructuralPatterns', () => {
     expect(top.pattern).toContain('fields≤4');
     expect(top.pattern).toContain('depth0');
     expect(top.pattern).toContain('ops:list');
+  });
+});
+
+describe('mineComprehensive', () => {
+  it('aggregates listLikeOpCountsPerResource and resourcesWithMultipleListLikes', () => {
+    const apiIr: ApiIR = {
+      api: { title: 'T', version: '1' },
+      resources: [
+        makeResource({
+          key: 'a',
+          operations: [
+            {
+              id: 'GET:/a',
+              method: HTTP_METHOD.GET,
+              kind: OPERATION_KIND.list,
+              path: '/a',
+              responseSchema: { type: 'object', properties: { x: { type: 'string' } } },
+            },
+            {
+              id: 'GET:/a/{id}/b',
+              method: HTTP_METHOD.GET,
+              kind: OPERATION_KIND.listScoped,
+              path: '/a/{id}/b',
+              identifierParam: 'id',
+              responseSchema: { type: 'object', properties: { y: { type: 'string' } } },
+            },
+          ],
+        }),
+        makeResource({
+          key: 'b',
+          operations: [
+            {
+              id: 'GET:/b',
+              method: HTTP_METHOD.GET,
+              kind: OPERATION_KIND.list,
+              path: '/b',
+              responseSchema: { type: 'object', properties: { z: { type: 'string' } } },
+            },
+          ],
+        }),
+      ],
+    };
+    const agg = mineComprehensive([{ apiIr }]);
+    expect(agg.resourcesWithMultipleListLikes).toBe(1);
+    expect(agg.listLikeOpCountsPerResource.sort((a, b) => a - b)).toEqual([1, 2]);
   });
 });
 

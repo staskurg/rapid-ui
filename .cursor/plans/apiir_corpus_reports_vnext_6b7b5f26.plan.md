@@ -15,8 +15,8 @@ todos:
     content: "Phase 3: compareOperationKind / operationKindRank; signature sort; mining + archetype listLike op"
     status: completed
   - id: phase-4-grouping-multilist
-    content: "Phase 4 (optional): grouping smoke / listLikeOps — defer or implement"
-    status: pending
+    content: "Phase 4: listLikeOpCounts + primaryListLikeOperation; mining report lines; archetype uses primary"
+    status: completed
   - id: phase-5-fixtures-verify
     content: "Phase 5: Regen fixtures, add/run verify:apiir-fixtures, reconcile corpus vs fixture counts, grep-driven kind updates + compiler tests"
     status: pending

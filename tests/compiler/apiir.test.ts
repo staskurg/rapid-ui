@@ -8,9 +8,16 @@ import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { canonicalize } from '@/lib/compiler/openapi/canonicalize';
 import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir/build';
 import {
+  compareOperationKind,
   CURRENT_API_IR_VERSION,
-  PARAMETER_IN,
+  HTTP_METHOD,
   isListShapedResponseSchema,
+  listLikeOperationKinds,
+  OPERATION_KIND,
+  PARAMETER_IN,
+  primaryListLikeOperation,
+  type OperationIR,
+  type OperationKind,
 } from '@/lib/compiler/apiir';
 import { sha256Hash } from '@/lib/compiler/hash';
 
@@ -202,5 +209,39 @@ paths:
     const op = result.apiIr.resources[0]?.operations[0];
     expect(op?.kind).toBe('listScoped');
     expect(op?.identifierParam).toBe('orgId');
+  });
+});
+
+describe('list-like helpers', () => {
+  const op = (kind: OperationKind, path: string): OperationIR => ({
+    id: path,
+    method: HTTP_METHOD.GET,
+    kind,
+    path,
+    responseSchema: { type: 'object', properties: {} },
+  });
+
+  it('primaryListLikeOperation picks the first list-like in operation order', () => {
+    expect(
+      primaryListLikeOperation([
+        op(OPERATION_KIND.detail, '/x/{id}'),
+        op(OPERATION_KIND.list, '/x'),
+      ])?.kind
+    ).toBe(OPERATION_KIND.list);
+  });
+
+  it('listLikeOperationKinds returns distinct kinds in compareOperationKind order', () => {
+    expect(
+      listLikeOperationKinds([
+        op(OPERATION_KIND.listScoped, '/a/{id}/w'),
+        op(OPERATION_KIND.list, '/a'),
+      ])
+    ).toEqual([OPERATION_KIND.list, OPERATION_KIND.listScoped]);
+  });
+
+  it('after build-style sort, primary list-like is list before listScoped', () => {
+    const unsorted = [op(OPERATION_KIND.listScoped, '/a/{id}/w'), op(OPERATION_KIND.list, '/a')];
+    const sorted = [...unsorted].sort((a, b) => compareOperationKind(a.kind, b.kind));
+    expect(primaryListLikeOperation(sorted)?.kind).toBe(OPERATION_KIND.list);
   });
 });

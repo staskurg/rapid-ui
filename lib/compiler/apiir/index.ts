@@ -38,3 +38,8 @@ export {
   schemaHasJsonType,
 } from './list-shape';
 export type { JsonSchemaTypeKeyword } from './list-shape';
+export {
+  filterListLikeOperations,
+  listLikeOperationKinds,
+  primaryListLikeOperation,
+} from './list-like';
