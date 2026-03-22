@@ -64,28 +64,43 @@ All items below must be **written down** (this section + **ARCHITECTURE.md** stu
 
 ### Resolved product / contract choices (former open questions)
 
+#### User-visible meaning of `GET /items/{id}` returning a list
 
-| Topic                                                          | MVP resolution                                                                                                                                                                                                                                                                                                                                                                           |
-| -------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **User-visible meaning** of `GET /items/{id}` returning a list | Compiler/mock treat as **scoped list**: response is list-shaped data for that path param. **No** compiler-mandated breadcrumb or marketing copy in MVP; **document** “scope = route context” in ARCHITECTURE. App UX is out of scope.                                                                                                                                                    |
-| **Row identity** when only **listScoped** + **create**         | **idField** inferred from list / listScoped **response** item shape (envelope + array item properties), same heuristics as today’s list path — **never** from `listScoped.identifierParam`. If no id is inferable, **idField** is absent; mock **item** route (`/[paramId]`) returns **404**; tests lock one agreed fallback (e.g. synthetic ids **not** in MVP unless already in mock). |
-| **ParameterIR `format`**                                       | **Enumerate only** what [lib/compiler/openapi/subset-validator.ts](lib/compiler/openapi/subset-validator.ts) allows for path/query primitives; extend IR only **in lockstep** with subset. Document allowed set in ARCHITECTURE / IR comment.                                                                                                                                            |
-| **Warning when persisted apiIrVersion < compiler**             | **Yes (recommended MVP):** compilation or read path surfaces **stale IR** (API + optional UI copy). Exact surface TBD in [lib/db/compilations.ts](lib/db/compilations.ts) / API route — must match documented legacy semantics.                                                                                                                                                          |
-| **apiIrVersion bump policy**                                   | **Bump** when serialized **ApiIR JSON meaning** or **field set** changes such that old persisted rows would be **misinterpreted** (document each bump in ARCHITECTURE changelog). Purely internal refactors with **identical** emitted JSON shape → **no** bump.                                                                                                                         |
-| **specId** for JSONL                                           | **Required:** path **relative to** `tests/compiler/fixtures/apiir/` (include corpus dir segment, e.g. `valid-specs-foo/bar`) so rows are **collision-free**. Optional extra column `specBasename` for display.                                                                                                                                                                           |
-| **queryParamCount vs parameters[]**                            | **Single source:** `**parameters[]`**; `**queryParamCount`** = **derived** at build time (count of `in: "query"` entries) and **must** stay equal; **no** independent authoring.                                                                                                                                                                                                         |
-| **eval:llm** after prompt changes                              | **MVP:** run `**npm run eval:llm`** (or agreed spot-check) **once** after Phase 6 lands; **no** mandatory threshold edits unless results regress — document outcome in PR.                                                                                                                                                                                                               |
+Compiler/mock treat as **scoped list**: response is list-shaped data for that path param. **No** compiler-mandated breadcrumb or marketing copy in MVP; **document** “scope = route context” in ARCHITECTURE. App UX is out of scope.
 
+#### Row identity when only listScoped + create
+
+**idField** inferred from list / listScoped **response** item shape (envelope + array item properties), same heuristics as today’s list path — **never** from `listScoped.identifierParam`. If no id is inferable, **idField** is absent; mock **item** route (`/[paramId]`) returns **404**; tests lock one agreed fallback (e.g. synthetic ids **not** in MVP unless already in mock).
+
+#### ParameterIR `format`
+
+**Enumerate only** what [lib/compiler/openapi/subset-validator.ts](lib/compiler/openapi/subset-validator.ts) allows for path/query primitives; extend IR only **in lockstep** with subset. Document allowed set in ARCHITECTURE / IR comment.
+
+#### Warning when persisted apiIrVersion < compiler
+
+**Yes (recommended MVP):** compilation or read path surfaces **stale IR** (API + optional UI copy). Exact surface TBD in [lib/db/compilations.ts](lib/db/compilations.ts) / API route — must match documented legacy semantics.
+
+#### apiIrVersion bump policy
+
+**Bump** when serialized **ApiIR JSON meaning** or **field set** changes such that old persisted rows would be **misinterpreted** (document each bump in ARCHITECTURE changelog). Purely internal refactors with **identical** emitted JSON shape → **no** bump.
+
+#### specId for JSONL
+
+**Required:** path **relative to** `tests/compiler/fixtures/apiir/` (include corpus dir segment, e.g. `valid-specs-foo/bar`) so rows are **collision-free**. Optional extra column `specBasename` for display.
+
+#### queryParamCount vs parameters[]
+
+**Single source:** `parameters[]`; `queryParamCount` = **derived** at build time (count of `in: "query"` entries) and **must** stay equal; **no** independent authoring.
+
+#### eval:llm after prompt changes
+
+**MVP:** run `npm run eval:llm` (or agreed spot-check) **once** after Phase 6 lands; **no** mandatory threshold edits unless results regress — document outcome in PR.
 
 ### Risk mitigations (operational, before/during rollout)
 
-
-| Risk                                       | Mitigation                                                                                                                                                                                                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mock / **corpus:report** / mining disagree | **Single** analyze-apiir path; **merge policy:** land Phase **7** before trusting analytics; on **main**, do not ship **listScoped-only** fixtures without Phase **6** (runtime). Use a **PR checklist**: grep `OperationKind`, run both scripts. |
-| Legacy DB rows **missing** `apiIrVersion`  | **Document in Phase 1:** treat missing as `**0`** (legacy / unknown); all readers (**API, DB layer, UI**) use the **same** rule; optional warning when `0` < current.                                                                             |
-| **Half-updated** branches                  | Prefer **stacked PRs** or one train with explicit order; do not merge fixture regen **alone** on `main` if it introduces listScoped-only resources before Phase 6.                                                                                |
-
+- **Mock / corpus:report / mining disagree** — **Single** analyze-apiir path; **merge policy:** land Phase **7** before trusting analytics; on **main**, do not ship **listScoped-only** fixtures without Phase **6** (runtime). Use a **PR checklist**: grep `OperationKind`, run both scripts.
+- **Legacy DB rows missing `apiIrVersion`** — **Document in Phase 1:** treat missing as `0` (legacy / unknown); all readers (**API, DB layer, UI**) use the **same** rule; optional warning when `0` < current.
+- **Half-updated branches** — Prefer **stacked PRs** or one train with explicit order; do not merge fixture regen **alone** on `main` if it introduces listScoped-only resources before Phase 6.
 
 ---
 
@@ -93,20 +108,45 @@ All items below must be **written down** (this section + **ARCHITECTURE.md** stu
 
 These are **fixed** for implementation; do not invent a third convention.
 
+#### Kind
 
-| Area                | Decision                                                                                                                                                                                                                   |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Kind                | Add **listScoped**. Classifier precedence: array root → list-shaped; object envelope → heuristics; **GET** + one path param + **non-list** body stays **detail**.                                                          |
-| Pattern tokens      | **normalizePattern**: **listScoped** stays **distinct** in ops strings. Archetypes / table-surface patterns: same policy — either distinct `listScoped_*` **or** documented fold with **list**; not both conventions.      |
-| identifierParam     | For **listScoped**, this is **scope id** (parent context), not row id. Prompts / metadata must **not** treat it like **detail** row identity.                                                                              |
-| UiPlan view key     | **listScoped** behaves like **list** for planning; **no new UiPlan view key** unless schema is deliberately extended. [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts) keeps **list** as the view key. |
-| Parameters          | **ParameterIR**: path/query only, aligned with [lib/compiler/openapi/subset-validator.ts](lib/compiler/openapi/subset-validator.ts); sort `(in, name)` with **path** before **query**.                                     |
-| Versioning          | **apiIrVersion**: integer on root **ApiIR** only; participates in **apiIrHash** after implementation; **document** semantics for legacy rows **missing** version (see Pre-implementation gate).                            |
-| UI readiness input  | Primary: fixture ApiIR JSON + `**verify:apiir-fixtures`**.                                                                                                                                                                 |
-| JSONL identity      | One row per **(specId, resourceKey)**; **resourceKey** = `ResourceIR.key`; **specId** = **relative path** under fixture apiir root (see Pre-implementation gate); composite **specId::resourceKey** is globally unique.    |
-| Required query flag | **list** and **listScoped** both participate (UISpec/filter UI deferred; same intent when built).                                                                                                                          |
-| Scope / LLM         | **listScoped.identifierParam** = **scope**, not row id — exclude from naive “row id” / table-column treatment in prompts; **scope is route context** unless schema repeats it; document after UX pass in ARCHITECTURE.     |
+Add **listScoped**. Classifier precedence: array root → list-shaped; object envelope → heuristics; **GET** + one path param + **non-list** body stays **detail**.
 
+#### Pattern tokens
+
+**normalizePattern**: **listScoped** stays **distinct** in ops strings. Archetypes / table-surface patterns: same policy — either distinct `listScoped_`* **or** documented fold with **list**; not both conventions.
+
+#### identifierParam
+
+For **listScoped**, this is **scope id** (parent context), not row id. Prompts / metadata must **not** treat it like **detail** row identity.
+
+#### UiPlan view key
+
+**listScoped** behaves like **list** for planning; **no new UiPlan view key** unless schema is deliberately extended. [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts) keeps **list** as the view key.
+
+#### Parameters
+
+**ParameterIR**: path/query only, aligned with [lib/compiler/openapi/subset-validator.ts](lib/compiler/openapi/subset-validator.ts); sort `(in, name)` with **path** before **query**.
+
+#### Versioning
+
+**apiIrVersion**: integer on root **ApiIR** only; participates in **apiIrHash** after implementation; **document** semantics for legacy rows **missing** version (see Pre-implementation gate).
+
+#### UI readiness input
+
+Primary: fixture ApiIR JSON + `verify:apiir-fixtures`.
+
+#### JSONL identity
+
+One row per **(specId, resourceKey)**; **resourceKey** = `ResourceIR.key`; **specId** = **relative path** under fixture apiir root (see Pre-implementation gate); composite **specId::resourceKey** is globally unique.
+
+#### Required query flag
+
+**list** and **listScoped** both participate (UISpec/filter UI deferred; same intent when built).
+
+#### Scope / LLM
+
+**listScoped.identifierParam** = **scope**, not row id — exclude from naive “row id” / table-column treatment in prompts; **scope is route context** unless schema repeats it; document after UX pass in ARCHITECTURE.
 
 ---
 
@@ -114,46 +154,38 @@ These are **fixed** for implementation; do not invent a third convention.
 
 Treat as **list** ∪ **listScoped** unless **pattern tokens** must distinguish **listScoped** ([analyze-apiir.ts](scripts/corpus-data/analyze-apiir.ts) `normalizePattern`).
 
-
-| Area                     | Files / notes                                                                                                                                                                                                                                                                                                  |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| IR build                 | [lib/compiler/apiir/build.ts](lib/compiler/apiir/build.ts) — `KIND_ORDER`                                                                                                                                                                                                                                      |
-| Kind order strategy      | Prefer **one exported `KIND_ORDER`** (and display order) from `lib/compiler/apiir/` consumed by build + analyze-apiir; else **grep checklist** on every merge. [extractResourceSignature](scripts/corpus-data/analyze-apiir.ts) uses `KIND_ORDER.indexOf` — missing **listScoped** ⇒ **-1** and unstable sort. |
-| Lowering                 | [lib/compiler/lowering/lower.ts](lib/compiler/lowering/lower.ts) — `mergeSchemaFields`, `hasOpaqueOrMapShape`, `inferIdField`                                                                                                                                                                                  |
-| Mock                     | [app/api/mock/[id]/[resource]/route.ts](app/api/mock/[id]/[resource]/route.ts), [app/api/mock/[id]/[resource]/[paramId]/route.ts](app/api/mock/[id]/[resource]/[paramId]/route.ts); optional [lib/compiler/mock/store.ts](lib/compiler/mock/store.ts)                                                          |
-| Mining / report language | [scripts/corpus-data/analyze-apiir.ts](scripts/corpus-data/analyze-apiir.ts) — `listResponseShapes`, archetypes, CRUD, primitives, `has("list")`, **KIND_ORDER**, **opOrder** (~line 889; sync display vs sort).                                                                                               |
-| Corpus report            | [scripts/corpus-report.ts](scripts/corpus-report.ts) imports analyze-apiir — Phase 7 affects **language analysis**, not only [corpus-pattern-mining.ts](scripts/corpus-pattern-mining.ts).                                                                                                                     |
-| Archetypes               | [scripts/corpus-data/archetype-extractor.ts](scripts/corpus-data/archetype-extractor.ts), [scripts/extract-archetypes.ts](scripts/extract-archetypes.ts) — `deriveOperationPattern` / list-only strings                                                                                                        |
-| UiPlan                   | [lib/compiler/uiplan/prompt.user.ts](lib/compiler/uiplan/prompt.user.ts), [lib/compiler/uiplan/prompt.system.txt](lib/compiler/uiplan/prompt.system.txt), [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts)                                                                                 |
-| Persistence / eval       | [lib/db/compilations.ts](lib/db/compilations.ts), `app/api/compilations/`, [eval/eval-llm-only.ts](eval/eval-llm-only.ts)                                                                                                                                                                                      |
-| Grouping (defer)         | [lib/compiler/apiir/grouping.ts](lib/compiler/apiir/grouping.ts) only if corpus buckets break                                                                                                                                                                                                                  |
-| Tests                    | [tests/compiler/apiir.test.ts](tests/compiler/apiir.test.ts), [uiplan.test.ts](tests/compiler/uiplan.test.ts), [lowering.test.ts](tests/compiler/lowering.test.ts), [analyze-apiir.test.ts](tests/compiler/analyze-apiir.test.ts), [archetype-extractor.test.ts](tests/compiler/archetype-extractor.test.ts)   |
-| New                      | `corpus-ui-readiness.ts` (Phase 8)                                                                                                                                                                                                                                                                             |
-
+- **IR build** — [lib/compiler/apiir/build.ts](lib/compiler/apiir/build.ts) — `KIND_ORDER`
+- **Kind order strategy** — Prefer one exported `KIND_ORDER` (and display order) from `lib/compiler/apiir/` consumed by build + analyze-apiir; else **grep checklist** on every merge. [extractResourceSignature](scripts/corpus-data/analyze-apiir.ts) uses `KIND_ORDER.indexOf` — missing **listScoped** ⇒ **-1** and unstable sort.
+- **Lowering** — [lib/compiler/lowering/lower.ts](lib/compiler/lowering/lower.ts) — `mergeSchemaFields`, `hasOpaqueOrMapShape`, `inferIdField`
+- **Mock** — [app/api/mock/[id]/[resource]/route.ts](app/api/mock/[id]/[resource]/route.ts), [app/api/mock/[id]/[resource]/[paramId]/route.ts](app/api/mock/[id]/[resource]/[paramId]/route.ts); optional [lib/compiler/mock/store.ts](lib/compiler/mock/store.ts)
+- **Mining / report language** — [scripts/corpus-data/analyze-apiir.ts](scripts/corpus-data/analyze-apiir.ts) — `listResponseShapes`, archetypes, CRUD, primitives, `has("list")`, **KIND_ORDER**, **opOrder** (~line 889; sync display vs sort).
+- **Corpus report** — [scripts/corpus-report.ts](scripts/corpus-report.ts) imports analyze-apiir — Phase 7 affects **language analysis**, not only [corpus-pattern-mining.ts](scripts/corpus-pattern-mining.ts).
+- **Archetypes** — [scripts/corpus-data/archetype-extractor.ts](scripts/corpus-data/archetype-extractor.ts), [scripts/extract-archetypes.ts](scripts/extract-archetypes.ts) — `deriveOperationPattern` / list-only strings
+- **UiPlan** — [lib/compiler/uiplan/prompt.user.ts](lib/compiler/uiplan/prompt.user.ts), [lib/compiler/uiplan/prompt.system.txt](lib/compiler/uiplan/prompt.system.txt), [lib/compiler/uiplan/normalize.ts](lib/compiler/uiplan/normalize.ts)
+- **Persistence / eval** — [lib/db/compilations.ts](lib/db/compilations.ts), `app/api/compilations/`, [eval/eval-llm-only.ts](eval/eval-llm-only.ts)
+- **Grouping (defer)** — [lib/compiler/apiir/grouping.ts](lib/compiler/apiir/grouping.ts) only if corpus buckets break
+- **Tests** — [tests/compiler/apiir.test.ts](tests/compiler/apiir.test.ts), [uiplan.test.ts](tests/compiler/uiplan.test.ts), [lowering.test.ts](tests/compiler/lowering.test.ts), [analyze-apiir.test.ts](tests/compiler/analyze-apiir.test.ts), [archetype-extractor.test.ts](tests/compiler/archetype-extractor.test.ts)
+- **New** — `corpus-ui-readiness.ts` (Phase 8)
 
 ### Baseline repo facts (do not rediscover)
 
 - **Parameter merge:** [lib/compiler/apiir/operations.ts](lib/compiler/apiir/operations.ts) already merges like subset (`paramKey` = `in:name`). Emitting **ParameterIR[]** refactors that loop.
-- **Fixtures:** ~**144** / **379** YAML in `valid-specs-`* with parallel **apiir** JSON; plus [tests/compiler/fixtures/demo/](tests/compiler/fixtures/demo/) (**5** YAML ↔ `**apiir/demo/`**). **Generator and verifier must include demo.**
-- **Verifier** today: `**.yaml` / `.yml` only** — OpenAPI `**.json`** beside YAML needs **verifier extended**; **JSON-only** specs may generate but not verify until supported.
+- **Fixtures:** ~**144** / **379** YAML in `valid-specs-`* with parallel **apiir** JSON; plus [tests/compiler/fixtures/demo/](tests/compiler/fixtures/demo/) (**5** YAML ↔ `apiir/demo/`). **Generator and verifier must include demo.**
+- **Verifier** today: `*.yaml` / `*.yml` only — OpenAPI `*.json` beside YAML needs **verifier extended**; **JSON-only** specs may generate but not verify until supported.
 - **Committed fixture JSON** = raw **apiIr** only (no embedded `apiIrHash`; hash is build-time). After **apiIrVersion** on root, it is part of hashed object → bumps change **apiIrHash** (expected).
-- **CI:** no `**.github/workflows`** at time of planning — **local/regen discipline** until `verify:apiir-fixtures` runs in CI.
+- **CI:** no `.github/workflows` at time of planning — **local/regen discipline** until `verify:apiir-fixtures` runs in CI.
 
 ## Phase checkpoints (at a glance)
 
-
-| Phase | You are done when…                                                                               | Run before next phase                                                                                                                        |
-| ----- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | Contract documented in types + ARCHITECTURE; `apiIrVersion` / `ParameterIR` / kind rules decided | `npm run type`; targeted `apiir` tests if types land here                                                                                    |
-| 2     | Shared list-shape module wired into build; `ParameterIR[]` emitted from merge                    | `npm run type`; `npm test -- tests/compiler/apiir.test.ts`                                                                                   |
-| 3     | `listScoped` in every `KIND_ORDER` / sort path (no `indexOf` −1)                                 | Above + `npm test -- tests/compiler/analyze-apiir.test.ts`                                                                                   |
-| 4     | Either explicitly deferred, or grouping/multi-list-likes stable                                  | If implemented: `npm run corpus:report` completes without throw                                                                              |
-| 5     | Fixtures regen + verifier green; counts reconciled                                               | `npm run fixtures:generate-apiir`; `npm run verify:apiir-fixtures`; full `npm test`                                                          |
-| 6     | Lowering, mock, UiPlan match `list` ∪ `listScoped` rules; scope-vs-row tested                    | `npm test -- tests/compiler/lowering.test.ts tests/compiler/uiplan.test.ts` (+ mock checks)                                                  |
-| 7     | Mining + corpus-report language use updated analyze-apiir                                        | `npm test -- tests/compiler/analyze-apiir.test.ts tests/compiler/archetype-extractor.test.ts`; `corpus:pattern-mining`; spot `corpus:report` |
-| 8     | JSONL + npm script exist; schema matches spec                                                    | `npm run corpus:ui-readiness` + spot-check output                                                                                            |
-| 9     | Docs match reality; reviewers agree                                                              | `npm run type`; `npm test`                                                                                                                   |
-
+- **Phase 1** — **Done when:** contract documented in types + ARCHITECTURE; `apiIrVersion` / `ParameterIR` / kind rules decided. **Run:** `npm run type`; targeted `apiir` tests if types land here.
+- **Phase 2** — **Done when:** shared list-shape module wired into build; `ParameterIR[]` emitted from merge. **Run:** `npm run type`; `npm test -- tests/compiler/apiir.test.ts`
+- **Phase 3** — **Done when:** `listScoped` in every `KIND_ORDER` / sort path (no `indexOf` −1). **Run:** above + `npm test -- tests/compiler/analyze-apiir.test.ts`
+- **Phase 4** — **Done when:** either explicitly deferred, or grouping/multi-list-likes stable. **Run:** if implemented: `npm run corpus:report` completes without throw
+- **Phase 5** — **Done when:** fixtures regen + verifier green; counts reconciled. **Run:** `npm run fixtures:generate-apiir`; `npm run verify:apiir-fixtures`; full `npm test`
+- **Phase 6** — **Done when:** lowering, mock, UiPlan match `list` ∪ `listScoped` rules; scope-vs-row tested. **Run:** `npm test -- tests/compiler/lowering.test.ts tests/compiler/uiplan.test.ts` (+ mock checks)
+- **Phase 7** — **Done when:** mining + corpus-report language use updated analyze-apiir. **Run:** `npm test -- tests/compiler/analyze-apiir.test.ts tests/compiler/archetype-extractor.test.ts`; `corpus:pattern-mining`; spot `corpus:report`
+- **Phase 8** — **Done when:** JSONL + npm script exist; schema matches spec. **Run:** `npm run corpus:ui-readiness` + spot-check output
+- **Phase 9** — **Done when:** docs match reality; reviewers agree. **Run:** `npm run type`; `npm test`
 
 Full gate criteria and optional notes are under each phase below.
 
@@ -161,7 +193,7 @@ Full gate criteria and optional notes are under each phase below.
 
 ### Phase 1 — ApiIR contract (design-first)
 
-- Specify **apiIrVersion**, **ParameterIR**, and `**parameters[]` as sole authority**; `**queryParamCount`** derived at build (must stay in sync — see Pre-implementation gate).
+- Specify **apiIrVersion**, **ParameterIR**, and `parameters[]` as **sole authority**; `queryParamCount` derived at build (must stay in sync — see Pre-implementation gate).
 - Define **OperationKind** rules: **listScoped** vs **detail**; **identifierParam** semantics for each.
 - Changelog / **ARCHITECTURE.md** for version and legacy read semantics.
 
@@ -207,7 +239,7 @@ Full gate criteria and optional notes are under each phase below.
 
 ### Phase 5 — Fixtures, verification, repo hygiene
 
-- Regen: `npm run fixtures:generate-apiir`; add `**verify:apiir-fixtures`** script in [package.json](package.json) if not present; reconcile **corpus vs fixture counts** (~145 vs 144) as a **copy/process** issue, not “missing JSON.”
+- Regen: `npm run fixtures:generate-apiir`; add `verify:apiir-fixtures` script in [package.json](package.json) if not present; reconcile **corpus vs fixture counts** (~145 vs 144) as a **copy/process** issue, not “missing JSON.”
 - Include **demo** in regen/verify ([tests/compiler/fixtures/demo/](tests/compiler/fixtures/demo/)).
 - Grep **OperationKind**, `kind === "list"`, **listScoped**, `case "list"`; update tests: [tests/compiler/apiir.test.ts](tests/compiler/apiir.test.ts), [tests/compiler/lowering.test.ts](tests/compiler/lowering.test.ts), [tests/compiler/uiplan.test.ts](tests/compiler/uiplan.test.ts), [tests/compiler/analyze-apiir.test.ts](tests/compiler/analyze-apiir.test.ts).
 
@@ -270,13 +302,13 @@ Full gate criteria and optional notes are under each phase below.
 
 ## Recommended execution order (merge hygiene)
 
-Before closing each execution step, confirm the **Phase checkpoints** (table + per-phase **Checkpoint** blocks above) for every phase touched in that step.
+Before closing each execution step, confirm the **Phase checkpoints** (checklist + per-phase **Checkpoint** blocks above) for every phase touched in that step.
 
 The **phase numbers** are topical; **this order** is how to land without broken `main` or misleading analytics:
 
 1. **Phases 1–4** + tests (contract, classifier, `KIND_ORDER`, optional grouping smoke).
-2. **Phase 5:** regen fixtures + `**verify:apiir-fixtures`** + count reconciliation — **respect Phase 6 merge policy** (no listScoped-only fixtures on `main` before runtime).
-3. **Phase 7** + run `**corpus:pattern-mining`** and spot-check `**corpus:report`** (lang stats share analyze-apiir).
+2. **Phase 5:** regen fixtures + `verify:apiir-fixtures` + count reconciliation — **respect Phase 6 merge policy** (no listScoped-only fixtures on `main` before runtime).
+3. **Phase 7** + run `corpus:pattern-mining` and spot-check `corpus:report` (lang stats share analyze-apiir).
 4. **Phase 8** (ui-readiness JSONL).
 5. **Phase 6** (lowering, mock, uiplan) — **may run before step 2 on a feature branch** (“runtime first”).
 
@@ -284,20 +316,16 @@ The **phase numbers** are topical; **this order** is how to land without broken 
 
 ## Stress tests / edge cases + risks
 
-
-| Topic                                         | Why                                                                                          |
-| --------------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `**KIND_ORDER` / `indexOf`**                  | Missing `**listScoped**` → **-1**, unstable signature sort (Phase 3).                        |
-| `**GET` + one path + non-list body**          | Stays `**detail`**.                                                                          |
-| `**GET` + one path + list + detail** siblings | Mock/store: **scope** vs **row**; URL invariant so `[paramId]` never treats scope as row id. |
-| **Missing / empty success schema**            | Classifier fallback: `**detail`** vs error — specify in classifier tests.                    |
-| **Non-200 success** (e.g. only `204`)         | Same: define how classifier / IR build behaves.                                              |
-| **Envelope lists** (`items` + cursor/tokens)  | Classifier + `**idField`** / column heuristics must agree with lowering.                     |
-| `**listScoped` without `detail**`             | `**idField**`, mock `**/[paramId]**` — one rule + tests (see gate).                          |
-| **Duplicate list-like ops**                   | `**listLikeOps`** column; **primary op** for seeds if code picks one.                        |
-| **Classifier single source**                  | IR, lowering, mining, readiness share one module.                                            |
-| `**OperationKind` exhaustiveness**            | `**switch`** / `**Record<OperationKind, …>**` maps break on new kinds.                       |
-
+- `**KIND_ORDER` / `indexOf`** — Missing `listScoped` → **-1**, unstable signature sort (Phase 3).
+- `**GET` + one path + non-list body** — Stays `detail`.
+- `**GET` + one path + list + detail** siblings — Mock/store: **scope** vs **row**; URL invariant so `[paramId]` never treats scope as row id.
+- **Missing / empty success schema** — Classifier fallback: `detail` vs error — specify in classifier tests.
+- **Non-200 success** (e.g. only `204`) — Same: define how classifier / IR build behaves.
+- **Envelope lists** (`items` + cursor/tokens) — Classifier + `idField` / column heuristics must agree with lowering.
+- `**listScoped` without `detail`** — `idField`, mock `/[paramId]` — one rule + tests (see gate).
+- **Duplicate list-like ops** — `listLikeOps` column; **primary op** for seeds if code picks one.
+- **Classifier single source** — IR, lowering, mining, readiness share one module.
+- `**OperationKind` exhaustiveness** — `switch` / `Record<OperationKind, …>` maps break on new kinds.
 
 **Operational risks:** half-updated **analyze-apiir** vs mock/report; legacy rows missing **apiIrVersion**; bump policy (covered in Pre-implementation gate).
 
@@ -307,4 +335,3 @@ Pre-implementation gate + **Locked decisions** cover contract choices. Track dur
 
 - **App UX** beyond documented “scope = route context” (breadcrumbs, copy) — out of MVP per gate.
 - Finer **eval:llm** thresholds if regressions appear after Phase 6 (gate: one spot-check + PR note).
-
