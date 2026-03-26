@@ -1,0 +1,103 @@
+openapi: 3.0.3
+info:
+  title: Viral Caption Generator API
+  description: >
+    Backend service for generating viral captions for TikTok, Instagram Reels, and YouTube Shorts.
+    Built with Node.js, Express, and TypeScript. Supports OpenAI-powered captions with fallback to mock captions.
+    Includes Stripe billing integration for monetization.
+  version: 1.2.0
+servers:
+  - url: http://localhost:4000
+    description: Local development server
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: >
+        Provide your API key or bearer token in the Authorization header.
+        Example: `Authorization: Bearer sk_test_yourkey`
+
+paths:
+  /v1/billing/checkout:
+    post:
+      summary: Create Stripe Checkout Session
+      description: >
+        Creates a Stripe Checkout session for purchasing caption generation credits.
+        Requires Stripe API key configured in the backend.
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - planId
+              properties:
+                planId:
+                  type: string
+                  description: Identifier for the pricing plan (e.g., "basic", "pro")
+                  example: pro
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checkoutUrl:
+                    type: string
+                    example: https://checkout.stripe.com/pay/cs_test_12345
+        '400':
+          description: Invalid request
+        '500':
+          description: Stripe error
+
+  /v1/billing/success:
+    get:
+      summary: Payment success callback
+      description: >
+        Called after a successful Stripe Checkout payment. Confirms credits were added.
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Payment success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Payment completed successfully. Credits have been added to your account.
+
+  /v1/billing/cancel:
+    get:
+      summary: Payment cancellation callback
+      description: >
+        Called if the user cancels Stripe Checkout. Confirms no charges were made.
+      security:
+        - ApiKeyAuth: []
+      responses:
+        '200':
+          description: Payment cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: cancelled
+                  message:
+                    type: string
+                    example: Payment was cancelled. No charges were made.

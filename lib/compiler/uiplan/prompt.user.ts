@@ -26,7 +26,7 @@ FieldPlan — include ALL of these for every field:
 MAPPING RULES:
 - Each ResourceIR in ApiIR becomes one entry in UiPlanIR.resources with the same "name".
 - View presence is derived from operation kinds:
-  - list: if resource has an operation with kind="list"
+  - list: if resource has an operation with kind="list" OR kind="listScoped" (scoped collection — use list response schema, same list view key as root list)
   - detail: if resource has an operation with kind="detail"
   - create: if resource has an operation with kind="create"
   - edit: if resource has an operation with kind="update"

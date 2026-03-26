@@ -1,0 +1,329 @@
+openapi: 3.0.3
+info:
+  title: Collector Split Tool API
+  description: API for calculating collector splits, managing token distributions, and monitoring transactions
+  version: 1.0.0
+  contact:
+    name: Support Team
+    url: https://github.com/your-org/collector-split-tool/issues
+
+servers:
+  - url: http://localhost:8000
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "INVALID_PARAMETER"
+            message:
+              type: string
+              example: "Invalid collection address format"
+            details:
+              type: object
+              additionalProperties: true
+
+    Collector:
+      type: object
+      properties:
+        address:
+          type: string
+          example: "tz1test1"
+        rank:
+          type: integer
+          example: 1
+        score:
+          type: number
+          format: float
+          example: 0.85
+        stats:
+          type: object
+          properties:
+            total_nfts:
+              type: integer
+              example: 100
+            lifetime_spent:
+              type: number
+              format: float
+              example: 1000.5
+            recent_purchases:
+              type: integer
+              example: 5
+
+    Split:
+      type: object
+      properties:
+        address:
+          type: string
+          example: "tz1test1"
+        share:
+          type: integer
+          description: Share in basis points (1/100 of a percent)
+          example: 500
+        rank:
+          type: integer
+          example: 1
+        score:
+          type: number
+          format: float
+          example: 0.85
+
+    TransactionStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, applied, failed]
+          example: "applied"
+        confirmations:
+          type: integer
+          example: 30
+        timestamp:
+          type: string
+          format: date-time
+        details:
+          type: object
+          properties:
+            block_hash:
+              type: string
+              example: "BL..."
+            block_level:
+              type: integer
+              example: 1234567
+            gas_used:
+              type: integer
+              example: 10000
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      security: []
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+                  version:
+                    type: string
+                    example: "1.0.0"
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /collectors/{collection_address}:
+    get:
+      summary: Get ranked collectors for a collection
+      parameters:
+        - name: collection_address
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: min_nfts
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: max_collectors
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: include_stats
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of ranked collectors
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collectors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Collector'
+                  total_collectors:
+                    type: integer
+                  timestamp:
+                    type: string
+                    format: date-time
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /splits/calculate:
+    post:
+      summary: Calculate splits for collectors
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - collection_address
+                - total_share
+              properties:
+                collection_address:
+                  type: string
+                total_share:
+                  type: integer
+                  description: Total share in basis points
+                min_collectors:
+                  type: integer
+                  default: 3
+                max_collectors:
+                  type: integer
+                  default: 10
+                min_share:
+                  type: integer
+                  default: 10
+                max_share:
+                  type: integer
+                  default: 5000
+      responses:
+        '200':
+          description: Calculated splits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  splits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Split'
+                  total_share:
+                    type: integer
+                  collector_count:
+                    type: integer
+        '400':
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /transactions/{operation_hash}:
+    get:
+      summary: Get transaction status
+      parameters:
+        - name: operation_hash
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: wait_for_confirmation
+          in: query
+          schema:
+            type: integer
+            default: 0
+      responses:
+        '200':
+          description: Transaction status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionStatus'
+        '404':
+          description: Transaction not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /collectors/{address}/stats:
+    get:
+      summary: Get collector statistics
+      parameters:
+        - name: address
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: collection_address
+          in: query
+          schema:
+            type: string
+        - name: time_range
+          in: query
+          schema:
+            type: integer
+            default: 30
+      responses:
+        '200':
+          description: Collector statistics
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  stats:
+                    type: object
+                    properties:
+                      total_nfts:
+                        type: integer
+                      total_collections:
+                        type: integer
+                      lifetime_spent:
+                        type: number
+                        format: float
+                      recent_activity:
+                        type: object
+                        properties:
+                          purchases:
+                            type: integer
+                          sales:
+                            type: integer
+                          volume:
+                            type: number
+                            format: float
+                  collections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        address:
+                          type: string
+                        nfts_owned:
+                          type: integer
+                        first_purchase:
+                          type: string
+                          format: date-time
+        '404':
+          description: Collector not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error' 

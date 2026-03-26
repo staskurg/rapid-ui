@@ -262,6 +262,8 @@ corpus:pattern-mining --repo {api-guru|github}  → pattern-mining-{repo}-{times
 
 Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures/valid-specs-{api-guru|github}/`.
 
+**Golden archetype fixtures:** `tests/compiler/fixtures/golden-candidates/golden-candidates.md` (from `extract:archetypes`), optional YAML pins under `golden-candidates/<archetype>/` (`fixtures:copy-golden-specs`), and mirrored ApiIR under `tests/compiler/fixtures/apiir/golden-candidates/...` (`fixtures:generate-apiir` recurses all fixture OpenAPI paths).
+
 See [docs/corpus-github.md](docs/corpus-github.md) for the GitHub crawler workflow.
 
 ### ApiIR vNext — pre-implementation gate (stubs)
@@ -277,8 +279,8 @@ This subsection records **reviewer-approved** contract and operational choices b
 
 #### Changelog (`apiIrVersion`)
 
-| Version | Summary                                                                                                                                  |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Version | Summary                                                                                                                                                                                                   |
+| ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **1**   | Root `apiIrVersion`; `ParameterIR` + merged `parameters[]` (optional `required` on query params when OpenAPI requires them); `OperationKind` includes **`listScoped`** (inference/classifier in Phase 2). |
 
 #### Parameters (`ParameterIR`)

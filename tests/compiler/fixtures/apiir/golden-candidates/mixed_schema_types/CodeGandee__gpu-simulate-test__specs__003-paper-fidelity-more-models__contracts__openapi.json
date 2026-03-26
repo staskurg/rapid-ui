@@ -1,0 +1,388 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "gpu-simulate-test paper-fidelity contract",
+    "version": "v1"
+  },
+  "resources": [
+    {
+      "name": "Paper-fidelity",
+      "key": "paper-fidelity",
+      "operations": [
+        {
+          "id": "POST:/paper-fidelity/matrix",
+          "method": "POST",
+          "kind": "create",
+          "path": "/paper-fidelity/matrix",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenarios",
+              "workloads",
+              "scale"
+            ],
+            "properties": {
+              "scenarios": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": [
+                  "internlm_20b_arxiv",
+                  "llama2_70b_arxiv",
+                  "qwen_72b_arxiv"
+                ]
+              },
+              "workloads": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "static",
+                    "dynamic"
+                  ]
+                },
+                "example": [
+                  "static",
+                  "dynamic"
+                ]
+              },
+              "scale": {
+                "type": "string",
+                "enum": [
+                  "small",
+                  "medium",
+                  "full"
+                ]
+              },
+              "include_cpu_overhead": {
+                "type": "boolean",
+                "default": true
+              },
+              "run_id": {
+                "type": "string",
+                "description": "Optional caller-provided identifier for the matrix run."
+              },
+              "stop_on_failure": {
+                "type": "boolean",
+                "default": false,
+                "description": "If true, stop after the first failure (still write manifest)."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "run_id",
+              "manifest_json",
+              "runs"
+            ],
+            "properties": {
+              "run_id": {
+                "type": "string"
+              },
+              "manifest_json": {
+                "type": "string",
+                "description": "Absolute path to the per-matrix manifest JSON file."
+              },
+              "runs": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "scenario_key",
+                    "workload",
+                    "scale",
+                    "status"
+                  ],
+                  "properties": {
+                    "scenario_key": {
+                      "type": "string"
+                    },
+                    "workload": {
+                      "type": "string",
+                      "enum": [
+                        "static",
+                        "dynamic"
+                      ]
+                    },
+                    "scale": {
+                      "type": "string",
+                      "enum": [
+                        "small",
+                        "medium",
+                        "full"
+                      ]
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "success",
+                        "failure"
+                      ]
+                    },
+                    "report_dir": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "failure_record_json": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "blocker_category": {
+                      "type": "string",
+                      "enum": [
+                        "insufficient GPUs",
+                        "OOM",
+                        "missing model files",
+                        "unsupported model",
+                        "unknown"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/paper-fidelity/profile",
+          "method": "POST",
+          "kind": "create",
+          "path": "/paper-fidelity/profile",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario"
+            ],
+            "properties": {
+              "scenario": {
+                "type": "string",
+                "example": "internlm_20b_arxiv"
+              },
+              "include_cpu_overhead": {
+                "type": "boolean",
+                "default": true,
+                "description": "Required `true` for this feature’s acceptance matrix."
+              },
+              "hydra_overrides": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Optional Hydra overrides passed as `key=value` (e.g., `profiling.num_gpus=4`)."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "artifacts"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string"
+              },
+              "artifacts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "profiling_root",
+                  "profiling_meta_json"
+                ],
+                "properties": {
+                  "profiling_root": {
+                    "type": "string",
+                    "description": "Absolute path to the profiling root directory."
+                  },
+                  "profiling_meta_json": {
+                    "type": "string",
+                    "description": "Absolute path to `profiling_meta.json`."
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/paper-fidelity/repro",
+          "method": "POST",
+          "kind": "create",
+          "path": "/paper-fidelity/repro",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario",
+              "workload",
+              "profiling_root"
+            ],
+            "properties": {
+              "scenario": {
+                "type": "string"
+              },
+              "workload": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "dynamic"
+                ]
+              },
+              "scale": {
+                "type": "string",
+                "enum": [
+                  "small",
+                  "medium",
+                  "full"
+                ]
+              },
+              "profiling_root": {
+                "type": "string",
+                "description": "Absolute path to the host profiling root to use for Vidur."
+              },
+              "scenario_name_override": {
+                "type": "string",
+                "description": "Optional override for `scenario.name` to avoid report collisions."
+              },
+              "hydra_overrides": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Optional Hydra overrides passed as `key=value`."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "artifacts"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string"
+              },
+              "artifacts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "report_dir",
+                  "summary_md",
+                  "scores_json",
+                  "run_meta_json"
+                ],
+                "properties": {
+                  "report_dir": {
+                    "type": "string"
+                  },
+                  "summary_md": {
+                    "type": "string"
+                  },
+                  "scores_json": {
+                    "type": "string"
+                  },
+                  "run_meta_json": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/paper-fidelity/trace",
+          "method": "POST",
+          "kind": "create",
+          "path": "/paper-fidelity/trace",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario",
+              "workload"
+            ],
+            "properties": {
+              "scenario": {
+                "type": "string",
+                "description": "Scenario key under `configs/paper_fidelity/scenario/` (filename stem).",
+                "example": "llama2_70b_arxiv"
+              },
+              "workload": {
+                "type": "string",
+                "enum": [
+                  "static",
+                  "dynamic"
+                ]
+              },
+              "scale": {
+                "type": "string",
+                "enum": [
+                  "small",
+                  "medium",
+                  "full"
+                ]
+              },
+              "hydra_overrides": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Optional Hydra overrides passed as `key=value`."
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scenario_name",
+              "out_dir",
+              "artifacts"
+            ],
+            "properties": {
+              "scenario_name": {
+                "type": "string"
+              },
+              "out_dir": {
+                "type": "string",
+                "description": "Absolute path to the trace output directory."
+              },
+              "artifacts": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "trace_csv",
+                  "trace_meta_json"
+                ],
+                "properties": {
+                  "trace_csv": {
+                    "type": "string",
+                    "description": "Absolute path to `trace.csv`.",
+                    "example": "/data1/huangzhe/code/gpu-simulate-test/tmp/paper_fidelity/traces/llama2_70b_arxiv/trace.csv"
+                  },
+                  "trace_meta_json": {
+                    "type": "string",
+                    "description": "Absolute path to `trace_meta.json`.",
+                    "example": "/data1/huangzhe/code/gpu-simulate-test/tmp/paper_fidelity/traces/llama2_70b_arxiv/trace_meta.json"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

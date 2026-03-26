@@ -1,0 +1,300 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "takehomeTest",
+    "version": "0.1.0"
+  },
+  "resources": [
+    {
+      "name": "Checkout",
+      "key": "checkout",
+      "operations": [
+        {
+          "id": "POST:/checkout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/checkout",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "productIds": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "description": "IDs of selected products"
+                }
+              },
+              "coupons": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Selected coupons",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "description": "The coupon's ID."
+                    },
+                    "campaign": {
+                      "type": "string",
+                      "description": "The coupon's campaign."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "The coupon's description."
+                    },
+                    "category": {
+                      "type": "string",
+                      "description": "The coupon's category."
+                    }
+                  }
+                }
+              },
+              "totalPrice": {
+                "type": "number",
+                "description": "Tolal price from selected products before discount"
+              },
+              "netPrice": {
+                "type": "number",
+                "description": "Net price from selected products after discount from selected coupons"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "number",
+                "description": "ID of the order"
+              },
+              "products": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Selected products",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "description": "The product's ID."
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "The product's name."
+                    },
+                    "price": {
+                      "type": "integer",
+                      "description": "The product's price."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "The product's description."
+                    },
+                    "category": {
+                      "type": "string",
+                      "description": "The product's category."
+                    }
+                  }
+                }
+              },
+              "coupons": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "description": "Selected coupons",
+                  "properties": {
+                    "id": {
+                      "type": "integer",
+                      "description": "The coupon's ID."
+                    },
+                    "campaign": {
+                      "type": "string",
+                      "description": "The coupon's campaign."
+                    },
+                    "description": {
+                      "type": "string",
+                      "description": "The coupon's description."
+                    },
+                    "category": {
+                      "type": "string",
+                      "description": "The coupon's category."
+                    }
+                  }
+                }
+              },
+              "totalPrice": {
+                "type": "number",
+                "description": "tolal price from selected products before discount"
+              },
+              "netPrice": {
+                "type": "number",
+                "description": "net price from selected products after discount from selected coupons"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Coupons",
+      "key": "coupons",
+      "operations": [
+        {
+          "id": "GET:/coupons",
+          "method": "GET",
+          "kind": "list",
+          "path": "/coupons",
+          "parameters": [],
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Selected coupons",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "The coupon's ID."
+                },
+                "campaign": {
+                  "type": "string",
+                  "description": "The coupon's campaign."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The coupon's description."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "The coupon's category."
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/coupons/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/coupons/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer",
+                "description": "id of the coupon"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "Selected coupons",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "The coupon's ID."
+              },
+              "campaign": {
+                "type": "string",
+                "description": "The coupon's campaign."
+              },
+              "description": {
+                "type": "string",
+                "description": "The coupon's description."
+              },
+              "category": {
+                "type": "string",
+                "description": "The coupon's category."
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "parameters": [],
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "description": "Selected products",
+              "properties": {
+                "id": {
+                  "type": "integer",
+                  "description": "The product's ID."
+                },
+                "name": {
+                  "type": "string",
+                  "description": "The product's name."
+                },
+                "price": {
+                  "type": "integer",
+                  "description": "The product's price."
+                },
+                "description": {
+                  "type": "string",
+                  "description": "The product's description."
+                },
+                "category": {
+                  "type": "string",
+                  "description": "The product's category."
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer",
+                "description": "id of the product"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "description": "Selected products",
+            "properties": {
+              "id": {
+                "type": "integer",
+                "description": "The product's ID."
+              },
+              "name": {
+                "type": "string",
+                "description": "The product's name."
+              },
+              "price": {
+                "type": "integer",
+                "description": "The product's price."
+              },
+              "description": {
+                "type": "string",
+                "description": "The product's description."
+              },
+              "category": {
+                "type": "string",
+                "description": "The product's category."
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

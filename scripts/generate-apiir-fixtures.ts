@@ -1,90 +1,62 @@
 #!/usr/bin/env tsx
 /**
- * Generate ApiIR JSON fixtures from OpenAPI YAML fixtures.
- * Reads from:
- *   - tests/compiler/fixtures/demo/*.yaml
- *   - tests/compiler/fixtures/valid-specs-api-guru/*.yaml
- *   - tests/compiler/fixtures/valid-specs-github/*.yaml
- * Writes to tests/compiler/fixtures/apiir/demo/*.json, apiir/valid-specs-api-guru/*.json, apiir/valid-specs-github/*.json
+ * Generate ApiIR JSON fixtures from OpenAPI fixtures under tests/compiler/fixtures.
+ * Walks all nested directories except the top-level `apiir` output tree, mirroring each
+ * `.yaml` / `.yml` / `.json` path into `apiir/<same-relative-path>.json`.
+ *
+ * Typical roots: demo/, valid-specs-github, valid-specs-api-guru, golden-candidates/<archetype>/ (after copy-golden-specs).
  *
  * Run after parse/validate/build changes. Commit updated ApiIR files.
  *
  * Usage: npm run fixtures:generate-apiir
  */
 
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { dirname, join } from 'path';
 import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
 import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { buildApiIR } from '@/lib/compiler/apiir';
+import { openapiFixtureRelToApiirRel, walkOpenapiFixtureRelPaths } from './fixture-openapi-walk';
 
 const FIXTURES_DIR = join(process.cwd(), 'tests/compiler/fixtures');
-const APIIR_DIR = join(FIXTURES_DIR, 'apiir');
-const DEMO_DIR = join(FIXTURES_DIR, 'demo');
 
-type Source = { inputDir: string; outputSubdir: string };
+function processOne(relPath: string): boolean {
+  const inputPath = join(FIXTURES_DIR, relPath);
+  const outputPath = join(FIXTURES_DIR, openapiFixtureRelToApiirRel(relPath));
 
-function processSource(source: Source): number {
-  const { inputDir, outputSubdir } = source;
-  const outputDir = outputSubdir ? join(APIIR_DIR, outputSubdir) : APIIR_DIR;
+  const content = readFileSync(inputPath, 'utf-8');
+  const parseResult = parseOpenAPI(content);
 
-  if (!existsSync(inputDir)) {
-    return 0;
+  if (!parseResult.success) {
+    console.error(`[${relPath}] Parse failed: ${parseResult.error.message}`);
+    return false;
   }
 
-  const files = readdirSync(inputDir).filter(
-    (f) => f.endsWith('.yaml') || f.endsWith('.yml') || f.endsWith('.json')
-  );
-
-  if (files.length === 0) {
-    return 0;
+  const validateResult = validateSubset(parseResult.doc);
+  if (!validateResult.success) {
+    console.error(
+      `[${relPath}] Validation failed: ${validateResult.errors.map((e) => e.message).join('; ')}`
+    );
+    return false;
   }
 
-  if (!existsSync(outputDir)) {
-    mkdirSync(outputDir, { recursive: true });
+  const resolveResult = resolveRefs(parseResult.doc);
+  if (!resolveResult.success) {
+    console.error(`[${relPath}] Resolve failed: ${resolveResult.error.message}`);
+    return false;
   }
 
-  let processed = 0;
-  for (const file of files) {
-    const baseName = file.replace(/\.(yaml|yml|json)$/i, '');
-    const inputPath = join(inputDir, file);
-    const outputPath = join(outputDir, `${baseName}.json`);
-
-    const content = readFileSync(inputPath, 'utf-8');
-    const parseResult = parseOpenAPI(content);
-
-    if (!parseResult.success) {
-      console.error(`[${file}] Parse failed: ${parseResult.error.message}`);
-      continue;
-    }
-
-    const validateResult = validateSubset(parseResult.doc);
-    if (!validateResult.success) {
-      console.error(
-        `[${file}] Validation failed: ${validateResult.errors.map((e) => e.message).join('; ')}`
-      );
-      continue;
-    }
-
-    const resolveResult = resolveRefs(parseResult.doc);
-    if (!resolveResult.success) {
-      console.error(`[${file}] Resolve failed: ${resolveResult.error.message}`);
-      continue;
-    }
-
-    const buildResult = buildApiIR(resolveResult.doc);
-    if (!buildResult.success) {
-      console.error(`[${file}] Build failed: ${buildResult.error.message}`);
-      continue;
-    }
-
-    writeFileSync(outputPath, JSON.stringify(buildResult.apiIr, null, 2));
-    console.log(`Generated: ${outputPath}`);
-    processed++;
+  const buildResult = buildApiIR(resolveResult.doc);
+  if (!buildResult.success) {
+    console.error(`[${relPath}] Build failed: ${buildResult.error.message}`);
+    return false;
   }
 
-  return processed;
+  mkdirSync(dirname(outputPath), { recursive: true });
+  writeFileSync(outputPath, JSON.stringify(buildResult.apiIr, null, 2));
+  console.log(`Generated: ${outputPath}`);
+  return true;
 }
 
 function main() {
@@ -93,28 +65,17 @@ function main() {
     process.exit(1);
   }
 
-  if (!existsSync(APIIR_DIR)) {
-    mkdirSync(APIIR_DIR, { recursive: true });
-  }
+  let processed = 0;
+  walkOpenapiFixtureRelPaths(FIXTURES_DIR, (rel) => {
+    if (processOne(rel)) processed++;
+  });
 
-  const sources: Source[] = [
-    { inputDir: DEMO_DIR, outputSubdir: 'demo' },
-    { inputDir: join(FIXTURES_DIR, 'valid-specs-api-guru'), outputSubdir: 'valid-specs-api-guru' },
-    { inputDir: join(FIXTURES_DIR, 'valid-specs-github'), outputSubdir: 'valid-specs-github' },
-  ];
-
-  let total = 0;
-  for (const source of sources) {
-    const count = processSource(source);
-    total += count;
-  }
-
-  if (total === 0) {
+  if (processed === 0) {
     console.log('No OpenAPI fixtures found (excluding invalid).');
     process.exit(0);
   }
 
-  console.log(`Done. ${total} fixture(s) processed.`);
+  console.log(`Done. ${processed} fixture(s) processed.`);
 }
 
 main();

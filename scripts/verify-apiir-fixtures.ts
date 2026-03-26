@@ -3,86 +3,71 @@
  * Verify that ApiIR JSON fixtures match what the pipeline produces.
  * Run: npm run verify:apiir-fixtures
  *
- * Sources mirror {@link scripts/generate-apiir-fixtures.ts}: demo + valid-specs-* YAML **and** JSON OpenAPI.
- * If they differ, the fixtures are stale or there's a JSON round-trip bug.
+ * Sources mirror {@link scripts/generate-apiir-fixtures.ts}: every OpenAPI file under
+ * tests/compiler/fixtures except the top-level `apiir` tree, with mirrored paths under
+ * `apiir/` (same relative path, `.json` extension).
  */
 
-import { readFileSync, readdirSync, existsSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 import { parseOpenAPI } from '@/lib/compiler/openapi/parser';
 import { validateSubset } from '@/lib/compiler/openapi/subset-validator';
 import { resolveRefs } from '@/lib/compiler/openapi/ref-resolver';
 import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir';
+import { openapiFixtureRelToApiirRel, walkOpenapiFixtureRelPaths } from './fixture-openapi-walk';
 
 const FIXTURES_DIR = join(process.cwd(), 'tests/compiler/fixtures');
-const APIIR_DIR = join(FIXTURES_DIR, 'apiir');
-
-type Source = { yamlDir: string; apiirSubdir: string };
 
 function main() {
-  const sources: Source[] = [
-    { yamlDir: join(FIXTURES_DIR, 'demo'), apiirSubdir: 'demo' },
-    { yamlDir: join(FIXTURES_DIR, 'valid-specs-api-guru'), apiirSubdir: 'valid-specs-api-guru' },
-    { yamlDir: join(FIXTURES_DIR, 'valid-specs-github'), apiirSubdir: 'valid-specs-github' },
-  ];
-
   let allMatch = true;
 
-  for (const { yamlDir, apiirSubdir } of sources) {
-    if (!existsSync(yamlDir)) continue;
+  walkOpenapiFixtureRelPaths(FIXTURES_DIR, (relPath) => {
+    const yamlPath = join(FIXTURES_DIR, relPath);
+    const apiIrRel = openapiFixtureRelToApiirRel(relPath);
+    const apiIrPath = join(FIXTURES_DIR, apiIrRel);
 
-    const files = readdirSync(yamlDir).filter(
-      (f) => f.endsWith('.yaml') || f.endsWith('.yml') || f.endsWith('.json')
-    );
-
-    for (const file of files) {
-      const baseName = file.replace(/\.(yaml|yml|json)$/i, '');
-      const yamlPath = join(yamlDir, file);
-      const apiIrPath = join(APIIR_DIR, apiirSubdir, `${baseName}.json`);
-
-      if (!existsSync(apiIrPath)) {
-        console.log(`[${apiirSubdir}/${baseName}] SKIP - no ApiIR file`);
-        continue;
-      }
-
-      const content = readFileSync(yamlPath, 'utf-8');
-      const parseResult = parseOpenAPI(content);
-      if (!parseResult.success) {
-        console.log(`[${apiirSubdir}/${baseName}] SKIP - parse failed`);
-        continue;
-      }
-
-      const validateResult = validateSubset(parseResult.doc);
-      if (!validateResult.success) {
-        console.log(`[${apiirSubdir}/${baseName}] SKIP - validate failed`);
-        continue;
-      }
-
-      const resolveResult = resolveRefs(parseResult.doc);
-      if (!resolveResult.success) {
-        console.log(`[${apiirSubdir}/${baseName}] SKIP - resolve failed`);
-        continue;
-      }
-
-      const buildResult = buildApiIR(resolveResult.doc);
-      if (!buildResult.success) {
-        console.log(`[${apiirSubdir}/${baseName}] SKIP - build failed`);
-        continue;
-      }
-
-      const fromPipeline = apiIrStringify(buildResult.apiIr);
-      const fromFile = apiIrStringify(JSON.parse(readFileSync(apiIrPath, 'utf-8')));
-
-      if (fromPipeline === fromFile) {
-        console.log(`[${apiirSubdir}/${baseName}] ✓ MATCH`);
-      } else {
-        console.log(`[${apiirSubdir}/${baseName}] ✗ MISMATCH`);
-        console.log(`  Pipeline length: ${fromPipeline.length}`);
-        console.log(`  File length:     ${fromFile.length}`);
-        allMatch = false;
-      }
+    if (!existsSync(apiIrPath)) {
+      console.log(`[${apiIrRel}] SKIP - no ApiIR file`);
+      return;
     }
-  }
+
+    const content = readFileSync(yamlPath, 'utf-8');
+    const parseResult = parseOpenAPI(content);
+    if (!parseResult.success) {
+      console.log(`[${relPath}] SKIP - parse failed`);
+      return;
+    }
+
+    const validateResult = validateSubset(parseResult.doc);
+    if (!validateResult.success) {
+      console.log(`[${relPath}] SKIP - validate failed`);
+      return;
+    }
+
+    const resolveResult = resolveRefs(parseResult.doc);
+    if (!resolveResult.success) {
+      console.log(`[${relPath}] SKIP - resolve failed`);
+      return;
+    }
+
+    const buildResult = buildApiIR(resolveResult.doc);
+    if (!buildResult.success) {
+      console.log(`[${relPath}] SKIP - build failed`);
+      return;
+    }
+
+    const fromPipeline = apiIrStringify(buildResult.apiIr);
+    const fromFile = apiIrStringify(JSON.parse(readFileSync(apiIrPath, 'utf-8')));
+
+    if (fromPipeline === fromFile) {
+      console.log(`[${apiIrRel}] ✓ MATCH`);
+    } else {
+      console.log(`[${apiIrRel}] ✗ MISMATCH`);
+      console.log(`  Pipeline length: ${fromPipeline.length}`);
+      console.log(`  File length:     ${fromFile.length}`);
+      allMatch = false;
+    }
+  });
 
   process.exit(allMatch ? 0 : 1);
 }

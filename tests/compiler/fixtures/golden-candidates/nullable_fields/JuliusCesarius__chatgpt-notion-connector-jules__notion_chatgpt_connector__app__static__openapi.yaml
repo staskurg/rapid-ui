@@ -1,0 +1,121 @@
+openapi: 3.0.1
+info:
+  title: Notion ChatGPT Connector API
+  description: API for interacting with Notion, allowing ChatGPT to search content and retrieve page details.
+  version: "v0.1.0"
+servers:
+  # This should be dynamically replaced by your APP_BASE_URL when the plugin is loaded by ChatGPT.
+  # For local testing, you can hardcode it if your APP_BASE_URL is static.
+  # Example: - url: http://localhost:8000
+  # It's often better if the ai-plugin.json `api.url` points to the root of the spec,
+  # and the server URL here is relative or handled by ChatGPT's context.
+  # For now, let's assume APP_BASE_URL will be the server.
+  - url: / # Using a relative URL, assuming APP_BASE_URL is the base.
+paths:
+  /api/search:
+    post:
+      summary: Search Notion Content
+      operationId: searchNotionContent
+      tags:
+        - Notion API
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotionSearchQuery'
+      responses:
+        "200":
+          description: Search results from Notion.
+          content:
+            application/json:
+              schema:
+                type: object # Replace with actual Notion search result structure if known
+        "401":
+          description: Not authenticated.
+  /api/pages/{page_id}/content:
+    get:
+      summary: Get Notion Page Content
+      operationId: getNotionPageContent
+      tags:
+        - Notion API
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          description: The ID of the Notion page.
+          schema:
+            type: string
+        - name: start_cursor
+          in: query
+          required: false
+          description: Cursor for pagination.
+          schema:
+            type: string
+        - name: page_size
+          in: query
+          required: false
+          description: Number of results per page.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Content blocks of the Notion page.
+          content:
+            application/json:
+              schema:
+                type: object # Replace with actual Notion block list structure if known
+        "401":
+          description: Not authenticated.
+  /api/users/me:
+    get:
+      summary: Get Bot User Info
+      operationId: getCurrentNotionUser
+      tags:
+        - Notion API
+      responses:
+        "200":
+          description: Information about the authenticated Notion bot.
+          content:
+            application/json:
+              schema:
+                type: object # Replace with actual Notion user object structure
+        "401":
+          description: Not authenticated.
+components:
+  schemas:
+    NotionSearchQuery:
+      type: object
+      required:
+        - query
+      properties:
+        query:
+          type: string
+          description: The search term.
+        filter_type:
+          type: string
+          enum: [page, database]
+          nullable: true
+          description: Filter results to only pages or databases.
+        start_cursor:
+          type: string
+          nullable: true
+          description: Cursor for pagination.
+        page_size:
+          type: integer
+          nullable: true
+          description: Number of results per page.
+  securitySchemes:
+    # This is a placeholder for how ChatGPT expects OAuth to be referenced.
+    # The actual OAuth flow is initiated by ChatGPT based on ai-plugin.json.
+    notionOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://api.notion.com/v1/oauth/authorize # This is Notion's direct URL
+          # Token URL is not directly used by ChatGPT here, it's part of the plugin settings.
+          # For user-level OAuth, ChatGPT handles token exchange after user authorizes.
+          tokenUrl: https://api.notion.com/v1/oauth/token # Notion's direct token URL
+          scopes: {} # Notion doesn't use scopes in this flow in the typical way.
+security:
+  - notionOAuth: []

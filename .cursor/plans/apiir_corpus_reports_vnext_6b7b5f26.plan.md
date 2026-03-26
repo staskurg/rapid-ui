@@ -196,6 +196,10 @@ Treat as **list** ∪ **listScoped** unless **pattern tokens** must distinguish 
 - **Phase 8** — **Done when:** JSONL + npm script exist; schema matches spec. **Run:** `npm run corpus:ui-readiness` + spot-check output
 - **Phase 9** — **Done when:** docs match reality; reviewers agree. **Run:** `npm run type`; `npm test`
 
+### Operator notes (Phase 6 entry and release)
+
+Track A (listScoped-aware archetypes) is **[docs/pre-phase-6-archetypes.md](../../docs/pre-phase-6-archetypes.md)**. For the **vitest extract-archetypes smoke** vs **full `extract:archetypes`**, why temp `golden-candidates.md` can look empty, and the **post–Phase 6** checklist (**`eval:llm`**, **`inferIdField`** follow-up, optional **E2E** golden smoke), see **§9–10** in that doc. None of §10 is a hard blocker to **starting** Phase 6.
+
 Full gate criteria and optional notes are under each phase below.
 
 ## Work packages (by phase number in source doc)

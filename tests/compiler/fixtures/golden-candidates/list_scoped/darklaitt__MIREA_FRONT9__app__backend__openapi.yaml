@@ -1,0 +1,197 @@
+openapi: 3.0.0
+info:
+  title: Интернет-магазин API
+  version: 1.0.0
+  description: API для магазина и панели администратора
+
+paths:
+  # Магазин API
+  /api/products:
+    get:
+      summary: Получить список всех товаров
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  
+  /api/products/{id}:
+    get:
+      summary: Получить товар по ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Товар не найден
+  
+  /api/products/category/{category}:
+    get:
+      summary: Получить товары по категории
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+  
+  # Админ API
+  /api/admin/products:
+    get:
+      summary: Получить список всех товаров (админ)
+      responses:
+        '200':
+          description: Успешный ответ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+    
+    post:
+      summary: Добавить новый товар
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Товар успешно добавлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '400':
+          description: Некорректные данные
+  
+  /api/admin/products/batch:
+    post:
+      summary: Добавить несколько товаров одновременно
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: Товары успешно добавлены
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+        '400':
+          description: Некорректные данные
+  
+  /api/admin/products/{id}:
+    put:
+      summary: Редактировать информацию о товаре
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '200':
+          description: Товар успешно обновлен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Товар не найден
+        '400':
+          description: Некорректные данные
+    
+    delete:
+      summary: Удалить товар
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Товар успешно удален
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          description: Товар не найден
+
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        price:
+          type: integer
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - price
+    
+    ProductInput:
+      type: object
+      properties:
+        name:
+          type: string
+        price:
+          type: integer
+        description:
+          type: string
+        categories:
+          type: array
+          items:
+            type: string
+      required:
+        - name
+        - price

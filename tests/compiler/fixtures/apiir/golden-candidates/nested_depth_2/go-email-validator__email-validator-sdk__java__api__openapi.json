@@ -1,0 +1,878 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Email Validator",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "EmailValidation",
+      "key": "emailvalidation",
+      "operations": [
+        {
+          "id": "EmailValidation_singleValidation_get",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/v1/validation/single/{email}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "email",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "result_type",
+              "schema": {
+                "default": "CHECK_IF_EMAIL_EXIST",
+                "description": "* CHECK_IF_EMAIL_EXIST, CIEE - [check-if-email-exists format](https://github.com/amaurymartiny/check-if-email-exists#%EF%B8%8F-json-output).\n* MAILBOXVALIDATOR, MAIL_BOX_VALIDATOR, MBV - [mailboxvalidator.com format](https://www.mailboxvalidator.com/api-single-validation).\n* PROMPT_EMAIL_VERIFICATION_API, PEVA - [Email Verification api format](https://promptapi.com/marketplace/description/email_verification-api) from [promptapi](https://promptapi.com).\n",
+                "enum": [
+                  "CHECK_IF_EMAIL_EXIST",
+                  "CIEE",
+                  "MAILBOXVALIDATOR",
+                  "MAIL_BOX_VALIDATOR",
+                  "MBV",
+                  "PROMPT_EMAIL_VERIFICATION_API",
+                  "PEVA"
+                ],
+                "title": "ResultType",
+                "type": "string"
+              }
+            }
+          ],
+          "identifierParam": "email",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "example": {
+              "mailboxvalidator": {
+                "error_message": "error_message",
+                "is_domain": "is_domain",
+                "is_server_down": "is_server_down",
+                "is_catchall": "is_catchall",
+                "is_verified": "is_verified",
+                "is_disposable": "is_disposable",
+                "time_taken": "time_taken",
+                "is_suppressed": "is_suppressed",
+                "is_role": "is_role",
+                "credits_available": 0,
+                "is_greylisted": "is_greylisted",
+                "email_address": "email_address",
+                "domain": "domain",
+                "is_free": "is_free",
+                "is_smtp": "is_smtp",
+                "is_syntax": "is_syntax",
+                "mailboxvalidator_score": "mailboxvalidator_score",
+                "error_code": "error_code",
+                "is_high_risk": "is_high_risk",
+                "status": "status"
+              },
+              "prompt_email_verification_api": {
+                "mx_records": {
+                  "accepts_mail": true,
+                  "records": [
+                    "records",
+                    "records"
+                  ]
+                },
+                "is_catch_all": true,
+                "can_connect_smtp": true,
+                "is_disabled": true,
+                "is_inbox_full": true,
+                "is_role_account": true,
+                "is_deliverable": true,
+                "message": "message",
+                "is_disposable": true,
+                "syntax_valid": true,
+                "email": "email"
+              },
+              "check_if_email_exist": {
+                "input": "input",
+                "smtp": {
+                  "is_catch_all": true,
+                  "can_connect_smtp": true,
+                  "has_full_inbox": true,
+                  "is_disabled": true,
+                  "is_deliverable": true
+                },
+                "is_reachable": "is_reachable",
+                "syntax": {
+                  "address": "address",
+                  "domain": "domain",
+                  "is_valid_syntax": true,
+                  "username": "username"
+                },
+                "mx": {
+                  "accepts_mail": true,
+                  "records": [
+                    "records",
+                    "records"
+                  ]
+                },
+                "error": "error",
+                "misc": {
+                  "is_role_account": true,
+                  "is_disposable": true
+                }
+              }
+            },
+            "properties": {
+              "check_if_email_exist": {
+                "example": {
+                  "input": "input",
+                  "smtp": {
+                    "is_catch_all": true,
+                    "can_connect_smtp": true,
+                    "has_full_inbox": true,
+                    "is_disabled": true,
+                    "is_deliverable": true
+                  },
+                  "is_reachable": "is_reachable",
+                  "syntax": {
+                    "address": "address",
+                    "domain": "domain",
+                    "is_valid_syntax": true,
+                    "username": "username"
+                  },
+                  "mx": {
+                    "accepts_mail": true,
+                    "records": [
+                      "records",
+                      "records"
+                    ]
+                  },
+                  "error": "error",
+                  "misc": {
+                    "is_role_account": true,
+                    "is_disposable": true
+                  }
+                },
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "is_reachable": {
+                    "type": "string"
+                  },
+                  "misc": {
+                    "example": {
+                      "is_role_account": true,
+                      "is_disposable": true
+                    },
+                    "properties": {
+                      "is_disposable": {
+                        "type": "boolean"
+                      },
+                      "is_role_account": {
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "mx": {
+                    "example": {
+                      "accepts_mail": true,
+                      "records": [
+                        "records",
+                        "records"
+                      ]
+                    },
+                    "properties": {
+                      "accepts_mail": {
+                        "type": "boolean"
+                      },
+                      "records": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "smtp": {
+                    "example": {
+                      "is_catch_all": true,
+                      "can_connect_smtp": true,
+                      "has_full_inbox": true,
+                      "is_disabled": true,
+                      "is_deliverable": true
+                    },
+                    "properties": {
+                      "can_connect_smtp": {
+                        "type": "boolean"
+                      },
+                      "has_full_inbox": {
+                        "type": "boolean"
+                      },
+                      "is_catch_all": {
+                        "type": "boolean"
+                      },
+                      "is_deliverable": {
+                        "type": "boolean"
+                      },
+                      "is_disabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "syntax": {
+                    "example": {
+                      "address": "address",
+                      "domain": "domain",
+                      "is_valid_syntax": true,
+                      "username": "username"
+                    },
+                    "properties": {
+                      "address": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "domain": {
+                        "type": "string"
+                      },
+                      "is_valid_syntax": {
+                        "type": "boolean"
+                      },
+                      "username": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "mailboxvalidator": {
+                "example": {
+                  "error_message": "error_message",
+                  "is_domain": "is_domain",
+                  "is_server_down": "is_server_down",
+                  "is_catchall": "is_catchall",
+                  "is_verified": "is_verified",
+                  "is_disposable": "is_disposable",
+                  "time_taken": "time_taken",
+                  "is_suppressed": "is_suppressed",
+                  "is_role": "is_role",
+                  "credits_available": 0,
+                  "is_greylisted": "is_greylisted",
+                  "email_address": "email_address",
+                  "domain": "domain",
+                  "is_free": "is_free",
+                  "is_smtp": "is_smtp",
+                  "is_syntax": "is_syntax",
+                  "mailboxvalidator_score": "mailboxvalidator_score",
+                  "error_code": "error_code",
+                  "is_high_risk": "is_high_risk",
+                  "status": "status"
+                },
+                "properties": {
+                  "email_address": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "is_free": {
+                    "type": "string"
+                  },
+                  "is_syntax": {
+                    "type": "string"
+                  },
+                  "is_domain": {
+                    "type": "string"
+                  },
+                  "is_smtp": {
+                    "type": "string"
+                  },
+                  "is_verified": {
+                    "type": "string"
+                  },
+                  "is_server_down": {
+                    "type": "string"
+                  },
+                  "is_greylisted": {
+                    "type": "string"
+                  },
+                  "is_disposable": {
+                    "type": "string"
+                  },
+                  "is_suppressed": {
+                    "type": "string"
+                  },
+                  "is_role": {
+                    "type": "string"
+                  },
+                  "is_high_risk": {
+                    "type": "string"
+                  },
+                  "is_catchall": {
+                    "type": "string"
+                  },
+                  "mailboxvalidator_score": {
+                    "type": "string"
+                  },
+                  "time_taken": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "credits_available": {
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "error_code": {
+                    "type": "string"
+                  },
+                  "error_message": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "prompt_email_verification_api": {
+                "example": {
+                  "mx_records": {
+                    "accepts_mail": true,
+                    "records": [
+                      "records",
+                      "records"
+                    ]
+                  },
+                  "is_catch_all": true,
+                  "can_connect_smtp": true,
+                  "is_disabled": true,
+                  "is_inbox_full": true,
+                  "is_role_account": true,
+                  "is_deliverable": true,
+                  "message": "message",
+                  "is_disposable": true,
+                  "syntax_valid": true,
+                  "email": "email"
+                },
+                "properties": {
+                  "can_connect_smtp": {
+                    "type": "boolean"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "is_catch_all": {
+                    "type": "boolean"
+                  },
+                  "is_deliverable": {
+                    "type": "boolean"
+                  },
+                  "is_disabled": {
+                    "type": "boolean"
+                  },
+                  "is_disposable": {
+                    "type": "boolean"
+                  },
+                  "is_inbox_full": {
+                    "type": "boolean"
+                  },
+                  "is_role_account": {
+                    "type": "boolean"
+                  },
+                  "mx_records": {
+                    "example": {
+                      "accepts_mail": true,
+                      "records": [
+                        "records",
+                        "records"
+                      ]
+                    },
+                    "properties": {
+                      "accepts_mail": {
+                        "type": "boolean"
+                      },
+                      "records": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "syntax_valid": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        },
+        {
+          "id": "EmailValidation_singleValidation_post",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/validation/single",
+          "parameters": [],
+          "requestSchema": {
+            "example": {
+              "smtp": {
+                "proxy": "https://openapi-generator.tech",
+                "hello_name": "localhost",
+                "port": 25,
+                "timeout_response": 6.027456183070403,
+                "timeout_connection": 0.8008281904610115,
+                "email_from": "user@example.org"
+              },
+              "email": "SOME.EXISTING.EMAIL@domain.com"
+            },
+            "properties": {
+              "email": {
+                "example": "SOME.EXISTING.EMAIL@domain.com",
+                "type": "string"
+              },
+              "smtp": {
+                "example": {
+                  "proxy": "https://openapi-generator.tech",
+                  "hello_name": "localhost",
+                  "port": 25,
+                  "timeout_response": 6.027456183070403,
+                  "timeout_connection": 0.8008281904610115,
+                  "email_from": "user@example.org"
+                },
+                "properties": {
+                  "email_from": {
+                    "default": "user@example.org",
+                    "example": "user@example.org",
+                    "format": "email",
+                    "type": "string"
+                  },
+                  "hello_name": {
+                    "default": "localhost",
+                    "example": "localhost",
+                    "type": "string"
+                  },
+                  "proxy": {
+                    "description": "Versions - SOCKS4, SOCKS4A and SOCKS5.\nFormat -  schema://username:password@host:port.\n",
+                    "format": "uri",
+                    "type": "string"
+                  },
+                  "timeout_connection": {
+                    "default": 5,
+                    "description": "timeout creating smtp connection",
+                    "type": "number"
+                  },
+                  "timeout_response": {
+                    "description": "timeout of communication with smtp server",
+                    "type": "number"
+                  },
+                  "port": {
+                    "default": 25,
+                    "description": "smtp port remote server",
+                    "example": 25,
+                    "format": "int32",
+                    "type": "integer"
+                  }
+                },
+                "type": "object"
+              },
+              "result_type": {
+                "default": "CHECK_IF_EMAIL_EXIST",
+                "description": "* CHECK_IF_EMAIL_EXIST, CIEE - [check-if-email-exists format](https://github.com/amaurymartiny/check-if-email-exists#%EF%B8%8F-json-output).\n* MAILBOXVALIDATOR, MAIL_BOX_VALIDATOR, MBV - [mailboxvalidator.com format](https://www.mailboxvalidator.com/api-single-validation).\n* PROMPT_EMAIL_VERIFICATION_API, PEVA - [Email Verification api format](https://promptapi.com/marketplace/description/email_verification-api) from [promptapi](https://promptapi.com).\n",
+                "enum": [
+                  "CHECK_IF_EMAIL_EXIST",
+                  "CIEE",
+                  "MAILBOXVALIDATOR",
+                  "MAIL_BOX_VALIDATOR",
+                  "MBV",
+                  "PROMPT_EMAIL_VERIFICATION_API",
+                  "PEVA"
+                ],
+                "title": "ResultType",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          },
+          "responseSchema": {
+            "example": {
+              "mailboxvalidator": {
+                "error_message": "error_message",
+                "is_domain": "is_domain",
+                "is_server_down": "is_server_down",
+                "is_catchall": "is_catchall",
+                "is_verified": "is_verified",
+                "is_disposable": "is_disposable",
+                "time_taken": "time_taken",
+                "is_suppressed": "is_suppressed",
+                "is_role": "is_role",
+                "credits_available": 0,
+                "is_greylisted": "is_greylisted",
+                "email_address": "email_address",
+                "domain": "domain",
+                "is_free": "is_free",
+                "is_smtp": "is_smtp",
+                "is_syntax": "is_syntax",
+                "mailboxvalidator_score": "mailboxvalidator_score",
+                "error_code": "error_code",
+                "is_high_risk": "is_high_risk",
+                "status": "status"
+              },
+              "prompt_email_verification_api": {
+                "mx_records": {
+                  "accepts_mail": true,
+                  "records": [
+                    "records",
+                    "records"
+                  ]
+                },
+                "is_catch_all": true,
+                "can_connect_smtp": true,
+                "is_disabled": true,
+                "is_inbox_full": true,
+                "is_role_account": true,
+                "is_deliverable": true,
+                "message": "message",
+                "is_disposable": true,
+                "syntax_valid": true,
+                "email": "email"
+              },
+              "check_if_email_exist": {
+                "input": "input",
+                "smtp": {
+                  "is_catch_all": true,
+                  "can_connect_smtp": true,
+                  "has_full_inbox": true,
+                  "is_disabled": true,
+                  "is_deliverable": true
+                },
+                "is_reachable": "is_reachable",
+                "syntax": {
+                  "address": "address",
+                  "domain": "domain",
+                  "is_valid_syntax": true,
+                  "username": "username"
+                },
+                "mx": {
+                  "accepts_mail": true,
+                  "records": [
+                    "records",
+                    "records"
+                  ]
+                },
+                "error": "error",
+                "misc": {
+                  "is_role_account": true,
+                  "is_disposable": true
+                }
+              }
+            },
+            "properties": {
+              "check_if_email_exist": {
+                "example": {
+                  "input": "input",
+                  "smtp": {
+                    "is_catch_all": true,
+                    "can_connect_smtp": true,
+                    "has_full_inbox": true,
+                    "is_disabled": true,
+                    "is_deliverable": true
+                  },
+                  "is_reachable": "is_reachable",
+                  "syntax": {
+                    "address": "address",
+                    "domain": "domain",
+                    "is_valid_syntax": true,
+                    "username": "username"
+                  },
+                  "mx": {
+                    "accepts_mail": true,
+                    "records": [
+                      "records",
+                      "records"
+                    ]
+                  },
+                  "error": "error",
+                  "misc": {
+                    "is_role_account": true,
+                    "is_disposable": true
+                  }
+                },
+                "properties": {
+                  "input": {
+                    "type": "string"
+                  },
+                  "is_reachable": {
+                    "type": "string"
+                  },
+                  "misc": {
+                    "example": {
+                      "is_role_account": true,
+                      "is_disposable": true
+                    },
+                    "properties": {
+                      "is_disposable": {
+                        "type": "boolean"
+                      },
+                      "is_role_account": {
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "mx": {
+                    "example": {
+                      "accepts_mail": true,
+                      "records": [
+                        "records",
+                        "records"
+                      ]
+                    },
+                    "properties": {
+                      "accepts_mail": {
+                        "type": "boolean"
+                      },
+                      "records": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "smtp": {
+                    "example": {
+                      "is_catch_all": true,
+                      "can_connect_smtp": true,
+                      "has_full_inbox": true,
+                      "is_disabled": true,
+                      "is_deliverable": true
+                    },
+                    "properties": {
+                      "can_connect_smtp": {
+                        "type": "boolean"
+                      },
+                      "has_full_inbox": {
+                        "type": "boolean"
+                      },
+                      "is_catch_all": {
+                        "type": "boolean"
+                      },
+                      "is_deliverable": {
+                        "type": "boolean"
+                      },
+                      "is_disabled": {
+                        "type": "boolean"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "syntax": {
+                    "example": {
+                      "address": "address",
+                      "domain": "domain",
+                      "is_valid_syntax": true,
+                      "username": "username"
+                    },
+                    "properties": {
+                      "address": {
+                        "nullable": true,
+                        "type": "string"
+                      },
+                      "domain": {
+                        "type": "string"
+                      },
+                      "is_valid_syntax": {
+                        "type": "boolean"
+                      },
+                      "username": {
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "mailboxvalidator": {
+                "example": {
+                  "error_message": "error_message",
+                  "is_domain": "is_domain",
+                  "is_server_down": "is_server_down",
+                  "is_catchall": "is_catchall",
+                  "is_verified": "is_verified",
+                  "is_disposable": "is_disposable",
+                  "time_taken": "time_taken",
+                  "is_suppressed": "is_suppressed",
+                  "is_role": "is_role",
+                  "credits_available": 0,
+                  "is_greylisted": "is_greylisted",
+                  "email_address": "email_address",
+                  "domain": "domain",
+                  "is_free": "is_free",
+                  "is_smtp": "is_smtp",
+                  "is_syntax": "is_syntax",
+                  "mailboxvalidator_score": "mailboxvalidator_score",
+                  "error_code": "error_code",
+                  "is_high_risk": "is_high_risk",
+                  "status": "status"
+                },
+                "properties": {
+                  "email_address": {
+                    "type": "string"
+                  },
+                  "domain": {
+                    "type": "string"
+                  },
+                  "is_free": {
+                    "type": "string"
+                  },
+                  "is_syntax": {
+                    "type": "string"
+                  },
+                  "is_domain": {
+                    "type": "string"
+                  },
+                  "is_smtp": {
+                    "type": "string"
+                  },
+                  "is_verified": {
+                    "type": "string"
+                  },
+                  "is_server_down": {
+                    "type": "string"
+                  },
+                  "is_greylisted": {
+                    "type": "string"
+                  },
+                  "is_disposable": {
+                    "type": "string"
+                  },
+                  "is_suppressed": {
+                    "type": "string"
+                  },
+                  "is_role": {
+                    "type": "string"
+                  },
+                  "is_high_risk": {
+                    "type": "string"
+                  },
+                  "is_catchall": {
+                    "type": "string"
+                  },
+                  "mailboxvalidator_score": {
+                    "type": "string"
+                  },
+                  "time_taken": {
+                    "type": "string"
+                  },
+                  "status": {
+                    "type": "string"
+                  },
+                  "credits_available": {
+                    "format": "int64",
+                    "type": "integer"
+                  },
+                  "error_code": {
+                    "type": "string"
+                  },
+                  "error_message": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              },
+              "prompt_email_verification_api": {
+                "example": {
+                  "mx_records": {
+                    "accepts_mail": true,
+                    "records": [
+                      "records",
+                      "records"
+                    ]
+                  },
+                  "is_catch_all": true,
+                  "can_connect_smtp": true,
+                  "is_disabled": true,
+                  "is_inbox_full": true,
+                  "is_role_account": true,
+                  "is_deliverable": true,
+                  "message": "message",
+                  "is_disposable": true,
+                  "syntax_valid": true,
+                  "email": "email"
+                },
+                "properties": {
+                  "can_connect_smtp": {
+                    "type": "boolean"
+                  },
+                  "email": {
+                    "type": "string"
+                  },
+                  "is_catch_all": {
+                    "type": "boolean"
+                  },
+                  "is_deliverable": {
+                    "type": "boolean"
+                  },
+                  "is_disabled": {
+                    "type": "boolean"
+                  },
+                  "is_disposable": {
+                    "type": "boolean"
+                  },
+                  "is_inbox_full": {
+                    "type": "boolean"
+                  },
+                  "is_role_account": {
+                    "type": "boolean"
+                  },
+                  "mx_records": {
+                    "example": {
+                      "accepts_mail": true,
+                      "records": [
+                        "records",
+                        "records"
+                      ]
+                    },
+                    "properties": {
+                      "accepts_mail": {
+                        "type": "boolean"
+                      },
+                      "records": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "syntax_valid": {
+                    "type": "boolean"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                },
+                "type": "object"
+              }
+            },
+            "type": "object"
+          }
+        }
+      ]
+    }
+  ]
+}

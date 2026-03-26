@@ -1,0 +1,257 @@
+openapi: 3.0.3
+info:
+  title: Go REST Server API
+  description: |
+    A simple, configurable REST API server written in Go with Docker support.
+    Perfect for mocking APIs, testing, and development.
+    
+    All endpoints are configurable via `config.json`.
+  version: 1.0.0
+  contact:
+    name: API Support
+    url: https://github.com/ThaminduR/go-rest-server
+  license:
+    name: Open Source
+    url: https://github.com/ThaminduR/go-rest-server
+
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+  - url: http://localhost:3000
+    description: Alternative local server
+
+tags:
+  - name: Health
+    description: Health check endpoints
+  - name: Services
+    description: Service endpoints for testing
+
+paths:
+  /healthcheck:
+    get:
+      tags:
+        - Health
+      summary: Health check endpoint
+      description: Returns the health status of the service
+      operationId: getHealthcheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+              example:
+                status: true
+    post:
+      tags:
+        - Health
+      summary: Health check endpoint (POST)
+      description: Returns the health status of the service (accepts POST requests)
+      operationId: postHealthcheck
+      requestBody:
+        description: Optional request body (ignored by server)
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: boolean
+                    example: true
+              example:
+                status: true
+
+  /servicea:
+    get:
+      tags:
+        - Services
+      summary: Service A endpoint
+      description: Returns Service A information
+      operationId: getServiceA
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "servicea"
+              example:
+                service: "servicea"
+    post:
+      tags:
+        - Services
+      summary: Service A endpoint (POST)
+      description: Returns Service A information (accepts POST requests)
+      operationId: postServiceA
+      requestBody:
+        description: Optional request body (ignored by server)
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "servicea"
+              example:
+                service: "servicea"
+
+  /serviceb:
+    get:
+      tags:
+        - Services
+      summary: Service B endpoint
+      description: Returns Service B information
+      operationId: getServiceB
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "serviceb"
+              example:
+                service: "serviceb"
+    post:
+      tags:
+        - Services
+      summary: Service B endpoint (POST)
+      description: Returns Service B information (accepts POST requests)
+      operationId: postServiceB
+      requestBody:
+        description: Optional request body (ignored by server)
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "serviceb"
+              example:
+                service: "serviceb"
+
+  /servicec:
+    get:
+      tags:
+        - Services
+      summary: Service C endpoint
+      description: Returns Service C information
+      operationId: getServiceC
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "servicec"
+              example:
+                service: "servicec"
+    post:
+      tags:
+        - Services
+      summary: Service C endpoint (POST)
+      description: Returns Service C information (accepts POST requests)
+      operationId: postServiceC
+      requestBody:
+        description: Optional request body (ignored by server)
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  service:
+                    type: string
+                    example: "servicec"
+              example:
+                service: "servicec"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Not Found"
+      required:
+        - error
+
+    MethodNotAllowed:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message for method not allowed
+          example: "Method not allowed"
+      required:
+        - error
+
+  responses:
+    NotFound:
+      description: The requested resource was not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: "Not Found"
+
+    MethodNotAllowed:
+      description: The HTTP method is not allowed for this endpoint
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/MethodNotAllowed'
+          example:
+            error: "Method not allowed"

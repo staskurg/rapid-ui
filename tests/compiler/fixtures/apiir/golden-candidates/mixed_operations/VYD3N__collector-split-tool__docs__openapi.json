@@ -1,0 +1,377 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Collector Split Tool API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Collectors",
+      "key": "collectors",
+      "operations": [
+        {
+          "id": "GET:/collectors/{address}/stats",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/collectors/{address}/stats",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "collection_address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "time_range",
+              "schema": {
+                "type": "integer",
+                "default": 30
+              }
+            }
+          ],
+          "identifierParam": "address",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "address": {
+                "type": "string"
+              },
+              "stats": {
+                "type": "object",
+                "properties": {
+                  "total_nfts": {
+                    "type": "integer"
+                  },
+                  "total_collections": {
+                    "type": "integer"
+                  },
+                  "lifetime_spent": {
+                    "type": "number",
+                    "format": "float"
+                  },
+                  "recent_activity": {
+                    "type": "object",
+                    "properties": {
+                      "purchases": {
+                        "type": "integer"
+                      },
+                      "sales": {
+                        "type": "integer"
+                      },
+                      "volume": {
+                        "type": "number",
+                        "format": "float"
+                      }
+                    }
+                  }
+                }
+              },
+              "collections": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "nfts_owned": {
+                      "type": "integer"
+                    },
+                    "first_purchase": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/collectors/{collection_address}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/collectors/{collection_address}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "collection_address",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "include_stats",
+              "schema": {
+                "type": "boolean",
+                "default": false
+              }
+            },
+            {
+              "in": "query",
+              "name": "max_collectors",
+              "schema": {
+                "type": "integer",
+                "default": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "min_nfts",
+              "schema": {
+                "type": "integer",
+                "default": 1
+              }
+            }
+          ],
+          "identifierParam": "collection_address",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "collectors": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "example": "tz1test1"
+                    },
+                    "rank": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "score": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 0.85
+                    },
+                    "stats": {
+                      "type": "object",
+                      "properties": {
+                        "total_nfts": {
+                          "type": "integer",
+                          "example": 100
+                        },
+                        "lifetime_spent": {
+                          "type": "number",
+                          "format": "float",
+                          "example": 1000.5
+                        },
+                        "recent_purchases": {
+                          "type": "integer",
+                          "example": 5
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "total_collectors": {
+                "type": "integer"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "key": "health",
+      "operations": [
+        {
+          "id": "GET:/health",
+          "method": "GET",
+          "kind": "list",
+          "path": "/health",
+          "parameters": [],
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "ok"
+              },
+              "version": {
+                "type": "string",
+                "example": "1.0.0"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Splits",
+      "key": "splits",
+      "operations": [
+        {
+          "id": "POST:/splits/calculate",
+          "method": "POST",
+          "kind": "create",
+          "path": "/splits/calculate",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "collection_address",
+              "total_share"
+            ],
+            "properties": {
+              "collection_address": {
+                "type": "string"
+              },
+              "total_share": {
+                "type": "integer",
+                "description": "Total share in basis points"
+              },
+              "min_collectors": {
+                "type": "integer",
+                "default": 3
+              },
+              "max_collectors": {
+                "type": "integer",
+                "default": 10
+              },
+              "min_share": {
+                "type": "integer",
+                "default": 10
+              },
+              "max_share": {
+                "type": "integer",
+                "default": 5000
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "splits": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "address": {
+                      "type": "string",
+                      "example": "tz1test1"
+                    },
+                    "share": {
+                      "type": "integer",
+                      "description": "Share in basis points (1/100 of a percent)",
+                      "example": 500
+                    },
+                    "rank": {
+                      "type": "integer",
+                      "example": 1
+                    },
+                    "score": {
+                      "type": "number",
+                      "format": "float",
+                      "example": 0.85
+                    }
+                  }
+                }
+              },
+              "total_share": {
+                "type": "integer"
+              },
+              "collector_count": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "key": "transactions",
+      "operations": [
+        {
+          "id": "GET:/transactions/{operation_hash}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/transactions/{operation_hash}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "operation_hash",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "wait_for_confirmation",
+              "schema": {
+                "type": "integer",
+                "default": 0
+              }
+            }
+          ],
+          "identifierParam": "operation_hash",
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "applied",
+                  "failed"
+                ],
+                "example": "applied"
+              },
+              "confirmations": {
+                "type": "integer",
+                "example": 30
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "details": {
+                "type": "object",
+                "properties": {
+                  "block_hash": {
+                    "type": "string",
+                    "example": "BL..."
+                  },
+                  "block_level": {
+                    "type": "integer",
+                    "example": 1234567
+                  },
+                  "gas_used": {
+                    "type": "integer",
+                    "example": 10000
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

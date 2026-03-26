@@ -4,11 +4,16 @@
  * Loads from tests/compiler/fixtures/apiir/valid-specs-{github|api-guru}/*.json,
  * runs two-pass pipeline (metrics → classification), writes archetypes.json.
  *
+ * Default (no `--output-dir`): writes `archetypes.json` under `scripts/corpus-data/` and
+ * `golden-candidates/golden-candidates.md` under `tests/compiler/fixtures/` (committed golden list).
+ * `scripts/corpus-data/reports/` is reserved for corpus pipeline outputs only.
+ *
  * Usage: npm run extract:archetypes [-- --limit N] [--repo github|api-guru] [--output-dir PATH] [--write-json] [--write-report] [--verbose] [--show-archetype NAME]
  */
 
 import { readFileSync, readdirSync, writeFileSync, mkdirSync, existsSync } from 'fs';
-import { join } from 'path';
+import { dirname, join, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import type { ApiIR } from '@/lib/compiler/apiir';
 import {
   extractResourceMetrics,
@@ -22,7 +27,17 @@ import {
 } from './corpus-data/archetype-extractor';
 
 const FIXTURES_APIIR = join(process.cwd(), 'tests/compiler/fixtures/apiir');
-const DEFAULT_OUTPUT_DIR = join(process.cwd(), 'scripts/corpus-data');
+/** Default `--output-dir`; only `archetypes.json` is written here — not the golden report (see {@link GOLDEN_CANDIDATES_FIXTURE_PATH}). */
+export const EXTRACT_ARCHETYPES_DEFAULT_OUTPUT_DIR = join(process.cwd(), 'scripts/corpus-data');
+/** Root for golden candidate artifacts (report + `<archetype>/` OpenAPI pins from copy-golden-specs). */
+export const GOLDEN_CANDIDATES_DIR = join(
+  process.cwd(),
+  'tests/compiler/fixtures/golden-candidates'
+);
+/** Committed golden spec list (regression / Phase 6 pins); written on default extract when `--write-report` is true. */
+export const GOLDEN_CANDIDATES_FIXTURE_PATH = join(GOLDEN_CANDIDATES_DIR, 'golden-candidates.md');
+
+const DEFAULT_OUTPUT_DIR = EXTRACT_ARCHETYPES_DEFAULT_OUTPUT_DIR;
 
 interface LoadedSpec {
   specId: string;
@@ -40,7 +55,7 @@ type Candidate = Readonly<{
   resourceCount: number;
 }>;
 
-function parseArgs(): {
+function parseArgs(argv: string[]): {
   limit: number | null;
   repo: 'github' | 'api-guru' | null;
   outputDir: string;
@@ -49,7 +64,7 @@ function parseArgs(): {
   verbose: boolean;
   showArchetype: string | null;
 } {
-  const args = process.argv.slice(2);
+  const args = argv;
   let limit: number | null = null;
   let repo: 'github' | 'api-guru' | null = null;
   let outputDir = DEFAULT_OUTPUT_DIR;
@@ -113,11 +128,35 @@ function loadSpecs(limit: number | null, repo: 'github' | 'api-guru' | null): Lo
   return limit !== null ? sorted.slice(0, limit) : sorted;
 }
 
+/**
+ * Run archetype extraction with the same argv shape as the CLI (`--limit`, `--output-dir`, …).
+ * Exported for tests so vitest does not need to spawn `tsx` (IPC can fail in restricted sandboxes).
+ */
+export function runExtractArchetypesCli(argv: string[]): number {
+  return runExtractArchetypesImpl(parseArgs(argv));
+}
+
+const SMOKE_LIMIT = 50;
+
+/**
+ * CLI argv for smoke extraction — equivalent to
+ * `npm run extract:archetypes -- --limit 50 --output-dir <outputDir>`.
+ */
+export function extractArchetypesSmokeCliArgs(outputDir: string): string[] {
+  return ['--limit', String(SMOKE_LIMIT), '--output-dir', outputDir];
+}
+
 function main(): number {
-  const { limit, repo, outputDir, writeJson, writeReport, verbose, showArchetype } = parseArgs();
+  return runExtractArchetypesImpl(parseArgs(process.argv.slice(2)));
+}
+
+function runExtractArchetypesImpl(parsed: ReturnType<typeof parseArgs>): number {
+  const { limit, repo, outputDir, writeJson, writeReport, verbose, showArchetype } = parsed;
   const outputJsonPath = join(outputDir, 'archetypes.json');
-  const reportsDir = join(outputDir, 'reports');
-  const goldenCandidatesPath = join(reportsDir, 'golden-candidates.md');
+  const isDefaultCorpusOutputDir = resolve(outputDir) === resolve(DEFAULT_OUTPUT_DIR);
+  const goldenCandidatesPath = isDefaultCorpusOutputDir
+    ? GOLDEN_CANDIDATES_FIXTURE_PATH
+    : join(outputDir, 'reports', 'golden-candidates.md');
   const specs = loadSpecs(limit, repo);
 
   const githubCount = specs.filter((s) => s.corpus === 'github').length;
@@ -285,7 +324,7 @@ function main(): number {
   }
 
   if (writeReport) {
-    mkdirSync(reportsDir, { recursive: true });
+    mkdirSync(dirname(goldenCandidatesPath), { recursive: true });
     const { selected, zeroArchetypes } = selectGoldenCandidates(sortedSpecs, sortedArchetypes);
     writeGoldenCandidatesReport(selected, goldenCandidatesPath);
     for (const arch of zeroArchetypes) {
@@ -295,7 +334,9 @@ function main(): number {
       const uniqueSpecs = new Set(
         Array.from(selected.values()).flatMap((arr) => arr.map((c) => c.specId))
       );
-      console.log(`Golden candidates: ${uniqueSpecs.size} unique specs across 22 archetypes`);
+      console.log(
+        `Golden candidates: ${uniqueSpecs.size} unique specs across ${ARCHETYPE_ORDER.length} archetypes`
+      );
     }
   }
 
@@ -420,4 +461,16 @@ function writeGoldenCandidatesReport(selected: Map<string, Candidate[]>, path: s
   console.log(`Wrote ${path}`);
 }
 
-process.exit(main());
+function isRunAsCliScript(): boolean {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return resolve(entry) === resolve(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (isRunAsCliScript()) {
+  process.exit(main());
+}

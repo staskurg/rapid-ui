@@ -210,6 +210,88 @@ paths:
     expect(op?.kind).toBe('listScoped');
     expect(op?.identifierParam).toBe('orgId');
   });
+
+  it('GET with one path param and non-list body stays detail', () => {
+    const yaml = `
+openapi: 3.0.3
+info:
+  title: Detail not scoped list
+  version: '1'
+paths:
+  /orgs/{orgId}/summary:
+    get:
+      operationId: getOrgSummary
+      parameters:
+        - name: orgId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  total:
+                    type: integer
+`;
+    const parseResult = parseOpenAPI(yaml);
+    if (!parseResult.success) throw new Error(parseResult.error.message);
+    const validateResult = validateSubset(parseResult.doc);
+    if (!validateResult.success) throw new Error('validate');
+    const resolveResult = resolveRefs(parseResult.doc);
+    if (!resolveResult.success) throw new Error(resolveResult.error.message);
+    const doc = canonicalize(resolveResult.doc) as Record<string, unknown>;
+    const result = buildApiIR(doc);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    const op = result.apiIr.resources[0]?.operations[0];
+    expect(op?.kind).toBe(OPERATION_KIND.detail);
+    expect(op?.identifierParam).toBe('orgId');
+  });
+
+  it('rejects specs when success response is only 204 (no 200/201 JSON schema)', () => {
+    const yaml = `
+openapi: 3.0.3
+info:
+  title: No json success
+  version: '1'
+paths:
+  /items:
+    get:
+      responses:
+        '204':
+          description: No content
+`;
+    const parseResult = parseOpenAPI(yaml);
+    if (!parseResult.success) throw new Error(parseResult.error.message);
+    const validateResult = validateSubset(parseResult.doc);
+    expect(validateResult.success).toBe(false);
+  });
+
+  it('rejects specs when 200 response exists but has no application/json schema', () => {
+    const yaml = `
+openapi: 3.0.3
+info:
+  title: 200 without json content
+  version: '1'
+paths:
+  /items:
+    get:
+      responses:
+        '200':
+          description: OK
+`;
+    const parseResult = parseOpenAPI(yaml);
+    if (!parseResult.success) throw new Error(parseResult.error.message);
+    const validateResult = validateSubset(parseResult.doc);
+    expect(validateResult.success).toBe(false);
+  });
 });
 
 describe('list-like helpers', () => {

@@ -1,0 +1,92 @@
+openapi: 3.0.0
+info:
+  title: Plaid API
+  description: API for searching institutions
+  version: 1.0.0
+servers:
+  - url: https://sandbox.plaid.com
+    description: Sandbox server
+paths:
+  /institutions/search:
+    post:
+      summary: Search institutions
+      description: Returns details for institutions that match the query parameters, up to a maximum of ten institutions per query.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - client_id
+                - secret
+                - query
+                - country_codes
+              properties:
+                client_id:
+                  type: string
+                  description: Your Plaid API client_id
+                secret:
+                  type: string
+                  description: Your Plaid API secret
+                query:
+                  type: string
+                  description: The search query. Institutions with names matching the query are returned.
+                  minLength: 1
+                products:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["assets", "auth", "balance", "employment", "identity", "income_verification", "investments", "liabilities", "identity_verification", "payment_initiation", "standing_orders", "transactions", "transfer"]
+                  minItems: 1
+                  description: Filter the institutions based on whether they support all products listed in products.
+                country_codes:
+                  type: array
+                  items:
+                    type: string
+                    enum: ["US", "GB", "ES", "NL", "FR", "IE", "CA", "DE", "IT", "PL", "DK", "NO", "SE", "EE", "LT", "LV", "PT", "BE"]
+                  minItems: 1
+                  description: Specify which country or countries to include institutions from.
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  institutions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        institution_id:
+                          type: string
+                          description: Unique identifier for the institution.
+                        name:
+                          type: string
+                          description: The official name of the institution.
+                        products:
+                          type: array
+                          items:
+                            type: string
+                          description: A list of the Plaid products supported by the institution.
+                        country_codes:
+                          type: array
+                          items:
+                            type: string
+                            enum: ["US", "GB", "ES", "NL", "FR", "IE", "CA", "DE", "IT", "PL", "DK", "NO", "SE", "EE", "LT", "LV", "PT", "BE"]
+                          description: A list of the country codes supported by the institution.
+                        url:
+                          type: string
+                          nullable: true
+                          description: The URL for the institution's website.
+                        primary_color:
+                          type: string
+                          nullable: true
+                          description: Hexadecimal representation of the primary color used by the institution.
+                        logo:
+                          type: string
+                          format: base64
+                          nullable: true
+                          description: Base64 encoded representation of the institution's logo.

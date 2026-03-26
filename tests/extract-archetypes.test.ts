@@ -1,21 +1,28 @@
 import { describe, it, expect, beforeAll } from 'vitest';
-import { execSync } from 'child_process';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  extractArchetypesSmokeCliArgs,
+  runExtractArchetypesCli,
+} from '../scripts/extract-archetypes';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROJECT_ROOT = join(__dirname, '..');
-const TEST_OUTPUT_DIR = join(__dirname, 'compiler/fixtures/extract-archetypes-output');
+/**
+ * Ephemeral smoke output — same argv as
+ * `npm run extract:archetypes -- --limit 50 --output-dir tests/tmp/extract-archetypes-smoke`.
+ *
+ * The limit applies after a **global sort** of specIds (`api-guru/…` before `github/…`), so the
+ * slice is the first 50 APIs.guru fixtures only. Expect sparse archetypes and console warnings in
+ * CI — that is intentional. See docs/pre-phase-6-archetypes.md §9.
+ */
+const TEST_OUTPUT_DIR = join(__dirname, 'tmp', 'extract-archetypes-smoke');
 const ARCHETYPES_JSON = join(TEST_OUTPUT_DIR, 'archetypes.json');
 const GOLDEN_CANDIDATES = join(TEST_OUTPUT_DIR, 'reports/golden-candidates.md');
 
 describe('extract-archetypes smoke test', () => {
   beforeAll(() => {
-    execSync(`npm run extract:archetypes -- --limit 50 --output-dir "${TEST_OUTPUT_DIR}"`, {
-      cwd: PROJECT_ROOT,
-      stdio: 'pipe',
-    });
+    runExtractArchetypesCli(extractArchetypesSmokeCliArgs(TEST_OUTPUT_DIR));
   });
 
   it('produces archetypes.json with correct structure', () => {
@@ -44,10 +51,10 @@ describe('extract-archetypes smoke test', () => {
     }
   });
 
-  it('produces golden-candidates.md with 22 sections', () => {
+  it('produces golden-candidates.md with 26 section headings (content may be sparse under --limit 50)', () => {
     expect(existsSync(GOLDEN_CANDIDATES)).toBe(true);
     const content = readFileSync(GOLDEN_CANDIDATES, 'utf-8');
     const sections = content.match(/^## \d+\. /gm) ?? [];
-    expect(sections.length).toBe(22);
+    expect(sections.length).toBe(26);
   });
 });

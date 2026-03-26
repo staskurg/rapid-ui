@@ -30,6 +30,7 @@ IDENTIFIER FIELD RULE (metadata — no overlap with readOnly):
   - The top-level property matching identifierParam in responseSchema is metadata.
   - Metadata is EXCLUDED from list and detail. It MUST NOT appear there. Do not include it, do not mark it readOnly.
   - For create/edit: include identifierParam only if it exists in requestSchema. (Path params are NOT in requestSchema — do not add them.)
+- listScoped vs detail: For operations with kind "listScoped", identifierParam names the **scope** path segment (parent route context), NOT the row primary key. Do not treat it like a detail row id. The row id for navigation comes from list item shape (e.g. "id") when present; exclusion of identifierParam from list/detail applies only if that property exists in the **list/listScoped response** schema.
 - Exclusion rules take precedence. If a field is excluded, it MUST NOT appear. readOnly applies only to fields that are included.
 
 READONLY RULES (deterministic; apply only to fields that are included):

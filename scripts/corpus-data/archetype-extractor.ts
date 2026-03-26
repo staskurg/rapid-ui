@@ -5,6 +5,8 @@
 
 import {
   OPERATION_KIND,
+  PARAMETER_IN,
+  isListLikeKind,
   primaryListLikeOperation,
   type JsonSchema,
   type OperationKind,
@@ -37,6 +39,10 @@ export const ARCHETYPES = {
   MIXED_SCHEMA_TYPES: "mixed_schema_types",
   ARRAY_ROOT_LIST: "array_root_list",
   WRAPPED_LIST_RESPONSE: "wrapped_list_response",
+  LIST_SCOPED: "list_scoped",
+  LIST_SCOPED_WITH_DETAIL: "list_scoped_with_detail",
+  LIST_SCOPED_ONLY: "list_scoped_only",
+  REQUIRED_QUERY_LIST_LIKE: "required_query_list_like",
 } as const;
 
 export const ARCHETYPE_ORDER: readonly string[] = [
@@ -62,6 +68,10 @@ export const ARCHETYPE_ORDER: readonly string[] = [
   ARCHETYPES.MIXED_SCHEMA_TYPES,
   ARCHETYPES.ARRAY_ROOT_LIST,
   ARCHETYPES.WRAPPED_LIST_RESPONSE,
+  ARCHETYPES.LIST_SCOPED,
+  ARCHETYPES.LIST_SCOPED_WITH_DETAIL,
+  ARCHETYPES.LIST_SCOPED_ONLY,
+  ARCHETYPES.REQUIRED_QUERY_LIST_LIKE,
 ];
 
 // Freeze to prevent mutation
@@ -102,6 +112,10 @@ export interface ResourceArchetypeMetrics {
   operationPattern: OperationPattern;
   listResponseShape: "array_root" | "object_wrapped" | "unknown";
   primitiveOnly: boolean;
+  hasListScoped: boolean;
+  hasListScopedWithDetail: boolean;
+  hasListScopedOnly: boolean;
+  hasRequiredQueryOnListLike: boolean;
 }
 
 export interface SpecArchetypeMetrics {
@@ -392,6 +406,14 @@ export function extractResourceMetrics(resource: ResourceIR): ResourceArchetypeM
   const operations = resource.operations;
   const kinds = operations.map((o) => o.kind);
   const operationCount = operations.length;
+  const hasListScoped = operations.some((op) => op.kind === OPERATION_KIND.listScoped);
+  const hasDetail = operations.some((op) => op.kind === OPERATION_KIND.detail);
+  const hasRequiredQueryOnListLike = operations.some((op) => {
+    if (!isListLikeKind(op.kind)) return false;
+    return (op.parameters ?? []).some(
+      (parameter) => parameter.in === PARAMETER_IN.query && parameter.required === true
+    );
+  });
 
   let counts: SchemaCounts = {
     fieldCount: 0,
@@ -457,6 +479,10 @@ export function extractResourceMetrics(resource: ResourceIR): ResourceArchetypeM
     operationPattern: deriveOperationPattern(operations),
     listResponseShape,
     primitiveOnly,
+    hasListScoped,
+    hasListScopedWithDetail: hasListScoped && hasDetail,
+    hasListScopedOnly: hasListScoped && !hasDetail,
+    hasRequiredQueryOnListLike,
   };
 }
 
@@ -601,6 +627,22 @@ export function classifyResourceArchetypes(
   // 22. wrapped_list_response: listResponseShape = object_wrapped
   if (r.listResponseShape === "object_wrapped") {
     out.push(ARCHETYPES.WRAPPED_LIST_RESPONSE);
+  }
+  // 23. list_scoped: at least one listScoped operation
+  if (r.hasListScoped) {
+    out.push(ARCHETYPES.LIST_SCOPED);
+  }
+  // 24. list_scoped_with_detail: listScoped + detail on same resource
+  if (r.hasListScopedWithDetail) {
+    out.push(ARCHETYPES.LIST_SCOPED_WITH_DETAIL);
+  }
+  // 25. list_scoped_only: listScoped and no detail on same resource
+  if (r.hasListScopedOnly) {
+    out.push(ARCHETYPES.LIST_SCOPED_ONLY);
+  }
+  // 26. required_query_list_like: required query param on list/listScoped
+  if (r.hasRequiredQueryOnListLike) {
+    out.push(ARCHETYPES.REQUIRED_QUERY_LIST_LIKE);
   }
 
   return out;

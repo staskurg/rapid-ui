@@ -1,0 +1,84 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Viral Caption Generator API",
+    "version": "1.2.0"
+  },
+  "resources": [
+    {
+      "name": "Billing",
+      "key": "billing",
+      "operations": [
+        {
+          "id": "GET:/v1/billing/cancel",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/billing/cancel",
+          "parameters": [],
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "cancelled"
+              },
+              "message": {
+                "type": "string",
+                "example": "Payment was cancelled. No charges were made."
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/v1/billing/success",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/billing/success",
+          "parameters": [],
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "example": "success"
+              },
+              "message": {
+                "type": "string",
+                "example": "Payment completed successfully. Credits have been added to your account."
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/v1/billing/checkout",
+          "method": "POST",
+          "kind": "create",
+          "path": "/v1/billing/checkout",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "planId"
+            ],
+            "properties": {
+              "planId": {
+                "type": "string",
+                "description": "Identifier for the pricing plan (e.g., \"basic\", \"pro\")",
+                "example": "pro"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "checkoutUrl": {
+                "type": "string",
+                "example": "https://checkout.stripe.com/pay/cs_test_12345"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

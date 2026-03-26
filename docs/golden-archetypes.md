@@ -1,6 +1,6 @@
 # Golden Archetypes — API Resource Classification
 
-This document describes the 22 golden archetypes used by the archetype extraction tool to classify API resources. Each archetype represents a distinct pattern that stresses different parts of the compiler and renderer. Golden candidates are selected per archetype for regression testing.
+This document describes the 26 golden archetypes used by the archetype extraction tool to classify API resources. Each archetype represents a distinct pattern that stresses different parts of the compiler and renderer. Golden candidates are selected per archetype for regression testing.
 
 ---
 
@@ -224,8 +224,50 @@ This document describes the 22 golden archetypes used by the archetype extractio
 
 ---
 
+## 23. list_scoped
+
+**Rule:** Resource has at least one operation with `kind = listScoped`
+
+**Rationale:** Explicitly tracks scoped collection resources for Phase 6 (scope context vs row identity).
+
+**Example characteristics:** `GET /accounts/{accountId}/orders` returns a list for the scope id.
+
+---
+
+## 24. list_scoped_with_detail
+
+**Rule:** Resource has at least one `listScoped` operation and at least one `detail` operation
+
+**Rationale:** Critical runtime shape where scope route and row route both exist and must not be conflated.
+
+**Example characteristics:** Scoped list plus item detail endpoint on the same resource.
+
+---
+
+## 25. list_scoped_only
+
+**Rule:** Resource has `listScoped` and no `detail` operation
+
+**Rationale:** Captures fallback behavior when list-like data exists but no row GET exists.
+
+**Example characteristics:** Scoped collection endpoint without item detail endpoint.
+
+---
+
+## 26. required_query_list_like
+
+**Rule:** At least one list-like operation (`list` or `listScoped`) has a required query parameter
+
+**Rationale:** Flags resources that need required filters/query before list load and should align with UI-readiness signals.
+
+**Example characteristics:** List/listScoped endpoint requiring query like `status` or `tenant`.
+
+---
+
 ## See also
 
-- `scripts/extract-archetypes.ts` — extraction script
+- `scripts/extract-archetypes.ts` — extraction script (`npm run extract:archetypes`; use `--output-dir` for ephemeral runs e.g. smoke tests)
 - `scripts/corpus-data/archetype-extractor.ts` — classification logic
-- `scripts/corpus-data/reports/golden-candidates.md` — selected candidates per archetype
+- `tests/compiler/fixtures/golden-candidates/golden-candidates.md` — selected golden spec candidates per archetype (**committed**; updated by default `npm run extract:archetypes`, not under `scripts/corpus-data/reports/`, which is for corpus pipeline reports only)
+- `tests/compiler/fixtures/golden-candidates/<archetype>/` — OpenAPI files pinned from that report (**`npm run fixtures:copy-golden-specs`**); ApiIR mirrors the same relative paths under `tests/compiler/fixtures/apiir/` (**`npm run fixtures:generate-apiir`**)
+- [pre-phase-6-archetypes.md](./pre-phase-6-archetypes.md) — extending archetypes with **listScoped** / required-query buckets before Phase 6 (lowering + mock + UiPlan)

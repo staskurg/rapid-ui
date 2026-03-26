@@ -1,0 +1,177 @@
+openapi: 3.1.0
+info:
+  title: HTTPBin API
+  description: A simple HTTP Request & Response Service
+  version: 1.0.0
+  contact:
+    name: HTTPBin Support
+    url: https://github.com/postmanlabs/httpbin
+
+servers:
+  - url: https://bap-amer-west-demo1.cs.apigee.net/httpbin
+
+paths:
+  /get:
+    get:
+      operationId: getRequest
+      summary: Returns GET data
+      description: Returns the GET request's query parameters and headers
+      parameters:
+        - name: param1
+          in: query
+          description: Sample query parameter 1
+          schema:
+            type: string
+        - name: param2
+          in: query
+          description: Sample query parameter 2
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  args:
+                    type: object
+                    description: Query parameters
+                  headers:
+                    type: object
+                    description: Request headers
+                  origin:
+                    type: string
+                    description: Client IP
+                  url:
+                    type: string
+                    description: Request URL
+
+  /post:
+    post:
+      operationId: postRequest
+      summary: Returns POST data
+      description: Returns the POST request's body data and headers
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  description: Name of the item
+                value:
+                  type: string
+                  description: Value of the item
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: string
+                    description: Request body data
+                  headers:
+                    type: object
+                    description: Request headers
+                  json:
+                    type: object
+                    description: Parsed JSON body
+                  origin:
+                    type: string
+                    description: Client IP
+                  url:
+                    type: string
+                    description: Request URL
+
+  /status/{code}:
+    get:
+      operationId: getStatus
+      summary: Returns specified status code
+      description: Returns the specified HTTP status code
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: HTTP status code to return
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 599
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    description: The status code that was returned
+
+  /delay/{seconds}:
+    get:
+      operationId: getDelay
+      summary: Delays response
+      description: Delays responding for the specified number of seconds
+      parameters:
+        - name: seconds
+          in: path
+          required: true
+          description: Number of seconds to delay
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 10
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  delay:
+                    type: integer
+                    description: The number of seconds that were delayed
+
+  /headers:
+    get:
+      operationId: getHeaders
+      summary: Returns request headers
+      description: Returns the request's headers
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  headers:
+                    type: object
+                    description: Request headers
+
+  /user-agent:
+    get:
+      operationId: getUserAgent
+      summary: Returns user agent
+      description: Returns the request's User-Agent header
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user-agent:
+                    type: string
+                    description: The request's User-Agent header 

@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: ecom-tech-test-assignment — Todos API
+  version: "1.0.0"
+  description: |
+    REST API для управления задачами (todos).
+    Поддерживает создание, получение, обновление и удаление задач.
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+tags:
+  - name: Tasks
+    description: Операции с задачами (add/get/get-all/put/delete)
+
+components:
+  parameters:
+    TaskIdPath:
+      name: task_id
+      in: path
+      required: true
+      schema:
+        type: string
+      description: Идентификатор задачи (в коде uint64, здесь строка)
+  schemas:
+    TaskDto:
+      type: object
+      required: [task_id, title, status]
+      properties:
+        task_id:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [NEW, IN_PROGRESS, DONE]
+      example:
+        task_id: "1"
+        title: Buy milk
+        description: 2 liters of milk
+        status: NEW
+
+    TaskDtoShort:
+      type: object
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [NEW, IN_PROGRESS, DONE]
+      example:
+        title: Buy milk
+        description: 2 liters of milk
+        status: NEW
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [REQUEST_FAILED, FAILED_TO_DECODE, NOT_FOUND]
+            message:
+              type: string
+      example:
+        error:
+          code: FAILED_TO_DECODE
+          message: failed to decode request
+
+    AddTaskResponse:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/TaskDto'
+
+    GetTaskResponse:
+      type: object
+      properties:
+        task:
+          $ref: '#/components/schemas/TaskDto'
+
+    GetAllResponse:
+      type: object
+      properties:
+        tasks_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskDto'
+
+    PutResponse:
+      type: object
+      properties:
+        changed_task:
+          $ref: '#/components/schemas/TaskDto'
+
+    DeleteResponse:
+      type: object
+      properties:
+        deleted_task_id:
+          type: string
+
+paths:
+  /todos/add:
+    post:
+      tags: [Tasks]
+      summary: Создать новую задачу
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDtoShort'
+            example:
+              title: Buy milk
+              description: 2 liters of milk
+              status: NEW
+      responses:
+        '200':
+          description: Задача успешно создана
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddTaskResponse'
+              example:
+                task:
+                  task_id: "1"
+                  title: Buy milk
+                  description: 2 liters of milk
+                  status: NEW
+        '400':
+          description: Неверный запрос (пустой title или некорректный JSON/статус)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                decode_error:
+                  summary: Failed to decode request body
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "failed to decode request" }
+                missing_title:
+                  summary: Missing title validation
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "task title is empty" }
+                invalid_status:
+                  summary: Invalid status value
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "task status must be one of NEW, IN_PROGRESS, DONE" }
+
+  /todos/get:
+    get:
+      tags: [Tasks]
+      summary: Получить список всех задач
+      responses:
+        '200':
+          description: Список задач
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAllResponse'
+              example:
+                tasks_list:
+                  - task_id: "1"
+                    title: Buy milk
+                    description: 2 liters of milk
+                    status: NEW
+                  - task_id: "2"
+                    title: Pay rent
+                    description: Monthly
+                    status: IN_PROGRESS
+
+  /todos/get/{task_id}:
+    get:
+      tags: [Tasks]
+      summary: Получить задачу по id
+      parameters:
+        - $ref: '#/components/parameters/TaskIdPath'
+      responses:
+        '200':
+          description: Задача найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTaskResponse'
+              example:
+                task:
+                  task_id: "5"
+                  title: Buy milk
+                  description: 2 liters
+                  status: NEW
+        '400':
+          description: Неправильный формат id или неверный путь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_id_format:
+                  summary: invalid task_id format
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "invalid task_id format, must be uint64" }
+                invalid_path:
+                  summary: invalid path / missing id
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "Invalid request" }
+                empty_id:
+                  summary: empty id value
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "request body is empty" }
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: NOT_FOUND, message: "task not found" }
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: REQUEST_FAILED, message: "failed to get task" }
+
+  /todos/put/{task_id}:
+    put:
+      tags: [Tasks]
+      summary: Обновить задачу
+      parameters:
+        - $ref: '#/components/parameters/TaskIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TaskDtoShort'
+      responses:
+        '200':
+          description: Задача обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PutResponse'
+              example:
+                changed_task:
+                  task_id: "7"
+                  title: t
+                  description: d
+                  status: DONE
+        '400':
+          description: Неверный формат запроса (id/JSON/status/title)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_path:
+                  summary: Missing or invalid path
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "Invalid request" }
+                invalid_id_format:
+                  summary: Invalid task_id format
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "invalid task_id format, must be uint64" }
+                decode_error:
+                  summary: Failed to decode request
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "failed to decode request" }
+                missing_title:
+                  summary: Missing title validation
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "task title is empty" }
+                invalid_status:
+                  summary: Invalid status value
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "task status must be one of NEW, IN_PROGRESS, DONE" }
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: NOT_FOUND, message: "task not found" }
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: REQUEST_FAILED, message: "failed to put task" }
+
+  /todos/delete/{task_id}:
+    delete:
+      tags: [Tasks]
+      summary: Удалить задачу по id
+      parameters:
+        - $ref: '#/components/parameters/TaskIdPath'
+      responses:
+        '200':
+          description: Успешное удаление
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteResponse'
+              example:
+                deleted_task_id: "3"
+        '400':
+          description: Неверный формат id или неверный путь
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_path:
+                  summary: Invalid request
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "Invalid request" }
+                invalid_id_format:
+                  summary: invalid task_id format
+                  value:
+                    error: { code: FAILED_TO_DECODE, message: "invalid task_id format, must be uint64" }
+        '404':
+          description: Задача не найдена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: NOT_FOUND, message: "task not found" }
+        '500':
+          description: Внутренняя ошибка сервера
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: { code: REQUEST_FAILED, message: "failed to delete task" }
+
+

@@ -1,0 +1,68 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "github-repos",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "repos",
+      "key": "repos",
+      "operations": [
+        {
+          "id": "RepositoriesController_findAll",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/users/{username}/repos",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "username",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "identifierParam": "username",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": "string"
+                },
+                "branches": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "lastCommitSha": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "lastCommitSha"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "owner",
+                "branches"
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

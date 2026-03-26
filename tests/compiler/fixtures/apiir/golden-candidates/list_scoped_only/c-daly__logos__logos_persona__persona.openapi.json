@@ -1,0 +1,265 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Persona API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Persona",
+      "key": "persona",
+      "operations": [
+        {
+          "id": "getEntries",
+          "method": "GET",
+          "kind": "list",
+          "path": "/persona/entries",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "limit",
+              "schema": {
+                "type": "integer",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 100,
+                "example": 10
+              }
+            },
+            {
+              "in": "query",
+              "name": "sentiment",
+              "schema": {
+                "type": "string",
+                "example": "confident",
+                "enum": [
+                  "confident",
+                  "cautious",
+                  "curious",
+                  "neutral",
+                  "concerned"
+                ]
+              }
+            }
+          ],
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "description": "Unique identifier for the entry",
+                  "example": "entry-uuid-123"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO 8601 timestamp when the entry was created",
+                  "example": "2024-01-15T10:30:00Z"
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Text summary of the activity or memory",
+                  "example": "Successfully completed pick-and-place task"
+                },
+                "sentiment": {
+                  "type": "string",
+                  "description": "Optional emotional tone of the entry",
+                  "example": "confident",
+                  "enum": [
+                    "confident",
+                    "cautious",
+                    "curious",
+                    "neutral",
+                    "concerned"
+                  ]
+                },
+                "related_process": {
+                  "type": "string",
+                  "description": "Optional UUID of related Process node",
+                  "example": "process-uuid-123"
+                }
+              },
+              "required": [
+                "uuid",
+                "timestamp",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "id": "getSentimentSummary",
+          "method": "GET",
+          "kind": "list",
+          "path": "/persona/sentiment/summary",
+          "parameters": [],
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "sentiments": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "integer"
+                },
+                "description": "Count of entries for each sentiment type",
+                "example": {
+                  "confident": 15,
+                  "cautious": 8,
+                  "curious": 5,
+                  "neutral": 12,
+                  "concerned": 3
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "getEntriesForProcess",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/persona/entries/process/{process_uuid}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "process_uuid",
+              "schema": {
+                "type": "string",
+                "example": "process-uuid-123"
+              }
+            }
+          ],
+          "identifierParam": "process_uuid",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "uuid": {
+                  "type": "string",
+                  "description": "Unique identifier for the entry",
+                  "example": "entry-uuid-123"
+                },
+                "timestamp": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "ISO 8601 timestamp when the entry was created",
+                  "example": "2024-01-15T10:30:00Z"
+                },
+                "summary": {
+                  "type": "string",
+                  "description": "Text summary of the activity or memory",
+                  "example": "Successfully completed pick-and-place task"
+                },
+                "sentiment": {
+                  "type": "string",
+                  "description": "Optional emotional tone of the entry",
+                  "example": "confident",
+                  "enum": [
+                    "confident",
+                    "cautious",
+                    "curious",
+                    "neutral",
+                    "concerned"
+                  ]
+                },
+                "related_process": {
+                  "type": "string",
+                  "description": "Optional UUID of related Process node",
+                  "example": "process-uuid-123"
+                }
+              },
+              "required": [
+                "uuid",
+                "timestamp",
+                "summary"
+              ]
+            }
+          }
+        },
+        {
+          "id": "createEntry",
+          "method": "POST",
+          "kind": "create",
+          "path": "/persona/entries",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "summary": {
+                "type": "string",
+                "description": "Text summary of the activity or memory",
+                "example": "Successfully completed pick-and-place task"
+              },
+              "sentiment": {
+                "type": "string",
+                "description": "Optional emotional tone of the entry",
+                "example": "confident",
+                "enum": [
+                  "confident",
+                  "cautious",
+                  "curious",
+                  "neutral",
+                  "concerned"
+                ]
+              },
+              "related_process": {
+                "type": "string",
+                "description": "Optional UUID of related Process node",
+                "example": "process-uuid-123"
+              }
+            },
+            "required": [
+              "summary"
+            ]
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "uuid": {
+                "type": "string",
+                "description": "Unique identifier for the entry",
+                "example": "entry-uuid-123"
+              },
+              "timestamp": {
+                "type": "string",
+                "format": "date-time",
+                "description": "ISO 8601 timestamp when the entry was created",
+                "example": "2024-01-15T10:30:00Z"
+              },
+              "summary": {
+                "type": "string",
+                "description": "Text summary of the activity or memory",
+                "example": "Successfully completed pick-and-place task"
+              },
+              "sentiment": {
+                "type": "string",
+                "description": "Optional emotional tone of the entry",
+                "example": "confident",
+                "enum": [
+                  "confident",
+                  "cautious",
+                  "curious",
+                  "neutral",
+                  "concerned"
+                ]
+              },
+              "related_process": {
+                "type": "string",
+                "description": "Optional UUID of related Process node",
+                "example": "process-uuid-123"
+              }
+            },
+            "required": [
+              "uuid",
+              "timestamp",
+              "summary"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

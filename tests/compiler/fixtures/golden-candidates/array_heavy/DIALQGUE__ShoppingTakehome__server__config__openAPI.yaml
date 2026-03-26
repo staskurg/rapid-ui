@@ -1,0 +1,239 @@
+openapi: 3.1.0
+info:
+  title: takehomeTest
+  version: 0.1.0
+components:
+  schemas:
+    productSchema:
+      type: object
+      description: Selected products
+      properties:
+        id:
+          type: integer
+          description: The product's ID.
+        name:
+          type: string
+          description: The product's name.
+        price:
+          type: integer
+          description: The product's price.
+        description:
+          type: string
+          description: The product's description.
+        category:
+          type: string
+          description: The product's category.
+    couponSchema:
+      type: object
+      description: Selected coupons
+      properties:
+        id:
+          type: integer
+          description: The coupon's ID.
+        campaign:
+          type: string
+          description: The coupon's campaign.
+        description:
+          type: string
+          description: The coupon's description.
+        category:
+          type: string
+          description: The coupon's category.
+    rawOrderSchema:
+      type: object
+      properties:
+        productIds:
+          type: array
+          items:
+            type: number
+            description: IDs of selected products
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/couponSchema'
+        totalPrice:
+          type: number
+          description: Tolal price from selected products before discount
+        netPrice:
+          type: number
+          description: Net price from selected products after discount from selected coupons
+    orderSchema: 
+      type: object
+      properties:
+        id: 
+          type: number
+          description: ID of the order
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/productSchema'
+        coupons:
+          type: array
+          items:
+            $ref: '#/components/schemas/couponSchema'
+        totalPrice:
+          type: number
+          description: tolal price from selected products before discount
+        netPrice:
+          type: number
+          description: net price from selected products after discount from selected coupons
+
+              
+paths:
+  /products:
+    get:
+      description: Use to request all products
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/productSchema'
+              example:
+                id: 10
+                name: 'T-Shirt'
+                price: 150
+                description: 'This is a T-Shirt'
+                category: 'Fashion'
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Internal server error
+  /products/{id}:
+    get:
+      description: Use to request a product by id
+      parameters:
+        - in: path
+          schema:
+            type: integer
+            description: id of the product
+          name: id
+          required: true
+      responses:
+        '200':
+          description: A product object.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/productSchema'
+              example:
+                id: 10
+                name: 'T-Shirt'
+                price: 150
+                description: 'This is a T-Shirt'
+                category: 'Fashion'
+        '400':
+          description: Invalid id supplied
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Invalid id supplied
+        '404':
+          description: product not found
+          content:
+            text/html:
+              schema:
+                type: string
+              example: product not found
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Internal server error
+  /coupons:
+    get:
+      description: Use to request all coupons
+      responses:
+        '200':
+          description: A successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/couponSchema'
+              example:
+                id: 10
+                campaign: 'fixedAmount'
+                description: 'Fixed amount discount 50 baht'
+                category: 'coupon'
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Internal server error
+  /coupons/{id}:
+    get:
+      description: Use to request a coupon by id
+      parameters:
+        - in: path
+          schema:
+            type: integer
+            description: id of the coupon
+          name: id
+          required: true
+      responses:
+        '200':
+          description: A user object
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/couponSchema'
+              example:
+                id: 10
+                campaign: 'fixedAmount'
+                description: 'Fixed amount discount 50 baht'
+                category: 'coupon'
+        '400':
+          description: Invalid id supplied
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Invalid id supplied
+        '404':
+          description: Coupon not found
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Coupon not found
+        '500':
+          description: Internal server error
+          content:
+            text/html:
+              schema:
+                type: string
+              example: Internal server error
+  /checkout:
+    post:
+      description: Use to create new order with selected products and coupons
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: 
+              $ref: '#/components/schemas/rawOrderSchema'
+            name: order
+            required: true
+      responses:
+        '200':
+          description: A created order
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/orderSchema'
+          
+
+                

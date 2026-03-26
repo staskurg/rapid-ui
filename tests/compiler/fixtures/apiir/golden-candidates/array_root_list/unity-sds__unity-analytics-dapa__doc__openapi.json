@@ -1,0 +1,85 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Unity DAPA Process Mapper",
+    "version": "0.0.1"
+  },
+  "resources": [
+    {
+      "name": "Collections",
+      "key": "collections",
+      "operations": [
+        {
+          "id": "get_processes_for_collection_id",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/collections/{collection_id}/processes",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "collection_id",
+              "schema": {
+                "description": "collection id",
+                "type": "string",
+                "example": "JPL_MUR25-JPL-L4-GLOB-v04.2"
+              }
+            }
+          ],
+          "identifierParam": "collection_id",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "id": "get_time_series_for_collection_id",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/collections/{collection_id}/processes/time-series:area",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "collection_id",
+              "schema": {
+                "description": "collection id",
+                "type": "string",
+                "example": "JPL_MUR25-JPL-L4-GLOB-v04.2"
+              }
+            },
+            {
+              "in": "query",
+              "name": "bbox",
+              "schema": {
+                "description": "bounding box",
+                "type": "string",
+                "example": "-160,-15,-130,15"
+              },
+              "required": true
+            },
+            {
+              "in": "query",
+              "name": "datetime",
+              "schema": {
+                "description": "start/end time in iso format",
+                "type": "string",
+                "example": "2022-01-01T00:00:00Z/2022-01-31T23:59:59Z"
+              },
+              "required": true
+            }
+          ],
+          "identifierParam": "collection_id",
+          "queryParamCount": 2,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "float"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

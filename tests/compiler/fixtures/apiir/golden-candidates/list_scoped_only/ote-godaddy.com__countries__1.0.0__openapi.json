@@ -1,0 +1,181 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "v1",
+      "key": "v1",
+      "operations": [
+        {
+          "id": "getCountries",
+          "method": "GET",
+          "kind": "list",
+          "path": "/v1/countries",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "marketId",
+              "schema": {
+                "format": "bcp-47",
+                "type": "string"
+              },
+              "format": "bcp-47",
+              "required": true
+            },
+            {
+              "in": "query",
+              "name": "order",
+              "schema": {
+                "default": "ascending",
+                "enum": [
+                  "ascending",
+                  "descending"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "regionName",
+              "schema": {
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "regionTypeId",
+              "schema": {
+                "type": "integer"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort",
+              "schema": {
+                "default": "key",
+                "enum": [
+                  "key",
+                  "label"
+                ],
+                "type": "string"
+              }
+            }
+          ],
+          "queryParamCount": 5,
+          "responseSchema": {
+            "items": {
+              "properties": {
+                "callingCode": {
+                  "description": "The calling code prefix used for phone numbers in this country",
+                  "type": "string"
+                },
+                "countryKey": {
+                  "description": "The ISO country-code",
+                  "format": "iso-country-code",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "The localized name of the country",
+                  "type": "string"
+                }
+              }
+            },
+            "type": "array"
+          }
+        },
+        {
+          "id": "getCountry",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/v1/countries/{countryKey}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "countryKey",
+              "schema": {
+                "format": "iso-country-code",
+                "type": "string"
+              },
+              "format": "iso-country-code"
+            },
+            {
+              "in": "query",
+              "name": "marketId",
+              "schema": {
+                "format": "bcp-47",
+                "type": "string"
+              },
+              "format": "bcp-47",
+              "required": true
+            },
+            {
+              "in": "query",
+              "name": "order",
+              "schema": {
+                "default": "ascending",
+                "enum": [
+                  "ascending",
+                  "descending"
+                ],
+                "type": "string"
+              }
+            },
+            {
+              "in": "query",
+              "name": "sort",
+              "schema": {
+                "default": "key",
+                "enum": [
+                  "key",
+                  "label"
+                ],
+                "type": "string"
+              }
+            }
+          ],
+          "identifierParam": "countryKey",
+          "queryParamCount": 3,
+          "responseSchema": {
+            "items": {
+              "properties": {
+                "callingCode": {
+                  "description": "The calling code prefix used for phone numbers in this country",
+                  "type": "string"
+                },
+                "countryKey": {
+                  "description": "The ISO country-code",
+                  "format": "iso-country-code",
+                  "type": "string"
+                },
+                "label": {
+                  "description": "The localized name of the country",
+                  "type": "string"
+                },
+                "states": {
+                  "description": "List of states/provinces in this country",
+                  "items": {
+                    "properties": {
+                      "label": {
+                        "description": "The localized name of the state, province, or territory",
+                        "type": "string"
+                      },
+                      "stateKey": {
+                        "description": "The state code",
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "type": "array"
+                }
+              }
+            },
+            "type": "array"
+          }
+        }
+      ]
+    }
+  ]
+}

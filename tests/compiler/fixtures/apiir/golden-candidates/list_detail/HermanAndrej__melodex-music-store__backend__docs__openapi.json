@@ -1,0 +1,582 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Melodex Online Store API",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Categories",
+      "key": "categories",
+      "operations": [
+        {
+          "id": "GET:/categories",
+          "method": "GET",
+          "kind": "list",
+          "path": "/categories",
+          "parameters": [],
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "CategoryID": {
+                  "type": "integer"
+                },
+                "CategoryName": {
+                  "type": "string"
+                },
+                "ParentCategoryID": {
+                  "type": "integer"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/categories/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/categories/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "CategoryID": {
+                "type": "integer"
+              },
+              "CategoryName": {
+                "type": "string"
+              },
+              "ParentCategoryID": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "key": "orders",
+      "operations": [
+        {
+          "id": "GET:/orders",
+          "method": "GET",
+          "kind": "list",
+          "path": "/orders",
+          "parameters": [],
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "OrderID": {
+                  "type": "integer"
+                },
+                "UserID": {
+                  "type": "integer"
+                },
+                "OrderDate": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "TotalAmount": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/orders/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/orders/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "OrderID": {
+                "type": "integer"
+              },
+              "UserID": {
+                "type": "integer"
+              },
+              "OrderDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "TotalAmount": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/orders",
+          "method": "POST",
+          "kind": "create",
+          "path": "/orders",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "ProductID": {
+                      "type": "integer"
+                    },
+                    "Quantity": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "OrderID": {
+                "type": "integer"
+              },
+              "UserID": {
+                "type": "integer"
+              },
+              "OrderDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "TotalAmount": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Products",
+      "key": "products",
+      "operations": [
+        {
+          "id": "GET:/products",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products",
+          "parameters": [],
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ProductID": {
+                  "type": "integer"
+                },
+                "Name": {
+                  "type": "string"
+                },
+                "Rating": {
+                  "type": "number"
+                },
+                "Price": {
+                  "type": "number"
+                },
+                "Brand": {
+                  "type": "string"
+                },
+                "Description": {
+                  "type": "string"
+                },
+                "Stock": {
+                  "type": "integer"
+                },
+                "CategoryID": {
+                  "type": "integer"
+                },
+                "ImageURL": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/search",
+          "method": "GET",
+          "kind": "list",
+          "path": "/products/search",
+          "parameters": [
+            {
+              "in": "query",
+              "name": "q",
+              "schema": {
+                "type": "string"
+              },
+              "required": true
+            }
+          ],
+          "queryParamCount": 1,
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ProductID": {
+                  "type": "integer"
+                },
+                "Name": {
+                  "type": "string"
+                },
+                "Rating": {
+                  "type": "number"
+                },
+                "Price": {
+                  "type": "number"
+                },
+                "Brand": {
+                  "type": "string"
+                },
+                "Description": {
+                  "type": "string"
+                },
+                "Stock": {
+                  "type": "integer"
+                },
+                "CategoryID": {
+                  "type": "integer"
+                },
+                "ImageURL": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{id}/ratings",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/products/{id}/ratings",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "RatingID": {
+                  "type": "integer"
+                },
+                "UserID": {
+                  "type": "integer"
+                },
+                "ProductID": {
+                  "type": "integer"
+                },
+                "RatingValue": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 5
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/category/{id}",
+          "method": "GET",
+          "kind": "listScoped",
+          "path": "/products/category/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "ProductID": {
+                  "type": "integer"
+                },
+                "Name": {
+                  "type": "string"
+                },
+                "Rating": {
+                  "type": "number"
+                },
+                "Price": {
+                  "type": "number"
+                },
+                "Brand": {
+                  "type": "string"
+                },
+                "Description": {
+                  "type": "string"
+                },
+                "Stock": {
+                  "type": "integer"
+                },
+                "CategoryID": {
+                  "type": "integer"
+                },
+                "ImageURL": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "GET:/products/{id}",
+          "method": "GET",
+          "kind": "detail",
+          "path": "/products/{id}",
+          "parameters": [
+            {
+              "in": "path",
+              "name": "id",
+              "schema": {
+                "type": "integer"
+              }
+            }
+          ],
+          "identifierParam": "id",
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "ProductID": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "Rating": {
+                "type": "number"
+              },
+              "Price": {
+                "type": "number"
+              },
+              "Brand": {
+                "type": "string"
+              },
+              "Description": {
+                "type": "string"
+              },
+              "Stock": {
+                "type": "integer"
+              },
+              "CategoryID": {
+                "type": "integer"
+              },
+              "ImageURL": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Ratings",
+      "key": "ratings",
+      "operations": [
+        {
+          "id": "POST:/ratings",
+          "method": "POST",
+          "kind": "create",
+          "path": "/ratings",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "ProductID": {
+                "type": "integer"
+              },
+              "RatingValue": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "RatingID": {
+                "type": "integer"
+              },
+              "UserID": {
+                "type": "integer"
+              },
+              "ProductID": {
+                "type": "integer"
+              },
+              "RatingValue": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 5
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "key": "users",
+      "operations": [
+        {
+          "id": "POST:/users/login",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/login",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string"
+              },
+              "password": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "token": {
+                "type": "string"
+              },
+              "user": {
+                "type": "object",
+                "properties": {
+                  "UserID": {
+                    "type": "integer"
+                  },
+                  "Name": {
+                    "type": "string"
+                  },
+                  "Email": {
+                    "type": "string"
+                  },
+                  "DateOfBirth": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "Address": {
+                    "type": "string"
+                  },
+                  "Phone": {
+                    "type": "string"
+                  },
+                  "DateOfJoin": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "id": "POST:/users/register",
+          "method": "POST",
+          "kind": "create",
+          "path": "/users/register",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "properties": {
+              "Name": {
+                "type": "string"
+              },
+              "Email": {
+                "type": "string"
+              },
+              "Password": {
+                "type": "string"
+              },
+              "DateOfBirth": {
+                "type": "string",
+                "format": "date"
+              },
+              "Address": {
+                "type": "string"
+              },
+              "Phone": {
+                "type": "string"
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "properties": {
+              "UserID": {
+                "type": "integer"
+              },
+              "Name": {
+                "type": "string"
+              },
+              "Email": {
+                "type": "string"
+              },
+              "DateOfBirth": {
+                "type": "string",
+                "format": "date"
+              },
+              "Address": {
+                "type": "string"
+              },
+              "Phone": {
+                "type": "string"
+              },
+              "DateOfJoin": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,244 @@
+{
+  "apiIrVersion": 1,
+  "api": {
+    "title": "Search API for GPT Actions",
+    "version": "1.0.0"
+  },
+  "resources": [
+    {
+      "name": "Retrieve",
+      "key": "retrieve",
+      "operations": [
+        {
+          "id": "retrieve",
+          "method": "POST",
+          "kind": "create",
+          "path": "/retrieve",
+          "parameters": [],
+          "requestSchema": {
+            "type": "object",
+            "required": [
+              "query"
+            ],
+            "properties": {
+              "query": {
+                "type": "string",
+                "description": "Search query string",
+                "example": "AI regulation",
+                "minLength": 1,
+                "maxLength": 500
+              },
+              "hours": {
+                "type": "integer",
+                "description": "Time window in hours (24, 48, or 72)",
+                "default": 24,
+                "minimum": 1,
+                "maximum": 8760,
+                "example": 24
+              },
+              "k": {
+                "type": "integer",
+                "description": "Number of results to return",
+                "default": 10,
+                "minimum": 1,
+                "maximum": 100,
+                "example": 10
+              },
+              "filters": {
+                "type": "object",
+                "description": "Additional filters",
+                "default": {},
+                "properties": {
+                  "sources": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "Filter by source domains",
+                    "example": [
+                      "reuters.com",
+                      "bbc.com"
+                    ]
+                  },
+                  "lang": {
+                    "type": "string",
+                    "description": "Language filter (en, ru, auto)",
+                    "default": "auto",
+                    "enum": [
+                      "en",
+                      "ru",
+                      "auto"
+                    ],
+                    "example": "en"
+                  }
+                }
+              },
+              "cursor": {
+                "type": "string",
+                "nullable": true,
+                "description": "Pagination cursor (from previous response)",
+                "example": "b2Zmc2V0OjEw"
+              },
+              "correlation_id": {
+                "type": "string",
+                "nullable": true,
+                "description": "Correlation ID for request tracking (optional)",
+                "example": "search-abc123",
+                "minLength": 1,
+                "maxLength": 100
+              }
+            }
+          },
+          "responseSchema": {
+            "type": "object",
+            "required": [
+              "items",
+              "total_available",
+              "coverage",
+              "freshness_stats",
+              "diagnostics"
+            ],
+            "properties": {
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "title",
+                    "url",
+                    "source_domain",
+                    "published_at"
+                  ],
+                  "properties": {
+                    "title": {
+                      "type": "string",
+                      "description": "Article title",
+                      "example": "Almost a fifth of young UK adults use AI to design holiday"
+                    },
+                    "url": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "Article URL",
+                      "example": "https://www.theguardian.com/travel/2025/oct/07/uk-adults-ai-design-holiday"
+                    },
+                    "source_domain": {
+                      "type": "string",
+                      "description": "Source domain",
+                      "example": "theguardian.com"
+                    },
+                    "published_at": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Publication timestamp (ISO 8601)",
+                      "example": "2025-10-07T12:38:18+00:00"
+                    },
+                    "snippet": {
+                      "type": "string",
+                      "nullable": true,
+                      "description": "Article snippet (first 300 chars, may be null)",
+                      "example": "The European Union today proposed comprehensive regulations..."
+                    },
+                    "relevance_score": {
+                      "type": "number",
+                      "format": "float",
+                      "nullable": true,
+                      "description": "Relevance score (0.0-1.0, may be null)",
+                      "minimum": 0,
+                      "maximum": 1,
+                      "example": 0.8161
+                    }
+                  }
+                },
+                "description": "Search results"
+              },
+              "next_cursor": {
+                "type": "string",
+                "nullable": true,
+                "description": "Cursor for next page (null if no more results)",
+                "example": "eyJvZmZzZXQiOiAxMH0="
+              },
+              "total_available": {
+                "type": "integer",
+                "description": "Total results available in this time window",
+                "example": 15
+              },
+              "coverage": {
+                "type": "number",
+                "format": "float",
+                "description": "Search coverage ratio (0.0-1.0)",
+                "minimum": 0,
+                "maximum": 1,
+                "example": 1
+              },
+              "freshness_stats": {
+                "type": "object",
+                "description": "Freshness statistics",
+                "required": [
+                  "median_age_seconds",
+                  "window_hours"
+                ],
+                "properties": {
+                  "median_age_seconds": {
+                    "type": "number",
+                    "format": "float",
+                    "description": "Median article age in seconds",
+                    "example": 37262.01
+                  },
+                  "window_hours": {
+                    "type": "integer",
+                    "description": "Time window used for search",
+                    "example": 24
+                  }
+                }
+              },
+              "diagnostics": {
+                "type": "object",
+                "description": "Diagnostic information",
+                "required": [
+                  "total_results",
+                  "offset",
+                  "returned",
+                  "has_more",
+                  "window"
+                ],
+                "properties": {
+                  "total_results": {
+                    "type": "integer",
+                    "description": "Total results found",
+                    "example": 15
+                  },
+                  "offset": {
+                    "type": "integer",
+                    "description": "Offset used for pagination",
+                    "example": 0
+                  },
+                  "returned": {
+                    "type": "integer",
+                    "description": "Number of items returned in this response",
+                    "example": 10
+                  },
+                  "has_more": {
+                    "type": "boolean",
+                    "description": "Whether more results are available",
+                    "example": true
+                  },
+                  "window": {
+                    "type": "string",
+                    "description": "Time window used (24h, 48h, 72h)",
+                    "example": "24h"
+                  },
+                  "correlation_id": {
+                    "type": "string",
+                    "nullable": true,
+                    "description": "Correlation ID from request",
+                    "example": "search-abc123"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

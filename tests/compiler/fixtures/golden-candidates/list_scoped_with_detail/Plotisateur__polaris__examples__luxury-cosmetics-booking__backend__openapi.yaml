@@ -1,0 +1,288 @@
+openapi: 3.1.0
+info:
+  title: Luxury Cosmetics Booking API
+  version: 1.0.0
+  description: API for booking luxury cosmetic treatments and viewing products
+
+servers:
+  - url: http://localhost:3000/api
+    description: Local development server
+
+paths:
+  /products:
+    get:
+      operationId: getProducts
+      summary: Get all products
+      description: Retrieve the complete catalog of luxury cosmetic products
+      tags:
+        - Products
+      responses:
+        '200':
+          description: Products retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - total
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+
+  /products/{id}:
+    get:
+      operationId: getProductById
+      summary: Get product by ID
+      description: Retrieve a specific product by its ID
+      tags:
+        - Products
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Product found
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Product'
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /products/category/{category}:
+    get:
+      operationId: getProductsByCategory
+      summary: Get products by category
+      description: Filter products by category
+      tags:
+        - Products
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Products filtered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - total
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Product'
+                  total:
+                    type: integer
+
+  /bookings:
+    get:
+      operationId: getUserBookings
+      summary: Get user bookings
+      description: Retrieve all bookings for the authenticated user
+      tags:
+        - Bookings
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bookings retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - total
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Booking'
+                  total:
+                    type: integer
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    post:
+      operationId: createBooking
+      summary: Create a new booking
+      description: Create a booking for a luxury cosmetic treatment
+      tags:
+        - Bookings
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - productId
+                - productName
+                - quantity
+                - appointmentDate
+              properties:
+                productId:
+                  type: integer
+                  description: ID of the product to book
+                productName:
+                  type: string
+                  description: Name of the product
+                quantity:
+                  type: integer
+                  minimum: 1
+                  description: Number of sessions to book
+                appointmentDate:
+                  type: string
+                  format: date-time
+                  description: Preferred appointment date
+      responses:
+        '201':
+          description: Booking created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - data
+                  - message
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Booking'
+                  message:
+                    type: string
+        '400':
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Product:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - description
+        - price
+        - duration
+        - imageUrl
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        description:
+          type: string
+        price:
+          type: number
+        duration:
+          type: string
+        imageUrl:
+          type: string
+
+    Booking:
+      type: object
+      required:
+        - id
+        - productId
+        - productName
+        - quantity
+        - appointmentDate
+        - userEmail
+        - userName
+        - status
+        - createdAt
+      properties:
+        id:
+          type: integer
+        productId:
+          type: integer
+        productName:
+          type: string
+        quantity:
+          type: integer
+        appointmentDate:
+          type: string
+        userEmail:
+          type: string
+        userName:
+          type: string
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+
+    Error:
+      type: object
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

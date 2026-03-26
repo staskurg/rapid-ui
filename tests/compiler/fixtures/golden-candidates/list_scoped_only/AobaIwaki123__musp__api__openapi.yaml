@@ -1,0 +1,277 @@
+openapi: 3.0.0
+info:
+  description: |
+    MuSP is a web application that downloads audio from YouTube links and separates the audio and vocals using Demucs.
+    This API specification provides endpoints for job creation, status checking, and retrieving separated audio files.
+  title: MuSP API
+  version: 1.0.0
+servers:
+- url: http://localhost:8000
+security:
+- ApiKeyAuth: []
+tags:
+- description: Retrieval operations
+  name: GET
+- description: Creation operations
+  name: POST
+paths:
+  /video:
+    post:
+      description: Creates a job to download audio from a YouTube link and separate
+        the audio and vocals.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostVideoRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostVideoResponse'
+          description: The video is already registered
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+          description: Invalid request
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new job
+      tags:
+      - POST
+  /{user_id}:
+    get:
+      description: Retrieves a list of YouTube IDs and Wav URLs created by a user.
+      parameters:
+      - description: User ID
+        example: testUser
+        explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          maximum: 100
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetVideoIDAndWavURLResponse'
+          description: Retrieved the list of YouTube IDs and Wav URLs for the user
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+          description: Invalid request
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieve a list of YouTube IDs and Wav URLs for a user
+      tags:
+      - GET
+  /users:
+    post:
+      description: Registers user information.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostUserRequest'
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostUserResponse'
+          description: User already exists
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse400'
+          description: Invalid request
+      security:
+      - ApiKeyAuth: []
+      summary: Register user information
+      tags:
+      - POST
+components:
+  parameters:
+    UserID:
+      description: User ID
+      example: testUser
+      explode: false
+      in: path
+      name: user_id
+      required: true
+      schema:
+        maximum: 100
+        type: string
+      style: simple
+  schemas:
+    PostVideoRequest:
+      additionalProperties: false
+      example:
+        user_id: testUser
+        youtube_url: https://www.youtube.com/watch?v=57Q4Hp46oXc
+      properties:
+        user_id:
+          description: User ID
+          maximum: 100
+          type: string
+        youtube_url:
+          description: YouTube video link
+          maximum: 100
+          pattern: "/^(?:https?://)?(?:www\\.)?(?:youtube\\.com/(?:watch\\?.*v=|embed/|v/)|youtu\\\
+            .be/)([a-zA-Z0-9_-]{11})/"
+          type: string
+      required:
+      - user_id
+      - youtube_url
+      title: PostVideoRequest
+      type: object
+    PostVideoResponse:
+      additionalProperties: false
+      example:
+        status_code: 200
+        status_message: The video is already registered
+        youtube_id: 57Q4Hp46oXc
+      properties:
+        status_code:
+          description: Status code
+          type: integer
+        status_message:
+          description: Status message
+          maximum: 500
+          type: string
+        youtube_id:
+          description: YouTube video ID
+          maximum: 11
+          pattern: "^[a-zA-Z0-9_-]{11}$"
+          type: string
+      required:
+      - status_code
+      - status_message
+      - youtube_id
+      title: PostVideoResponse
+      type: object
+    VideoIDAndWavURL:
+      additionalProperties: false
+      properties:
+        youtube_id:
+          description: YouTube video ID
+          maximum: 11
+          pattern: "^[a-zA-Z0-9_-]{11}$"
+          title: youtube_id
+          type: string
+        vocal_wav_url:
+          description: Separated audio file URL
+          format: uri
+          maximum: 200
+          title: vocal_wav_url
+          type: string
+        inst_wav_url:
+          description: Separated instrumental file URL
+          format: uri
+          maximum: 200
+          title: inst_wav_url
+          type: string
+      required:
+      - inst_wav_url
+      - vocal_wav_url
+      - youtube_id
+      title: VideoIDAndWavURL
+      type: object
+    GetVideoIDAndWavURLResponse:
+      additionalProperties: false
+      example:
+        status_code: 200
+        status_message: Retrieved the list of YouTube IDs and Wav URLs for the user
+        data:
+        - youtube_id: 57Q4Hp46oXc
+          vocal_wav_url: http://localhost:8000/57Q4Hp46oXc/vocal.wav
+          inst_wav_url: http://localhost:8000/57Q4Hp46oXc/instrumental.wav
+        - youtube_id: 57Q4Hp46oXc
+          vocal_wav_url: http://localhost:8000/57Q4Hp46oXc/vocal.wav
+          inst_wav_url: http://localhost:8000/57Q4Hp46oXc/instrumental.wav
+      properties:
+        status_code:
+          description: Status code
+          type: integer
+        status_message:
+          description: Status message
+          maximum: 500
+          type: string
+        data:
+          items:
+            $ref: '#/components/schemas/VideoIDAndWavURL'
+          type: array
+      required:
+      - data
+      - status_code
+      - status_message
+      title: GetVideoIDAndWavURLResponse
+      type: object
+    PostUserRequest:
+      additionalProperties: false
+      example:
+        google_id: testGoogleID
+      properties:
+        google_id:
+          description: Google user ID
+          maximum: 100
+          type: string
+      required:
+      - google_id
+      title: PostUserRequest
+      type: object
+    PostUserResponse:
+      additionalProperties: false
+      example:
+        status_code: 200
+        status_message: User already exists
+        user_id: testUser
+      properties:
+        status_code:
+          description: Status code
+          type: integer
+        status_message:
+          description: Status message
+          maximum: 500
+          type: string
+        user_id:
+          description: User ID
+          maximum: 100
+          type: string
+      required:
+      - status_code
+      - status_message
+      - user_id
+      title: PostUserResponse
+      type: object
+    ErrorResponse400:
+      additionalProperties: false
+      example:
+        error: error
+      properties:
+        error:
+          description: Error message
+          maximum: 500
+          title: error
+          type: string
+      required:
+      - error
+      title: ErrorResponse400
+      type: object
+  securitySchemes:
+    ApiKeyAuth:
+      in: header
+      name: X-API-KEY
+      type: apiKey

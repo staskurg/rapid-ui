@@ -162,6 +162,10 @@ describe('extractResourceMetrics', () => {
     expect(m.operationPattern).toBe(OPERATION_PATTERN.CREATE_ONLY);
     expect(m.operationCount).toBe(1);
     expect(m.listResponseShape).toBe('unknown');
+    expect(m.hasListScoped).toBe(false);
+    expect(m.hasListScopedWithDetail).toBe(false);
+    expect(m.hasListScopedOnly).toBe(false);
+    expect(m.hasRequiredQueryOnListLike).toBe(false);
   });
 
   it('computes depth: User { address { city } } → depth = 1', () => {
@@ -313,6 +317,43 @@ describe('extractResourceMetrics', () => {
       ],
     };
     expect(extractResourceMetrics(resourcePrimitiveArray).listResponseShape).toBe('unknown');
+  });
+
+  it('extracts listScoped + required-list-query metrics', () => {
+    const resource: ResourceIR = {
+      name: 'Orders',
+      key: 'orders',
+      operations: [
+        {
+          id: 'GET:/accounts/{accountId}/orders',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.listScoped,
+          path: '/accounts/{accountId}/orders',
+          identifierParam: 'accountId',
+          parameters: [
+            { in: 'path', name: 'accountId', schema: { type: 'string' } },
+            { in: 'query', name: 'status', schema: { type: 'string' }, required: true },
+          ],
+          responseSchema: {
+            type: 'array',
+            items: { type: 'object', properties: { id: { type: 'string' } } },
+          },
+        },
+        {
+          id: 'GET:/orders/{id}',
+          method: HTTP_METHOD.GET,
+          kind: OPERATION_KIND.detail,
+          path: '/orders/{id}',
+          identifierParam: 'id',
+          responseSchema: { type: 'object', properties: { id: { type: 'string' } } },
+        },
+      ],
+    };
+    const m = extractResourceMetrics(resource);
+    expect(m.hasListScoped).toBe(true);
+    expect(m.hasListScopedWithDetail).toBe(true);
+    expect(m.hasListScopedOnly).toBe(false);
+    expect(m.hasRequiredQueryOnListLike).toBe(true);
   });
 });
 
@@ -468,6 +509,13 @@ describe('classifyResourceArchetypes', () => {
     ['mixed_schema_types', { enum: 1, arrayOfObjects: 1, nestedObject: 1 }],
     ['array_root_list', { listShape: 'array_root' as const }],
     ['wrapped_list_response', { listShape: 'object_wrapped' as const }],
+    ['list_scoped', { kinds: [OPERATION_KIND.listScoped] as OperationKind[] }],
+    [
+      'list_scoped_with_detail',
+      { kinds: [OPERATION_KIND.listScoped, OPERATION_KIND.detail] as OperationKind[] },
+    ],
+    ['list_scoped_only', { kinds: [OPERATION_KIND.listScoped] as OperationKind[] }],
+    ['required_query_list_like', { requiredListQuery: true }],
   ])('classifies %s', (archetype, config) => {
     const op = (kind: OperationKind) => ({
       id: kind,
@@ -497,6 +545,18 @@ describe('classifyResourceArchetypes', () => {
         name: 'R',
         key: 'r',
         operations: kinds.map((k) => op(k)),
+      };
+    } else if ('kinds' in config) {
+      resource = {
+        name: 'R',
+        key: 'r',
+        operations: config.kinds.map((k) => ({
+          ...op(k),
+          parameters:
+            k === OPERATION_KIND.listScoped
+              ? [{ in: 'path', name: 'scopeId', schema: { type: 'string' } }]
+              : undefined,
+        })),
       };
     } else {
       resource = { name: 'R', key: 'r', operations: [op(OPERATION_KIND.list)] };
@@ -562,6 +622,20 @@ describe('classifyResourceArchetypes', () => {
       resource.operations[0] = {
         ...resource.operations[0],
         responseSchema: { type: 'array', items: { type: 'object', properties: props } },
+      };
+    }
+    if ('requiredListQuery' in config && config.requiredListQuery) {
+      resource.operations[0] = {
+        ...resource.operations[0],
+        kind: OPERATION_KIND.listScoped,
+        parameters: [
+          { in: 'path', name: 'scopeId', schema: { type: 'string' } },
+          { in: 'query', name: 'search', schema: { type: 'string' }, required: true },
+        ],
+        responseSchema: {
+          type: 'array',
+          items: { type: 'object', properties: { id: { type: 'string' } } },
+        },
       };
     }
 

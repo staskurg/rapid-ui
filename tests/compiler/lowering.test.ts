@@ -195,4 +195,111 @@ describe('lower', () => {
     if (!result.success) return;
     expect(stringify(result.specs)).toMatchSnapshot();
   });
+
+  it('listScoped + detail infers idField from list response item, not scope param', () => {
+    const apiIr: ApiIR = {
+      api: { title: 'Scoped + detail', version: '1' },
+      resources: [
+        {
+          name: 'Orders',
+          key: 'orders',
+          operations: [
+            {
+              id: 'GET:/accounts/{accountId}/orders',
+              method: 'GET',
+              kind: 'listScoped',
+              path: '/accounts/{accountId}/orders',
+              identifierParam: 'accountId',
+              responseSchema: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    total: { type: 'number' },
+                  },
+                },
+              },
+            },
+            {
+              id: 'GET:/orders/{orderId}',
+              method: 'GET',
+              kind: 'detail',
+              path: '/orders/{orderId}',
+              identifierParam: 'orderId',
+              responseSchema: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  total: { type: 'number' },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const uiPlan = normalizeUiPlanIR({
+      resources: [
+        {
+          name: 'Orders',
+          views: {
+            list: { fields: [{ path: 'id' }, { path: 'total' }] },
+            detail: { fields: [{ path: 'id' }, { path: 'total' }] },
+          },
+        },
+      ],
+    });
+    const result = lower(uiPlan, apiIr);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.specs.orders?.idField).toBe('id');
+    expect(result.specs.orders?.idField).not.toBe('accountId');
+  });
+
+  it('listScoped-only resource can lower without idField', () => {
+    const apiIr: ApiIR = {
+      api: { title: 'Scoped only', version: '1' },
+      resources: [
+        {
+          name: 'Reports',
+          key: 'reports',
+          operations: [
+            {
+              id: 'GET:/orgs/{orgId}/reports',
+              method: 'GET',
+              kind: 'listScoped',
+              path: '/orgs/{orgId}/reports',
+              identifierParam: 'orgId',
+              responseSchema: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    title: { type: 'string' },
+                    status: { type: 'string' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const uiPlan = normalizeUiPlanIR({
+      resources: [
+        {
+          name: 'Reports',
+          views: {
+            list: { fields: [{ path: 'title' }, { path: 'status' }] },
+          },
+        },
+      ],
+    });
+    const result = lower(uiPlan, apiIr);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.specs.reports).toBeDefined();
+    expect(result.specs.reports?.idField).toBeUndefined();
+  });
 });
