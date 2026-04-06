@@ -214,7 +214,7 @@ Two pipelines share **analyze-apiir** and must stay aligned; operators should kn
 | Pipeline           | Flow                                                                                                               | Purpose                                                                                                                              |
 | ------------------ | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **A — Raw corpus** | `corpus:run` → `corpus:report`                                                                                     | Rebuild / analyze ApiIR from paths recorded in **raw** corpus data                                                                   |
-| **B — Fixtures**   | `fixtures:generate-apiir` → `verify:apiir-fixtures` → `corpus:pattern-mining` → `corpus:ui-readiness` (when added) | **Committed** fixture ApiIR under `tests/compiler/fixtures/apiir/` as the contract source of truth for mining and UI-readiness JSONL |
+| **B — Fixtures**   | `fixtures:generate-apiir` → `verify:apiir-fixtures` → `corpus:pattern-mining` → `corpus:ui-readiness` | **Committed** fixture ApiIR under `tests/compiler/fixtures/apiir/` as the contract source of truth for mining and UI-readiness JSONL |
 
 ```mermaid
 flowchart LR
@@ -234,6 +234,13 @@ flowchart LR
   mine --> shared
   report --> shared
 ```
+
+### Path conventions: raw corpus vs fixture ApiIR
+
+Do not mix paths from the two pipelines when comparing counts or joining reports.
+
+- **Pipeline A (raw batch):** Paths in `corpus:run` output (`results[].path`, `meta.cleanList[].path`) are whatever the crawler or mirror recorded under `scripts/corpus-data/specs/` (and similar). `corpus:report` analyzes **that JSON only**; it re-reads OpenAPI from those paths when building language sections.
+- **Pipeline B (fixtures):** OpenAPI inputs live under `tests/compiler/fixtures/` (`demo/`, `valid-specs-*`, golden paths). Generated ApiIR JSON lives under `tests/compiler/fixtures/apiir/` with a parallel directory layout. **`corpus:pattern-mining`** and **`corpus:ui-readiness`** read **only** committed fixture ApiIR. UI-readiness **`specId`** is the path of each ApiIR file **relative to** `tests/compiler/fixtures/apiir/` (collision-free across corpus dirs).
 
 ### Corpus Pipeline (typical local workflow)
 
@@ -266,9 +273,9 @@ Output: `scripts/corpus-data/reports/`. Valid specs → `tests/compiler/fixtures
 
 See [docs/corpus-github.md](docs/corpus-github.md) for the GitHub crawler workflow.
 
-### ApiIR vNext — pre-implementation gate (stubs)
+### ApiIR contract (versioning, parameters, `listScoped`, and corpus scripts)
 
-This subsection records **reviewer-approved** contract and operational choices before Phase 1+ code lands. It is the written gate from the ApiIR corpus reports plan; implementation details live in `lib/compiler/apiir/` and related modules.
+Operator reference for persisted ApiIR shape, **`apiIrVersion`**, **`listScoped`**, and how **Pipeline B** scripts use fixtures. Types and build logic live in `lib/compiler/apiir/` and related modules.
 
 #### Versioning (`apiIrVersion`)
 
@@ -376,6 +383,8 @@ scripts/
   corpus-run.ts
   corpus-report.ts
   corpus-pattern-mining.ts
+  corpus-ui-readiness.ts
+  verify-apiir-fixtures.ts
   corpus-github-crawl.ts
   corpus-extract-valid.ts
   check-openapi.ts
@@ -403,3 +412,7 @@ scripts/
 4. **Account-scoped compilations** — Postgres stores compilations; accountId from client
 5. **Mock backend** — Generated UIs use mock API; no real backend required for demo
 6. **Shareable URLs** — `/u/[id]/[resource]` works without session; mock data keyed by accountId+compilationId
+
+## Related documentation
+
+- **[ApiIR corpus vNext — handoff and remaining work](docs/apiir-corpus-vnext-handoff.md)** — UISpec vs renderer, eval vs compile-time LLM, and post–Phase 6 hardening before moving on to the next initiative.

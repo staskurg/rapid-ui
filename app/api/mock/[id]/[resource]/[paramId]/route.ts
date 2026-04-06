@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCompilation } from '@/lib/compiler/store';
 import * as mockStore from '@/lib/compiler/mock/store';
-import { isListLikeKind } from '@/lib/compiler/apiir';
+import { primaryListLikeOperation } from '@/lib/compiler/apiir';
 import type { JsonSchema } from '@/lib/compiler/apiir/types';
 import type { UISpec } from '@/lib/spec/types';
 
@@ -29,7 +29,7 @@ async function getResourceContext(
   const resourceIr = entry.apiIr.resources.find((r) => r.key === resource);
   if (!resourceIr) return { error: 'Resource not found', status: 404 };
 
-  const listOp = resourceIr.operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(resourceIr.operations);
   const listSchema = listOp?.responseSchema ?? { type: 'array', items: { type: 'object' } };
 
   return {

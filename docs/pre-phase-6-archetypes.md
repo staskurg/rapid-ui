@@ -2,6 +2,8 @@
 
 This document is the **contract** for extending the archetype extractor **before** lowering, mock, and UiPlan work (**Phase 6** in `.cursor/plans/apiir_corpus_reports_vnext_*.plan.md`). It does **not** replace pattern mining or UI readiness; it **adds operation-kind dimensions** the original **22 archetypes** did not name, so **golden candidates** can intentionally cover **scoped list** and related UI cases.
 
+**See also:** [apiir-corpus-vnext-handoff.md](./apiir-corpus-vnext-handoff.md) — UISpec vs renderer, eval vs compile-time LLM, and what remains (Phase 6, Phase 9, post–Phase 6 hardening) before the next initiative.
+
 ---
 
 ## 1. Why Track A first (and where Track B fits)

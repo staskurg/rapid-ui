@@ -176,3 +176,78 @@ export function isListShapedResponseSchema(schema: JsonSchema): boolean {
   if (isArrayRootSchema(schema)) return true;
   return classifyListEnvelopePreferred(schema) !== null;
 }
+
+/**
+ * JSON Schema for **one element** of a list-shaped success body (`type: object` with `properties`),
+ * or null when the body is not list-shaped or items are not object-typed.
+ * Covers array roots and object envelopes (preferred keys + same catch-all array sweep as
+ * {@link classifyListResponseEnvelope}) so lowering (`inferIdField`) matches list extraction.
+ */
+export function getListItemObjectSchema(schema: JsonSchema): JsonSchema | null {
+  if (!schema || typeof schema !== 'object') return null;
+
+  if (isArrayRootSchema(schema)) {
+    const items = asRecord(schema).items as JsonSchema | undefined;
+    if (items && typeof items === 'object' && schemaHasJsonType(items, JSON_SCHEMA_TYPE.object)) {
+      return items;
+    }
+    return null;
+  }
+
+  if (!schemaHasJsonType(schema, JSON_SCHEMA_TYPE.object)) return null;
+
+  const props = asRecord(schema).properties as Record<string, unknown> | undefined;
+  if (!props || typeof props !== 'object') return null;
+
+  for (const outer of LIST_ENVELOPE_OUTER_KEY_ORDER) {
+    const val = props[outer];
+    if (!val || typeof val !== 'object') continue;
+    const obj = val as Record<string, unknown>;
+    if (isArraySubschema(obj)) {
+      const items = obj.items as JsonSchema | undefined;
+      if (
+        items &&
+        typeof items === 'object' &&
+        schemaHasJsonType(items as JsonSchema, JSON_SCHEMA_TYPE.object)
+      ) {
+        return items as JsonSchema;
+      }
+      continue;
+    }
+    const innerProps = obj.properties as Record<string, unknown> | undefined;
+    if (innerProps && typeof innerProps === 'object') {
+      for (const inner of LIST_ENVELOPE_INNER_KEY_ORDER) {
+        const innerVal = innerProps[inner];
+        if (
+          innerVal &&
+          typeof innerVal === 'object' &&
+          isArraySubschema(innerVal as Record<string, unknown>)
+        ) {
+          const items = (innerVal as Record<string, unknown>).items as JsonSchema | undefined;
+          if (
+            items &&
+            typeof items === 'object' &&
+            schemaHasJsonType(items as JsonSchema, JSON_SCHEMA_TYPE.object)
+          ) {
+            return items as JsonSchema;
+          }
+        }
+      }
+    }
+  }
+
+  const catchAll = findArrayPropertyKey(props);
+  if (catchAll) {
+    const arr = props[catchAll] as Record<string, unknown>;
+    const items = arr.items as JsonSchema | undefined;
+    if (
+      items &&
+      typeof items === 'object' &&
+      schemaHasJsonType(items as JsonSchema, JSON_SCHEMA_TYPE.object)
+    ) {
+      return items as JsonSchema;
+    }
+  }
+
+  return null;
+}

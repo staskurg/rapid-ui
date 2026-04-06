@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCompilation } from '@/lib/compiler/store';
-import { isListLikeKind } from '@/lib/compiler/apiir';
+import { primaryListLikeOperation } from '@/lib/compiler/apiir';
 import * as mockStore from '@/lib/compiler/mock/store';
 
 export async function GET(
@@ -29,7 +29,7 @@ export async function GET(
     return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
   }
 
-  const listOp = resourceIr.operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(resourceIr.operations);
   const listSchema = listOp?.responseSchema ?? { type: 'array', items: { type: 'object' } };
 
   const records = mockStore.getRecords(
@@ -69,7 +69,7 @@ export async function POST(
     return NextResponse.json({ error: 'Resource not found' }, { status: 404 });
   }
 
-  const listOp = resourceIr.operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(resourceIr.operations);
   const listSchema = listOp?.responseSchema ?? { type: 'array', items: { type: 'object' } };
 
   let input: Record<string, unknown>;

@@ -922,6 +922,12 @@ function main(): number {
     lines.push(`- Code: ${ex.errors[0]?.code ?? 'unknown'}`);
   }
   lines.push('');
+  lines.push('---');
+  lines.push('');
+  lines.push(
+    '_This report is **Pipeline A** (raw `corpus:run` batch → `corpus:report`). For committed fixture ApiIR, use **Pipeline B**: `fixtures:generate-apiir` → `verify:apiir-fixtures` → `corpus:pattern-mining` / `corpus:ui-readiness`. See **Corpus pipelines** in `ARCHITECTURE.md`._'
+  );
+  lines.push('');
 
   const reportContent = lines.join('\n');
   writeFileSync(reportPath, reportContent, 'utf-8');

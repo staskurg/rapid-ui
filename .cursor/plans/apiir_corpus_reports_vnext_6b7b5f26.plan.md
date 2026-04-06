@@ -28,10 +28,10 @@ todos:
     status: completed
   - id: phase-6-runtime
     content: "Phase 6: Lowering + mock (list ?? listScoped, scope vs row) + UiPlan prompts; respect main merge gate with listScoped-only fixtures"
-    status: pending
+    status: completed
   - id: phase-9-docs
     content: "Phase 9: ARCHITECTURE.md — pipelines A/B, apiIrVersion/legacy semantics, optional corpus-report footer"
-    status: pending
+    status: completed
 isProject: false
 ---
 
@@ -198,7 +198,7 @@ Treat as **list** ∪ **listScoped** unless **pattern tokens** must distinguish 
 
 ### Operator notes (Phase 6 entry and release)
 
-Track A (listScoped-aware archetypes) is **[docs/pre-phase-6-archetypes.md](../../docs/pre-phase-6-archetypes.md)**. For the **vitest extract-archetypes smoke** vs **full `extract:archetypes`**, why temp `golden-candidates.md` can look empty, and the **post–Phase 6** checklist (**`eval:llm`**, **`inferIdField`** follow-up, optional **E2E** golden smoke), see **§9–10** in that doc. None of §10 is a hard blocker to **starting** Phase 6.
+Track A (listScoped-aware archetypes) is **[docs/pre-phase-6-archetypes.md](../../docs/pre-phase-6-archetypes.md)**. For the **vitest extract-archetypes smoke** vs **full `extract:archetypes`**, why temp `golden-candidates.md` can look empty, and the **post–Phase 6** checklist (`**eval:llm`**, `**inferIdField`** follow-up, optional **E2E** golden smoke), see **§9–10** in that doc. None of §10 is a hard blocker to **starting** Phase 6.
 
 Full gate criteria and optional notes are under each phase below.
 
@@ -327,7 +327,7 @@ Full Pipeline A on local trees under [scripts/corpus-data/specs/](scripts/corpus
 
 - **ARCHITECTURE.md**: two pipelines; fixture-relative vs raw corpus; optional trivial footer on corpus report.
 
-**Checkpoint**
+**Checkpoint** (completed)
 
 - **Done when:** New operators can run pipeline A vs B without confusion; `apiIrVersion` / legacy rows / bump policy (as decided) documented; corpus-report footer done or explicitly out of scope.
 - **Verify:** Doc review checklist; `npm run type`; `npm test` to ensure no drift from final behavior.

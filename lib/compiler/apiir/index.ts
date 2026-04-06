@@ -27,6 +27,7 @@ export { buildApiIR, apiIrStringify } from './build';
 export type { BuildApiIROutput, BuildApiIRResult, BuildApiIRFailure } from './build';
 export {
   classifyListResponseEnvelope,
+  getListItemObjectSchema,
   isArrayRootSchema,
   isListShapedResponseSchema,
   JSON_SCHEMA_TYPE,

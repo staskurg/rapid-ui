@@ -10,6 +10,7 @@ import { buildApiIR, apiIrStringify } from '@/lib/compiler/apiir/build';
 import {
   compareOperationKind,
   CURRENT_API_IR_VERSION,
+  getListItemObjectSchema,
   HTTP_METHOD,
   isListShapedResponseSchema,
   listLikeOperationKinds,
@@ -291,6 +292,33 @@ paths:
     if (!parseResult.success) throw new Error(parseResult.error.message);
     const validateResult = validateSubset(parseResult.doc);
     expect(validateResult.success).toBe(false);
+  });
+});
+
+describe('getListItemObjectSchema', () => {
+  it('returns array items object schema for array root', () => {
+    const items = getListItemObjectSchema({
+      type: 'array',
+      items: { type: 'object', properties: { id: { type: 'string' } } },
+    });
+    expect(items).not.toBeNull();
+    const props = items!.properties as Record<string, unknown> | undefined;
+    expect(Object.keys(props ?? {})).toContain('id');
+  });
+
+  it('resolves preferred envelope keys to item object schema', () => {
+    const items = getListItemObjectSchema({
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { type: 'object', properties: { id: { type: 'string' } } },
+        },
+      },
+    });
+    expect(items).not.toBeNull();
+    const props = items!.properties as Record<string, unknown> | undefined;
+    expect(Object.keys(props ?? {})).toContain('id');
   });
 });
 

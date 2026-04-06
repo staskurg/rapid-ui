@@ -257,6 +257,51 @@ describe('lower', () => {
     expect(result.specs.orders?.idField).not.toBe('accountId');
   });
 
+  it('listScoped-only resource infers idField from list item when id is present', () => {
+    const apiIr: ApiIR = {
+      api: { title: 'Scoped list ids', version: '1' },
+      resources: [
+        {
+          name: 'Rows',
+          key: 'rows',
+          operations: [
+            {
+              id: 'GET:/orgs/{orgId}/rows',
+              method: 'GET',
+              kind: 'listScoped',
+              path: '/orgs/{orgId}/rows',
+              identifierParam: 'orgId',
+              responseSchema: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    label: { type: 'string' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      ],
+    };
+    const uiPlan = normalizeUiPlanIR({
+      resources: [
+        {
+          name: 'Rows',
+          views: {
+            list: { fields: [{ path: 'label' }] },
+          },
+        },
+      ],
+    });
+    const result = lower(uiPlan, apiIr);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.specs.rows?.idField).toBe('id');
+  });
+
   it('listScoped-only resource can lower without idField', () => {
     const apiIr: ApiIR = {
       api: { title: 'Scoped only', version: '1' },

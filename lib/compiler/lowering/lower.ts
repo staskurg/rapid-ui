@@ -5,7 +5,9 @@
 
 import { UISpecSchema } from '@/lib/spec/schema';
 import type { UISpec, Field } from '@/lib/spec/types';
-import { isListLikeKind, type ApiIR, type ResourceIR } from '../apiir/types';
+import { getListItemObjectSchema } from '../apiir/list-shape';
+import { primaryListLikeOperation } from '../apiir/list-like';
+import { OPERATION_KIND, type ApiIR, type JsonSchema, type ResourceIR } from '../apiir/types';
 import type { UiPlanIR, ResourcePlan, FieldPlan } from '../uiplan/uiplan.schema';
 import { slugify } from '@/lib/utils/slugify';
 import {
@@ -156,7 +158,7 @@ function lowerResource(
 }
 
 function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
-  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(resource.operations);
   const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const schemas: Record<string, unknown>[] = [];
   if (listOp?.responseSchema) schemas.push(listOp.responseSchema as Record<string, unknown>);
@@ -174,7 +176,7 @@ function hasOpaqueOrMapShape(resource: ResourceIR): boolean {
 function mergeSchemaFields(resource: ResourceIR): Map<string, FieldInfo> {
   const merged = new Map<string, FieldInfo>();
 
-  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
+  const listOp = primaryListLikeOperation(resource.operations);
   const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const createOp = resource.operations.find((o) => o.kind === 'create');
   const updateOp = resource.operations.find((o) => o.kind === 'update');
@@ -236,23 +238,33 @@ function mergeFormFields(createPaths: string[], editPaths: string[]): string[] {
 }
 
 function inferIdField(resource: ResourceIR): string | undefined {
+  const listOp = primaryListLikeOperation(resource.operations);
+  const scopeParamNames = new Set(
+    resource.operations
+      .filter((o) => o.kind === OPERATION_KIND.listScoped)
+      .map((o) => o.identifierParam)
+      .filter((x): x is string => Boolean(x))
+  );
+
   const detailOp = resource.operations.find((o) => o.kind === 'detail');
   const updateOp = resource.operations.find((o) => o.kind === 'update');
   const deleteOp = resource.operations.find((o) => o.kind === 'delete');
-
   const param = detailOp?.identifierParam ?? updateOp?.identifierParam ?? deleteOp?.identifierParam;
 
-  if (!param) return undefined;
+  const itemSchema =
+    listOp?.responseSchema != null
+      ? getListItemObjectSchema(listOp.responseSchema as JsonSchema)
+      : null;
+  const itemProps = itemSchema?.properties as Record<string, unknown> | undefined;
+  const itemPropNames =
+    itemProps && typeof itemProps === 'object' ? new Set(Object.keys(itemProps)) : undefined;
 
-  const listOp = resource.operations.find((o) => isListLikeKind(o.kind));
-  const schema = listOp?.responseSchema;
-  if (!schema) return param;
+  if (itemPropNames && itemPropNames.size > 0) {
+    if (itemPropNames.has('id')) return 'id';
+    if (param && !scopeParamNames.has(param) && itemPropNames.has(param)) return param;
+    return undefined;
+  }
 
-  const objSchema = schema.type === 'array' ? schema.items : schema;
-  const props = (objSchema as Record<string, unknown>)?.properties as
-    | Record<string, unknown>
-    | undefined;
-  if (props && 'id' in props) return 'id';
-
+  if (!param || scopeParamNames.has(param)) return undefined;
   return param;
 }
