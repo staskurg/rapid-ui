@@ -415,4 +415,4 @@ scripts/
 
 ## Related documentation
 
-- **[ApiIR corpus vNext — handoff and remaining work](docs/apiir-corpus-vnext-handoff.md)** — UISpec vs renderer, eval vs compile-time LLM, and post–Phase 6 hardening before moving on to the next initiative.
+- **[LLM determinism evaluation](eval/README.md)** — Regression harness for ApiIR → UiPlanIR and the full OpenAPI → UISpec pipeline.

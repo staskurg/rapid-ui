@@ -168,8 +168,6 @@ For the GitHub crawler workflow, see [docs/corpus-github.md](./docs/corpus-githu
 - **[OpenAPI Subset v1](./docs/openapi-subset-v1.md)** — RUS-v1 spec and corpus workflow
 - **[GitHub Corpus](./docs/corpus-github.md)** — Crawling and validating OpenAPI specs from GitHub
 - **[Getting Started](./docs/getting-started.md)** — Step-by-step setup guide
-- **[Mock API Testing](./docs/mock-api-testing.md)** — Manual testing of generated UIs
-- **[Form Modal Nested Schema](./docs/form-modal-nested-schema.md)** — Nested field handling in forms
 
 ## How It Works
 

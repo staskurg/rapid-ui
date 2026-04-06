@@ -5,7 +5,7 @@
  * The UISpec uses flat dot-path names (e.g. "profile.firstName"). These helpers align
  * schema, validation, defaults, and error display with RHF's nested structure.
  *
- * @see docs/form-modal-nested-schema.md
+ * @see lib/compiler/lowering/README.md (Nested Paths)
  */
 
 import { z } from 'zod';

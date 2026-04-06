@@ -14,7 +14,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  *
  * The limit applies after a **global sort** of specIds (`api-guru/…` before `github/…`), so the
  * slice is the first 50 APIs.guru fixtures only. Expect sparse archetypes and console warnings in
- * CI — that is intentional. See docs/pre-phase-6-archetypes.md §9.
+ * CI — that is intentional for this limited fixture slice.
  */
 const TEST_OUTPUT_DIR = join(__dirname, 'tmp', 'extract-archetypes-smoke');
 const ARCHETYPES_JSON = join(TEST_OUTPUT_DIR, 'archetypes.json');

@@ -25,6 +25,6 @@ UISpec has no array type. Array-of-primitive fields (e.g. `tags: string[]`) are 
 
 ## Nested Paths
 
-- FormModal uses a **nested schema** that matches React Hook Form's structure. When using `register("profile.firstName")`, RHF stores `{ profile: { firstName: "..." } }`. The schema, defaults, and error display all use nested structure. See `lib/utils/formSchema.ts` and `docs/form-modal-nested-schema.md`.
+- FormModal uses a **nested schema** that matches React Hook Form's structure. When using `register("profile.firstName")`, RHF stores `{ profile: { firstName: "..." } }`. The schema, defaults, and error display all use nested structure. See `lib/utils/formSchema.ts`.
 - Edit modal: pass `editRecord` directly (nested from API). Create/update: pass form data directly to adapter (already nested).
 - DataTable/getCellValue supports dot paths for nested access.
